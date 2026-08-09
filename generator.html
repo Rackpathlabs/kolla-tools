@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rackpathlabs — generator globals.yml (Kolla-Ansible)</title>
+<meta name="description" content="Generator pliku globals.yml dla Kolla-Ansible. Działa offline, bez zależności zewnętrznych.">
+<style>
+:root{
+  --bg:#0e1318; --panel:#151b22; --panel-2:#1b232c; --line:#26313c;
+  --fg:#e6edf3; --muted:#8b98a5; --dim:#87939f;
+  --accent:#3ddc97; --accent-dim:#1f7f58;
+  --blue:#5aa9ff; --amber:#e8b339; --red:#ef6a6a;
+  --mono:ui-monospace,SFMono-Regular,"JetBrains Mono","Cascadia Mono",Consolas,"Liberation Mono",monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --r:8px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--fg); font-family:var(--sans);
+  font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+a{color:var(--blue)}
+.wrap{max-width:1320px;margin:0 auto;padding:0 20px 64px}
+
+/* ---------- header ---------- */
+header{border-bottom:1px solid var(--line);background:linear-gradient(180deg,#131a21,#0e1318)}
+.hdr{max-width:1320px;margin:0 auto;padding:18px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:11px;font-weight:650;letter-spacing:.2px}
+.logo{width:26px;height:26px;flex:0 0 26px}
+.brand small{display:block;font-weight:400;font-size:12px;color:var(--muted);letter-spacing:.3px}
+nav{margin-left:auto;display:flex;gap:6px}
+nav a{
+  color:var(--muted);text-decoration:none;font-size:13.5px;padding:6px 12px;
+  border:1px solid transparent;border-radius:var(--r)
+}
+nav a:hover{color:var(--fg);background:var(--panel-2)}
+nav a[aria-current="page"]{color:var(--fg);border-color:var(--line);background:var(--panel)}
+
+.skip{
+  position:absolute;left:-9999px;top:0;background:var(--panel-2);color:var(--fg);
+  padding:9px 14px;border:1px solid var(--accent-dim);border-radius:var(--r);z-index:60
+}
+.skip:focus{left:12px;top:12px}
+
+h1{font-size:20px;margin:26px 0 4px;font-weight:600;letter-spacing:-.2px}
+.lede{color:var(--muted);font-size:14px;margin:0 0 22px;max-width:78ch}
+
+/* ---------- layout ---------- */
+.cols{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:960px){.cols{grid-template-columns:minmax(0,1fr)}}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.panel>h2{
+  margin:0;padding:12px 16px;font-size:12px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.9px;color:var(--muted);border-bottom:1px solid var(--line)
+}
+.panel .body{padding:16px}
+
+/* ---------- form ---------- */
+fieldset{border:0;margin:0 0 22px;padding:0}
+fieldset:last-of-type{margin-bottom:4px}
+legend{
+  padding:0;font-size:11.5px;font-weight:650;letter-spacing:.9px;text-transform:uppercase;
+  color:var(--accent);margin-bottom:12px
+}
+.field{margin-bottom:16px}
+.field:last-child{margin-bottom:0}
+label{display:block;font-size:13px;font-weight:550;margin-bottom:5px}
+label .req{
+  float:right;font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;
+  color:var(--dim);padding-top:2px
+}
+.hint{font-size:12px;color:var(--dim);margin-top:5px;line-height:1.45}
+input[type=text],select{
+  width:100%;padding:8px 10px;background:#0c1116;color:var(--fg);
+  border:1px solid var(--line);border-radius:var(--r);font:14px/1.4 var(--mono);
+  transition:border-color .12s,box-shadow .12s
+}
+select{font-family:var(--sans);font-size:14px;cursor:pointer}
+input:focus,select:focus,button:focus-visible,a:focus-visible{
+  outline:none;border-color:var(--accent-dim);box-shadow:0 0 0 3px rgba(61,220,151,.14)
+}
+input[aria-invalid="true"]{border-color:var(--red);box-shadow:0 0 0 3px rgba(239,106,106,.10)}
+input.warn-field{border-color:var(--amber)}
+
+/* toggles */
+.toggle{
+  display:flex;align-items:flex-start;gap:11px;padding:9px 11px;border-radius:var(--r);
+  border:1px solid transparent;cursor:pointer;user-select:none
+}
+.toggle:hover{background:var(--panel-2)}
+.toggle input{
+  appearance:none;-webkit-appearance:none;margin:2px 0 0;flex:0 0 34px;width:34px;height:19px;
+  background:#2a343f;border-radius:11px;position:relative;cursor:pointer;transition:background .15s
+}
+.toggle input::after{
+  content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;
+  background:#9aa7b4;transition:transform .15s,background .15s
+}
+.toggle input:checked{background:var(--accent-dim)}
+.toggle input:checked::after{transform:translateX(15px);background:var(--accent)}
+.toggle input:focus-visible{box-shadow:0 0 0 3px rgba(61,220,151,.16)}
+.toggle .t-txt{min-width:0}
+.toggle .t-name{font:13.5px/1.35 var(--mono);color:var(--fg)}
+.toggle .t-desc{font-size:12px;color:var(--dim);margin-top:2px}
+
+/* ---------- buttons ---------- */
+button{
+  font:inherit;font-size:13.5px;font-weight:550;color:var(--fg);background:var(--panel-2);
+  border:1px solid var(--line);border-radius:var(--r);padding:7px 14px;cursor:pointer;
+  transition:background .12s,border-color .12s,color .12s
+}
+button:hover:not(:disabled){background:#232d38;border-color:#33404d}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.primary{background:var(--accent-dim);border-color:#2a9c6c;color:#eafff5}
+button.primary:hover:not(:disabled){background:#248f63;border-color:#3ddc97}
+button.ghost{background:transparent}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ---------- output ---------- */
+.out-head{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.out-head .sp{margin-left:auto}
+.fname{font:12.5px var(--mono);color:var(--muted)}
+pre.yaml{
+  margin:0;padding:14px 0;overflow:auto;max-height:calc(100vh - 260px);min-height:340px;
+  font:13px/1.62 var(--mono);tab-size:2
+}
+@media (max-width:960px){pre.yaml{max-height:none}}
+.row{display:block;white-space:pre;padding:0 16px 0 0}
+.row .no{
+  display:inline-block;width:44px;padding-right:14px;text-align:right;color:#5f6d7a;
+  user-select:none;-webkit-user-select:none
+}
+.c{color:#7c8b99;font-style:italic}
+.k{color:#7fd6ff}
+.p{color:#8895a2}
+.v{color:#e7c07b}
+.s{color:var(--accent)}
+
+/* ---------- diagnostics ---------- */
+.status{
+  display:flex;align-items:center;gap:9px;padding:10px 14px;border-radius:var(--r);
+  font-size:13.5px;border:1px solid var(--line);background:var(--panel-2)
+}
+.status .dot{width:8px;height:8px;border-radius:50%;flex:0 0 8px;background:var(--accent)}
+.status.has-err{border-color:#5c2b2b;background:#241618}
+.status.has-err .dot{background:var(--red)}
+.status.has-warn{border-color:#5a4a1e;background:#221d12}
+.status.has-warn .dot{background:var(--amber)}
+ul.diag{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:7px}
+ul.diag:empty{margin:0}
+ul.diag li{display:flex;gap:9px;font-size:13px;line-height:1.45;color:#cbd5dd}
+.sev{
+  flex:0 0 auto;font:10.5px/1.65 var(--mono);font-weight:700;letter-spacing:.6px;
+  padding:0 6px;border-radius:4px;text-transform:uppercase;height:18px;margin-top:1px
+}
+.sev.error{background:rgba(239,106,106,.14);color:var(--red)}
+.sev.warn{background:rgba(232,179,57,.14);color:var(--amber)}
+.sev.info{background:rgba(90,169,255,.13);color:var(--blue)}
+code{font:12.5px var(--mono);background:#0c1116;border:1px solid var(--line);border-radius:4px;padding:1px 5px;color:#d6e2ec}
+
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translate(-50%,14px);
+  background:var(--panel-2);border:1px solid var(--accent-dim);color:var(--fg);
+  padding:9px 16px;border-radius:var(--r);font-size:13.5px;box-shadow:0 8px 26px rgba(0,0,0,.45);
+  opacity:0;pointer-events:none;transition:opacity .16s,transform .16s;z-index:50
+}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast.alert{border-color:#8a5b1e}
+
+footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:var(--dim);font-size:12.5px}
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Przejdź do treści</a>
+
+<header>
+  <div class="hdr">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="2.5" y="3.5" width="19" height="5" rx="1.6" stroke="#3ddc97" stroke-width="1.5"/>
+        <rect x="2.5" y="15.5" width="19" height="5" rx="1.6" stroke="#3ddc97" stroke-width="1.5"/>
+        <path d="M6 8.5v7M18 8.5v7" stroke="#5aa9ff" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="6" cy="6" r="1" fill="#3ddc97"/><circle cx="6" cy="18" r="1" fill="#3ddc97"/>
+      </svg>
+      <span>Rackpathlabs<small>OpenStack tooling</small></span>
+    </div>
+    <nav aria-label="Narzędzia">
+      <a href="generator.html" aria-current="page">globals.yml</a>
+      <a href="validator.html">inventory validator</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+  <h1>Generator <code>globals.yml</code> dla Kolla-Ansible</h1>
+  <p class="lede">
+    Uzupełnij parametry wdrożenia — plik składa się na żywo po prawej stronie. Ustawienia
+    zapisują się lokalnie w przeglądarce, nic nie opuszcza tej maszyny.
+  </p>
+
+  <div class="cols">
+
+    <!-- ============ FORM ============ -->
+    <form class="panel" id="form" autocomplete="off" novalidate>
+      <h2>Parametry wdrożenia</h2>
+      <div class="body">
+
+        <fieldset>
+          <legend>Obraz bazowy</legend>
+
+          <div class="field">
+            <label for="distro">kolla_base_distro <span class="req">wymagane</span></label>
+            <select id="distro" aria-required="true" aria-describedby="h-distro">
+              <option value="rocky">rocky</option>
+              <option value="ubuntu">ubuntu</option>
+              <option value="debian">debian</option>
+            </select>
+            <p class="hint" id="h-distro">Dystrybucja bazowa obrazów kontenerów. Musi być spójna z obrazami w rejestrze.</p>
+          </div>
+
+          <div class="field">
+            <label for="release">openstack_release <span class="req">wymagane</span></label>
+            <input type="text" id="release" list="releases" spellcheck="false" placeholder="2025.1"
+                   aria-required="true" aria-describedby="h-release" maxlength="32">
+            <datalist id="releases">
+              <option value="2025.2" label="Flamingo"></option>
+              <option value="2025.1" label="Epoxy"></option>
+              <option value="2024.2" label="Dalmatian"></option>
+              <option value="2024.1" label="Caracal"></option>
+              <option value="2023.2" label="Bobcat"></option>
+              <option value="2023.1" label="Antelope"></option>
+              <option value="zed" label="Zed"></option>
+              <option value="yoga" label="Yoga"></option>
+              <option value="master" label="rozwojowa"></option>
+            </datalist>
+            <p class="hint" id="h-release">Tag obrazów, np. <code>2025.1</code>. Powinien odpowiadać wersji kolla-ansible.</p>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Sieć</legend>
+
+          <div class="field">
+            <label for="vip">kolla_internal_vip_address <span class="req">wymagane</span></label>
+            <input type="text" id="vip" spellcheck="false" placeholder="10.0.0.250"
+                   aria-required="true" aria-describedby="h-vip" maxlength="15">
+            <p class="hint" id="h-vip">Wolny adres IPv4 w sieci zarządzania — nieprzypisany do żadnego hosta.</p>
+          </div>
+
+          <div class="field">
+            <label for="net_if">network_interface <span class="req">wymagane</span></label>
+            <input type="text" id="net_if" spellcheck="false" placeholder="eth0"
+                   aria-required="true" aria-describedby="h-net_if" maxlength="15">
+            <p class="hint" id="h-net_if">Interfejs sieci zarządzania / API. Musi mieć adres IP na każdym węźle.</p>
+          </div>
+
+          <div class="field">
+            <label for="ext_if">neutron_external_interface <span class="req">wymagane</span></label>
+            <input type="text" id="ext_if" spellcheck="false" placeholder="eth1"
+                   aria-required="true" aria-describedby="h-ext_if" maxlength="15">
+            <p class="hint" id="h-ext_if">Interfejs ruchu zewnętrznego. Bez adresu IP, bez konfiguracji — Neutron przejmuje go w całości.</p>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Usługi</legend>
+          <label class="toggle" for="t_haproxy">
+            <input type="checkbox" id="t_haproxy" checked>
+            <span class="t-txt"><span class="t-name">enable_haproxy</span>
+              <span class="t-desc">HAProxy + keepalived — wymagane dla VIP i HA punktów końcowych API.</span></span>
+          </label>
+          <label class="toggle" for="t_cinder">
+            <input type="checkbox" id="t_cinder">
+            <span class="t-txt"><span class="t-name">enable_cinder</span>
+              <span class="t-desc">Wolumeny blokowe. Wymaga skonfigurowanego backendu magazynu.</span></span>
+          </label>
+          <label class="toggle" for="t_prometheus">
+            <input type="checkbox" id="t_prometheus">
+            <span class="t-txt"><span class="t-name">enable_prometheus</span>
+              <span class="t-desc">Zbieranie metryk. Wymaga hostów w grupie <em>monitoring</em>.</span></span>
+          </label>
+          <label class="toggle" for="t_provider">
+            <input type="checkbox" id="t_provider">
+            <span class="t-txt"><span class="t-name">enable_neutron_provider_networks</span>
+              <span class="t-desc">Sieci provider (flat/VLAN) mapowane bezpośrednio na fizyczną sieć.</span></span>
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Wyjście</legend>
+          <label class="toggle" for="t_comments">
+            <input type="checkbox" id="t_comments" checked>
+            <span class="t-txt"><span class="t-name">Komentarze objaśniające</span>
+              <span class="t-desc">Nagłówki sekcji i uwagi wdrożeniowe wynikające z wybranej konfiguracji.</span></span>
+          </label>
+          <div class="btn-row" style="margin-top:14px">
+            <button type="button" class="ghost" id="btn-reset">Przywróć domyślne</button>
+          </div>
+        </fieldset>
+
+      </div>
+    </form>
+
+    <!-- ============ OUTPUT ============ -->
+    <div>
+      <div class="panel">
+        <div class="out-head">
+          <span class="fname">/etc/kolla/globals.yml</span>
+          <span class="sp"></span>
+          <button type="button" id="btn-copy" aria-describedby="status-txt">Kopiuj</button>
+          <button type="button" class="primary" id="btn-download" aria-describedby="status-txt">Pobierz globals.yml</button>
+        </div>
+        <pre class="yaml" id="out" tabindex="0" aria-label="Podgląd wygenerowanego pliku globals.yml"></pre>
+      </div>
+
+      <div class="panel" style="margin-top:18px">
+        <h2>Kontrola konfiguracji</h2>
+        <div class="body">
+          <div class="status" id="status" role="status" aria-live="polite">
+            <span class="dot"></span><span id="status-txt">Konfiguracja poprawna.</span>
+          </div>
+          <ul class="diag" id="diag"></ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    Rackpathlabs — narzędzia OpenStack. Pojedynczy plik HTML, bez zależności zewnętrznych, działa offline.
+  </footer>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var STORE = "rackpathlabs.globals-generator.v1";
+  var HEADER = "# Generated with Rackpathlabs globals.yml generator";
+
+  var DISTROS = ["rocky", "ubuntu", "debian"];
+  /* wydania sprzed schematu RRRR.N — nadal spotykane w migracjach */
+  var NAMED_RELEASES = ["victoria", "wallaby", "xena", "yoga", "zed"];
+
+  var DEFAULTS = {
+    distro: "rocky",
+    release: "2025.1",
+    vip: "",
+    net_if: "eth0",
+    ext_if: "eth1",
+    t_haproxy: true,
+    t_cinder: false,
+    t_prometheus: false,
+    t_provider: false,
+    t_comments: true
+  };
+
+  var TEXT_FIELDS = ["distro", "release", "vip", "net_if", "ext_if"];
+  var BOOL_FIELDS = ["t_haproxy", "t_cinder", "t_prometheus", "t_provider", "t_comments"];
+
+  var el = {};
+  TEXT_FIELDS.concat(BOOL_FIELDS).forEach(function (id) { el[id] = document.getElementById(id); });
+  var out = document.getElementById("out");
+  var diag = document.getElementById("diag");
+  var statusBox = document.getElementById("status");
+  var statusTxt = document.getElementById("status-txt");
+  var btnCopy = document.getElementById("btn-copy");
+  var btnDownload = document.getElementById("btn-download");
+  var toastEl = document.getElementById("toast");
+
+  var currentYaml = "";
+  var hasErrors = false;
+
+  /* localStorage bywa niedostępny: file:// w części przeglądarek, tryb prywatny, polityka firmowa */
+  var storageOk = (function () {
+    try {
+      var probe = STORE + ".probe";
+      localStorage.setItem(probe, "1");
+      localStorage.removeItem(probe);
+      return true;
+    } catch (e) { return false; }
+  })();
+
+  /* ------------------------------------------------------------------ */
+  /* stan                                                                */
+  /* ------------------------------------------------------------------ */
+
+  /* Wartość z pamięci lokalnej jest wejściem niezaufanym — przechodzi przez te same
+     reguły co wpis z klawiatury. Samo przycięcie długości nie wystarcza. */
+  function sanitize(raw) {
+    var s = {};
+    TEXT_FIELDS.forEach(function (id) {
+      var v = raw ? raw[id] : null;
+      if (typeof v !== "string") { s[id] = DEFAULTS[id]; return; }
+      v = v.slice(0, 64);
+      var re = FIELD_RE[id];
+      s[id] = (v === "" || !re || re.test(v)) ? v : DEFAULTS[id];
+    });
+    if (DISTROS.indexOf(s.distro) === -1) s.distro = DEFAULTS.distro;
+    BOOL_FIELDS.forEach(function (id) {
+      var v = raw ? raw[id] : null;
+      s[id] = (typeof v === "boolean") ? v : DEFAULTS[id];
+    });
+    return s;
+  }
+
+  function readState() {
+    var s = {};
+    TEXT_FIELDS.forEach(function (id) { s[id] = el[id].value.trim(); });
+    BOOL_FIELDS.forEach(function (id) { s[id] = el[id].checked; });
+    return s;
+  }
+
+  function applyState(raw) {
+    var s = sanitize(raw);
+    TEXT_FIELDS.forEach(function (id) { el[id].value = s[id]; });
+    BOOL_FIELDS.forEach(function (id) { el[id].checked = s[id]; });
+  }
+
+  function save(s) {
+    if (!storageOk) return;
+    try { localStorage.setItem(STORE, JSON.stringify(s)); } catch (e) { storageOk = false; }
+  }
+
+  function load() {
+    if (!storageOk) return null;
+    try {
+      var raw = localStorage.getItem(STORE);
+      if (!raw) return null;
+      var s = JSON.parse(raw);
+      return (s && typeof s === "object" && !Array.isArray(s)) ? s : null;
+    } catch (e) { return null; }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* walidacja                                                           */
+  /* ------------------------------------------------------------------ */
+
+  function parseIPv4(value) {
+    var m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(value);
+    if (!m) return null;
+    var parts = m.slice(1);
+    for (var i = 0; i < 4; i++) {
+      if (parts[i].length > 1 && parts[i].charAt(0) === "0") return null; // wiodące zera
+      if (Number(parts[i]) > 255) return null;
+    }
+    return parts.map(Number);
+  }
+
+  /* jądro Linuksa dopuszcza cyfrę na początku (np. 10ge0); zabronione są ':' oraz '/' */
+  var IFACE_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,14}$/;
+  var RELEASE_RE = /^[A-Za-z0-9._\/-]{1,32}$/;
+  var VIP_RE = /^[0-9.]{1,15}$/;
+
+  /* zestaw reguł wspólny dla walidacji i dla sanityzacji pamięci lokalnej */
+  var FIELD_RE = {
+    release: RELEASE_RE,
+    vip: VIP_RE,
+    net_if: IFACE_RE,
+    ext_if: IFACE_RE
+  };
+
+  function checkIface(name, label, d) {
+    var tag = "<code>" + label + "</code>";
+    if (!name) {
+      d.push({ level: "error", field: label, msg: "Pole " + tag + " jest wymagane." });
+      return;
+    }
+    if (name.length > 15) {
+      d.push({ level: "error", field: label, msg: tag + ": <code>" + esc(name) + "</code> ma " + name.length +
+              " znaków — w Linuksie nazwa interfejsu może mieć maksymalnie 15." });
+      return;
+    }
+    if (parseIPv4(name)) {
+      d.push({ level: "error", field: label, msg: tag + ": <code>" + esc(name) + "</code> to adres IP, a oczekiwana jest nazwa interfejsu." });
+      return;
+    }
+    if (!IFACE_RE.test(name)) {
+      d.push({ level: "error", field: label, msg: tag + ": <code>" + esc(name) +
+              "</code> zawiera niedozwolone znaki. Dopuszczalne są litery, cyfry oraz <code>. _ -</code>." });
+      return;
+    }
+    if (name === "lo") {
+      d.push({ level: "error", field: label, msg: tag + ": interfejs pętli zwrotnej nie nadaje się do wdrożenia wielowęzłowego." });
+    }
+  }
+
+  function validate(s) {
+    var d = [];
+
+    /* --- obraz bazowy --- */
+    if (DISTROS.indexOf(s.distro) === -1) {
+      d.push({
+        level: "error", field: "distro",
+        msg: "<code>kolla_base_distro</code>: wybierz jedną z obsługiwanych dystrybucji (" + DISTROS.join(", ") + ")."
+      });
+    }
+
+    /* --- wydanie --- */
+    if (!s.release) {
+      d.push({ level: "error", field: "release", msg: "Pole <code>openstack_release</code> jest wymagane." });
+    } else if (!RELEASE_RE.test(s.release)) {
+      d.push({
+        level: "error", field: "release",
+        msg: "<code>openstack_release</code>: <code>" + esc(s.release) +
+             "</code> zawiera niedozwolone znaki. Tag obrazu może zawierać litery, cyfry oraz <code>. _ - /</code>."
+      });
+    } else {
+      var base = s.release.replace(/^stable\//, "");
+      if (base === "master") {
+        d.push({ level: "warn", field: "release", msg: "Gałąź <code>master</code> to obrazy rozwojowe — nie do środowiska produkcyjnego." });
+      } else if (NAMED_RELEASES.indexOf(base.toLowerCase()) !== -1) {
+        d.push({
+          level: "info", field: "release",
+          msg: "<code>" + esc(base) + "</code> to wydanie sprzed schematu <code>RRRR.N</code>."
+        });
+      } else if (!/^\d{4}\.\d$/.test(base)) {
+        d.push({
+          level: "warn", field: "release",
+          msg: "<code>openstack_release</code>: nietypowa wartość <code>" + esc(s.release) +
+               "</code>. Kolla używa formatu <code>RRRR.N</code> (np. 2025.1), nazwy wydania albo <code>master</code>."
+        });
+      }
+    }
+
+    /* --- VIP --- */
+    if (!s.vip) {
+      d.push({ level: "error", field: "vip", msg: "Pole <code>kolla_internal_vip_address</code> jest wymagane." });
+    } else {
+      var ip = parseIPv4(s.vip);
+      if (!ip) {
+        d.push({ level: "error", field: "vip", msg: "<code>kolla_internal_vip_address</code>: <code>" + esc(s.vip) + "</code> nie jest poprawnym adresem IPv4." });
+      } else if (ip[0] === 0 || ip[0] === 127 || ip[0] >= 224) {
+        d.push({
+          level: "error", field: "vip",
+          msg: "<code>kolla_internal_vip_address</code>: adres <code>" + esc(s.vip) +
+               "</code> należy do puli zarezerwowanej (loopback, multicast lub 0.0.0.0/8)."
+        });
+      } else if (ip[0] === 169 && ip[1] === 254) {
+        d.push({ level: "error", field: "vip", msg: "<code>kolla_internal_vip_address</code>: adres link-local (169.254.0.0/16) nie może pełnić roli VIP." });
+      } else {
+        if (ip[3] === 0 || ip[3] === 255) {
+          d.push({
+            level: "warn", field: "vip",
+            msg: "<code>kolla_internal_vip_address</code>: ostatni oktet <code>" + ip[3] +
+                 "</code> w sieci /24 to adres sieci lub rozgłoszeniowy. Sprawdź maskę podsieci."
+          });
+        }
+        var isDoc = (ip[0] === 192 && ip[1] === 0 && ip[2] === 2) ||
+                    (ip[0] === 198 && ip[1] === 51 && ip[2] === 100) ||
+                    (ip[0] === 203 && ip[1] === 0 && ip[2] === 113);
+        var isCgnat = (ip[0] === 100 && ip[1] >= 64 && ip[1] <= 127);
+        var isPriv = (ip[0] === 10) || (ip[0] === 172 && ip[1] >= 16 && ip[1] <= 31) || (ip[0] === 192 && ip[1] === 168);
+        if (isDoc) {
+          d.push({
+            level: "warn", field: "vip",
+            msg: "Adres <code>" + esc(s.vip) + "</code> pochodzi z puli dokumentacyjnej (RFC 5737) — najczęściej oznacza wartość skopiowaną z przykładu i niepodmienioną."
+          });
+        } else if (isCgnat) {
+          d.push({
+            level: "warn", field: "vip",
+            msg: "Adres <code>" + esc(s.vip) + "</code> należy do puli CGNAT (100.64.0.0/10). Bywa zajęta przez infrastrukturę operatora — upewnij się, że sieć zarządzania jest wyłącznie Twoja."
+          });
+        } else if (!isPriv) {
+          d.push({
+            level: "info", field: "vip",
+            msg: "VIP spoza puli prywatnej (RFC 1918). Sieć wewnętrzna API nie powinna być osiągalna publicznie."
+          });
+        }
+      }
+    }
+
+    /* --- interfejsy --- */
+    checkIface(s.net_if, "network_interface", d);
+    checkIface(s.ext_if, "neutron_external_interface", d);
+    if (s.net_if && s.ext_if && s.net_if === s.ext_if) {
+      d.push({
+        level: "error", field: "ext_if",
+        msg: "<code>network_interface</code> i <code>neutron_external_interface</code> muszą być różnymi interfejsami — Neutron przejmuje interfejs zewnętrzny i usuwa z niego adresację."
+      });
+    }
+
+    /* --- spójność usług --- */
+    if (!s.t_haproxy) {
+      d.push({
+        level: "warn", field: null,
+        msg: "Przy wyłączonym <code>enable_haproxy</code> adres <code>kolla_internal_vip_address</code> musi być istniejącym adresem pojedynczego węzła sterującego — nie adresem wirtualnym."
+      });
+    }
+    if (s.t_prometheus) {
+      d.push({
+        level: "info", field: null,
+        msg: "Prometheus wymaga co najmniej jednego hosta w grupie <code>monitoring</code> w inventory."
+      });
+    }
+    if (s.t_cinder) {
+      d.push({
+        level: "warn", field: null,
+        msg: "Cinder bez skonfigurowanego backendu (LVM, Ceph, NFS) nie utworzy wolumenów — uzupełnij ustawienia backendu przed wdrożeniem."
+      });
+    }
+    if (s.t_provider && s.ext_if) {
+      d.push({
+        level: "info", field: null,
+        msg: "Sieci provider wymagają mostka <code>neutron_bridge_name</code> (domyślnie <code>br-ex</code>) oraz portu przełącznika skonfigurowanego pod wybrany typ sieci."
+      });
+    }
+
+    if (!storageOk) {
+      d.push({
+        level: "info", field: null,
+        msg: "Przeglądarka blokuje pamięć lokalną w tym trybie — ustawienia nie zostaną zapamiętane po odświeżeniu strony."
+      });
+    }
+
+    var rank = { error: 0, warn: 1, info: 2 };
+    d.sort(function (a, b) { return rank[a.level] - rank[b.level]; });
+    return d;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* YAML                                                                */
+  /* ------------------------------------------------------------------ */
+
+  /* Serializacja skalara w cudzysłowie podwójnym zgodnie z YAML 1.1/1.2.
+     Escapowanie jest tu, a nie w walidacji: walidacja to warstwa UI,
+     serializer musi być bezpieczny niezależnie od tego, co wpadnie na wejście.
+     Uwaga: YAML 1.1 traktuje NEL (U+0085), LS (U+2028) i PS (U+2029) jako
+     złamania linii — parser Ansible też. Muszą zostać zescapowane. */
+  function q(value) {
+    var s = String(value == null ? "" : value)
+      .replace(/\\/g, "\\\\")
+      .replace(/"/g, '\\"')
+      .replace(/[\x00-\x1f\x7f]/g, function (ch) {
+        return "\\x" + ("0" + ch.charCodeAt(0).toString(16)).slice(-2);
+      })
+      .replace(/[\u0085\u2028\u2029]/g, function (ch) {
+        return "\\u" + ("000" + ch.charCodeAt(0).toString(16)).slice(-4);
+      });
+    return '"' + s + '"';
+  }
+
+  /* Wartość wstawiana do komentarza. Komentarz to kontekst, w którym nic nie da
+     się zaescapować — wychodzi z niego wyłącznie whitelista znaków. */
+  function cmt(value) {
+    var s = String(value == null ? "" : value).replace(/[^A-Za-z0-9._\/-]+/g, " ").trim();
+    return s || "?";
+  }
+
+  function yn(flag) { return flag ? '"yes"' : '"no"'; }
+
+  var REJECTED = '""    # BŁĄD: wartość odrzucona, patrz Kontrola konfiguracji';
+
+  /* Pole z błędem walidacji nie trafia do wyniku nawet w podglądzie — podgląd jest
+     artefaktem, da się go zaznaczyć i skopiować ręcznie z pominięciem przycisków. */
+  function fv(s, bad, id) {
+    return bad[id] ? REJECTED : q(s[id]);
+  }
+
+  function fc(s, bad, id) {
+    return cmt(bad[id] ? "?" : s[id]);
+  }
+
+  function buildYaml(s, bad) {
+    var c = s.t_comments;
+    var L = [];
+    var rule = "###############################################################################";
+
+    L.push("---");
+    L.push(HEADER);
+    if (c) {
+      L.push("#");
+      L.push("# Plik konfiguracyjny Kolla-Ansible: /etc/kolla/globals.yml");
+      L.push("# Docelowe wydanie: " + fc(s, bad, "release") + "   |   obraz bazowy: " + fc(s, bad, "distro"));
+      L.push("#");
+      L.push("# Zweryfikuj wartości na docelowych hostach przed uruchomieniem");
+      L.push("# 'kolla-ansible prechecks' oraz 'kolla-ansible deploy'.");
+    }
+    L.push("");
+
+    if (c) { L.push(rule); L.push("# Obraz bazowy i wydanie"); L.push(rule); }
+    L.push("kolla_base_distro: " + fv(s, bad, "distro"));
+    L.push("openstack_release: " + fv(s, bad, "release"));
+    L.push("");
+
+    if (c) {
+      L.push(rule);
+      L.push("# Sieć");
+      L.push("#");
+      L.push("# network_interface           - sieć zarządzania / API, wymaga adresu IP na każdym węźle");
+      L.push("# neutron_external_interface  - ruch zewnętrzny, interfejs bez adresu IP i bez konfiguracji");
+      L.push("# kolla_internal_vip_address  - wolny adres w sieci zarządzania, nieprzypisany do hosta");
+      L.push(rule);
+    }
+    L.push("network_interface: " + fv(s, bad, "net_if"));
+    L.push("neutron_external_interface: " + fv(s, bad, "ext_if"));
+    L.push("kolla_internal_vip_address: " + fv(s, bad, "vip"));
+    L.push("");
+
+    if (c) { L.push(rule); L.push("# Warstwa równoważenia obciążenia"); L.push(rule); }
+    L.push("enable_haproxy: " + yn(s.t_haproxy));
+    if (c && !s.t_haproxy) {
+      L.push("# UWAGA: wyłączenie HAProxy wyłącza również keepalived, a więc adres wirtualny.");
+      L.push("#        kolla_internal_vip_address musi być adresem przypisanym do jedynego");
+      L.push("#        węzła sterującego. Punkty końcowe API pozostają bez redundancji.");
+    }
+    L.push("");
+
+    if (c) { L.push(rule); L.push("# Usługi OpenStack"); L.push(rule); }
+    L.push("enable_cinder: " + yn(s.t_cinder));
+    if (c && s.t_cinder) {
+      L.push("# Cinder wymaga wskazania backendu. Odkomentuj i dostosuj jedną z opcji:");
+      L.push('#enable_cinder_backend_lvm: "yes"');
+      L.push('#cinder_volume_group: "cinder-volumes"');
+      L.push('#enable_cinder_backend_nfs: "yes"');
+      L.push('#cinder_backend_ceph: "yes"');
+    }
+    L.push("enable_prometheus: " + yn(s.t_prometheus));
+    if (c && s.t_prometheus) {
+      L.push("# Prometheus wdraża się na hostach z grupy 'monitoring' w inventory.");
+      L.push("# Panele metryk wymagają dodatkowo:");
+      L.push('#enable_grafana: "yes"');
+    }
+    L.push("");
+
+    if (c) { L.push(rule); L.push("# Neutron"); L.push(rule); }
+    L.push("enable_neutron_provider_networks: " + yn(s.t_provider));
+    if (c && s.t_provider) {
+      L.push("# Sieci provider mapują się bezpośrednio na sieć fizyczną podpiętą do");
+      L.push("# neutron_external_interface (" + fc(s, bad, "ext_if") + "). Ruch wychodzi przez mostek");
+      L.push("# neutron_bridge_name — domyślnie br-ex. Port przełącznika musi być");
+      L.push("# skonfigurowany zgodnie z typem sieci (dostępowy dla flat, trunk 802.1Q dla VLAN).");
+    }
+
+    var text = L.join("\n").replace(/\s+$/, "");
+
+    /* Zapora niezależna od reguł walidacji. Reguły pilnują pól, które istnieją dziś;
+       ta kontrola obowiązuje także pola dodane w przyszłości. Wyłapuje treść, którą
+       Ansible wykonałby jako szablon, oraz znaki rozbijające strukturę pliku. */
+    var tripped = /\{\{|\}\}|\{%|%\}|[\r\u0085\u2028\u2029]/.test(text);
+    if (tripped) {
+      text = [
+        "---",
+        HEADER,
+        "#",
+        "# Generowanie zatrzymane. Konfiguracja zawiera treść, która zostałaby",
+        "# wykonana przez Ansible jako szablon albo rozbiłaby strukturę pliku.",
+        "# Popraw pola oznaczone jako błędne w panelu Kontrola konfiguracji."
+      ].join("\n");
+    }
+
+    return { text: text, tripped: tripped };
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* render                                                              */
+  /* ------------------------------------------------------------------ */
+
+  function esc(str) {
+    return String(str)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function highlight(line) {
+    if (line.trim() === "---") return '<span class="c">' + esc(line) + "</span>";
+    if (/^\s*#/.test(line)) return '<span class="c">' + esc(line) + "</span>";
+    var m = /^([A-Za-z0-9_]+)(:)(\s*)("(?:[^"\\]|\\.)*"|\S*)(\s*)(#.*)?$/.exec(line);
+    if (!m) return esc(line);
+    var val = m[4];
+    var cls = (val === '"yes"' || val === '"no"') ? "s" : "v";
+    return '<span class="k">' + esc(m[1]) + '</span><span class="p">:</span>' + m[3] +
+           '<span class="' + cls + '">' + esc(val) + "</span>" + m[5] +
+           (m[6] ? '<span class="c">' + esc(m[6]) + "</span>" : "");
+  }
+
+  function renderYaml(text) {
+    var lines = text.split("\n");
+    var html = "";
+    for (var i = 0; i < lines.length; i++) {
+      html += '<span class="row"><span class="no">' + (i + 1) + "</span>" + highlight(lines[i]) + "</span>";
+    }
+    out.innerHTML = html;
+  }
+
+  function renderDiagnostics(list) {
+    var errors = 0, warns = 0;
+    var describedBy = {};
+
+    diag.innerHTML = list.map(function (x, i) {
+      if (x.level === "error") errors++;
+      else if (x.level === "warn") warns++;
+      var domId = "diag-" + i;
+      if (x.field) {
+        var fid = fieldToId(x.field);
+        if (fid && el[fid]) (describedBy[fid] || (describedBy[fid] = [])).push(domId);
+      }
+      var label = x.level === "error" ? "błąd" : (x.level === "warn" ? "uwaga" : "info");
+      return '<li id="' + domId + '"><span class="sev ' + x.level + '">' + label + "</span><span>" + x.msg + "</span></li>";
+    }).join("");
+
+    statusBox.classList.toggle("has-err", errors > 0);
+    statusBox.classList.toggle("has-warn", errors === 0 && warns > 0);
+
+    if (errors) {
+      statusTxt.textContent = "Konfiguracja niekompletna — " + plural(errors, "błąd", "błędy", "błędów") +
+        (warns ? ", " + plural(warns, "uwaga", "uwagi", "uwag") : "") + ". Eksport zablokowany.";
+    } else if (warns) {
+      statusTxt.textContent = "Plik gotowy — " + plural(warns, "uwaga", "uwagi", "uwag") + " do sprawdzenia przed wdrożeniem.";
+    } else {
+      statusTxt.textContent = "Konfiguracja poprawna. Plik gotowy do pobrania.";
+    }
+
+    hasErrors = errors > 0;
+    btnDownload.disabled = hasErrors;
+    btnCopy.disabled = hasErrors;
+    var blockedTitle = hasErrors ? "Usuń błędy konfiguracji, aby wyeksportować plik" : "";
+    btnDownload.title = blockedTitle;
+    btnCopy.title = blockedTitle;
+
+    /* oznaczenie pól i powiązanie komunikatów z polami dla czytników ekranu */
+    TEXT_FIELDS.forEach(function (id) {
+      var field = el[id];
+      field.removeAttribute("aria-invalid");
+      field.classList.remove("warn-field");
+      var ids = describedBy[id];
+      field.setAttribute("aria-describedby", ids ? "h-" + id + " " + ids.join(" ") : "h-" + id);
+    });
+    list.forEach(function (x) {
+      if (!x.field) return;
+      var id = fieldToId(x.field);
+      if (!id || !el[id]) return;
+      if (x.level === "error") {
+        el[id].setAttribute("aria-invalid", "true");
+        el[id].classList.remove("warn-field");
+      } else if (x.level === "warn" && !el[id].hasAttribute("aria-invalid")) {
+        el[id].classList.add("warn-field");
+      }
+    });
+  }
+
+  function fieldToId(name) {
+    if (name === "network_interface") return "net_if";
+    if (name === "neutron_external_interface") return "ext_if";
+    return name; // distro, release, vip
+  }
+
+  function plural(n, one, few, many) {
+    var w;
+    if (n === 1) w = one;
+    else if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) w = few;
+    else w = many;
+    return n + " " + w;
+  }
+
+  var saveTimer = null;
+  function refresh() {
+    var s = readState();
+    var d = validate(s);
+
+    var bad = {};
+    d.forEach(function (x) {
+      if (x.level === "error" && x.field) bad[fieldToId(x.field)] = true;
+    });
+
+    var built = buildYaml(s, bad);
+    if (built.tripped) {
+      d.unshift({
+        level: "error", field: null,
+        msg: "Serializer zatrzymał generowanie pliku: wynik zawierał treść wykonywalną przez Ansible lub znak rozbijający strukturę YAML."
+      });
+    }
+
+    currentYaml = built.text;
+    renderYaml(currentYaml);
+    renderDiagnostics(d);
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () { save(s); }, 300);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* akcje                                                               */
+  /* ------------------------------------------------------------------ */
+
+  var toastTimer = null;
+  function toast(msg, alert) {
+    toastEl.textContent = msg;
+    toastEl.classList.toggle("alert", !!alert);
+    toastEl.classList.add("on");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove("on"); }, 2400);
+  }
+
+  function exportText() { return currentYaml.replace(/\n?$/, "\n"); }
+
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        navigator.clipboard.writeText(text).then(
+          function () { toast("Skopiowano do schowka."); },
+          function () { legacyCopy(text); }
+        );
+        return;
+      } catch (e) { /* polityka uprawnień potrafi rzucić synchronicznie */ }
+    }
+    legacyCopy(text);
+  }
+
+  function legacyCopy(text) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.cssText = "position:fixed;top:-1000px;opacity:0";
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    toast(ok ? "Skopiowano do schowka." : "Nie udało się skopiować — zaznacz treść i użyj Ctrl+C.", !ok);
+  }
+
+  function download(text, filename) {
+    try {
+      var blob = new Blob([text], { type: "text/yaml;charset=utf-8" });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      toast("Przekazano " + filename + " do pobrania.");
+    } catch (e) {
+      toast("Przeglądarka zablokowała pobieranie — użyj przycisku Kopiuj.", true);
+    }
+  }
+
+  btnCopy.addEventListener("click", function () {
+    if (hasErrors) return;
+    copyText(exportText());
+  });
+  btnDownload.addEventListener("click", function () {
+    if (hasErrors) return;
+    download(exportText(), "globals.yml");
+  });
+
+  document.getElementById("btn-reset").addEventListener("click", function () {
+    applyState(DEFAULTS);
+    refresh();
+    toast("Przywrócono wartości domyślne.");
+  });
+
+  var form = document.getElementById("form");
+  form.addEventListener("input", refresh);
+  /* refresh() jest idempotentne; 'change' domyka przypadki wypełnienia
+     programowego, przez menedżer haseł albo rozszerzenie przeglądarki */
+  form.addEventListener("change", refresh);
+  form.addEventListener("submit", function (e) { e.preventDefault(); });
+
+  document.addEventListener("keydown", function (e) {
+    if (!(e.ctrlKey || e.metaKey) || !e.key) return;
+    if (e.key.toLowerCase() !== "s") return;
+    e.preventDefault();
+    if (hasErrors) { toast("Eksport zablokowany — konfiguracja zawiera błędy.", true); return; }
+    download(exportText(), "globals.yml");
+  });
+
+  /* ------------------------------------------------------------------ */
+  applyState(load() || DEFAULTS);
+  refresh();
+})();
+</script>
+</body>
+</html>

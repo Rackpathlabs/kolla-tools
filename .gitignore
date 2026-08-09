@@ -1,0 +1,9 @@
+# Konfiguracja lokalna asystenta — zawiera dane procesu i osób.
+# Musi pozostać poza repozytorium publikowanym na GitHub Pages.
+.claude/
+
+# Pliki robocze
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
