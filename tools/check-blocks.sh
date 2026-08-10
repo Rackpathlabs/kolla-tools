@@ -27,7 +27,7 @@ for entry in $BLOCKS; do
     echo "FAIL $src: pusty blok $name"; rc=1; continue
   fi
 
-  for f in $TARGETS; do
+  for f in $(block_targets "$entry"); do
     if ! has_block "$name" "$f"; then
       echo "FAIL $f: brak bloku $name"; rc=1; continue
     fi
