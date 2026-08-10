@@ -214,11 +214,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
           <div class="field">
             <label for="distro">kolla_base_distro <span class="req">wymagane</span></label>
-            <select id="distro" aria-required="true" aria-describedby="h-distro">
-              <option value="rocky">rocky</option>
-              <option value="ubuntu">ubuntu</option>
-              <option value="debian">debian</option>
-            </select>
+            <!-- opcje pochodzą z macierzy wydań (KOLLA_MATRIX), nie z tego znacznika -->
+            <select id="distro" aria-required="true" aria-describedby="h-distro"></select>
             <p class="hint" id="h-distro">Dystrybucja bazowa obrazów kontenerów. Musi być spójna z obrazami w rejestrze.</p>
           </div>
 
@@ -226,17 +223,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
             <label for="release">openstack_release <span class="req">wymagane</span></label>
             <input type="text" id="release" list="releases" spellcheck="false" placeholder="2025.1"
                    aria-required="true" aria-describedby="h-release" maxlength="32">
-            <datalist id="releases">
-              <option value="2025.2" label="Flamingo"></option>
-              <option value="2025.1" label="Epoxy"></option>
-              <option value="2024.2" label="Dalmatian"></option>
-              <option value="2024.1" label="Caracal"></option>
-              <option value="2023.2" label="Bobcat"></option>
-              <option value="2023.1" label="Antelope"></option>
-              <option value="zed" label="Zed"></option>
-              <option value="yoga" label="Yoga"></option>
-              <option value="master" label="rozwojowa"></option>
-            </datalist>
+            <!-- pozycje pochodzą z macierzy wydań (KOLLA_MATRIX), nie z tego znacznika -->
+            <datalist id="releases"></datalist>
             <p class="hint" id="h-release">Tag obrazów, np. <code>2025.1</code>. Powinien odpowiadać wersji kolla-ansible.</p>
           </div>
         </fieldset>
@@ -344,7 +332,223 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
   var STORE = "rackpathlabs.globals-generator.v1";
   var HEADER = "# Generated with Rackpathlabs globals.yml generator";
 
-  var DISTROS = ["rocky", "ubuntu", "debian"];
+  /* == KOLLA-MATRIX BEGIN — generowane z matrix.js, nie edytuj w miejscu == */
+  /* Jedna tabela konsumowana przez oba narzędzia. Dodanie wydania = dopisanie
+     wpisu do releases[] — bez zmian w logice.
+
+     status:      development | maintained | unmaintained | eol
+     kolla:       seria kolla-ansible odpowiadająca wydaniu (null = gałąź rozwojowa)
+     baseDistros: dopuszczalne wartości kolla_base_distro (null = brak danych, wydanie
+                  poza wsparciem — narzędzie nie zgaduje)
+     unpublished: distro dopuszczalne w konfiguracji, ale bez publikowanych obrazów
+     hostOs:      systemy hosta wspierane przez to wydanie (informacyjnie)
+     released:    data wydania; null, jeśli jeszcze nie wydane
+     expected:    planowana data wydania — wyłącznie dla status 'development'
+     endsOn:      data zmiany statusu wsparcia: dla 'maintained' planowana, dla
+                  'unmaintained' i 'eol' ta, w której nastąpiła; dla 'development'
+                  null — wydanie, które się nie ukazało, nie ma kiedy przestać być
+                  wspierane
+     defaults:    domyślne wartości istotne dla decyzji wdrożeniowych; opis klucza
+                  leży w keys[] — jeden opis na klucz, nie na wydanie
+     deprecated:  { kind: 'key'|'group'|'service', name, replacedBy, sev, note }
+                  kind 'key' konsumuje generator, 'group'/'service' — walidator;
+                  sev ('error'|'warn'|'info') jest w danych, bo waga zależy od wpisu:
+                  przemianowana grupa to błąd, usunięta usługa to uwaga, zmiana grupy
+                  nadrzędnej to informacja */
+  var KOLLA_MATRIX = {
+    schema: 1,
+    updated: "2026-08-10",
+
+    /* Opis klucza żyje tu raz, nie przy każdym wydaniu.
+       notable: klucz dotyczy każdego wdrożenia i narzędzie wspomina o nim zawsze.
+                false = klucz ma sens dopiero przy włączonej konkretnej usłudze,
+                więc czeka na przełączniki enable_* (issue #6). */
+    keys: {
+      om_enable_rabbitmq_stream_fanout: {
+        notable: true,
+        label: "kolejki strumieniowe dla fanoutów RabbitMQ",
+        why: "Przy wartości domyślnej <code>true</code> liderzy wszystkich strumieni potrafią " +
+             "wylądować na jednym brokerze. Przy trzech węzłach control warto zweryfikować " +
+             "rozłożenie liderów po wdrożeniu."
+      },
+      om_rabbitmq_qos_prefetch_count: {
+        notable: true,
+        label: "prefetch QoS dla RabbitMQ",
+        why: "Od 2026.1 domyślnie 50 zamiast wartości nieograniczonej — zmiana wpływa " +
+             "na rozkład obciążenia między workerami."
+      },
+      enable_ironic_inspector: {
+        notable: false,
+        label: "Ironic Inspector",
+        why: "Projekt wycofany; od 2025.1 domyślnie wyłączony i przewidziany do usunięcia."
+      },
+      enable_ironic_neutron_agent: {
+        notable: false,
+        label: "agent Neutron dla Ironic",
+        why: "Od 2025.1 domyślnie wyłączony."
+      }
+    },
+
+    releases: [
+      {
+        id: "2026.2", name: "Hibiscus", kolla: null, status: "development",
+        released: null, expected: "2026-09-30", endsOn: null,
+        baseDistros: null, unpublished: [], hostOs: [],
+        defaults: {},
+        deprecated: []
+      },
+      {
+        id: "2026.1", name: "Gazpacho", kolla: "22.x", status: "maintained",
+        released: "2026-04-01", expected: null, endsOn: "2027-10-27",
+        baseDistros: ["centos", "debian", "rocky", "ubuntu"],
+        unpublished: ["centos"],
+        hostOs: ["CentOS Stream 10", "Debian Trixie (13)", "Rocky Linux 10", "Ubuntu Noble (24.04)"],
+        defaults: {
+          om_enable_rabbitmq_stream_fanout: true,
+          om_rabbitmq_qos_prefetch_count: 50
+        },
+        deprecated: [
+          { kind: "group", name: "kolla-toolbox", replacedBy: "kolla_toolbox", sev: "error",
+            note: "Grupa i rola przemianowane — myślnik zastąpiony podkreśleniem. Stara nazwa nie zostanie rozpoznana." },
+          { kind: "service", name: "zun", replacedBy: null, sev: "warn",
+            note: "Usunięte w 2026.1 (niedziałające)." },
+          { kind: "service", name: "kuryr", replacedBy: null, sev: "warn",
+            note: "Usunięte razem z Zun, który był jedynym konsumentem." },
+          { kind: "service", name: "influxdb", replacedBy: null, sev: "warn",
+            note: "Usunięte — InfluxDB v1 osiągnęło EOL, migracji do v2 nie zaplanowano." },
+          { kind: "service", name: "telegraf", replacedBy: null, sev: "warn",
+            note: "Usunięte po wcześniejszej deprecjacji." },
+          { kind: "service", name: "venus", replacedBy: null, sev: "warn",
+            note: "Usunięte z powodu braku aktywności projektu." },
+          { kind: "group", name: "cinder-volume", replacedBy: null, sev: "info",
+            note: "Domyślna grupa nadrzędna zmieniona ze <code>storage</code> na <code>cinder</code>." },
+          { kind: "group", name: "cinder-backup", replacedBy: null, sev: "info",
+            note: "Domyślna grupa nadrzędna zmieniona ze <code>storage</code> na <code>cinder</code>." },
+          { kind: "key", name: "distro_python_version", replacedBy: null, sev: "warn",
+            note: "Usunięte." },
+          { kind: "key", name: "lightbits_JWT", replacedBy: "lightbits_jwt", sev: "error",
+            note: "Przemianowane — zmieniona wielkość liter." }
+        ]
+      },
+      {
+        id: "2025.2", name: "Flamingo", kolla: "21.x", status: "maintained",
+        released: "2025-10-01", expected: null, endsOn: "2027-04-28",
+        baseDistros: ["centos", "debian", "rocky", "ubuntu"],
+        unpublished: ["centos"],
+        hostOs: ["CentOS Stream 10", "Debian Bookworm (12)", "Rocky Linux 10", "Ubuntu Noble (24.04)"],
+        defaults: {
+          om_enable_rabbitmq_stream_fanout: true
+        },
+        deprecated: []
+      },
+      {
+        id: "2025.1", name: "Epoxy", kolla: "20.x", status: "maintained",
+        released: "2025-04-02", expected: null, endsOn: "2026-10-02",
+        baseDistros: ["centos", "debian", "rocky", "ubuntu"],
+        unpublished: ["centos"],
+        hostOs: ["CentOS Stream 9", "CentOS Stream 10", "Debian Bookworm (12)",
+                 "Rocky Linux 9", "Rocky Linux 10", "Ubuntu Noble (24.04)"],
+        defaults: {
+          om_enable_rabbitmq_stream_fanout: true,
+          enable_ironic_inspector: false,
+          enable_ironic_neutron_agent: false
+        },
+        deprecated: [
+          { kind: "key", name: "om_enable_rabbitmq_high_availability", replacedBy: null, sev: "error",
+            note: "Usunięte — kolejki quorum są od tego wydania obowiązkowe." },
+          { kind: "key", name: "letsencrypt_cert_server", replacedBy: "letsencrypt_external_cert_server", sev: "error",
+            note: "Przemianowane." },
+          { kind: "key", name: "openstack_previous_release_name", replacedBy: "ironic_pin_release_version", sev: "error",
+            note: "Przemianowane." },
+          { kind: "key", name: "ceph_cinder_keyring", replacedBy: null, sev: "warn", note: "Usunięte." },
+          { kind: "key", name: "ceph_cinder_backup_keyring", replacedBy: null, sev: "warn", note: "Usunięte." },
+          { kind: "key", name: "ceph_glance_keyring", replacedBy: null, sev: "warn", note: "Usunięte." },
+          { kind: "key", name: "ceph_gnocchi_keyring", replacedBy: null, sev: "warn", note: "Usunięte." },
+          { kind: "key", name: "ceph_manila_keyring", replacedBy: null, sev: "warn", note: "Usunięte." },
+          { kind: "key", name: "ceph_nova_keyring", replacedBy: null, sev: "warn", note: "Usunięte." },
+          { kind: "service", name: "swift", replacedBy: null, sev: "warn",
+            note: "Wsparcie dla wdrożenia Swift usunięte w 2025.1." }
+        ]
+      },
+      {
+        id: "2024.2", name: "Dalmatian", kolla: "19.x", status: "eol",
+        released: "2024-10-02", expected: null, endsOn: "2026-04-29",
+        baseDistros: ["centos", "debian", "rocky", "ubuntu"],
+        unpublished: ["centos"],
+        hostOs: ["CentOS Stream 9", "Debian Bookworm (12)", "Rocky Linux 9",
+                 "Ubuntu Jammy (22.04)", "Ubuntu Noble (24.04)"],
+        defaults: {},
+        deprecated: []
+      },
+      {
+        id: "2024.1", name: "Caracal", kolla: "18.x", status: "unmaintained",
+        released: "2024-04-03", expected: null, endsOn: null,
+        baseDistros: ["centos", "debian", "rocky", "ubuntu"],
+        unpublished: ["centos"],
+        hostOs: ["CentOS Stream 9", "Debian Bullseye (11)", "Debian Bookworm (12)",
+                 "openEuler 22.03 LTS", "Rocky Linux 9",
+                 "Ubuntu Jammy (22.04)", "Ubuntu Noble (24.04)"],
+        defaults: {},
+        deprecated: []
+      },
+
+      /* Wydania poniżej są poza wsparciem. Macierz distro celowo pozostaje pusta:
+         narzędzie ma powiedzieć "brak wsparcia", a nie sugerować konfigurację,
+         której nikt już nie testuje. */
+      { id: "2023.2", name: "Bobcat",   kolla: "17.x", status: "eol", released: "2023-10-04", expected: null, endsOn: "2025-04-30",
+        baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecated: [] },
+      { id: "2023.1", name: "Antelope", kolla: "16.x", status: "eol", released: "2023-03-22", expected: null, endsOn: null,
+        baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecated: [] },
+      { id: "zed",    name: "Zed",      kolla: "15.x", status: "eol", released: "2022-10-05", expected: null, endsOn: null,
+        baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecated: [] },
+      { id: "yoga",   name: "Yoga",     kolla: "14.x", status: "eol", released: "2022-03-30", expected: null, endsOn: null,
+        baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecated: [] }
+    ]
+  };
+  /* == KOLLA-MATRIX END == */
+
+  /* ------------------------------------------------------------------ */
+  /* macierz wydań — odczyt                                              */
+  /* ------------------------------------------------------------------ */
+
+  /* Opisy statusów są logiką prezentacji, nie danymi — dodanie wydania nie
+     wymaga ich ruszania. */
+  /* dateField wskazuje, które pole daty ma sens dla danego statusu — wydanie
+     jeszcze nieopublikowane ma datę planowaną, wycofane datę wycofania */
+  var RELEASE_STATUS = {
+    development: { level: "warn", dateField: "expected", dateLabel: "planowane wydanie",
+      text: "gałąź rozwojowa — wydanie nie ukazało się jeszcze jako stabilne" },
+    maintained: { level: null, dateField: null, dateLabel: "", text: "" },
+    unmaintained: { level: "warn", dateField: "endsOn", dateLabel: "od",
+      text: "wydanie bez utrzymania — poprawki, w tym bezpieczeństwa, nie powstają" },
+    eol: { level: "warn", dateField: "endsOn", dateLabel: "od",
+      text: "wydanie osiągnęło koniec życia" }
+  };
+
+  /* wejściem bywa 'stable/2025.1' albo nazwa własna ('Epoxy') */
+  function findRelease(value) {
+    var v = String(value == null ? "" : value).replace(/^stable\//, "").toLowerCase();
+    if (!v) return null;
+    var list = KOLLA_MATRIX.releases;
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].id.toLowerCase() === v) return list[i];
+      if (list[i].name && list[i].name.toLowerCase() === v) return list[i];
+    }
+    return null;
+  }
+
+  /* Zbiór dopuszczalnych obrazów bazowych to unia z wydań, dla których macierz ma
+     dane. Lista rozwijana w formularzu powstaje z tego samego źródła. */
+  var DISTROS = (function () {
+    var seen = Object.create(null), list = [];
+    KOLLA_MATRIX.releases.forEach(function (r) {
+      (r.baseDistros || []).forEach(function (dst) {
+        if (!seen[dst]) { seen[dst] = 1; list.push(dst); }
+      });
+    });
+    return list.sort();
+  })();
+
   /* wydania sprzed schematu RRRR.N — nadal spotykane w migracjach */
   var NAMED_RELEASES = ["victoria", "wallaby", "xena", "yoga", "zed"];
 
@@ -493,12 +697,27 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
   function validate(s) {
     var d = [];
+    var rel = findRelease(s.release);
 
     /* --- obraz bazowy --- */
     if (DISTROS.indexOf(s.distro) === -1) {
       d.push({
         level: "error", field: "distro",
         msg: "<code>kolla_base_distro</code>: wybierz jedną z obsługiwanych dystrybucji (" + DISTROS.join(", ") + ")."
+      });
+    } else if (rel && rel.baseDistros && rel.baseDistros.indexOf(s.distro) === -1) {
+      d.push({
+        level: "error", field: "distro",
+        msg: "<code>" + esc(s.distro) + "</code> nie jest obsługiwanym obrazem bazowym w wydaniu <code>" +
+             esc(rel.id) + "</code>. Dopuszczalne: " +
+             rel.baseDistros.map(function (x) { return "<code>" + esc(x) + "</code>"; }).join(", ") + "."
+      });
+    } else if (rel && (rel.unpublished || []).indexOf(s.distro) !== -1) {
+      d.push({
+        level: "warn", field: "distro",
+        msg: "Wydanie <code>" + esc(rel.id) + "</code> dopuszcza <code>" + esc(s.distro) +
+             "</code> w konfiguracji, ale Kolla nie publikuje dla niego obrazów. " +
+             "Obrazy trzeba zbudować samodzielnie albo wybrać inny obraz bazowy."
       });
     }
 
@@ -525,6 +744,43 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           level: "warn", field: "release",
           msg: "<code>openstack_release</code>: nietypowa wartość <code>" + esc(s.release) +
                "</code>. Kolla używa formatu <code>RRRR.N</code> (np. 2025.1), nazwy wydania albo <code>master</code>."
+        });
+      }
+
+      /* --- macierz wydań --- */
+      /* 'master' celowo omija macierz: to ruchomy cel, a nie wydanie. */
+      if (base !== "master" && !rel) {
+        d.push({
+          level: "warn", field: "release",
+          msg: "<code>" + esc(base) + "</code> nie występuje w macierzy wydań (stan na " +
+               esc(KOLLA_MATRIX.updated) + "). Zgodności obrazu bazowego z wydaniem nie da się sprawdzić."
+        });
+      } else if (rel) {
+        var st = RELEASE_STATUS[rel.status];
+        if (st && st.level) {
+          var dt = st.dateField ? rel[st.dateField] : null;
+          d.push({
+            level: st.level, field: "release",
+            msg: "<code>" + esc(rel.id) + "</code> (" + esc(rel.name) +
+                 (rel.kolla ? ", kolla-ansible " + esc(rel.kolla) : "") + "): " + st.text +
+                 (dt ? " — " + st.dateLabel + ": <code>" + esc(dt) + "</code>" : "") + "."
+          });
+        }
+        if (rel.hostOs && rel.hostOs.length) {
+          d.push({
+            level: "info", field: null,
+            msg: "Systemy hosta wspierane w wydaniu <code>" + esc(rel.id) + "</code>: " +
+                 rel.hostOs.map(esc).join(", ") + "."
+          });
+        }
+        Object.keys(rel.defaults).forEach(function (key) {
+          var meta = KOLLA_MATRIX.keys[key];
+          if (!meta || !meta.notable) return;
+          d.push({
+            level: "info", field: null,
+            msg: "<code>" + esc(key) + "</code> — w tym wydaniu wartość domyślna to <code>" +
+                 esc(String(rel.defaults[key])) + "</code> (" + meta.label + "). " + meta.why
+          });
         });
       }
     }
@@ -678,6 +934,11 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       L.push("#");
       L.push("# Plik konfiguracyjny Kolla-Ansible: /etc/kolla/globals.yml");
       L.push("# Docelowe wydanie: " + fc(s, bad, "release") + "   |   obraz bazowy: " + fc(s, bad, "distro"));
+      var relC = bad.release ? null : findRelease(s.release);
+      if (relC) {
+        L.push("# " + cmt(relC.name) + (relC.kolla ? ", kolla-ansible " + cmt(relC.kolla) : "") +
+               ", status wsparcia: " + cmt(relC.status));
+      }
       L.push("#");
       L.push("# Zweryfikuj wartości na docelowych hostach przed uruchomieniem");
       L.push("# 'kolla-ansible prechecks' oraz 'kolla-ansible deploy'.");
@@ -972,7 +1233,28 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     download(exportText(), "globals.yml");
   });
 
+  /* Formularz dostaje treść z macierzy, żeby dodanie wydania albo obrazu bazowego
+     nie wymagało dotykania znaczników HTML. */
+  function populateFromMatrix() {
+    el.distro.innerHTML = DISTROS.map(function (dst) {
+      return '<option value="' + esc(dst) + '">' + esc(dst) + "</option>";
+    }).join("");
+
+    var statusTag = {
+      development: "w rozwoju", maintained: "wspierane",
+      unmaintained: "bez utrzymania", eol: "EOL"
+    };
+    document.getElementById("releases").innerHTML =
+      KOLLA_MATRIX.releases.map(function (r) {
+        var label = r.name + (r.kolla ? " · kolla-ansible " + r.kolla : "") +
+                    " · " + (statusTag[r.status] || r.status);
+        return '<option value="' + esc(r.id) + '" label="' + esc(label) + '"></option>';
+      }).join("") +
+      '<option value="master" label="gałąź rozwojowa"></option>';
+  }
+
   /* ------------------------------------------------------------------ */
+  populateFromMatrix();
   applyState(load() || DEFAULTS);
   refresh();
 })();
