@@ -33,11 +33,17 @@ function stubNode(id) {
 
 function installDom() {
   var nodes = Object.create(null);
+  /* Warstwa i18n dotyka documentElement i selektorów. Stub musi je mieć, inaczej
+     samo wczytanie narzędzia rzuca wyjątkiem — a test ma sprawdzać reguły,
+     nie przewracać się na szkielecie strony. */
   global.document = {
     getElementById: function (id) { return nodes[id] || (nodes[id] = stubNode(id)); },
     createElement: function () { return stubNode("tmp"); },
     addEventListener: function () {},
     body: stubNode("body"),
+    documentElement: stubNode("html"),
+    querySelector: function () { return null; },
+    querySelectorAll: function () { return []; },
     execCommand: function () { return true; }
   };
   global.window = {
