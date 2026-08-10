@@ -27,6 +27,12 @@
                   poza wsparciem — narzędzie nie zgaduje)
      unpublished: distro dopuszczalne w konfiguracji, ale bez publikowanych obrazów
      hostOs:      systemy hosta wspierane przez to wydanie (informacyjnie)
+     released:    data wydania; null, jeśli jeszcze nie wydane
+     expected:    planowana data wydania — wyłącznie dla status 'development'
+     endsOn:      data zmiany statusu wsparcia: dla 'maintained' planowana, dla
+                  'unmaintained' i 'eol' ta, w której nastąpiła; dla 'development'
+                  null — wydanie, które się nie ukazało, nie ma kiedy przestać być
+                  wspierane
      defaults:    domyślne wartości istotne dla decyzji wdrożeniowych; opis klucza
                   leży w keys[] — jeden opis na klucz, nie na wydanie
      deprecated:  { kind: 'key'|'group'|'service', name, replacedBy, sev, note }
@@ -71,14 +77,14 @@
     releases: [
       {
         id: "2026.2", name: "Hibiscus", kolla: null, status: "development",
-        released: null, endsOn: "2026-09-30",
+        released: null, expected: "2026-09-30", endsOn: null,
         baseDistros: null, unpublished: [], hostOs: [],
         defaults: {},
         deprecated: []
       },
       {
         id: "2026.1", name: "Gazpacho", kolla: "22.x", status: "maintained",
-        released: "2026-04-01", endsOn: "2027-10-27",
+        released: "2026-04-01", expected: null, endsOn: "2027-10-27",
         baseDistros: ["centos", "debian", "rocky", "ubuntu"],
         unpublished: ["centos"],
         hostOs: ["CentOS Stream 10", "Debian Trixie (13)", "Rocky Linux 10", "Ubuntu Noble (24.04)"],
@@ -111,7 +117,7 @@
       },
       {
         id: "2025.2", name: "Flamingo", kolla: "21.x", status: "maintained",
-        released: "2025-10-01", endsOn: "2027-04-28",
+        released: "2025-10-01", expected: null, endsOn: "2027-04-28",
         baseDistros: ["centos", "debian", "rocky", "ubuntu"],
         unpublished: ["centos"],
         hostOs: ["CentOS Stream 10", "Debian Bookworm (12)", "Rocky Linux 10", "Ubuntu Noble (24.04)"],
@@ -122,9 +128,9 @@
       },
       {
         id: "2025.1", name: "Epoxy", kolla: "20.x", status: "maintained",
-        released: "2025-04-02", endsOn: "2026-10-02",
+        released: "2025-04-02", expected: null, endsOn: "2026-10-02",
         baseDistros: ["centos", "debian", "rocky", "ubuntu"],
-        unpublished: [],
+        unpublished: ["centos"],
         hostOs: ["CentOS Stream 9", "CentOS Stream 10", "Debian Bookworm (12)",
                  "Rocky Linux 9", "Rocky Linux 10", "Ubuntu Noble (24.04)"],
         defaults: {
@@ -151,7 +157,7 @@
       },
       {
         id: "2024.2", name: "Dalmatian", kolla: "19.x", status: "eol",
-        released: "2024-10-02", endsOn: "2026-04-29",
+        released: "2024-10-02", expected: null, endsOn: "2026-04-29",
         baseDistros: ["centos", "debian", "rocky", "ubuntu"],
         unpublished: ["centos"],
         hostOs: ["CentOS Stream 9", "Debian Bookworm (12)", "Rocky Linux 9",
@@ -161,9 +167,9 @@
       },
       {
         id: "2024.1", name: "Caracal", kolla: "18.x", status: "unmaintained",
-        released: "2024-04-03", endsOn: null,
+        released: "2024-04-03", expected: null, endsOn: null,
         baseDistros: ["centos", "debian", "rocky", "ubuntu"],
-        unpublished: [],
+        unpublished: ["centos"],
         hostOs: ["CentOS Stream 9", "Debian Bullseye (11)", "Debian Bookworm (12)",
                  "openEuler 22.03 LTS", "Rocky Linux 9",
                  "Ubuntu Jammy (22.04)", "Ubuntu Noble (24.04)"],
@@ -174,13 +180,13 @@
       /* Wydania poniżej są poza wsparciem. Macierz distro celowo pozostaje pusta:
          narzędzie ma powiedzieć "brak wsparcia", a nie sugerować konfigurację,
          której nikt już nie testuje. */
-      { id: "2023.2", name: "Bobcat",   kolla: "17.x", status: "eol", released: "2023-10-04", endsOn: "2025-04-30",
+      { id: "2023.2", name: "Bobcat",   kolla: "17.x", status: "eol", released: "2023-10-04", expected: null, endsOn: "2025-04-30",
         baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecated: [] },
-      { id: "2023.1", name: "Antelope", kolla: "16.x", status: "eol", released: "2023-03-22", endsOn: null,
+      { id: "2023.1", name: "Antelope", kolla: "16.x", status: "eol", released: "2023-03-22", expected: null, endsOn: null,
         baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecated: [] },
-      { id: "zed",    name: "Zed",      kolla: "15.x", status: "eol", released: "2022-10-05", endsOn: null,
+      { id: "zed",    name: "Zed",      kolla: "15.x", status: "eol", released: "2022-10-05", expected: null, endsOn: null,
         baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecated: [] },
-      { id: "yoga",   name: "Yoga",     kolla: "14.x", status: "eol", released: "2022-03-30", endsOn: null,
+      { id: "yoga",   name: "Yoga",     kolla: "14.x", status: "eol", released: "2022-03-30", expected: null, endsOn: null,
         baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecated: [] }
     ]
   };

@@ -73,6 +73,15 @@ ok("unpublished zawiera się w baseDistros", M.releases.every(function (r) {
 ok("klucze z defaults mają opis w keys[]", M.releases.every(function (r) {
   return Object.keys(r.defaults).every(function (k) { return !!M.keys[k]; });
 }));
+ok("tylko wydanie rozwojowe ma datę planowaną", M.releases.every(function (r) {
+  return r.status === "development" ? !!r.expected : r.expected === null;
+}));
+ok("wydanie rozwojowe nie ma daty końca wsparcia", M.releases.every(function (r) {
+  return r.status !== "development" || r.endsOn === null;
+}));
+ok("wydanie rozwojowe nie ma daty wydania", M.releases.every(function (r) {
+  return r.status !== "development" || r.released === null;
+}));
 ok("deprecated ma poprawne rodzaje", M.releases.every(function (r) {
   return r.deprecated.every(function (x) { return ["key", "group", "service"].indexOf(x.kind) !== -1 && !!x.name; });
 }));
@@ -98,17 +107,29 @@ ok("2025.1 wypisuje systemy hosta", has(d, "info", /Ubuntu Noble/));
 d = T.validate(base({ release: "2025.2", distro: "centos" }));
 ok("centos w 2025.2 -> uwaga o braku obrazów", has(d, "warn", /nie publikuje dla niego obrazów/));
 
+/* docs 2025.1: "Kolla does not publish CS9/10 based images" */
 d = T.validate(base({ release: "2025.1", distro: "centos" }));
-ok("centos w 2025.1 -> bez uwagi o obrazach", !has(d, "warn", /nie publikuje/));
+ok("centos w 2025.1 -> uwaga o braku obrazów", has(d, "warn", /nie publikuje dla niego obrazów/));
+
+/* docs 2024.1: "Kolla does not publish CS9 based images" */
+d = T.validate(base({ release: "2024.1", distro: "centos" }));
+ok("centos w 2024.1 -> uwaga o braku obrazów", has(d, "warn", /nie publikuje dla niego obrazów/));
+
+d = T.validate(base({ release: "2025.1", distro: "rocky" }));
+ok("rocky w 2025.1 -> bez uwagi o obrazach", !has(d, "warn", /nie publikuje/));
 
 d = T.validate(base({ release: "2024.2" }));
 ok("2024.2 -> uwaga o EOL", has(d, "warn", /koniec życia/));
+ok("2024.2 -> data wycofania z pola endsOn", has(d, "warn", /od: <code>2026-04-29<\/code>/));
 
 d = T.validate(base({ release: "2024.1" }));
 ok("2024.1 -> uwaga o braku utrzymania", has(d, "warn", /bez utrzymania/));
+ok("2024.1 bez znanej daty -> bez ogona z datą", !has(d, "warn", /bez utrzymania.* — od:/));
 
 d = T.validate(base({ release: "2026.2" }));
 ok("2026.2 -> uwaga o gałęzi rozwojowej", has(d, "warn", /gałąź rozwojowa/));
+ok("2026.2 -> data planowanego wydania, nie końca wsparcia",
+   has(d, "warn", /planowane wydanie: <code>2026-09-30<\/code>/));
 
 d = T.validate(base({ release: "2026.1" }));
 ok("2026.1 (wspierane) -> brak uwagi o statusie",

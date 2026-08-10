@@ -61,8 +61,12 @@ ok("2026.1 (wspierane) -> brak wpisu", !hasCode(run("", "2026.1"), "WYDANIE"));
 var r = run("", "2024.2");
 ok("2024.2 -> uwaga o EOL", hasCode(r, "WYDANIE") && /koniec życia/.test(find(r, "WYDANIE")[0].msg));
 ok("2024.2 -> waga 'warn'", find(r, "WYDANIE")[0].sev === "warn");
+ok("2024.2 -> data wycofania z pola endsOn", /od: <code>2026-04-29<\/code>/.test(find(r, "WYDANIE")[0].msg));
 r = run("", "2024.1");
 ok("2024.1 -> uwaga o braku utrzymania", /bez utrzymania/.test(find(r, "WYDANIE")[0].msg));
+r = run("", "2026.2");
+ok("2026.2 -> data planowanego wydania, nie końca wsparcia",
+   /planowane wydanie: <code>2026-09-30<\/code>/.test(find(r, "WYDANIE")[0].msg));
 
 console.log("grupy wycofane i przemianowane:");
 r = run("\n[zun]\ncmp01\n", "2026.1");
