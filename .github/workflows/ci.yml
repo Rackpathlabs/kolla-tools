@@ -44,6 +44,12 @@ jobs:
       - name: Spójność macierzy wydań
         run: bash tools/check-matrix.sh
 
+      # Zastępuje test przeglądarkowy z AC issue #4 — ten wymagałby npm.
+      # Polityka CSP jest przypięta co do znaku, więc jej zmiana wywala build
+      # i wymusza powtórzenie ręcznej weryfikacji w przeglądarce.
+      - name: Gwarancja offline (CSP, API sieciowe, zasoby zewnętrzne)
+        run: node tools/check-offline.js
+
       # Składnia (node --check), testy dymne i golden-file dla obu narzędzi.
       - name: Pełny zestaw testów
         run: bash tools/run-tests.sh

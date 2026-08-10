@@ -40,6 +40,10 @@ echo "== higiena plików =="
 bash tools/check-binary.sh || rc=1
 
 echo
+echo "== gwarancja offline =="
+"$NODE" tools/check-offline.js || rc=1
+
+echo
 echo "== spójność macierzy =="
 bash tools/check-matrix.sh || rc=1
 
