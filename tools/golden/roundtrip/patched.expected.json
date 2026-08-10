@@ -1,0 +1,32 @@
+{
+  "ok": true,
+  "keys": [
+    {
+      "key": "kolla_base_distro",
+      "kind": "scalar",
+      "line": 3
+    },
+    {
+      "key": "openstack_release",
+      "kind": "scalar",
+      "line": 4
+    },
+    {
+      "key": "network_interface",
+      "kind": "scalar",
+      "line": 5
+    },
+    {
+      "key": "enable_cinder",
+      "kind": "scalar",
+      "line": 6
+    },
+    {
+      "key": "kolla_internal_vip_address",
+      "kind": "scalar",
+      "line": 7
+    }
+  ],
+  "findings": [],
+  "review": []
+}

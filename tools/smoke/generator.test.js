@@ -4,7 +4,8 @@ var lib = require("../testlib");
 lib.installDom();
 var T = lib.loadTool(process.argv[2],
   ["validate", "findRelease", "DISTROS", "KOLLA_MATRIX", "buildYaml", "badFields",
-   "DEFAULTS", "baseDev", "physnets", "LINT"]);
+   "DEFAULTS", "baseDev", "physnets", "LINT",
+   "GLOBALS", "rawStateFromParsed", "changedOverrides", "yamlBool"]);
 
 var R = lib.runner();
 var ok = R.ok;
@@ -194,6 +195,103 @@ d = T.validate(base({ t_octavia: true }));
 ok("Octavia bez Barbicana -> błąd", has(d, "error", /enable_octavia<\/code> wymaga/));
 d = T.validate(base({ t_masakari: true }));
 ok("Masakari bez hacluster -> błąd", has(d, "error", /enable_masakari<\/code> wymaga/));
+
+/* ---- parser globals.yml (blok współdzielony, issue #7) ---- */
+
+console.log("parser — podzbiór obsługiwany:");
+var P = T.GLOBALS;
+var doc = P.parse('---\nkolla_base_distro: "rocky"\nnetwork_interface: eth0  # zarządzanie\nempty_key:\n');
+ok("skalar w cudzysłowie", doc.keys.kolla_base_distro.value === "rocky");
+ok("skalar goły z komentarzem końcowym", doc.keys.network_interface.value === "eth0");
+ok("klucz bez wartości daje null", doc.keys.empty_key.value === null);
+ok("numer linii dla każdego klucza",
+   doc.keys.kolla_base_distro.line === 2 && doc.keys.network_interface.line === 3);
+ok("kolejność kluczy zachowana",
+   doc.order.join(",") === "kolla_base_distro,network_interface,empty_key");
+
+doc = P.parse("---\noctavia_amp_network:\n  provider_network_type: vlan\n  provider_physical_network: physnet2\n");
+ok("mapping zagnieżdżony", doc.keys.octavia_amp_network.kind === "map" &&
+   doc.keys.octavia_amp_network.value.provider_network_type === "vlan");
+doc = P.parse("---\nlista:\n  - a\n  - b\nflow: [x, y]\n");
+ok("lista blokowa", doc.keys.lista.kind === "list" && doc.keys.lista.value.join(",") === "a,b");
+ok("lista przepływowa", doc.keys.flow.value.join(",") === "x,y");
+
+console.log("parser — konstrukcje poza podzbiorem:");
+doc = P.parse("---\nklucz: |\n  wiersz\n");
+ok("skalar blokowy -> błąd", !doc.ok && doc.findings[0].sev === "error");
+ok("błąd wskazuje linię", doc.findings[0].line === 2, String(doc.findings[0].line));
+ok("jeden błąd, bez kaskady", doc.findings.length === 1, String(doc.findings.length));
+doc = P.parse("---\nklucz: &kotwica\n  a: 1\n");
+ok("kotwica -> błąd z linią", !doc.ok && doc.findings[0].line === 2);
+doc = P.parse("---\nklucz: wartosc\n---\ninny: wartosc\n");
+ok("drugi dokument -> błąd", !doc.ok && doc.findings.some(function (f) { return f.line === 3; }));
+doc = P.parse("---\nklucz:\n\twartosc: 1\n");
+ok("wcięcie tabulatorem -> błąd", !doc.ok);
+
+console.log("parser — round-trip:");
+var src = '---\n# komentarz\nklucz: "wartosc"   # koniec linii\ninny: 1\n';
+ok("emisja bez podmian jest bajtowo identyczna", P.emit(P.parse(src), {}).text === src);
+var em = P.emit(P.parse(src), { klucz: "nowa" });
+ok("podmiana zachowuje komentarz końcowy", /klucz: "nowa"   # koniec linii/.test(em.text), em.text);
+ok("podmiana nie rusza pozostałych linii", /^---\n# komentarz\n/.test(em.text));
+ok("klucz spoza pliku trafia na koniec z adnotacją",
+   /# Klucze dodane przy eksporcie/.test(P.emit(P.parse(src), { nowy: "x" }).text));
+ok("klucz niebędący skalarem jest pomijany, nie psuty",
+   P.emit(P.parse("---\nlista:\n  - a\n"), { lista: "x" }).skipped.join(",") === "lista");
+
+console.log("parser — przegląd kluczy wobec wydania:");
+doc = P.parse('---\nom_enable_rabbitmq_high_availability: "yes"\nnieznany_klucz: 1\n');
+var rv = P.review(doc, T.findRelease("2025.1"), { om_enable_rabbitmq_high_availability: 1 });
+ok("wycofany klucz z wagą z macierzy",
+   rv.some(function (f) { return f.code === "KLUCZ-WYCOFANY" && f.sev === "error" && f.line === 2; }));
+ok("nieznany klucz jako informacja",
+   rv.some(function (f) { return f.code === "KLUCZ-NIEZNANY" && f.sev === "info" && f.line === 3; }));
+ok("bez wydania brak uwag o wycofaniu",
+   !P.review(doc, null, {}).some(function (f) { return f.code === "KLUCZ-WYCOFANY"; }));
+
+console.log("import do formularza:");
+doc = P.parse('---\nkolla_base_distro: "ubuntu"\nenable_cinder: "yes"\ncinder_backend_ceph: "yes"\n' +
+              'octavia_amp_network:\n  provider_network_type: vlan\n  provider_physical_network: physnet2\n');
+var st = T.rawStateFromParsed(doc);
+ok("wartości tekstowe trafiają do pól", st.distro === "ubuntu");
+ok("wartości logiczne z yes/no", st.t_cinder === true);
+ok("backend magazynu wywnioskowany z kluczy backendów", st.storage === "ceph");
+ok("mapping zagnieżdżony zasila dwa pola", st.amp_net === "vlan" && st.physnet === "physnet2");
+ok("yes/no/true/false rozpoznane",
+   T.yamlBool("yes") === true && T.yamlBool("FALSE") === false && T.yamlBool("cokolwiek") === null);
+
+var st2 = T.rawStateFromParsed(doc);
+st2.distro = "rocky";
+var ov = T.changedOverrides(doc, st2);
+ok("podmiana tylko dla zmienionych kluczy",
+   Object.keys(ov).join(",") === "kolla_base_distro" && ov.kolla_base_distro === "rocky",
+   JSON.stringify(ov));
+ok("bez zmian brak podmian",
+   Object.keys(T.changedOverrides(doc, T.rawStateFromParsed(doc))).length === 0);
+
+console.log("styk kontraktu KV-12a z importem:");
+/* Jedyne miejsce, gdzie dwie zasady się stykają: kontrakt „generator wypisuje klucz
+   krytyczny jawnie" kontra „import niczego nie dopisuje". Wygrywa round-trip bajtowy,
+   a brak klucza ma być diagnostyką — nie edycją cudzego pliku. */
+var noKey = '---\nkolla_base_distro: "rocky"\nopenstack_release: "2025.1"\nenable_haproxy: "yes"\n';
+var docNo = P.parse(noKey);
+var stNo = T.rawStateFromParsed(docNo);
+var dNo = T.validate(stNo, docNo);
+ok("import bez klucza -> uwaga, a nie fałszywa informacja o jawnym ustawieniu",
+   has(dNo, "warn", /om_enable_rabbitmq_stream_fanout/) && !has(dNo, "info", /ustawiony jawnie/));
+ok("komunikat mówi wprost, że import nie dopisuje kluczy",
+   has(dNo, "warn", /nie dopisuje brakujących kluczy/));
+ok("eksport nie dopisuje klucza — plik wraca bajtowo identyczny",
+   P.emit(docNo, T.changedOverrides(docNo, stNo)).text === noKey);
+
+var docYes = P.parse(noKey.replace("enable_haproxy",
+  'om_enable_rabbitmq_stream_fanout: "yes"\nenable_haproxy'));
+ok("import z kluczem -> informacja o jawnym ustawieniu",
+   has(T.validate(T.rawStateFromParsed(docYes), docYes), "info", /ustawiony jawnie/));
+
+ok("tryb generowania od zera nadal spełnia kontrakt KV-12a",
+   has(T.validate(base(), null), "info", /ustawiony jawnie/) &&
+   !has(T.validate(base(), null), "warn", /om_enable_rabbitmq_stream_fanout/));
 
 console.log("YAML:");
 var y = T.buildYaml(base(), {});

@@ -5,8 +5,8 @@
  * identycznie do generator.html i validator.html między te same znaczniki.
  *
  * Zmiana macierzy = edycja TEGO pliku, potem:
- *     bash tools/sync-matrix.sh      # przepisuje blok do obu plików HTML
- *     bash tools/check-matrix.sh     # sprawdza, że wszystkie trzy kopie są zgodne
+ *     bash tools/sync-blocks.sh      # przepisuje bloki do obu plików HTML
+ *     bash tools/check-blocks.sh     # sprawdza, że wszystkie kopie są zgodne
  *
  * Wcięcie dwóch spacji jest celowe — blok żyje wewnątrz IIFE w obu plikach HTML
  * i musi być tam identyczny co do bajtu.

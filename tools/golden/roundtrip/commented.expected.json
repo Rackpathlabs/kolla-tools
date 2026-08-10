@@ -1,0 +1,54 @@
+{
+  "ok": true,
+  "keys": [
+    {
+      "key": "kolla_base_distro",
+      "kind": "scalar",
+      "line": 6
+    },
+    {
+      "key": "openstack_release",
+      "kind": "scalar",
+      "line": 7
+    },
+    {
+      "key": "network_interface",
+      "kind": "scalar",
+      "line": 10
+    },
+    {
+      "key": "neutron_external_interface",
+      "kind": "scalar",
+      "line": 11
+    },
+    {
+      "key": "kolla_internal_vip_address",
+      "kind": "scalar",
+      "line": 12
+    },
+    {
+      "key": "enable_haproxy",
+      "kind": "scalar",
+      "line": 14
+    },
+    {
+      "key": "enable_cinder",
+      "kind": "scalar",
+      "line": 15
+    },
+    {
+      "key": "nova_compute_virt_type",
+      "kind": "scalar",
+      "line": 18
+    }
+  ],
+  "findings": [],
+  "review": [
+    {
+      "code": "KLUCZ-NIEZNANY",
+      "sev": "info",
+      "key": "nova_compute_virt_type",
+      "line": 18
+    }
+  ]
+}

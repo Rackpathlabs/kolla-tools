@@ -44,8 +44,8 @@ echo "== gwarancja offline =="
 "$NODE" tools/check-offline.js || rc=1
 
 echo
-echo "== spójność macierzy =="
-bash tools/check-matrix.sh || rc=1
+echo "== spójność bloków współdzielonych =="
+bash tools/check-blocks.sh || rc=1
 
 echo
 echo "== składnia =="
@@ -65,6 +65,10 @@ echo "== walidator =="
 echo
 echo "== golden: generator =="
 "$NODE" tools/golden/generator.golden.js .gen.test.tmp.js $GOLDEN_FLAG || rc=1
+
+echo
+echo "== golden: round-trip parsera =="
+"$NODE" tools/golden/roundtrip.golden.js .gen.test.tmp.js $GOLDEN_FLAG || rc=1
 
 echo
 echo "== golden: walidator =="

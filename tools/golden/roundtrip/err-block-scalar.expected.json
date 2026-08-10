@@ -1,0 +1,18 @@
+{
+  "ok": false,
+  "keys": [
+    {
+      "key": "kolla_base_distro",
+      "kind": "scalar",
+      "line": 3
+    }
+  ],
+  "findings": [
+    {
+      "code": "NIEOBSLUGIWANE",
+      "sev": "error",
+      "line": 4
+    }
+  ],
+  "review": []
+}

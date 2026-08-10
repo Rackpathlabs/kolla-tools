@@ -1,0 +1,4 @@
+{
+  "network_interface": "bond0.10",
+  "enable_cinder": "yes"
+}

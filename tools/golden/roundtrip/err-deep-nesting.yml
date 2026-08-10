@@ -1,0 +1,6 @@
+# golden-release: 2026.1
+---
+octavia_amp_network:
+  provider:
+    type: vlan
+    physnet: physnet1

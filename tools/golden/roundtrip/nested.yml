@@ -1,0 +1,9 @@
+# golden-release: 2026.1
+---
+enable_octavia: "yes"
+octavia_amp_network:
+  name: lb-mgmt-net
+  provider_network_type: vlan
+  provider_physical_network: physnet2
+  provider_segmentation_id: 107
+enable_barbican: "yes"

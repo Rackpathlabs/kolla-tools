@@ -4,7 +4,7 @@ var lib = require("../testlib");
 lib.installDom();
 var T = lib.loadTool(process.argv[2],
   ["parse", "analyse", "buildReport", "KOLLA_MATRIX", "findRelease",
-   "defaultRelease", "SAMPLE_OK"]);
+   "defaultRelease", "SAMPLE_OK", "GLOBALS"]);
 
 var R = lib.runner();
 var ok = R.ok;
@@ -290,6 +290,16 @@ ok("nazwany kompromis (rezerwa zasobów)",
    /rezerw/.test(find(r, "KOLOKACJA-STORAGE")[0].hint));
 r = runInv(inv(DISJOINT));
 ok("magazyn osobno -> cisza", !hasCode(r, "KOLOKACJA-STORAGE"));
+
+/* Blok parsera jest w walidatorze obecny i sprawny, ale jeszcze nieużywany w UI —
+   konsumentem będzie tryb łączony (#18). Test pilnuje, że blok nie zniknie po drodze. */
+console.log("blok parsera globals (nieużywany w UI):");
+ok("GLOBALS obecny w walidatorze", typeof T.GLOBALS === "object" && T.GLOBALS !== null);
+var pdoc = T.GLOBALS.parse('---\nkolla_internal_vip_address: "10.0.0.250"\ncinder_cluster_name: prod\n');
+ok("parsuje i podaje numery linii",
+   pdoc.ok && pdoc.keys.kolla_internal_vip_address.line === 2 && pdoc.keys.cinder_cluster_name.line === 3);
+ok("round-trip działa też tutaj",
+   T.GLOBALS.emit(pdoc, {}).text === '---\nkolla_internal_vip_address: "10.0.0.250"\ncinder_cluster_name: prod\n');
 
 console.log("raport:");
 var res = run("", "2026.1");

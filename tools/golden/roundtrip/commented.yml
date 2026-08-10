@@ -1,0 +1,18 @@
+# golden-release: 2026.1
+---
+# Plik odziedziczony po poprzedniej ekipie.
+# Nie ruszać sekcji sieciowej bez uzgodnienia.
+
+kolla_base_distro: "rocky"
+openstack_release: "2026.1"          # pinned po incydencie z marca
+
+# --- sieć ---
+network_interface: bond0.10          # zarządzanie
+neutron_external_interface: bond1
+kolla_internal_vip_address: "10.0.0.250"
+
+enable_haproxy: "yes"
+enable_cinder: 'yes'                 # apostrofy, bo tak było w szablonie
+
+# klucz, o którym generator nic nie wie — ma przetrwać eksport
+nova_compute_virt_type: kvm

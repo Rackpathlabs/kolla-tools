@@ -41,8 +41,8 @@ jobs:
       - name: Higiena plików (bajty NUL)
         run: bash tools/check-binary.sh
 
-      - name: Spójność macierzy wydań
-        run: bash tools/check-matrix.sh
+      - name: Spójność bloków współdzielonych
+        run: bash tools/check-blocks.sh
 
       # Zastępuje test przeglądarkowy z AC issue #4 — ten wymagałby npm.
       # Polityka CSP jest przypięta co do znaku, więc jej zmiana wywala build

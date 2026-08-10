@@ -1,0 +1,7 @@
+# golden-release: 2026.1
+---
+kolla_base_distro: "rocky"
+openstack_release: "2026.1"
+network_interface: eth0              # zostanie podmienione
+enable_cinder: "no"
+kolla_internal_vip_address: "10.0.0.250"

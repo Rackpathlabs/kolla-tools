@@ -1,0 +1,8 @@
+# golden-release: 2025.1
+---
+kolla_base_distro: "rocky"
+openstack_release: "2025.1"
+om_enable_rabbitmq_high_availability: "yes"
+letsencrypt_cert_server: "https://acme-v02.api.letsencrypt.org/directory"
+ceph_cinder_keyring: "ceph.client.cinder.keyring"
+enable_haproxy: "yes"

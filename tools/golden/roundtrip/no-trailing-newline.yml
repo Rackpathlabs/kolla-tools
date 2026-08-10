@@ -1,0 +1,4 @@
+# golden-release: 2026.1
+---
+kolla_base_distro: "rocky"
+openstack_release: "2026.1"

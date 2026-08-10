@@ -1,0 +1,7 @@
+# golden-release: 2026.1
+---
+octavia_provider_drivers:
+  - amphora
+  - ovn
+neutron_bridge_name: [br-ex, br-ex2]
+enable_neutron_provider_networks: "yes"
