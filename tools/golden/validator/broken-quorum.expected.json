@@ -1,0 +1,30 @@
+{
+  "release": "2026.1",
+  "findings": [
+    {
+      "code": "KWORUM-LICZBA",
+      "sev": "error",
+      "line": 5
+    },
+    {
+      "code": "KWORUM-OVN",
+      "sev": "error",
+      "line": 22
+    },
+    {
+      "code": "GRUPA-PRZEMIANOWANA",
+      "sev": "error",
+      "line": 26
+    },
+    {
+      "code": "BRAMA-BEZ-HA",
+      "sev": "warn",
+      "line": 9
+    },
+    {
+      "code": "GRUPA-WYCOFANA",
+      "sev": "warn",
+      "line": 29
+    }
+  ]
+}

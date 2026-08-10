@@ -1,0 +1,12 @@
+{
+  "distro": "debian",
+  "release": "2024.2",
+  "vip": "192.168.10.9",
+  "net_if": "bond0.10",
+  "ext_if": "bond1",
+  "t_haproxy": true,
+  "t_cinder": true,
+  "t_prometheus": false,
+  "t_provider": false,
+  "t_comments": false
+}

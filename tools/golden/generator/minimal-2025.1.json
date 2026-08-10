@@ -1,0 +1,12 @@
+{
+  "distro": "rocky",
+  "release": "2025.1",
+  "vip": "10.0.0.250",
+  "net_if": "eth0",
+  "ext_if": "eth1",
+  "t_haproxy": true,
+  "t_cinder": false,
+  "t_prometheus": false,
+  "t_provider": false,
+  "t_comments": true
+}

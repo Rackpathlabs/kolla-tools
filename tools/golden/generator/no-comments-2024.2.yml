@@ -1,0 +1,16 @@
+---
+# Generated with Rackpathlabs globals.yml generator
+
+kolla_base_distro: "debian"
+openstack_release: "2024.2"
+
+network_interface: "bond0.10"
+neutron_external_interface: "bond1"
+kolla_internal_vip_address: "192.168.10.9"
+
+enable_haproxy: "yes"
+
+enable_cinder: "yes"
+enable_prometheus: "no"
+
+enable_neutron_provider_networks: "no"

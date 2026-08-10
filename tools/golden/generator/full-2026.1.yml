@@ -1,0 +1,54 @@
+---
+# Generated with Rackpathlabs globals.yml generator
+#
+# Plik konfiguracyjny Kolla-Ansible: /etc/kolla/globals.yml
+# Docelowe wydanie: 2026.1   |   obraz bazowy: ubuntu
+# Gazpacho, kolla-ansible 22.x, status wsparcia: maintained
+#
+# Zweryfikuj wartości na docelowych hostach przed uruchomieniem
+# 'kolla-ansible prechecks' oraz 'kolla-ansible deploy'.
+
+###############################################################################
+# Obraz bazowy i wydanie
+###############################################################################
+kolla_base_distro: "ubuntu"
+openstack_release: "2026.1"
+
+###############################################################################
+# Sieć
+#
+# network_interface           - sieć zarządzania / API, wymaga adresu IP na każdym węźle
+# neutron_external_interface  - ruch zewnętrzny, interfejs bez adresu IP i bez konfiguracji
+# kolla_internal_vip_address  - wolny adres w sieci zarządzania, nieprzypisany do hosta
+###############################################################################
+network_interface: "ens3"
+neutron_external_interface: "ens4"
+kolla_internal_vip_address: "172.16.4.200"
+
+###############################################################################
+# Warstwa równoważenia obciążenia
+###############################################################################
+enable_haproxy: "yes"
+
+###############################################################################
+# Usługi OpenStack
+###############################################################################
+enable_cinder: "yes"
+# Cinder wymaga wskazania backendu. Odkomentuj i dostosuj jedną z opcji:
+#enable_cinder_backend_lvm: "yes"
+#cinder_volume_group: "cinder-volumes"
+#enable_cinder_backend_nfs: "yes"
+#cinder_backend_ceph: "yes"
+enable_prometheus: "yes"
+# Prometheus wdraża się na hostach z grupy 'monitoring' w inventory.
+# Panele metryk wymagają dodatkowo:
+#enable_grafana: "yes"
+
+###############################################################################
+# Neutron
+###############################################################################
+enable_neutron_provider_networks: "yes"
+# Sieci provider mapują się bezpośrednio na sieć fizyczną podpiętą do
+# neutron_external_interface (ens4). Ruch wychodzi przez mostek
+# neutron_bridge_name — domyślnie br-ex. Port przełącznika musi być
+# skonfigurowany zgodnie z typem sieci (dostępowy dla flat, trunk 802.1Q dla VLAN).

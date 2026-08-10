@@ -1,41 +1,13 @@
-/* Test dymny walidatora: reguły zależne od wydania. */
-var fs = require("fs");
+/* Test dymny walidatora: reguły wydania, kworum i kolokacji. */
+var lib = require("../testlib");
 
-function stub(id) {
-  return {
-    id: id, value: "", innerHTML: "", textContent: "", disabled: false, style: {}, _a: {},
-    scrollTop: 0, offsetHeight: 400,
-    classList: { toggle: function () {}, add: function () {}, remove: function () {}, contains: function () { return false; } },
-    setAttribute: function (k, v) { this._a[k] = v; },
-    removeAttribute: function (k) { delete this._a[k]; },
-    hasAttribute: function (k) { return Object.prototype.hasOwnProperty.call(this._a, k); },
-    addEventListener: function () {}, appendChild: function () {}, removeChild: function () {},
-    click: function () {}, select: function () {}, querySelector: function () { return null; }
-  };
-}
-var nodes = {};
-global.document = {
-  getElementById: function (id) { return nodes[id] || (nodes[id] = stub(id)); },
-  createElement: function () { return stub("tmp"); },
-  addEventListener: function () {}, body: stub("body"), execCommand: function () { return true; }
-};
-global.window = { isSecureContext: false, getComputedStyle: function () { return { lineHeight: "21px", fontSize: "13px" }; } };
-global.getComputedStyle = global.window.getComputedStyle;
-global.navigator = {};
+lib.installDom();
+var T = lib.loadTool(process.argv[2],
+  ["parse", "analyse", "buildReport", "KOLLA_MATRIX", "findRelease",
+   "defaultRelease", "SAMPLE_OK"]);
 
-var src = fs.readFileSync(process.argv[2], "utf8");
-var hook = ";globalThis.__t={parse:parse,analyse:analyse,buildReport:buildReport," +
-           "KOLLA_MATRIX:KOLLA_MATRIX,findRelease:findRelease," +
-           "defaultRelease:defaultRelease,SAMPLE_OK:SAMPLE_OK};";
-var at = src.lastIndexOf("})();");
-eval(src.slice(0, at) + hook + src.slice(at));
-
-var T = globalThis.__t;
-var fails = 0;
-function ok(name, cond, detail) {
-  if (cond) console.log("  ok   " + name);
-  else { console.log("  FAIL " + name + (detail ? "  -> " + detail : "")); fails++; }
-}
+var R = lib.runner();
+var ok = R.ok;
 
 var INV = [
   "[control]", "ctl[01:03] ansible_host=10.0.0.1[1:3]", "",
@@ -325,5 +297,4 @@ var rep = T.buildReport(res, { e: 0, w: 0, i: 0 });
 ok("zawiera wiersz z wydaniem", /Wydanie: 2026\.1 Gazpacho \(kolla-ansible 22\.x\)/.test(rep),
    rep.split("\n").slice(0, 6).join(" | "));
 
-console.log(fails ? "\n" + fails + " testów nie przeszło" : "\nwszystkie testy przeszły");
-process.exit(fails ? 1 : 0);
+R.finish();

@@ -1126,15 +1126,21 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     return n + " " + w;
   }
 
-  var saveTimer = null;
-  function refresh() {
-    var s = readState();
-    var d = validate(s);
-
+  /* Pola odrzucone przez walidację. Wydzielone, bo tą samą ścieżką musi przejść
+     test golden — inaczej porównywałby wynik funkcji, której nikt nie wywołuje. */
+  function badFields(d) {
     var bad = {};
     d.forEach(function (x) {
       if (x.level === "error" && x.field) bad[fieldToId(x.field)] = true;
     });
+    return bad;
+  }
+
+  var saveTimer = null;
+  function refresh() {
+    var s = readState();
+    var d = validate(s);
+    var bad = badFields(d);
 
     var built = buildYaml(s, bad);
     if (built.tripped) {

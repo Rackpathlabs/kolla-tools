@@ -1,0 +1,42 @@
+---
+# Generated with Rackpathlabs globals.yml generator
+#
+# Plik konfiguracyjny Kolla-Ansible: /etc/kolla/globals.yml
+# Docelowe wydanie: 2025.1   |   obraz bazowy: rocky
+# Epoxy, kolla-ansible 20.x, status wsparcia: maintained
+#
+# Zweryfikuj wartości na docelowych hostach przed uruchomieniem
+# 'kolla-ansible prechecks' oraz 'kolla-ansible deploy'.
+
+###############################################################################
+# Obraz bazowy i wydanie
+###############################################################################
+kolla_base_distro: "rocky"
+openstack_release: "2025.1"
+
+###############################################################################
+# Sieć
+#
+# network_interface           - sieć zarządzania / API, wymaga adresu IP na każdym węźle
+# neutron_external_interface  - ruch zewnętrzny, interfejs bez adresu IP i bez konfiguracji
+# kolla_internal_vip_address  - wolny adres w sieci zarządzania, nieprzypisany do hosta
+###############################################################################
+network_interface: "eth0"
+neutron_external_interface: "eth1"
+kolla_internal_vip_address: "10.0.0.250"
+
+###############################################################################
+# Warstwa równoważenia obciążenia
+###############################################################################
+enable_haproxy: "yes"
+
+###############################################################################
+# Usługi OpenStack
+###############################################################################
+enable_cinder: "no"
+enable_prometheus: "no"
+
+###############################################################################
+# Neutron
+###############################################################################
+enable_neutron_provider_networks: "no"

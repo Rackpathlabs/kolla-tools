@@ -1,51 +1,12 @@
-/* Test dymny generatora: minimalny stub DOM + asercje na macierzy wydań. */
-var fs = require("fs");
+/* Test dymny generatora: reguły macierzy wydań i walidacja pól. */
+var lib = require("../testlib");
 
-function stub(id) {
-  return {
-    id: id, value: "", checked: false, innerHTML: "", title: "", disabled: false,
-    textContent: "", style: {}, _a: {},
-    classList: { toggle: function () {}, add: function () {}, remove: function () {}, contains: function () { return false; } },
-    setAttribute: function (k, v) { this._a[k] = v; },
-    removeAttribute: function (k) { delete this._a[k]; },
-    hasAttribute: function (k) { return Object.prototype.hasOwnProperty.call(this._a, k); },
-    getAttribute: function (k) { return this._a[k]; },
-    addEventListener: function () {}, appendChild: function () {}, removeChild: function () {},
-    click: function () {}, select: function () {}
-  };
-}
+lib.installDom();
+var T = lib.loadTool(process.argv[2],
+  ["validate", "findRelease", "DISTROS", "KOLLA_MATRIX", "buildYaml", "badFields"]);
 
-var nodes = {};
-global.document = {
-  getElementById: function (id) { return nodes[id] || (nodes[id] = stub(id)); },
-  createElement: function () { return stub("tmp"); },
-  addEventListener: function () {},
-  body: stub("body"),
-  execCommand: function () { return true; }
-};
-global.window = { isSecureContext: false };
-global.navigator = {};
-global.localStorage = {
-  _m: {},
-  setItem: function (k, v) { this._m[k] = String(v); },
-  getItem: function (k) { return Object.prototype.hasOwnProperty.call(this._m, k) ? this._m[k] : null; },
-  removeItem: function (k) { delete this._m[k]; }
-};
-
-var src = fs.readFileSync(process.argv[2], "utf8");
-/* wystawienie wnętrza IIFE na potrzeby testu — plik źródłowy zostaje nietknięty */
-var hook = ";globalThis.__t={validate:validate,findRelease:findRelease,DISTROS:DISTROS," +
-           "KOLLA_MATRIX:KOLLA_MATRIX,buildYaml:buildYaml};";
-var at = src.lastIndexOf("})();");
-if (at === -1) { console.error("nie znalazłem końca IIFE"); process.exit(1); }
-eval(src.slice(0, at) + hook + src.slice(at));
-
-var T = globalThis.__t;
-var fails = 0;
-function ok(name, cond, detail) {
-  if (cond) { console.log("  ok   " + name); }
-  else { console.log("  FAIL " + name + (detail ? "  -> " + detail : "")); fails++; }
-}
+var R = lib.runner();
+var ok = R.ok;
 
 function base(over) {
   var s = { distro: "rocky", release: "2025.1", vip: "10.0.0.250",
@@ -157,5 +118,4 @@ ok("nagłówek zawiera nazwę wydania", /Epoxy/.test(y.text), y.text.split("\n")
 ok("nagłówek zawiera serię kolla-ansible", /kolla-ansible 20\.x/.test(y.text));
 ok("serializer nie został zatrzymany", y.tripped === false);
 
-console.log(fails ? "\n" + fails + " testów nie przeszło" : "\nwszystkie testy przeszły");
-process.exit(fails ? 1 : 0);
+R.finish();
