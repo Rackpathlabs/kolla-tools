@@ -1,0 +1,56 @@
+{
+  "ok": true,
+  "keys": [
+    {
+      "key": "kolla_base_distro",
+      "kind": "scalar",
+      "line": 3
+    },
+    {
+      "key": "openstack_release",
+      "kind": "scalar",
+      "line": 4
+    },
+    {
+      "key": "om_enable_rabbitmq_high_availability",
+      "kind": "scalar",
+      "line": 5
+    },
+    {
+      "key": "letsencrypt_cert_server",
+      "kind": "scalar",
+      "line": 6
+    },
+    {
+      "key": "ceph_cinder_keyring",
+      "kind": "scalar",
+      "line": 7
+    },
+    {
+      "key": "enable_haproxy",
+      "kind": "scalar",
+      "line": 8
+    }
+  ],
+  "findings": [],
+  "review": [
+    {
+      "code": "KLUCZ-WYCOFANY",
+      "sev": "error",
+      "key": "om_enable_rabbitmq_high_availability",
+      "line": 5
+    },
+    {
+      "code": "KLUCZ-WYCOFANY",
+      "sev": "error",
+      "key": "letsencrypt_cert_server",
+      "line": 6
+    },
+    {
+      "code": "KLUCZ-WYCOFANY",
+      "sev": "warn",
+      "key": "ceph_cinder_keyring",
+      "line": 7
+    }
+  ]
+}

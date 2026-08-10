@@ -1,0 +1,23 @@
+{
+  "ok": false,
+  "keys": [
+    {
+      "key": "octavia_amp_network",
+      "kind": "map",
+      "line": 3
+    }
+  ],
+  "findings": [
+    {
+      "code": "NIEOBSLUGIWANE",
+      "sev": "error",
+      "line": 4
+    },
+    {
+      "code": "NIEOBSLUGIWANE",
+      "sev": "error",
+      "line": 5
+    }
+  ],
+  "review": []
+}

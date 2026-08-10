@@ -1,0 +1,29 @@
+{
+  "ok": true,
+  "keys": [
+    {
+      "key": "octavia_provider_drivers",
+      "kind": "list",
+      "line": 3
+    },
+    {
+      "key": "neutron_bridge_name",
+      "kind": "list",
+      "line": 6
+    },
+    {
+      "key": "enable_neutron_provider_networks",
+      "kind": "scalar",
+      "line": 7
+    }
+  ],
+  "findings": [],
+  "review": [
+    {
+      "code": "KLUCZ-NIEZNANY",
+      "sev": "info",
+      "key": "octavia_provider_drivers",
+      "line": 3
+    }
+  ]
+}

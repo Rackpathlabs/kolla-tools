@@ -1,0 +1,22 @@
+{
+  "ok": true,
+  "keys": [
+    {
+      "key": "enable_octavia",
+      "kind": "scalar",
+      "line": 3
+    },
+    {
+      "key": "octavia_amp_network",
+      "kind": "map",
+      "line": 4
+    },
+    {
+      "key": "enable_barbican",
+      "kind": "scalar",
+      "line": 9
+    }
+  ],
+  "findings": [],
+  "review": []
+}

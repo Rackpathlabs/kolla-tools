@@ -1,0 +1,17 @@
+{
+  "ok": true,
+  "keys": [
+    {
+      "key": "kolla_base_distro",
+      "kind": "scalar",
+      "line": 3
+    },
+    {
+      "key": "openstack_release",
+      "kind": "scalar",
+      "line": 4
+    }
+  ],
+  "findings": [],
+  "review": []
+}

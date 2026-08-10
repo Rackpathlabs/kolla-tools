@@ -1,0 +1,6 @@
+# golden-release: 2026.1
+---
+kolla_base_distro: "rocky"
+custom_banner: |
+  linia pierwsza
+  linia druga
