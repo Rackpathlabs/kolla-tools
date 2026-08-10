@@ -228,11 +228,17 @@ r = runInv(inv(["[control]", "ctl01 ansible_host=10.0.0.11", "ctl02 ansible_host
                 "[compute]", "ctl01", "ctl02", "ctl03", "",
                 "[storage]", "str01 ansible_host=10.0.0.41", "",
                 "[monitoring]", "mon01 ansible_host=10.0.0.51", ""]));
-ok("hiperkonwergencja 3-węzłowa -> błąd, nie informacja",
+/* Amendment KV-04: w walidatorze jednoplikowym to uwaga — warunek eskalacji
+   (enable_masakari) leży w globals.yml, którego ten tool nie widzi. */
+ok("hiperkonwergencja 3-węzłowa -> uwaga, nie błąd",
    find(r, "KOLOKACJA-CONTROL-COMPUTE")[0] &&
-   find(r, "KOLOKACJA-CONTROL-COMPUTE")[0].sev === "error");
+   find(r, "KOLOKACJA-CONTROL-COMPUTE")[0].sev === "warn");
 ok("opisany tryb awarii (kaskada Masakari)",
    /hostmonitor/.test(find(r, "KOLOKACJA-CONTROL-COMPUTE")[0].hint));
+ok("wpis nazywa warunek eskalacji",
+   /enable_masakari/.test(find(r, "KOLOKACJA-CONTROL-COMPUTE")[0].hint));
+ok("wpis mówi, że bez Masakari to poprawny wzorzec",
+   /poprawny układ hiperkonwergentny/.test(find(r, "KOLOKACJA-CONTROL-COMPUTE")[0].hint));
 
 /* regresja: stara reguła patrzyła na bezpośrednie członkostwo i tego nie widziała */
 r = runInv(inv(["[control]", "ctl01 ansible_host=10.0.0.11", "ctl02 ansible_host=10.0.0.12", "",

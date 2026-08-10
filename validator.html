@@ -1037,20 +1037,29 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
        konstrukcją, nie usterką. Osobny wpis informacyjny wystawia reguła kworum. */
     var aio = hostNames.length === 1;
 
-    /* --- KV-04: [control] i [compute] muszą być rozłączne --- */
+    /* --- KV-04: [control] i [compute] rozłączne --- */
+    /* Uwaga, nie błąd: warunek eskalacji ("wdrożenie z Masakari albo produkcyjne")
+       leży w globals.yml, którego ten walidator nie widzi. Kolokacja bez Masakari
+       to poprawny układ hiperkonwergentny małego klastra. Waga nie może przekraczać
+       tego, co da się udowodnić z widocznego pliku — tryb łączony podniesie ją do
+       błędu, gdy zobaczy enable_masakari / enable_hacluster / enable_pacemaker_remote. */
     var ctlCmp = intersect(control, compute);
     if (ctlCmp.length && !aio) {
       out.push({
-        sev: "error", code: "KOLOKACJA-CONTROL-COMPUTE",
+        sev: "warn", code: "KOLOKACJA-CONTROL-COMPUTE",
         msg: plural(ctlCmp.length, "Host pełni", "Hosty pełnią", "Hostów pełni") +
              " jednocześnie rolę sterującą i obliczeniową: " + hostList(ctlCmp) + ".",
         line: groupLine(groups.compute),
-        hint: "Wdrożenie przejdzie, laboratorium będzie działać bez zarzutu. Później " +
-              "albo Pacemaker Remote nie wystartuje na hoście będącym już pełnym " +
-              "członkiem Corosync, albo — przy <code>restrict_to_remotes = false</code> — " +
-              "hostmonitor uzna węzeł sterujący za kandydata do ewakuacji: restart " +
-              "serwisowy takiego hosta każe Masakari ewakuować maszyny z węzła, na " +
-              "którym stoją MariaDB i RabbitMQ, przez API, które właśnie leży. Kaskada."
+        hint: "Bez Masakari to poprawny układ hiperkonwergentny — zaplanuj rezerwę " +
+              "procesora i pamięci na usługi sterowania. Z <code>enable_masakari</code> " +
+              "ta sama konfiguracja jest błędem grożącym uszkodzeniem danych: albo " +
+              "Pacemaker Remote nie wystartuje na hoście będącym już pełnym członkiem " +
+              "Corosync, albo — przy <code>restrict_to_remotes = false</code> — " +
+              "hostmonitor uzna węzeł sterujący za kandydata do ewakuacji i restart " +
+              "serwisowy każe Masakari ewakuować maszyny z węzła, na którym stoją " +
+              "MariaDB i RabbitMQ, przez API, które właśnie leży. Kaskada. " +
+              "Rozstrzygnięcie wymaga <code>globals.yml</code> — tego pliku walidator " +
+              "nie widzi."
       });
     }
 
