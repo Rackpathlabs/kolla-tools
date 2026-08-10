@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Nowy push do gałęzi PR unieważnia poprzedni przebieg.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: testy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Twarda zasada repozytorium. Narzędzia są pojedynczymi plikami HTML
+      # działającymi z file://; cokolwiek z npm w drzewie znaczy, że ktoś zaczął
+      # budować to inaczej, niż brzmi obietnica produktu.
+      - name: Zero zależności npm
+        run: |
+          bad=0
+          for p in package.json package-lock.json yarn.lock pnpm-lock.yaml node_modules; do
+            if [ -e "$p" ]; then echo "FAIL: w repo pojawiło się $p"; bad=1; fi
+          done
+          [ "$bad" -eq 0 ] && echo "OK   brak śladów npm"
+          exit "$bad"
+
+      # Osobne kroki, mimo że run-tests.sh uruchamia je ponownie: kosztują
+      # milisekundy, a w interfejsie GitHuba od razu widać, co poszło źle.
+      - name: Higiena plików (bajty NUL)
+        run: bash tools/check-binary.sh
+
+      - name: Spójność macierzy wydań
+        run: bash tools/check-matrix.sh
+
+      # Składnia (node --check), testy dymne i golden-file dla obu narzędzi.
+      - name: Pełny zestaw testów
+        run: bash tools/run-tests.sh

@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-# Testy dymne obu narzędzi. Wymagają wyłącznie Node — żadnych pakietów z npm.
+# Pełny zestaw testów obu narzędzi. Wymaga wyłącznie Node — żadnych pakietów z npm.
 # Uruchamiaj z katalogu repo:  bash tools/run-tests.sh
+#
+# bash tools/run-tests.sh --update   przepisuje wzorce golden zamiast je sprawdzać.
+# Rób to tylko po zamierzonej zmianie wyjścia i obejrzyj diff przed commitem.
 #
 # Skrypty stron są osadzone w HTML, więc test wycina blok <script> do pliku
 # tymczasowego obok pliku źródłowego. Katalog repo, a nie /tmp, bo pod WSL
@@ -28,20 +31,13 @@ extract_script() {
   [ -s "$2" ] || { echo "Nie udało się wyciąć bloku <script> z $1"; exit 1; }
 }
 
+GOLDEN_FLAG=""
+[ "${1:-}" = "--update" ] && GOLDEN_FLAG="--update"
+
 rc=0
 
 echo "== higiena plików =="
-# Bajt NUL w pliku HTML to zawsze pomyłka edycji: parser HTML zamienia go na U+FFFD,
-# a narzędzia tekstowe (grep, diff) zaczynają traktować plik jak binarny i milczą.
-# Uwaga: nie da się tu użyć grepa z wzorcem $'\x00' — bash nie utrzyma bajtu NUL
-# w napisie, więc wzorzec jest pusty i pasuje do każdego pliku.
-for f in generator.html validator.html matrix.js; do
-  if [ "$(tr -cd '\0' < "$f" | wc -c)" -ne 0 ]; then
-    echo "  FAIL $f: zawiera bajt NUL"; rc=1
-  else
-    echo "  ok   $f"
-  fi
-done
+bash tools/check-binary.sh || rc=1
 
 echo
 echo "== spójność macierzy =="
@@ -61,6 +57,14 @@ echo "== generator =="
 echo
 echo "== walidator =="
 "$NODE" tools/smoke/validator.test.js .val.test.tmp.js || rc=1
+
+echo
+echo "== golden: generator =="
+"$NODE" tools/golden/generator.golden.js .gen.test.tmp.js $GOLDEN_FLAG || rc=1
+
+echo
+echo "== golden: walidator =="
+"$NODE" tools/golden/validator.golden.js .val.test.tmp.js $GOLDEN_FLAG || rc=1
 
 echo
 [ "$rc" -eq 0 ] && echo "Wszystko przeszło." || echo "Są niepowodzenia."

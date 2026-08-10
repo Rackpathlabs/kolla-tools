@@ -1331,21 +1331,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           "Nazwa musi być rozwiązywalna przez DNS lub <code>/etc/hosts</code> na hoście wdrożeniowym.");
     }
 
-    /* --- liczebność grup --- */
-    var ctrl = effective.control ? effective.control.length : 0;
-    if (ctrl === 2) {
-      add("warn", "KWORUM", "Dwa węzły sterujące nie dają kworum dla klastrów MariaDB i RabbitMQ.", null,
-          "Zalecana liczba węzłów sterujących to 1 (środowisko testowe) albo nieparzysta co najmniej 3.");
-    } else if (ctrl > 2 && ctrl % 2 === 0) {
-      add("warn", "KWORUM", "Parzysta liczba węzłów sterujących (" + ctrl + ") — klastry z kworum wymagają liczby nieparzystej.", null,
-          "Przy " + ctrl + " węzłach tolerancja awarii jest taka sama jak przy " + (ctrl - 1) + ".");
-    } else if (ctrl === 1) {
-      add("info", "BEZ-HA", "Jeden węzeł sterujący — brak wysokiej dostępności płaszczyzny sterowania.", null,
-          "Dopuszczalne w laboratorium; w produkcji potrzebne są co najmniej trzy węzły.");
-    }
-    if (effective.network && effective.network.length === 1) {
-      add("info", "BEZ-HA", "Jeden węzeł sieciowy — pojedynczy punkt awarii ruchu północ-południe.", null);
-    }
+    /* Liczebność grup obsługują quorumRules() i collocationRules(). Wcześniejsze
+       reguły KWORUM i BEZ-HA stały tutaj i po dołożeniu tamtych dawały drugi wpis
+       o tym samym, w innej wadze — usunięte, nie zduplikowane. */
 
     /* --- literówki w nazwach grup --- */
     order.forEach(function (name) {

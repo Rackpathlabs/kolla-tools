@@ -1,0 +1,20 @@
+{
+  "release": "2026.1",
+  "findings": [
+    {
+      "code": "KOLOKACJA-CONTROL-COMPUTE",
+      "sev": "warn",
+      "line": 10
+    },
+    {
+      "code": "KOLOKACJA-NETWORK",
+      "sev": "warn",
+      "line": 16
+    },
+    {
+      "code": "KOLOKACJA-STORAGE",
+      "sev": "info",
+      "line": 13
+    }
+  ]
+}

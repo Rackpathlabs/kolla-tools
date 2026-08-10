@@ -1,0 +1,12 @@
+{
+  "distro": "ubuntu",
+  "release": "2026.1",
+  "vip": "172.16.4.200",
+  "net_if": "ens3",
+  "ext_if": "ens4",
+  "t_haproxy": true,
+  "t_cinder": true,
+  "t_prometheus": true,
+  "t_provider": true,
+  "t_comments": true
+}
