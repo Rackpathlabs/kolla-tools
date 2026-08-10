@@ -739,6 +739,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     "KV-05": {
       ack: "ack_link", field: "stg_if",
       sev: { hacluster: "error", plain: "warn" },
+      /* drabina eskalacji: pierwszy zapalony przełącznik wybiera wariant */
+      by: [["t_hacluster", "hacluster"], [null, "plain"]],
       why: "Corosync bierze pierścień z <code>api_interface</code>. Backfill Cepha, " +
            "wymiana OSD albo jedna migracja 64 GB potrafi wysycić łącze; Corosync gubi " +
            "token (domyślnie 3000 ms), Pacemaker uznaje węzeł za utracony, a Masakari " +
@@ -750,7 +752,11 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     },
     "KV-06": {
       ack: "ack_migration", field: "mig_if",
-      sev: { masakari: "error", plain: "warn" },
+      /* Waga stopniowana tym, co plik udowadnia. Bez narzędzi HA migracja przez
+         api_interface jest wartością domyślną Kolli i normą w laboratorium —
+         uwaga na każdym minimalnym pliku uczyłaby ignorowania lintu. */
+      sev: { masakari: "error", hacluster: "warn", plain: "info" },
+      by: [["t_masakari", "masakari"], ["t_hacluster", "hacluster"], [null, "plain"]],
       why: "Ewakuacja po awarii hosta to seria migracji dokładnie w chwili, gdy " +
            "płaszczyzna sterowania jest najbardziej obciążona. Ruch migracji zagładza " +
            "RPC, <code>nova-compute</code> na zdrowych hostach gubi puls " +
@@ -794,6 +800,16 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
      wydania. Kontrakt z KV-12a: plik wyprodukowany tym narzędziem nie ma prawa
      wpadać we własną regułę walidacyjną. */
   var EMITTED_KEYS = { om_enable_rabbitmq_stream_fanout: true };
+
+  /* Wybór wariantu dla reguł, których waga zależy wyłącznie od przełączników —
+     drabina siedzi w LINT[id].by, nie w warunku rozsianym po kodzie. */
+  function lintVariant(id, s) {
+    var by = LINT[id].by || [];
+    for (var i = 0; i < by.length; i++) {
+      if (by[i][0] === null || s[by[i][0]]) return by[i][1];
+    }
+    return null;
+  }
 
   /* Potwierdzenie obniża wagę do informacji — jedno miejsce dla wszystkich reguł. */
   function lintSev(id, variant, s) {
@@ -1056,7 +1072,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     var inheritsWithHa = !f.stgExplicit && s.t_hacluster && !sameLink;
     if (sameLink || inheritsWithHa) {
       d.push({
-        level: lintSev("KV-05", s.t_hacluster ? "hacluster" : "plain", s),
+        level: lintSev("KV-05", lintVariant("KV-05", s), s),
         field: R["KV-05"].field,
         msg: (sameLink
           ? "<code>storage_interface</code> (<code>" + esc(f.stg) + "</code>) i " +
@@ -1071,7 +1087,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     /* --- KV-06: migracja na łączu API --- */
     if (!f.migExplicit || baseDev(f.mig) === baseDev(f.api)) {
       d.push({
-        level: lintSev("KV-06", s.t_masakari ? "masakari" : "plain", s),
+        level: lintSev("KV-06", lintVariant("KV-06", s), s),
         field: R["KV-06"].field,
         msg: (!f.migExplicit
           ? "<code>migration_interface</code> nie jest ustawione — migracja pójdzie przez " +

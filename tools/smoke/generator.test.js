@@ -4,7 +4,7 @@ var lib = require("../testlib");
 lib.installDom();
 var T = lib.loadTool(process.argv[2],
   ["validate", "findRelease", "DISTROS", "KOLLA_MATRIX", "buildYaml", "badFields",
-   "DEFAULTS", "baseDev", "physnets"]);
+   "DEFAULTS", "baseDev", "physnets", "LINT"]);
 
 var R = lib.runner();
 var ok = R.ok;
@@ -59,8 +59,6 @@ console.log("walidacja:");
 var d;
 d = T.validate(base());
 ok("2025.1/rocky bez błędów", levels(d, "error").length === 0, JSON.stringify(levels(d, "error")));
-/* KV-12a: brak klucza = wartość domyślna = działa, ryzyko dopiero przy skali.
-   Uwaga, nie błąd — error na każdym labowym pliku uczy ignorowania narzędzia. */
 /* Kontrakt KV-12a: generator wypisuje ten klucz jawnie, więc jego własny plik
    nie wpada we własną regułę — wpis schodzi z uwagi do informacji. */
 ok("om_enable_rabbitmq_stream_fanout -> informacja o jawnym ustawieniu",
@@ -131,10 +129,17 @@ ok("bond0.10 vs bond0.20 -> to samo bond0", has(d, "warn", /bond0/));
 ok("porównanie po urządzeniu bazowym", T.baseDev("bond0.20") === "bond0");
 
 console.log("KV-06 — migracja na łączu API:");
+/* Drabina z Amendment: waga nie przekracza tego, co plik udowadnia. */
+var MIG = /migration_interface<\/code> nie jest ustawione/;
 d = T.validate(base());
-ok("brak migration_interface -> uwaga", has(d, "warn", /migration_interface<\/code> nie jest ustawione/));
+ok("bez narzędzi HA -> informacja", has(d, "info", MIG) && !has(d, "warn", MIG));
+d = T.validate(base({ t_hacluster: true }));
+ok("z hacluster bez Masakari -> uwaga", has(d, "warn", MIG) && !has(d, "error", MIG));
 d = T.validate(base({ t_masakari: true, t_hacluster: true }));
-ok("z Masakari -> błąd", has(d, "error", /migration_interface<\/code> nie jest ustawione/));
+ok("z Masakari -> błąd", has(d, "error", MIG));
+ok("drabina wag pochodzi z tabeli, nie z warunku w kodzie",
+   JSON.stringify(T.LINT["KV-06"].sev) ===
+   JSON.stringify({ masakari: "error", hacluster: "warn", plain: "info" }));
 d = T.validate(base({ t_masakari: true, t_hacluster: true, ack_migration: true }));
 ok("potwierdzenie obniża do informacji", has(d, "info", /migration_interface<\/code> nie jest ustawione/));
 d = T.validate(base({ api_if: "eth0", mig_if: "eth3" }));
