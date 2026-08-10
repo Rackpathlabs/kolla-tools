@@ -1,0 +1,6 @@
+---
+kolla_internal_vip_address: "10.92.0.250"
+letsencrypt_cert_server: "https://acme-v02.api.letsencrypt.org/directory"
+enable_redis: "yes"
+om_enable_rabbitmq_quorum_queues: "yes"
+prometheus_blackbox_exporter_endpoints: "custom"

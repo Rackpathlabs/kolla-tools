@@ -24,6 +24,7 @@ else
               "What these tools deliberately do not check" \
               "Where certainty ends" \
               'What "no findings" means' \
+              "The upgrade path mode" \
               "Design principles"; do
     if grep -qF "$want" SCOPE.md; then
       echo "OK   sekcja: $want"

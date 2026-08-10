@@ -45,8 +45,20 @@ ok("wydanie rozwojowe nie ma daty wydania", M.releases.every(function (r) {
   return r.status !== "development" || r.released === null;
 }));
 ok("deprecated ma poprawne rodzaje", M.releases.every(function (r) {
-  return r.deprecated.every(function (x) { return ["key", "group", "service"].indexOf(x.kind) !== -1 && !!x.name; });
+  return r.deprecated.every(function (x) {
+    return ["key", "group", "service", "procedure"].indexOf(x.kind) !== -1 && !!x.name;
+  });
 }));
+ok("każde wydanie deklaruje, czy deprecacje są skatalogowane",
+   M.releases.every(function (r) { return typeof r.deprecationsCatalogued === "boolean"; }));
+/* Pusta lista przy zadeklarowanym katalogowaniu jest dopuszczalna, ale odwrotność
+   nie: wydanie nieskatalogowane nie ma prawa udawać, że coś wie. */
+ok("wydanie nieskatalogowane ma pustą listę deprecacji",
+   M.releases.every(function (r) { return r.deprecationsCatalogued || r.deprecated.length === 0; }));
+ok("każda deprecacja ma wagę z dozwolonego zbioru",
+   M.releases.every(function (r) {
+     return r.deprecated.every(function (x) { return ["error", "warn", "info"].indexOf(x.sev) !== -1; });
+   }));
 ok("DISTROS = unia obrazów bazowych", T.DISTROS.join(",") === "centos,debian,rocky,ubuntu", T.DISTROS.join(","));
 
 console.log("findRelease:");

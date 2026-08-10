@@ -62,18 +62,23 @@ cases.forEach(function (file) {
     });
   }
 
-  var res = T.analyse(T.parse(text), m[1], glob, acks);
-  var actual = { release: m[1], globals: hasGlobals, findings: shape(res) };
+  /* Ścieżkę aktualizacji deklaruje nagłówek "# golden-upgrade-to: <wydanie>". */
+  var um = /^#\s*golden-upgrade-to:\s*(\S+)\s*$/m.exec(text);
+  var to = um ? um[1] : "";
+
+  var res = T.analyse(T.parse(text), m[1], glob, acks, to);
+  var actual = { release: m[1], upgradeTo: to || null, globals: hasGlobals, findings: shape(res) };
 
   /* Degradacja jest asercją, nie deklaracją: ten sam plik bez globals musi dać
      zero findingów spoza inventory i dokładnie tę samą listę klasy A. */
   if (hasGlobals && !update) {
-    var solo = T.analyse(T.parse(text), m[1], null, {});
+    var solo = T.analyse(T.parse(text), m[1], null, {}, to);
     var leaked = shape(solo).filter(function (f) { return f.src !== "inventory"; });
     R.ok(name + " — bez globals żaden finding spoza inventory", leaked.length === 0,
          JSON.stringify(leaked));
     var soloGolden = path.join(dir, name + ".no-globals.expected.json");
-    var soloStr = JSON.stringify({ release: m[1], globals: false, findings: shape(solo) }, null, 2) + "\n";
+    var soloStr = JSON.stringify({ release: m[1], upgradeTo: to || null, globals: false,
+                                   findings: shape(solo) }, null, 2) + "\n";
     if (fs.existsSync(soloGolden)) {
       R.ok(name + " — lista klasy A bez globals zgodna",
            soloStr === fs.readFileSync(soloGolden, "utf8"));
@@ -81,9 +86,9 @@ cases.forEach(function (file) {
       R.ok(name + " (bez globals)", false, "brak wzorca — uruchom z --update");
     }
   } else if (hasGlobals && update) {
-    var solo2 = T.analyse(T.parse(text), m[1], null, {});
+    var solo2 = T.analyse(T.parse(text), m[1], null, {}, to);
     fs.writeFileSync(path.join(dir, name + ".no-globals.expected.json"),
-      JSON.stringify({ release: m[1], globals: false, findings: shape(solo2) }, null, 2) + "\n");
+      JSON.stringify({ release: m[1], upgradeTo: to || null, globals: false, findings: shape(solo2) }, null, 2) + "\n");
     console.log("  zapisano " + name + ".no-globals.expected.json");
   }
   var goldenPath = path.join(dir, name + ".expected.json");
