@@ -25,8 +25,8 @@ global.navigator = {};
 
 var src = fs.readFileSync(process.argv[2], "utf8");
 var hook = ";globalThis.__t={parse:parse,analyse:analyse,buildReport:buildReport," +
-           "renderVerdict:null,KOLLA_MATRIX:KOLLA_MATRIX,findRelease:findRelease," +
-           "defaultRelease:defaultRelease};";
+           "KOLLA_MATRIX:KOLLA_MATRIX,findRelease:findRelease," +
+           "defaultRelease:defaultRelease,SAMPLE_OK:SAMPLE_OK};";
 var at = src.lastIndexOf("})();");
 eval(src.slice(0, at) + hook + src.slice(at));
 
@@ -101,6 +101,113 @@ r = run("", "2019.1");
 ok("wydanie spoza macierzy -> brak reguł, brak wyjątku", !hasCode(r, "WYDANIE"));
 r = run("", "");
 ok("puste wydanie -> brak wyjątku", Array.isArray(r.findings));
+
+/* ---- KV-02 / KV-03: kworum i liczebność ---- */
+
+function inv(parts) { return parts.join("\n") + "\n"; }
+function runInv(text, release) { return T.analyse(T.parse(text), release || "2026.1"); }
+
+var CTL3 = ["[control]", "ctl[01:03] ansible_host=10.0.0.1[1:3]", "",
+            "[network]", "ctl01", "", "[compute]", "cmp01 ansible_host=10.0.0.21", "",
+            "[storage]", "cmp01", "", "[monitoring]", "ctl01", ""];
+
+console.log("kworum [control] (KV-02):");
+r = runInv(inv(CTL3));
+ok("3 węzły -> brak alarmu", !hasCode(r, "KWORUM-LICZBA"));
+
+r = runInv(inv(["[control]", "ctl01 ansible_host=10.0.0.11", "ctl02 ansible_host=10.0.0.12", "",
+                "[network]", "ctl01", "", "[compute]", "cmp01 ansible_host=10.0.0.21", "",
+                "[storage]", "cmp01", "", "[monitoring]", "ctl01", ""]));
+ok("2 węzły -> błąd", find(r, "KWORUM-LICZBA")[0] && find(r, "KWORUM-LICZBA")[0].sev === "error");
+ok("2 węzły -> komunikat o parzystości", /liczba parzysta/.test(find(r, "KWORUM-LICZBA")[0].msg));
+ok("2 węzły -> opisany tryb awarii", /non-Primary/.test(find(r, "KWORUM-LICZBA")[0].hint));
+
+r = runInv(inv(["[control]", "ctl[01:04] ansible_host=10.0.0.1[1:4]", "",
+                "[network]", "ctl01", "", "[compute]", "cmp01 ansible_host=10.0.0.21", "",
+                "[storage]", "cmp01", "", "[monitoring]", "ctl01", ""]));
+ok("4 węzły -> błąd", hasCode(r, "KWORUM-LICZBA"));
+
+console.log("wyjątek all-in-one:");
+r = runInv(inv(["[control]", "aio01 ansible_host=10.0.0.11", "", "[network]", "aio01", "",
+                "[compute]", "aio01", "", "[storage]", "aio01", "", "[monitoring]", "aio01", ""]));
+ok("AIO -> informacja, nie błąd", hasCode(r, "KWORUM-AIO") && !hasCode(r, "KWORUM-LICZBA"));
+ok("AIO -> waga 'info'", find(r, "KWORUM-AIO")[0].sev === "info");
+
+r = runInv(inv(["[control]", "ctl01 ansible_host=10.0.0.11", "", "[network]", "ctl01", "",
+                "[compute]", "cmp01 ansible_host=10.0.0.21", "", "[storage]", "cmp01", "",
+                "[monitoring]", "ctl01", ""]));
+ok("1 węzeł sterujący bez roli compute -> błąd, nie wyjątek",
+   hasCode(r, "KWORUM-LICZBA") && !hasCode(r, "KWORUM-AIO"));
+
+console.log("grupy z własną obsadą:");
+r = runInv(inv(CTL3.concat(["[mariadb:children]", "control", ""])));
+ok("[mariadb] dziedziczące z control -> bez osobnego wpisu", !hasCode(r, "KWORUM-LICZBA"));
+
+r = runInv(inv(CTL3.concat(["[mariadb]", "ctl01", "ctl02", ""])));
+ok("[mariadb] z własnymi 2 hostami -> błąd", hasCode(r, "KWORUM-LICZBA"));
+ok("wpis dotyczy mariadb, nie control", /\[mariadb\]/.test(find(r, "KWORUM-LICZBA")[0].msg));
+
+r = runInv(inv(CTL3.concat(["[etcd]", "ctl01", "ctl02", "", "[rabbitmq]", "ctl01", "ctl02", ""])));
+ok("każda grupa liczona osobno", find(r, "KWORUM-LICZBA").length === 2);
+
+console.log("klaster RAFT OVN (KV-03):");
+r = runInv(inv(CTL3.concat(["[ovn-database:children]", "control", ""])));
+ok("3 hosty -> brak alarmu", !hasCode(r, "KWORUM-OVN"));
+
+r = runInv(inv(CTL3.concat(["[ovn-database]", "ctl01", "ctl02", ""])));
+ok("2 hosty -> błąd", find(r, "KWORUM-OVN")[0] && find(r, "KWORUM-OVN")[0].sev === "error");
+ok("opisany tryb awarii (zamrożona chmura)", /tylko do odczytu/.test(find(r, "KWORUM-OVN")[0].hint));
+
+r = runInv(inv(CTL3.concat(["[ovn-database]", "ctl01", "ctl02", "ctl03", "cmp01", "ctl04", ""])));
+ok("5 hostów -> błąd (powyżej 3)", hasCode(r, "KWORUM-OVN"));
+
+r = runInv(inv(CTL3.concat(["[ovn-database:children]", "control", "",
+                            "[ovn-nb-db:children]", "ovn-database", "",
+                            "[ovn-sb-db:children]", "ovn-database", ""])));
+ok("grupy dziedziczące -> bez zdublowanych wpisów", !hasCode(r, "KWORUM-OVN"));
+
+r = runInv(inv(CTL3.concat(["[ovn-database:children]", "control", "",
+                            "[ovn-nb-db]", "ctl01", "ctl02", ""])));
+ok("[ovn-nb-db] z własną obsadą -> jeden wpis", find(r, "KWORUM-OVN").length === 1);
+ok("wpis dotyczy ovn-nb-db", /ovn-nb-db/.test(find(r, "KWORUM-OVN")[0].msg));
+
+r = runInv(inv(CTL3.concat(["[ovn-database]", "ctl01", ""])));
+ok("1 host przy 3 sterujących -> informacja o SPOF",
+   find(r, "KWORUM-OVN")[0] && find(r, "KWORUM-OVN")[0].sev === "info");
+
+r = runInv(inv(CTL3.concat(["[ovn-database:children]", "control", "",
+                            "[ovn-northd]", "ctl01", ""])));
+ok("northd na innej liście -> uwaga", hasCode(r, "OVN-NORTHD"));
+r = runInv(inv(CTL3.concat(["[ovn-database:children]", "control", "",
+                            "[ovn-northd:children]", "ovn-database", ""])));
+ok("northd zgodny z bazą -> brak uwagi", !hasCode(r, "OVN-NORTHD"));
+
+console.log("monitory Ceph:");
+r = runInv(inv(CTL3.concat(["[ceph-mon]", "ctl01", "ctl02", ""])));
+ok("obecność [ceph-mon] -> informacja o zakresie Kolli", hasCode(r, "CEPH-POZA-KOLLA"));
+ok("2 monitory -> uwaga o kworum", hasCode(r, "KWORUM-CEPH"));
+r = runInv(inv(CTL3));
+ok("brak [ceph-mon] -> cisza", !hasCode(r, "CEPH-POZA-KOLLA") && !hasCode(r, "KWORUM-CEPH"));
+
+console.log("brak fałszywych alarmów:");
+r = runInv(inv(CTL3.concat(["[ovn-database:children]", "control", "",
+                            "[ovn-nb-db:children]", "ovn-database", "",
+                            "[ovn-sb-db:children]", "ovn-database", "",
+                            "[ovn-northd:children]", "ovn-database", "",
+                            "[mariadb:children]", "control", "",
+                            "[rabbitmq:children]", "control", "",
+                            "[etcd:children]", "control", ""])));
+ok("wzorcowe inventory 3-węzłowe -> zero błędów kworum",
+   !hasCode(r, "KWORUM-LICZBA") && !hasCode(r, "KWORUM-OVN") && !hasCode(r, "OVN-NORTHD"));
+ok("nazwy grup OVN nie są brane za literówki", !hasCode(r, "NIEZNANA-GRUPA"),
+   JSON.stringify(find(r, "NIEZNANA-GRUPA").map(function (f) { return f.msg; })));
+
+/* wbudowany przykład jest reklamowany jako poprawny — musi taki zostać */
+r = T.analyse(T.parse(T.SAMPLE_OK), "2026.1");
+ok("wbudowany 'Przykład poprawny' -> zero błędów",
+   r.findings.filter(function (f) { return f.sev === "error"; }).length === 0,
+   JSON.stringify(r.findings.filter(function (f) { return f.sev === "error"; })
+     .map(function (f) { return f.code; })));
 
 console.log("raport:");
 var res = run("", "2026.1");

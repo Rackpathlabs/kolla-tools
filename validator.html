@@ -468,7 +468,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     "cinder-backup-lvm,cinder-backup-multiple,horizon,heat,placement,swift,ironic,magnum,octavia," +
     "designate,barbican,manila,trove,masakari,ceilometer,gnocchi,aodh,cloudkitty," +
     "watcher,zun,blazar,cyborg,tacker,venus,skyline,opensearch,openvswitch," +
-    "ovn-database,ovn-controller,iscsid,tgtd,multipathd,external-compute,external-ceph"
+    "ovn-database,ovn-controller,ovn-controller-compute,ovn-controller-network," +
+    "ovn-nb-db,ovn-sb-db,ovn-sb-db-relay,ovn-northd,ceph-mon," +
+    "iscsid,tgtd,multipathd,external-compute,external-ceph"
   ).split(",");
 
   var el = {
@@ -801,6 +803,199 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     return out;
   }
 
+  /* ------------------------------------------------------------------ */
+  /* kworum i liczebność grup (KV-02, KV-03)                             */
+  /* ------------------------------------------------------------------ */
+
+  /* Wszystkie progi w jednym miejscu — reguły niżej nie zawierają liczb. */
+  var QUORUM = {
+    /* Galera, kolejki quorum RabbitMQ i Corosync wymagają większości. Parzysta
+       liczba węzłów nie podnosi odporności, a podwaja liczbę awarii zabijających
+       kworum. */
+    minOdd: 3,
+    /* Klaster RAFT baz OVN: kolla przewiduje 1 albo 3. Powyżej trzech koszt
+       replikacji rośnie, dostępność nie. */
+    ovnMax: 3
+  };
+
+  /* Grupy niosące własne kworum. Sprawdzane osobno, bo w inventory potrafią
+     dostać własną obsadę zamiast dziedziczyć z [control]. */
+  var QUORUM_GROUPS = [
+    { name: "control", label: "płaszczyzna sterowania",
+      why: "Na tej samej liście hostów stoją trzy niezależne mechanizmy kworum: " +
+           "Galera, kolejki quorum RabbitMQ i Corosync.",
+      fail: "Przy dwóch węzłach utrata jednego wprowadza Galerę w stan non-Primary — " +
+            "baza przechodzi w tryb tylko do odczytu, a każde zapisujące wywołanie API " +
+            "kończy się błędem 500. Przy czterech utrata dwóch (jedna szafa, jeden " +
+            "przełącznik) zabija kworum, mimo że dwa sprawne węzły zostają. Ujawnia się " +
+            "przy pierwszym prawdziwym przełączeniu albo podczas kolejkowego restartu " +
+            "przy aktualizacjach." },
+    { name: "mariadb", label: "Galera",
+      why: "Grupa ma własną obsadę zamiast dziedziczyć z <code>[control]</code>.",
+      fail: "Utrata połowy węzłów wprowadza klaster w stan non-Primary — baza staje się " +
+            "tylko do odczytu." },
+    { name: "rabbitmq", label: "RabbitMQ",
+      why: "Grupa ma własną obsadę zamiast dziedziczyć z <code>[control]</code>.",
+      fail: "Kolejki quorum wymagają większości. Bez niej publikacja wiadomości blokuje " +
+            "się, a wywołania RPC między usługami wygasają." },
+    { name: "hacluster", label: "Corosync/Pacemaker",
+      why: "Grupa ma własną obsadę zamiast dziedziczyć z <code>[control]</code>.",
+      fail: "Parzysty klaster Corosync przy podziale sieci nie wyłoni większości — " +
+            "żadna połowa nie przejmie zasobów." },
+    { name: "etcd", label: "etcd",
+      why: "Grupa ma własną obsadę zamiast dziedziczyć z <code>[control]</code>.",
+      fail: "etcd bez większości przechodzi w tryb tylko do odczytu — usługi tracące " +
+            "z nim łączność nie zapiszą stanu." }
+  ];
+
+  /* W referencyjnym inventory [ovn-nb-db] i [ovn-sb-db] dziedziczą z [ovn-database],
+     więc obsadę zmienia się zwykle w tej jednej grupie. Grupy szczegółowe sprawdzamy
+     tylko wtedy, gdy ktoś nadał im własną listę — inaczej ten sam błąd zgłosiłby się
+     trzy razy. */
+  var OVN_DB_GROUPS = [
+    { name: "ovn-database", label: "bazy OVN", base: true },
+    { name: "ovn-nb-db", label: "baza northbound OVN" },
+    { name: "ovn-sb-db", label: "baza southbound OVN" }
+  ];
+
+  function sameSet(a, b) {
+    if (!a || !b || a.length !== b.length) return false;
+    return a.slice().sort().join(" ") === b.slice().sort().join(" ");
+  }
+
+  function groupLine(g) {
+    if (!g) return null;
+    return g.declaredAt[0] || g.childrenAt[0] || g.varsAt[0] || g.referencedAt[0] || null;
+  }
+
+  /* Reguły liczebności. Wydzielone z analyse() z tego samego powodu co
+     releaseRules(): trzymają własne progi i własne wyjątki. */
+  function quorumRules(groups, effective, hostNames) {
+    var out = [];
+    var control = effective.control || [];
+    var compute = effective.compute || [];
+
+    /* Wyjątek all-in-one: jeden węzeł sterujący, który jest zarazem węzłem
+       obliczeniowym, to świadomy układ laboratoryjny, a nie zepsute kworum. */
+    var aio = control.length === 1 && compute.indexOf(control[0]) !== -1;
+
+    QUORUM_GROUPS.forEach(function (spec) {
+      var g = groups[spec.name];
+      if (!g) return;
+      var hosts = effective[spec.name] || [];
+      if (!hosts.length) return;              // pustą grupę zgłasza osobna reguła
+      /* grupa dziedzicząca obsadę z [control] jest już pokryta wpisem dla control */
+      if (spec.name !== "control" && sameSet(hosts, control)) return;
+
+      var n = hosts.length;
+      var line = groupLine(g);
+
+      if (n === 1) {
+        if (spec.name === "control" && aio) {
+          out.push({ sev: "info", code: "KWORUM-AIO",
+            msg: "Inventory all-in-one: jedyny host w <code>[control]</code> pełni " +
+                 "równocześnie rolę obliczeniową.",
+            line: line,
+            hint: "Układ laboratoryjny — brak wysokiej dostępności jest tu wyborem, " +
+                  "nie usterką. Do wdrożenia produkcyjnego potrzebne są co najmniej " +
+                  QUORUM.minOdd + " węzły sterujące." });
+        } else {
+          out.push({ sev: "error", code: "KWORUM-LICZBA",
+            msg: "Grupa <code>[" + esc(spec.name) + "]</code> ma jeden host — " +
+                 spec.label + " nie ma kworum ani redundancji.",
+            line: line,
+            hint: spec.fail + " Wymagana nieparzysta liczba hostów, nie mniejsza niż " +
+                  QUORUM.minOdd + "." });
+        }
+        return;
+      }
+
+      if (n % 2 === 0 || n < QUORUM.minOdd) {
+        out.push({ sev: "error", code: "KWORUM-LICZBA",
+          msg: "Grupa <code>[" + esc(spec.name) + "]</code> ma " +
+               countLabel(n, "host", "hosty", "hostów") + " — " +
+               (n % 2 === 0 ? "liczba parzysta" : "za mało") +
+               " dla kworum (" + spec.label + ").",
+          line: line,
+          hint: spec.why + " " + spec.fail });
+      }
+    });
+
+    /* --- klastry RAFT baz OVN --- */
+    var ovnBase = groups["ovn-database"] ? (effective["ovn-database"] || []) : null;
+    var nbHosts = null;
+    OVN_DB_GROUPS.forEach(function (spec) {
+      var g = groups[spec.name];
+      if (!g) return;
+      var hosts = effective[spec.name] || [];
+      if (!hosts.length) return;
+      if (spec.name === "ovn-nb-db") nbHosts = hosts;
+      /* grupa dziedzicząca z [ovn-database] jest pokryta wpisem dla tej grupy */
+      if (!spec.base && ovnBase && ovnBase.length && sameSet(hosts, ovnBase)) return;
+
+      var n = hosts.length;
+      var line = groupLine(g);
+
+      if (n % 2 === 0 || n > QUORUM.ovnMax) {
+        out.push({ sev: "error", code: "KWORUM-OVN",
+          msg: "Grupa <code>[" + esc(spec.name) + "]</code> ma " +
+               countLabel(n, "host", "hosty", "hostów") + " — klaster RAFT wymaga 1 albo " +
+               QUORUM.ovnMax + ".",
+          line: line,
+          hint: "Klaster dwuwęzłowy ma gorszą dostępność niż pojedynczy węzeł: wdrożenie " +
+                "przechodzi, <code>ovn-nbctl show</code> działa, ale przy utracie jednego " +
+                "z dwóch węzłów RAFT traci kworum i baza przechodzi w tryb tylko do " +
+                "odczytu. Neutron przestaje tworzyć porty i grupy zabezpieczeń, podczas " +
+                "gdy istniejąca warstwa danych działa dalej — monitoring maszyn świeci " +
+                "na zielono, a chmura jest zamrożona." });
+      } else if (n === 1 && control.length > 1) {
+        out.push({ sev: "info", code: "KWORUM-OVN",
+          msg: "Grupa <code>[" + esc(spec.name) + "]</code> ma jeden host przy " +
+               countLabel(control.length, "węźle", "węzłach", "węzłach") + " sterujących.",
+          line: line,
+          hint: "Dopuszczalne, ale " + spec.label + " staje się pojedynczym punktem awarii " +
+                "płaszczyzny sterowania sieci." });
+      }
+    });
+
+    /* northd łączy się z bazą lokalnie tylko wtedy, gdy stoi na tych samych hostach */
+    var northd = groups["ovn-northd"] ? (effective["ovn-northd"] || []) : null;
+    var dbRef = (nbHosts && nbHosts.length) ? nbHosts : ovnBase;
+    if (northd && northd.length && dbRef && dbRef.length && !sameSet(northd, dbRef)) {
+      out.push({ sev: "warn", code: "OVN-NORTHD",
+        msg: "Obsada <code>[ovn-northd]</code> różni się od obsady baz OVN.",
+        line: groupLine(groups["ovn-northd"]),
+        hint: "northd będzie łączyć się z bazą zdalnie. Zwykle obie grupy mają tę samą " +
+              "listę hostów." });
+    }
+
+    /* --- monitory Ceph --- */
+    /* Kolla-Ansible nie wdraża Cepha od wydania Ussuri — obecność tej grupy zwykle
+       znaczy, że inventory pochodzi sprzed tej zmiany albo z ceph-ansible/cephadm. */
+    var mon = groups["ceph-mon"];
+    if (mon) {
+      var monHosts = effective["ceph-mon"] || [];
+      var monLine = groupLine(mon);
+      out.push({ sev: "info", code: "CEPH-POZA-KOLLA",
+        msg: "Grupa <code>[ceph-mon]</code> nie jest wdrażana przez Kolla-Ansible.",
+        line: monLine,
+        hint: "Wdrażanie Cepha usunięto z Kolla-Ansible w wydaniu Ussuri. Klaster " +
+              "podłącza się jako zewnętrzny (<code>external-ceph</code>), a tę grupę " +
+              "obsługuje ceph-ansible albo cephadm — Kolla ją zignoruje." });
+      if (monHosts.length && (monHosts.length % 2 === 0 || monHosts.length < QUORUM.minOdd)) {
+        out.push({ sev: monHosts.length === 1 ? "info" : "warn", code: "KWORUM-CEPH",
+          msg: "Grupa <code>[ceph-mon]</code> ma " +
+               countLabel(monHosts.length, "host", "hosty", "hostów") + " — monitory Ceph " +
+               "wymagają nieparzystej liczby, nie mniejszej niż " + QUORUM.minOdd + ".",
+          line: monLine,
+          hint: "Bez większości monitorów klaster wstrzymuje operacje wejścia-wyjścia. " +
+                "Przy dwóch monitorach utrata jednego zatrzymuje cały magazyn." });
+      }
+    }
+
+    return out;
+  }
+
   function analyse(parsed, release) {
     var groups = parsed.groups;
     var order = parsed.order;
@@ -1057,6 +1252,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
     /* --- reguły zależne od wydania --- */
     releaseRules(release, groups).forEach(function (f) { findings.push(f); });
+
+    /* --- kworum i liczebność grup --- */
+    quorumRules(groups, effective, hostNames).forEach(function (f) { findings.push(f); });
 
     if (!hostNames.length && !findings.some(function (f) { return f.sev === "error"; })) {
       add("error", "BRAK-HOSTOW", "Inventory nie zawiera żadnego hosta.", null);
