@@ -1,0 +1,16 @@
+{
+  "release": "2026.1",
+  "globals": true,
+  "findings": [
+    {
+      "code": "KV-07-CINDER-KLASTER",
+      "sev": "error",
+      "src": "cross",
+      "line": 15,
+      "refs": [
+        "inventory:15",
+        "globals:-"
+      ]
+    }
+  ]
+}

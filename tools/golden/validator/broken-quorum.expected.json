@@ -1,30 +1,41 @@
 {
   "release": "2026.1",
+  "globals": false,
   "findings": [
     {
       "code": "KWORUM-LICZBA",
       "sev": "error",
-      "line": 5
+      "src": "inventory",
+      "line": 5,
+      "refs": []
     },
     {
       "code": "KWORUM-OVN",
       "sev": "error",
-      "line": 22
+      "src": "inventory",
+      "line": 22,
+      "refs": []
     },
     {
       "code": "GRUPA-PRZEMIANOWANA",
       "sev": "error",
-      "line": 26
+      "src": "inventory",
+      "line": 26,
+      "refs": []
     },
     {
       "code": "BRAMA-BEZ-HA",
       "sev": "warn",
-      "line": 9
+      "src": "inventory",
+      "line": 9,
+      "refs": []
     },
     {
       "code": "GRUPA-WYCOFANA",
       "sev": "warn",
-      "line": 29
+      "src": "inventory",
+      "line": 29,
+      "refs": []
     }
   ]
 }

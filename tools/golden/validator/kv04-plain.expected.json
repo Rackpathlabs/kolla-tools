@@ -1,0 +1,13 @@
+{
+  "release": "2026.1",
+  "globals": true,
+  "findings": [
+    {
+      "code": "KOLOKACJA-CONTROL-COMPUTE",
+      "sev": "warn",
+      "src": "inventory",
+      "line": 7,
+      "refs": []
+    }
+  ]
+}
