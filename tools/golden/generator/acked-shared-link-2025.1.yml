@@ -2,8 +2,8 @@
 # Generated with Rackpathlabs globals.yml generator
 #
 # Plik konfiguracyjny Kolla-Ansible: /etc/kolla/globals.yml
-# Docelowe wydanie: 2026.1   |   obraz bazowy: ubuntu
-# Gazpacho, kolla-ansible 22.x, status wsparcia: maintained
+# Docelowe wydanie: 2025.1   |   obraz bazowy: rocky
+# Epoxy, kolla-ansible 20.x, status wsparcia: maintained
 #
 # Zweryfikuj wartości na docelowych hostach przed uruchomieniem
 # 'kolla-ansible prechecks' oraz 'kolla-ansible deploy'.
@@ -11,8 +11,8 @@
 ###############################################################################
 # Obraz bazowy i wydanie
 ###############################################################################
-kolla_base_distro: "ubuntu"
-openstack_release: "2026.1"
+kolla_base_distro: "rocky"
+openstack_release: "2025.1"
 
 ###############################################################################
 # Sieć
@@ -21,11 +21,13 @@ openstack_release: "2026.1"
 # neutron_external_interface  - ruch zewnętrzny, interfejs bez adresu IP i bez konfiguracji
 # kolla_internal_vip_address  - wolny adres w sieci zarządzania, nieprzypisany do hosta
 ###############################################################################
-network_interface: "ens3"
-neutron_external_interface: "ens4"
-kolla_internal_vip_address: "172.16.4.200"
-# migration_interface nie jest ustawione — migracja na żywo pójdzie przez
-# api_interface, tą samą drogą co RPC i pierścień Corosync.
+network_interface: "bond0"
+neutron_external_interface: "eth3"
+kolla_internal_vip_address: "10.50.0.250"
+neutron_bridge_name: "br-ex"
+api_interface: "bond0"
+storage_interface: "bond0"
+migration_interface: "bond0"
 
 ###############################################################################
 # Warstwa równoważenia obciążenia
@@ -36,29 +38,38 @@ enable_haproxy: "yes"
 # Usługi OpenStack
 ###############################################################################
 enable_cinder: "yes"
+enable_cinder_backend_lvm: "yes"
+cinder_volume_group: "cinder-volumes"
 enable_heat: "no"
-enable_horizon: "no"
+enable_horizon: "yes"
 enable_barbican: "no"
 enable_octavia: "no"
-enable_prometheus: "yes"
+enable_prometheus: "no"
 enable_grafana: "no"
-enable_hacluster: "no"
-enable_masakari: "no"
+enable_hacluster: "yes"
+enable_masakari: "yes"
+# Masakari bez działającego STONITH nie jest wysoką dostępnością. Izolacja
+# sieciowa węzła wygląda jak jego awaria: instancja zostaje odtworzona,
+# podczas gdy pierwotna wciąż trzyma otwarty deskryptor RBD.
 
 ###############################################################################
 # Neutron
 ###############################################################################
-neutron_plugin_agent: ""
-enable_neutron_provider_networks: "yes"
-# Sieci provider mapują się bezpośrednio na sieć fizyczną podpiętą do
-# neutron_external_interface (ens4). Ruch wychodzi przez mostek
-# neutron_bridge_name — domyślnie br-ex. Port przełącznika musi być
-# skonfigurowany zgodnie z typem sieci (dostępowy dla flat, trunk 802.1Q dla VLAN).
+neutron_plugin_agent: "openvswitch"
+enable_neutron_provider_networks: "no"
 
 ###############################################################################
 # RabbitMQ
 ###############################################################################
 om_enable_rabbitmq_stream_fanout: "yes"
-# Wartość domyślna wydania 2026.1, wypisana jawnie.
+# Wartość domyślna wydania 2025.1, wypisana jawnie.
 # Przy true liderzy wszystkich strumieni potrafią wylądować na jednym
 # brokerze — po wdrożeniu zweryfikuj ich rozłożenie na węzłach.
+
+###############################################################################
+# Decyzje potwierdzone świadomie
+# - wspólne łącze dla ruchu magazynu i API: potwierdzony zapas pasma
+#   i kolejkowanie po stronie przełącznika
+# - migracja na wydzielonej sieci ustawionej poza Kollą przez
+#   live_migration_inbound_addr w nadpisaniu nova-compute
+###############################################################################
