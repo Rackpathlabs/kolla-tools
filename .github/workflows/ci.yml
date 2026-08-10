@@ -44,6 +44,11 @@ jobs:
       - name: Spójność bloków współdzielonych
         run: bash tools/check-blocks.sh
 
+      # SCOPE.md opisuje granice narzędzi. Jego zniknięcie albo utrata odnośnika
+      # z README zmieniłaby obietnicę produktu bez śladu w review.
+      - name: Dokument granic (SCOPE.md)
+        run: bash tools/check-docs.sh
+
       # Zastępuje test przeglądarkowy z AC issue #4 — ten wymagałby npm.
       # Polityka CSP jest przypięta co do znaku, więc jej zmiana wywala build
       # i wymusza powtórzenie ręcznej weryfikacji w przeglądarce.
