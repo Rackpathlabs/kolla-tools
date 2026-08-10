@@ -3,6 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Polityka bezpieczeństwa treści. Narzędzie jest w całości inline i nie pobiera
+     niczego z sieci, więc default-src 'none' blokuje wszystko, a wyjątki dotyczą
+     wyłącznie własnego skryptu i stylu. Brak connect-src oznacza, że fetch,
+     XMLHttpRequest, WebSocket, EventSource i sendBeacon są odcięte przez default-src.
+     Wczytywanie plików przez input[type=file] i FileReader jest operacją lokalną,
+     której CSP nie dotyczy — polityki nie osłabiamy na zapas.
+     frame-ancestors celowo pominięte: w znaczniku meta jest ignorowane przez
+     przeglądarki, a GitHub Pages nie pozwala ustawić nagłówka HTTP. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
 <title>Rackpathlabs — generator globals.yml (Kolla-Ansible)</title>
 <meta name="description" content="Generator pliku globals.yml dla Kolla-Ansible. Działa offline, bez zależności zewnętrznych.">
 <style>
