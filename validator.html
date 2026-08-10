@@ -67,6 +67,27 @@ h1{font-size:20px;margin:26px 0 4px;font-weight:600;letter-spacing:-.2px}
   padding:6px 8px;font:13px/1.3 var(--mono);cursor:pointer
 }
 .rel select:focus-visible{outline:none;border-color:var(--accent-dim);box-shadow:0 0 0 3px rgba(61,220,151,.14)}
+textarea.plain{
+  width:100%;min-height:120px;padding:10px 12px;background:#0c1116;color:var(--fg);resize:vertical;
+  border:0;border-top:1px solid var(--line);font:12.5px/1.6 var(--mono);display:block
+}
+textarea.plain:focus{outline:none;box-shadow:inset 0 0 0 2px var(--accent-dim)}
+textarea.plain.drag{box-shadow:inset 0 0 0 2px var(--accent-dim)}
+.scope-note{
+  padding:10px 12px;border-top:1px solid var(--line);background:#141b22;
+  font-size:12.5px;color:var(--muted);line-height:1.5
+}
+.scope-note strong{color:var(--fg);font-weight:600}
+.src{
+  font:10px/1.7 var(--mono);font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+  padding:0 6px;border-radius:4px;background:#1d2630;color:var(--dim);border:1px solid var(--line)
+}
+.src.globals{color:var(--blue);border-color:#274058}
+.src.cross{color:var(--accent);border-color:var(--accent-dim)}
+.ack-row{display:flex;align-items:flex-start;gap:9px;padding:9px 12px;border-top:1px solid var(--line);cursor:pointer}
+.ack-row input{margin-top:3px;flex:0 0 auto}
+.ack-row .t-txt{font-size:12.5px;color:var(--muted);line-height:1.45}
+.ack-row .t-txt b{color:var(--fg);font-weight:600;display:block}
 .editor{display:flex;position:relative;background:#0c1116}
 .editor.drag{outline:2px dashed var(--accent-dim);outline-offset:-4px}
 .gutter{
@@ -203,7 +224,36 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         </div>
       </div>
 
-      <div class="panel">
+      <div class="panel" style="margin-top:18px">
+        <h2>globals.yml
+          <span class="sp"></span>
+          <span class="chip" id="chip-globals">nie wczytano</span>
+        </h2>
+        <div class="tools">
+          <button type="button" class="small" id="btn-gfile">Wczytaj plik…</button>
+          <button type="button" class="small ghost" id="btn-gclear" disabled>Wyczyść</button>
+          <input type="file" id="gfile" accept=".yml,.yaml,.txt,text/plain" class="sr" aria-hidden="true" tabindex="-1">
+        </div>
+        <textarea id="gsrc" class="plain" spellcheck="false" autocapitalize="off" autocomplete="off"
+          aria-label="Zawartość pliku globals.yml — opcjonalna"
+          placeholder="Opcjonalnie. Wklej albo przeciągnij globals.yml, żeby włączyć reguły wymagające obu plików naraz."></textarea>
+        <label class="ack-row" for="ack_nobmc">
+          <input type="checkbox" id="ack_nobmc">
+          <span class="t-txt"><b>Laboratorium bez BMC — Masakari wyłącznie testowo</b>
+            Potwierdzenie obniża wpis o fencingu do informacji. Nie wycisza go: środowisko
+            <em>nazwane</em> „dev” nie jest zwolnieniem, bo konfiguracja bywa kopiowana na produkcję.</span>
+        </label>
+        <div class="scope-note" id="gscope" hidden>
+          <strong>Ten plik służy tu wyłącznie regułom wymagającym obu plików naraz</strong>
+          — kolizji VIP-a, klastrowania Cindera i fencingu Masakari.
+          Walidator <strong>nie sprawdza samego</strong> <code>globals.yml</code>: interfejsy,
+          TLS, zależności usług i zgodność z wydaniem lintuje
+          <a href="generator.html">generator globals.yml</a>. Brak wpisów poniżej nie znaczy,
+          że plik jest poprawny — znaczy, że nie ma konfliktu z tym inventory.
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:18px">
         <h2>Topologia
           <span class="sp"></span>
           <span class="chip" id="chip-hosts">0 hostów</span>
@@ -884,7 +934,13 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     toast: document.getElementById("toast"),
     file: document.getElementById("file"),
     btnReport: document.getElementById("btn-report"),
-    release: document.getElementById("release")
+    release: document.getElementById("release"),
+    gsrc: document.getElementById("gsrc"),
+    gfile: document.getElementById("gfile"),
+    gscope: document.getElementById("gscope"),
+    chipGlobals: document.getElementById("chip-globals"),
+    btnGclear: document.getElementById("btn-gclear"),
+    ackNoBmc: document.getElementById("ack_nobmc")
   };
 
   var lastReport = null;
@@ -1421,7 +1477,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       ? shown + " i " + (names.length - COLLOCATION.listLimit) + " więcej" : shown;
   }
 
-  function collocationRules(groups, effective, hostNames) {
+  function collocationRules(groups, effective, hostNames, flags) {
+    flags = flags || Object.create(null);
     var out = [];
     var control = effective.control || [];
     var compute = effective.compute || [];
@@ -1440,21 +1497,26 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
        błędu, gdy zobaczy enable_masakari / enable_hacluster / enable_pacemaker_remote. */
     var ctlCmp = intersect(control, compute);
     if (ctlCmp.length && !aio) {
+      var v4 = lintVariantB("KV-04", flags);
       out.push({
-        sev: "warn", code: "KOLOKACJA-CONTROL-COMPUTE",
+        sev: lintSevB("KV-04", v4, null), code: "KOLOKACJA-CONTROL-COMPUTE",
         msg: plural(ctlCmp.length, "Host pełni", "Hosty pełnią", "Hostów pełni") +
              " jednocześnie rolę sterującą i obliczeniową: " + hostList(ctlCmp) + ".",
         line: groupLine(groups.compute),
-        hint: "Bez Masakari to poprawny układ hiperkonwergentny — zaplanuj rezerwę " +
+        hint: (v4 === "ha"
+              ? "W <code>globals.yml</code> widać narzędzia HA, więc warunek eskalacji " +
+                "jest spełniony i to jest błąd, nie kompromis. "
+              : "") +
+              "Bez Masakari to poprawny układ hiperkonwergentny — zaplanuj rezerwę " +
               "procesora i pamięci na usługi sterowania. Z <code>enable_masakari</code> " +
               "ta sama konfiguracja jest błędem grożącym uszkodzeniem danych: albo " +
               "Pacemaker Remote nie wystartuje na hoście będącym już pełnym członkiem " +
               "Corosync, albo — przy <code>restrict_to_remotes = false</code> — " +
               "hostmonitor uzna węzeł sterujący za kandydata do ewakuacji i restart " +
               "serwisowy każe Masakari ewakuować maszyny z węzła, na którym stoją " +
-              "MariaDB i RabbitMQ, przez API, które właśnie leży. Kaskada. " +
-              "Rozstrzygnięcie wymaga <code>globals.yml</code> — tego pliku walidator " +
-              "nie widzi."
+              "MariaDB i RabbitMQ, przez API, które właśnie leży. Kaskada." +
+              (v4 === "ha" ? "" : " Rozstrzygnięcie wymaga <code>globals.yml</code> — " +
+               "wczytaj go w panelu obok, żeby narzędzie mogło je podjąć.")
       });
     }
 
@@ -1522,7 +1584,222 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     return out;
   }
 
-  function analyse(parsed, release) {
+  /* ------------------------------------------------------------------ */
+  /* reguły wymagające obu plików (KV-01, KV-07, KV-09) + eskalacja KV-04 */
+  /* ------------------------------------------------------------------ */
+
+  /* Ten sam kształt co LINT w generatorze (#25): warianty wagi w danych, drabina
+     eskalacji w `by`, potwierdzenie obniża do informacji. Powtórzony jest wyłącznie
+     kilkunastolinijkowy wybierak wariantu — reguły i ich treść nie. */
+  var LINT_B = {
+    "KV-01": { ack: "ack_nobmc", sev: { plain: "error" }, by: [[null, "plain"]] },
+    /* Amendment KV-04: tryb łączony widzi warunek eskalacji, więc może podnieść wagę.
+       Bez tych kluczy zostaje uwaga — dokładnie tyle, ile udowadnia samo inventory. */
+    "KV-04": { ack: null, sev: { ha: "error", plain: "warn" },
+               by: [["enable_masakari", "ha"], ["enable_hacluster", "ha"],
+                    ["enable_pacemaker_remote", "ha"], [null, "plain"]] },
+    "KV-07": { ack: null, sev: { missing: "error" }, by: [[null, "missing"]] },
+    "KV-09": { ack: null, sev: { collision: "error", subnet: "warn" } }
+  };
+
+  function lintVariantB(id, flags) {
+    var by = LINT_B[id].by || [];
+    for (var i = 0; i < by.length; i++) {
+      if (by[i][0] === null || flags[by[i][0]]) return by[i][1];
+    }
+    return null;
+  }
+
+  function lintSevB(id, variant, acks) {
+    var r = LINT_B[id];
+    if (r.ack && acks && acks[r.ack]) return "info";
+    return r.sev[variant];
+  }
+
+  function yamlTruthy(v) {
+    var s = String(v == null ? "" : v).trim().toLowerCase();
+    return s === "yes" || s === "true" || s === "on" || s === "1";
+  }
+
+  /* Klucz nieobecny znaczy "wartość domyślna Kolli", a ta dla haproxy i keepalived
+     jest włączona. Zwolnienie z KV-09 wymaga jawnego wyłączenia, nie milczenia. */
+  function explicitlyOff(glob, key) {
+    var e = glob && glob.keys[key];
+    if (!e) return false;
+    var s = String(e.value == null ? "" : e.value).trim().toLowerCase();
+    return s === "no" || s === "false" || s === "off" || s === "0";
+  }
+
+  var GLOBALS_FLAGS = ["enable_masakari", "enable_hacluster", "enable_pacemaker_remote",
+                       "enable_cinder_backend_lvm", "cinder_backend_ceph"];
+
+  function globalsFlags(glob) {
+    var f = Object.create(null);
+    GLOBALS_FLAGS.forEach(function (k) {
+      var e = glob && glob.keys[k];
+      f[k] = e ? yamlTruthy(e.value) : false;
+    });
+    return f;
+  }
+
+  var BMC_RE = /(^|_)(ipmi|bmc|drac|ilo|redfish)(_|$)/i;
+
+  /* Fencing wymaga adresu kontrolera zarządzania. Szukamy go w zmiennych hostów
+     i w zmiennych grup — w obu miejscach bywa deklarowany. */
+  function hasBmcFields(groups, order) {
+    for (var i = 0; i < order.length; i++) {
+      var g = groups[order[i]];
+      for (var h = 0; h < g.hosts.length; h++) {
+        var vars = g.hosts[h].vars;
+        for (var k in vars) if (BMC_RE.test(k)) return true;
+      }
+      for (var v = 0; v < g.vars.length; v++) if (BMC_RE.test(g.vars[v].key)) return true;
+    }
+    return false;
+  }
+
+  /* Inventory nie niesie masek, więc podsieć jest wnioskowana. Zwracamy założenie
+     razem z wynikiem, bo reguła, która go nie poda, jest blefem. */
+  function inferSubnet(addrs) {
+    var v4 = addrs.filter(function (a) { return /^\d{1,3}(\.\d{1,3}){3}$/.test(a); });
+    if (v4.length < 2) return null;
+    var parts = v4.map(function (a) { return a.split("."); });
+    var first = parts[0];
+    if (parts.every(function (p) { return p[0] === first[0] && p[1] === first[1] && p[2] === first[2]; })) {
+      return { prefix: first.slice(0, 3).join("."), mask: 24, octets: 3 };
+    }
+    if (parts.every(function (p) { return p[0] === first[0] && p[1] === first[1]; })) {
+      return { prefix: first.slice(0, 2).join("."), mask: 16, octets: 2 };
+    }
+    return null;
+  }
+
+  function gline(glob, key) {
+    var e = glob && glob.keys[key];
+    return e ? e.line : null;
+  }
+
+  function crossRules(groups, order, effective, hostIndex, glob, acks) {
+    var out = [];
+    if (!glob) return out;
+
+    /* Zgłoszenia parsera pokazujemy zawsze — także te bez wagi błędu. Reguły
+       uruchamiamy dopiero na pliku, który sparsował się w całości: wnioskowanie
+       z połowy pliku byłoby zgadywaniem. */
+    glob.findings.forEach(function (f) {
+      out.push({ sev: f.sev, code: f.code, src: "globals", line: f.line,
+                 msg: f.msg, hint: f.hint || null });
+    });
+    if (!glob.ok) return out;
+
+    var flags = globalsFlags(glob);
+
+    /* --- KV-01: Masakari z hacluster, ale bez śladu fencingu --- */
+    if (flags.enable_masakari && flags.enable_hacluster && !hasBmcFields(groups, order)) {
+      out.push({
+        sev: lintSevB("KV-01", lintVariantB("KV-01", flags), acks),
+        code: "KV-01-FENCING", src: "cross", line: null,
+        refs: [{ src: "globals", line: gline(glob, "enable_masakari") },
+               { src: "globals", line: gline(glob, "enable_hacluster") }],
+        msg: "<code>enable_masakari</code> i <code>enable_hacluster</code> są włączone, " +
+             "a inventory nie zawiera ani jednego pola kontrolera zarządzania " +
+             "(<code>ipmi_*</code>, <code>bmc_*</code>, <code>drac_*</code>, <code>ilo_*</code>, " +
+             "<code>redfish_*</code>) — fencing nie ma z czego powstać.",
+        hint: "Izolacja sieciowa węzła obliczeniowego wygląda dla hostmonitora jak jego " +
+              "awaria: Masakari ewakuuje, Nova odtwarza maszynę gdzie indziej, a pierwotny " +
+              "QEMU wciąż żyje i trzyma otwarty deskryptor RBD. Dwie instancje zapisują ten " +
+              "sam wolumen — system plików gościa zostaje uszkodzony. Bez fencingu nie ma " +
+              "jak wymusić zwolnienia blokady. Pełnej pewności nie da się uzyskać z tych " +
+              "dwóch plików: <code>masakari-monitors.conf</code> i nadpisania hacluster leżą " +
+              "poza nimi."
+      });
+    }
+
+    /* --- KV-07: wiele hostów magazynu bez nazwy klastra Cindera --- */
+    var storage = effective.storage || [];
+    var lvmOnly = flags.enable_cinder_backend_lvm && !flags.cinder_backend_ceph;
+    if (storage.length > 1 && !glob.keys.cinder_cluster_name && !lvmOnly) {
+      out.push({
+        sev: lintSevB("KV-07", lintVariantB("KV-07", flags), acks),
+        code: "KV-07-CINDER-KLASTER", src: "cross",
+        line: groupLine(groups.storage),
+        refs: [{ src: "inventory", line: groupLine(groups.storage) },
+               { src: "globals", line: null }],
+        msg: "Grupa <code>[storage]</code> ma " +
+             countLabel(storage.length, "host", "hosty", "hostów") +
+             ", a <code>globals.yml</code> nie ustawia <code>cinder_cluster_name</code>.",
+        hint: "To nie jest wysoka dostępność, tylko tyle niezależnych backendów, ile " +
+              "hostów, dzielących jedną pulę. Każdy wolumen dostaje w bazie " +
+              "<code>host = &lt;węzeł&gt;@ceph#ceph</code>. Działa, dopóki ten węzeł żyje — " +
+              "po jego utracie operacje <code>delete</code>, <code>extend</code>, " +
+              "<code>retype</code> i <code>snapshot</code> na jego wolumenach wiszą " +
+              "w <code>deleting</code> albo <code>error</code> na zawsze, bo żaden inny " +
+              "cinder-volume ich nie przejmie. Naprawa to ręczny " +
+              "<code>cinder-manage volume update_host</code> na produkcyjnej bazie."
+      });
+    }
+
+    /* --- KV-09: VIP kontra adresy hostów --- */
+    if (!explicitlyOff(glob, "enable_haproxy") && !explicitlyOff(glob, "enable_keepalived")) {
+      var byAddr = Object.create(null);
+      Object.keys(hostIndex).forEach(function (host) {
+        hostIndex[host].defs.forEach(function (d) {
+          var a = d.vars.ansible_host;
+          if (!a) return;
+          if (!byAddr[a]) byAddr[a] = { hosts: [], line: d.line };
+          if (byAddr[a].hosts.indexOf(host) === -1) byAddr[a].hosts.push(host);
+        });
+      });
+      var addrList = Object.keys(byAddr);
+      var net = inferSubnet(addrList);
+
+      ["kolla_internal_vip_address", "kolla_external_vip_address"].forEach(function (key) {
+        var e = glob.keys[key];
+        if (!e || e.value === null || String(e.value).trim() === "") return;
+        var vip = String(e.value).trim();
+
+        if (byAddr[vip]) {
+          out.push({
+            sev: lintSevB("KV-09", "collision", acks),
+            code: "KV-09-VIP-KOLIZJA", src: "cross", line: byAddr[vip].line,
+            refs: [{ src: "inventory", line: byAddr[vip].line },
+                   { src: "globals", line: e.line }],
+            msg: "<code>" + esc(key) + "</code> ma wartość <code>" + esc(vip) +
+                 "</code>, która jest już adresem hosta " +
+                 byAddr[vip].hosts.map(function (h) { return "<code>" + esc(h) + "</code>"; }).join(", ") + ".",
+            hint: "Wdrożenie przejdzie — keepalived podnosi adres nie pytając nikogo o zgodę. " +
+                  "Potem: zduplikowany adres IP, migotanie ARP i losowe przekroczenia czasu " +
+                  "w API, widoczne tylko z części sieci."
+          });
+          return;
+        }
+
+        if (!net) return;   // za mało danych, żeby cokolwiek twierdzić
+        var vipParts = vip.split(".");
+        if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(vip)) return;
+        if (vipParts.slice(0, net.octets).join(".") === net.prefix) return;
+
+        out.push({
+          sev: lintSevB("KV-09", "subnet", acks),
+          code: "KV-09-VIP-PODSIEC", src: "cross", line: null,
+          refs: [{ src: "globals", line: e.line }],
+          msg: "<code>" + esc(key) + "</code> (<code>" + esc(vip) + "</code>) leży poza " +
+               "podsiecią <code>" + esc(net.prefix) + ".0/" + net.mask + "</code> " +
+               "wywnioskowaną z adresów hostów.",
+          hint: "Założenie: wszystkie adresy <code>ansible_host</code> mieszczą się w jednej " +
+                "podsieci o masce <code>/" + net.mask + "</code>. Inventory nie niesie masek, " +
+                "więc to jest heurystyka, a nie odczyt — przy innym podziale sieci ten wpis " +
+                "jest fałszywym alarmem. Jeśli maska jest inna, zignoruj go. Jeśli nie jest: " +
+                "HAProxy się zwiąże, keepalived podniesie adres, ale ruch powrotny nie znajdzie " +
+                "drogi spoza segmentu — „działa z węzła sterującego, nie działa ze stacji”."
+        });
+      });
+    }
+
+    return out;
+  }
+
+  function analyse(parsed, release, glob, acks) {
     var groups = parsed.groups;
     var order = parsed.order;
     var findings = parsed.findings.slice();
@@ -1753,7 +2030,12 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     });
 
     /* --- kolokacja ról --- */
-    collocationRules(groups, effective, hostNames).forEach(function (f) { findings.push(f); });
+    var gflags = glob ? globalsFlags(glob) : Object.create(null);
+    collocationRules(groups, effective, hostNames, gflags).forEach(function (f) { findings.push(f); });
+
+    /* --- reguły wymagające obu plików --- */
+    crossRules(groups, order, effective, hostIndex, glob, acks || Object.create(null))
+      .forEach(function (f) { findings.push(f); });
 
     /* --- reguły zależne od wydania --- */
     releaseRules(release, groups).forEach(function (f) { findings.push(f); });
@@ -1765,6 +2047,10 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       add("error", "BRAK-HOSTOW", "Inventory nie zawiera żadnego hosta.", null);
     }
 
+    /* Plik był dotąd jeden, więc źródło findingu było niejawne. Od trybu łączonego
+       musi być jawne — inaczej numer linii wskazuje nie wiadomo gdzie. */
+    findings.forEach(function (f) { if (!f.src) f.src = "inventory"; });
+
     var rank = { error: 0, warn: 1, info: 2 };
     findings.sort(function (a, b) {
       if (rank[a.sev] !== rank[b.sev]) return rank[a.sev] - rank[b.sev];
@@ -1774,7 +2060,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     return {
       findings: findings, groups: groups, order: order,
       effective: effective, hostCount: hostNames.length,
-      release: findRelease(release)
+      release: findRelease(release), hasGlobals: !!glob
     };
   }
 
@@ -1834,7 +2120,22 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     el.findings.innerHTML = list.map(function (f) {
       var label = f.sev === "error" ? "błąd" : (f.sev === "warn" ? "uwaga" : "info");
       var meta = "<span>" + f.code + "</span>";
-      if (f.line) meta += '<button type="button" class="f-line" data-line="' + f.line + '">linia ' + f.line + "</button>";
+      var srcLabel = f.src === "globals" ? "globals" : (f.src === "cross" ? "oba pliki" : "inventory");
+      meta += '<span class="src ' + (f.src === "inventory" ? "" : f.src) + '">' + srcLabel + "</span>";
+      /* Kliknięcie prowadzi tylko do inventory — tylko ten edytor ma margines z liniami.
+         Odsyłacz do globals jest etykietą, żeby nie obiecywać skoku, którego nie ma. */
+      if (f.line && f.src !== "globals") {
+        meta += '<button type="button" class="f-line" data-line="' + f.line + '">inventory: linia ' + f.line + "</button>";
+      }
+      (f.refs || []).forEach(function (r) {
+        if (r.src === "inventory") {
+          if (r.line && r.line !== f.line) {
+            meta += '<button type="button" class="f-line" data-line="' + r.line + '">inventory: linia ' + r.line + "</button>";
+          }
+        } else {
+          meta += "<span>globals: " + (r.line ? "linia " + r.line : "klucza brak") + "</span>";
+        }
+      });
       return '<li><span class="sev ' + f.sev + '">' + label + "</span>" +
              '<div class="f-body"><div class="f-msg">' + f.msg + "</div>" +
              (f.hint ? '<div class="f-hint">' + f.hint + "</div>" : "") +
@@ -1923,6 +2224,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     L.push("Rackpathlabs — raport walidacji inventory multinode");
     L.push("===================================================");
     L.push("Hosty: " + res.hostCount + "   Grupy: " + res.order.length);
+    L.push("globals.yml: " + (res.hasGlobals
+      ? "wczytany — działają też reguły wymagające obu plików"
+      : "nie wczytano — wyłącznie reguły inventory"));
     if (res.release) {
       L.push("Wydanie: " + res.release.id + " " + res.release.name +
              (res.release.kolla ? " (kolla-ansible " + res.release.kolla + ")" : ""));
@@ -1937,7 +2241,12 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     } else {
       res.findings.forEach(function (f) {
         var sev = f.sev === "error" ? "BŁĄD " : (f.sev === "warn" ? "UWAGA" : "INFO ");
-        L.push("[" + sev + "] " + pad(f.line ? "linia " + f.line : "—", 10) + pad(f.code, 18) + stripTags(f.msg));
+        var where = f.src === "cross" ? "oba" : f.src;
+        L.push("[" + sev + "] " + pad(f.line ? where + ":" + f.line : where, 16) +
+               pad(f.code, 24) + stripTags(f.msg));
+        (f.refs || []).forEach(function (r) {
+          L.push("          -> " + r.src + (r.line ? ": linia " + r.line : ": klucza brak"));
+        });
         if (f.hint) L.push("          " + stripTags(f.hint));
       });
     }
@@ -1978,11 +2287,15 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       return;
     }
 
-    var res = analyse(parse(text), el.release.value);
+    var gtext = el.gsrc.value;
+    var glob = gtext.trim() ? GLOBALS.parse(gtext) : null;
+    var res = analyse(parse(text), el.release.value, glob,
+                      { ack_nobmc: el.ackNoBmc.checked });
 
     var marks = {};
     res.findings.forEach(function (f) {
-      if (!f.line) return;
+      /* margines należy do edytora inventory — wpis wskazujący globals nie ma tu czego oznaczać */
+      if (!f.line || f.src === "globals") return;
       if (f.sev === "error") marks[f.line] = "error";
       else if (f.sev === "warn" && marks[f.line] !== "error") marks[f.line] = "warn";
     });
@@ -2173,8 +2486,49 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
   el.release.addEventListener("change", run);
 
+  /* ---- opcjonalny globals.yml ---- */
+  function globalsState() {
+    var has = el.gsrc.value.trim().length > 0;
+    el.btnGclear.disabled = !has;
+    el.gscope.hidden = !has;
+    el.chipGlobals.textContent = has ? "wczytano" : "nie wczytano";
+  }
+
+  function readGlobalsFile(file) {
+    if (!file) return;
+    var r = new FileReader();
+    r.onload = function () { el.gsrc.value = String(r.result); globalsState(); run();
+                             toast("Wczytano globals.yml — reguły dwuplikowe włączone."); };
+    r.onerror = function () { toast("Nie udało się odczytać pliku.", true); };
+    r.readAsText(file);
+  }
+
+  el.gsrc.addEventListener("input", function () { globalsState(); scheduleRun(); });
+  el.ackNoBmc.addEventListener("change", run);
+  document.getElementById("btn-gfile").addEventListener("click", function () { el.gfile.click(); });
+  el.gfile.addEventListener("change", function () {
+    readGlobalsFile(this.files && this.files[0]);
+    this.value = "";
+  });
+  el.btnGclear.addEventListener("click", function () {
+    el.gsrc.value = "";
+    globalsState();
+    run();
+    toast("Usunięto globals.yml — zostały reguły inventory.");
+  });
+  ["dragenter", "dragover"].forEach(function (ev) {
+    el.gsrc.addEventListener(ev, function (e) { e.preventDefault(); el.gsrc.classList.add("drag"); });
+  });
+  ["dragleave", "drop"].forEach(function (ev) {
+    el.gsrc.addEventListener(ev, function (e) { e.preventDefault(); el.gsrc.classList.remove("drag"); });
+  });
+  el.gsrc.addEventListener("drop", function (e) {
+    readGlobalsFile(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]);
+  });
+
   /* ---- start ---- */
   populateReleases();
+  globalsState();
   reset();
   renderGutter("", {});
 })();

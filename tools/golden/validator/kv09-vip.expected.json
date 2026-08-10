@@ -1,0 +1,25 @@
+{
+  "release": "2026.1",
+  "globals": true,
+  "findings": [
+    {
+      "code": "KV-09-VIP-KOLIZJA",
+      "sev": "error",
+      "src": "cross",
+      "line": 3,
+      "refs": [
+        "inventory:3",
+        "globals:2"
+      ]
+    },
+    {
+      "code": "KV-09-VIP-PODSIEC",
+      "sev": "warn",
+      "src": "cross",
+      "line": null,
+      "refs": [
+        "globals:3"
+      ]
+    }
+  ]
+}

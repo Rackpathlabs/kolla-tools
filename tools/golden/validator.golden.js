@@ -19,7 +19,7 @@ var path = require("path");
 var lib = require("../testlib");
 
 lib.installDom();
-var T = lib.loadTool(process.argv[2], ["parse", "analyse"]);
+var T = lib.loadTool(process.argv[2], ["parse", "analyse", "GLOBALS"]);
 
 var dir = path.join(__dirname, "validator");
 /* flaga argumentem, nie zmienną środowiskową: pod WSL testy potrafi
@@ -42,13 +42,50 @@ cases.forEach(function (file) {
     return;
   }
 
-  var res = T.analyse(T.parse(text), m[1]);
-  var actual = {
-    release: m[1],
-    findings: res.findings.map(function (f) {
-      return { code: f.code, sev: f.sev, line: f.line === undefined ? null : f.line };
-    })
-  };
+  /* Opcjonalny towarzysz: <nazwa>.globals.yml włącza reguły wymagające obu plików.
+     Potwierdzenia deklaruje się w inventory nagłówkiem "# golden-ack: nazwa,nazwa". */
+  var gpath = path.join(dir, name + ".globals.yml");
+  var hasGlobals = fs.existsSync(gpath);
+  var glob = hasGlobals ? T.GLOBALS.parse(fs.readFileSync(gpath, "utf8")) : null;
+
+  var acks = {};
+  var am = /^#\s*golden-ack:\s*(\S+)\s*$/m.exec(text);
+  if (am) am[1].split(",").forEach(function (a) { acks[a.trim()] = true; });
+
+  function shape(r) {
+    return r.findings.map(function (f) {
+      return {
+        code: f.code, sev: f.sev, src: f.src,
+        line: f.line === undefined ? null : f.line,
+        refs: (f.refs || []).map(function (x) { return x.src + ":" + (x.line || "-"); })
+      };
+    });
+  }
+
+  var res = T.analyse(T.parse(text), m[1], glob, acks);
+  var actual = { release: m[1], globals: hasGlobals, findings: shape(res) };
+
+  /* Degradacja jest asercją, nie deklaracją: ten sam plik bez globals musi dać
+     zero findingów spoza inventory i dokładnie tę samą listę klasy A. */
+  if (hasGlobals && !update) {
+    var solo = T.analyse(T.parse(text), m[1], null, {});
+    var leaked = shape(solo).filter(function (f) { return f.src !== "inventory"; });
+    R.ok(name + " — bez globals żaden finding spoza inventory", leaked.length === 0,
+         JSON.stringify(leaked));
+    var soloGolden = path.join(dir, name + ".no-globals.expected.json");
+    var soloStr = JSON.stringify({ release: m[1], globals: false, findings: shape(solo) }, null, 2) + "\n";
+    if (fs.existsSync(soloGolden)) {
+      R.ok(name + " — lista klasy A bez globals zgodna",
+           soloStr === fs.readFileSync(soloGolden, "utf8"));
+    } else {
+      R.ok(name + " (bez globals)", false, "brak wzorca — uruchom z --update");
+    }
+  } else if (hasGlobals && update) {
+    var solo2 = T.analyse(T.parse(text), m[1], null, {});
+    fs.writeFileSync(path.join(dir, name + ".no-globals.expected.json"),
+      JSON.stringify({ release: m[1], globals: false, findings: shape(solo2) }, null, 2) + "\n");
+    console.log("  zapisano " + name + ".no-globals.expected.json");
+  }
   var goldenPath = path.join(dir, name + ".expected.json");
   var actualStr = JSON.stringify(actual, null, 2) + "\n";
 
@@ -72,8 +109,8 @@ cases.forEach(function (file) {
 
   /* Różnicę pokazujemy na poziomie wpisów, nie znaków — inaczej raport z CI
      jest nieczytelny. */
-  var exp = JSON.parse(expected).findings.map(function (f) { return f.code + "/" + f.sev + "/" + f.line; });
-  var got = actual.findings.map(function (f) { return f.code + "/" + f.sev + "/" + f.line; });
+  var exp = JSON.parse(expected).findings.map(function (f) { return f.code + "/" + f.sev + "/" + f.src + "/" + f.line; });
+  var got = actual.findings.map(function (f) { return f.code + "/" + f.sev + "/" + f.src + "/" + f.line; });
   var missing = exp.filter(function (x) { return got.indexOf(x) === -1; });
   var extra = got.filter(function (x) { return exp.indexOf(x) === -1; });
   R.ok(name, false,

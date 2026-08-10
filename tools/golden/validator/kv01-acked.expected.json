@@ -1,0 +1,16 @@
+{
+  "release": "2026.1",
+  "globals": true,
+  "findings": [
+    {
+      "code": "KV-01-FENCING",
+      "sev": "info",
+      "src": "cross",
+      "line": null,
+      "refs": [
+        "globals:3",
+        "globals:4"
+      ]
+    }
+  ]
+}

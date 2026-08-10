@@ -301,6 +301,85 @@ ok("parsuje i podaje numery linii",
 ok("round-trip działa też tutaj",
    T.GLOBALS.emit(pdoc, {}).text === '---\nkolla_internal_vip_address: "10.0.0.250"\ncinder_cluster_name: prod\n');
 
+/* ---- reguły wymagające obu plików (KV-01, KV-07, KV-09) ---- */
+
+function withGlobals(invText, globText, acks) {
+  return T.analyse(T.parse(invText), "2026.1",
+                   globText === null ? null : T.GLOBALS.parse(globText), acks || {});
+}
+
+var INV3 = inv(["[control]", "c1 ansible_host=10.80.0.11", "c2 ansible_host=10.80.0.12",
+                "c3 ansible_host=10.80.0.13", "",
+                "[network]", "n1 ansible_host=10.80.0.21", "n2 ansible_host=10.80.0.22", "",
+                "[compute]", "k1 ansible_host=10.80.0.31", "k2 ansible_host=10.80.0.32", "",
+                "[storage]", "s1 ansible_host=10.80.0.41", "s2 ansible_host=10.80.0.42", "",
+                "[monitoring]", "m1 ansible_host=10.80.0.51", ""]);
+
+console.log("KV-01 — fencing:");
+var HA = '---\nenable_masakari: "yes"\nenable_hacluster: "yes"\n';
+r = withGlobals(INV3, HA);
+ok("Masakari + hacluster bez pól BMC -> błąd", find(r, "KV-01-FENCING")[0] &&
+   find(r, "KV-01-FENCING")[0].sev === "error");
+ok("wpis wskazuje oba pliki jako źródło", find(r, "KV-01-FENCING")[0].src === "cross");
+ok("odsyłacz do linii w globals",
+   find(r, "KV-01-FENCING")[0].refs.some(function (x) { return x.src === "globals" && x.line === 2; }));
+r = withGlobals(INV3.replace("c1 ansible_host=10.80.0.11", "c1 ansible_host=10.80.0.11 ipmi_address=10.81.0.11"), HA);
+ok("pole ipmi_address w inventory -> cisza", !hasCode(r, "KV-01-FENCING"));
+r = withGlobals(INV3.replace("[control]", "[all:vars]\nbmc_username=admin\n\n[control]"), HA);
+ok("pole BMC w zmiennych grupy też liczy się jako fencing", !hasCode(r, "KV-01-FENCING"));
+r = withGlobals(INV3, HA, { ack_nobmc: true });
+ok("potwierdzenie obniża do informacji", find(r, "KV-01-FENCING")[0].sev === "info");
+ok("potwierdzenie nie wycisza wpisu", hasCode(r, "KV-01-FENCING"));
+r = withGlobals(INV3, '---\nenable_masakari: "yes"\n');
+ok("sam Masakari bez hacluster -> cisza", !hasCode(r, "KV-01-FENCING"));
+
+console.log("KV-07 — klastrowanie Cindera:");
+r = withGlobals(INV3, '---\nenable_cinder: "yes"\ncinder_backend_ceph: "yes"\n');
+ok("dwa hosty storage bez cinder_cluster_name -> błąd",
+   find(r, "KV-07-CINDER-KLASTER")[0] && find(r, "KV-07-CINDER-KLASTER")[0].sev === "error");
+ok("wskazuje linię grupy w inventory i brak klucza w globals",
+   find(r, "KV-07-CINDER-KLASTER")[0].refs.some(function (x) { return x.src === "inventory" && x.line > 0; }) &&
+   find(r, "KV-07-CINDER-KLASTER")[0].refs.some(function (x) { return x.src === "globals" && !x.line; }));
+r = withGlobals(INV3, '---\ncinder_cluster_name: prod\n');
+ok("z cinder_cluster_name -> cisza", !hasCode(r, "KV-07-CINDER-KLASTER"));
+r = withGlobals(INV3, '---\nenable_cinder_backend_lvm: "yes"\n');
+ok("backend LVM bez współdzielenia -> zwolnienie z reguły", !hasCode(r, "KV-07-CINDER-KLASTER"));
+
+console.log("KV-09 — VIP wobec adresów hostów:");
+r = withGlobals(INV3, '---\nkolla_internal_vip_address: "10.80.0.31"\n');
+ok("VIP równy adresowi hosta -> błąd", find(r, "KV-09-VIP-KOLIZJA")[0] &&
+   find(r, "KV-09-VIP-KOLIZJA")[0].sev === "error");
+ok("wskazuje host w inventory i klucz w globals",
+   find(r, "KV-09-VIP-KOLIZJA")[0].refs.length === 2);
+r = withGlobals(INV3, '---\nkolla_internal_vip_address: "192.168.5.9"\n');
+ok("VIP poza wnioskowaną podsiecią -> uwaga, nie błąd",
+   find(r, "KV-09-VIP-PODSIEC")[0] && find(r, "KV-09-VIP-PODSIEC")[0].sev === "warn");
+ok("wpis podaje założoną maskę wprost",
+   /10\.80\.0\.0\/24/.test(find(r, "KV-09-VIP-PODSIEC")[0].msg) &&
+   /heurystyka/.test(find(r, "KV-09-VIP-PODSIEC")[0].hint));
+r = withGlobals(INV3, '---\nkolla_internal_vip_address: "10.80.0.250"\n');
+ok("VIP wolny w tej samej podsieci -> cisza",
+   !hasCode(r, "KV-09-VIP-KOLIZJA") && !hasCode(r, "KV-09-VIP-PODSIEC"));
+r = withGlobals(INV3, '---\nenable_haproxy: "no"\nkolla_internal_vip_address: "10.80.0.31"\n');
+ok("zewnętrzny load balancer (enable_haproxy: no) -> zwolnienie", !hasCode(r, "KV-09-VIP-KOLIZJA"));
+
+console.log("globals nieparsowalny:");
+r = withGlobals(INV3, '---\nklucz: |\n  blok\n');
+ok("błąd parsera globals trafia do listy ze źródłem globals",
+   r.findings.some(function (f) { return f.src === "globals" && f.sev === "error"; }));
+ok("reguły dwuplikowe nie ruszają na niepełnym pliku",
+   !hasCode(r, "KV-01-FENCING") && !hasCode(r, "KV-07-CINDER-KLASTER"));
+
+console.log("degradacja bez globals:");
+var solo = T.analyse(T.parse(INV3), "2026.1", null, {});
+var duo = withGlobals(INV3, '---\nenable_masakari: "yes"\nenable_hacluster: "yes"\n');
+ok("bez globals ani jednego findingu spoza inventory",
+   solo.findings.every(function (f) { return f.src === "inventory"; }));
+ok("klasa A identyczna z globals i bez",
+   JSON.stringify(solo.findings.map(function (f) { return f.code + f.sev + f.line; })) ===
+   JSON.stringify(duo.findings.filter(function (f) { return f.src === "inventory"; })
+     .map(function (f) { return f.code + f.sev + f.line; })));
+
 console.log("raport:");
 var res = run("", "2026.1");
 var rep = T.buildReport(res, { e: 0, w: 0, i: 0 });

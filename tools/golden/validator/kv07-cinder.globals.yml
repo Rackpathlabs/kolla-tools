@@ -1,0 +1,4 @@
+---
+kolla_internal_vip_address: "10.60.0.250"
+enable_cinder: "yes"
+cinder_backend_ceph: "yes"
