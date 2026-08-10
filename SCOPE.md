@@ -180,6 +180,17 @@ verify the Content-Security-Policy used a pattern that excluded apostrophes, and
 policy text is full of them, so it found no policy tag at all and reported two correct
 files as broken. Both looked like working checks. Neither was.
 
+The strongest illustration came later, and it is the reason this principle extends to the
+test tooling itself rather than only to the checks. While deliberately breaking three new
+rules to watch them fail, all three produced the same failures in unrelated fixtures. The
+cause was in the machinery used to run the proof: a string substitution in the golden-file
+runner had silently matched nothing, so one side of a comparison gained a field the other
+never got, and seven fixtures were failing for a reason unrelated to any of the three
+breaks. Had the failures not been examined, seven false reds would have been accepted as
+the new expected output. The habit of watching a check fail caught a defect in the
+instrument that proves checks work — which is the case for applying it recursively, and
+not only to the guards.
+
 **An assertion answers a question someone asked; a golden file answers questions nobody
 asked.** Targeted assertions cover the cases their author thought of, which is exactly
 their blind spot. A duplicated quorum rule once produced two findings for one fault at two

@@ -34,20 +34,6 @@
       "src": "inventory",
       "line": null,
       "refs": []
-    },
-    {
-      "code": "GRUPA-WLASNA",
-      "sev": "info",
-      "src": "inventory",
-      "line": 22,
-      "refs": []
-    },
-    {
-      "code": "GRUPA-WLASNA",
-      "sev": "info",
-      "src": "inventory",
-      "line": 25,
-      "refs": []
     }
   ]
 }

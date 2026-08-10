@@ -1019,6 +1019,18 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     "iscsid,tgtd,multipathd,external-compute,external-ceph"
   ).split(",");
 
+  /* Grupy usunięte w którymkolwiek wydaniu też są nazwami Kolli — po prostu już
+     nieobsługiwanymi. Bez tego wykrywanie literówek zgłaszałoby je jako nieznane
+     obok wpisu o wycofaniu, czyli dwa razy o tej samej rzeczy, z czego raz
+     nieprawdziwie. Lista bierze się z macierzy, nie z drugiego wykazu. */
+  KOLLA_MATRIX.releases.forEach(function (r) {
+    r.deprecated.forEach(function (d) {
+      if (d.kind !== "group" && d.kind !== "service") return;
+      if (KNOWN.indexOf(d.name) === -1) KNOWN.push(d.name);
+      if (d.replacedBy && KNOWN.indexOf(d.replacedBy) === -1) KNOWN.push(d.replacedBy);
+    });
+  });
+
   var el = {
     src: document.getElementById("src"),
     gutter: document.getElementById("gutter"),
