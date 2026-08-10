@@ -209,6 +209,116 @@ ok("wbudowany 'Przykład poprawny' -> zero błędów",
    JSON.stringify(r.findings.filter(function (f) { return f.sev === "error"; })
      .map(function (f) { return f.code; })));
 
+/* ---- KV-04 / KV-11: kolokacja ról ---- */
+
+var DISJOINT = ["[control]", "ctl01 ansible_host=10.0.0.11", "ctl02 ansible_host=10.0.0.12",
+                "ctl03 ansible_host=10.0.0.13", "",
+                "[network]", "net01 ansible_host=10.0.0.21", "net02 ansible_host=10.0.0.22", "",
+                "[compute]", "cmp01 ansible_host=10.0.0.31", "cmp02 ansible_host=10.0.0.32", "",
+                "[storage]", "str01 ansible_host=10.0.0.41", "",
+                "[monitoring]", "mon01 ansible_host=10.0.0.51", ""];
+
+console.log("kolokacja [control]/[compute] (KV-04):");
+r = runInv(inv(DISJOINT));
+ok("role rozłączne -> cisza", !hasCode(r, "KOLOKACJA-CONTROL-COMPUTE"));
+
+r = runInv(inv(["[control]", "ctl01 ansible_host=10.0.0.11", "ctl02 ansible_host=10.0.0.12",
+                "ctl03 ansible_host=10.0.0.13", "",
+                "[network]", "net01 ansible_host=10.0.0.21", "net02 ansible_host=10.0.0.22", "",
+                "[compute]", "ctl01", "ctl02", "ctl03", "",
+                "[storage]", "str01 ansible_host=10.0.0.41", "",
+                "[monitoring]", "mon01 ansible_host=10.0.0.51", ""]));
+/* Amendment KV-04: w walidatorze jednoplikowym to uwaga — warunek eskalacji
+   (enable_masakari) leży w globals.yml, którego ten tool nie widzi. */
+ok("hiperkonwergencja 3-węzłowa -> uwaga, nie błąd",
+   find(r, "KOLOKACJA-CONTROL-COMPUTE")[0] &&
+   find(r, "KOLOKACJA-CONTROL-COMPUTE")[0].sev === "warn");
+ok("opisany tryb awarii (kaskada Masakari)",
+   /hostmonitor/.test(find(r, "KOLOKACJA-CONTROL-COMPUTE")[0].hint));
+ok("wpis nazywa warunek eskalacji",
+   /enable_masakari/.test(find(r, "KOLOKACJA-CONTROL-COMPUTE")[0].hint));
+ok("wpis mówi, że bez Masakari to poprawny wzorzec",
+   /poprawny układ hiperkonwergentny/.test(find(r, "KOLOKACJA-CONTROL-COMPUTE")[0].hint));
+
+/* regresja: stara reguła patrzyła na bezpośrednie członkostwo i tego nie widziała */
+r = runInv(inv(["[control]", "ctl01 ansible_host=10.0.0.11", "ctl02 ansible_host=10.0.0.12", "",
+                "[control:children]", "dodatkowe", "",
+                "[dodatkowe]", "cmp01", "",
+                "[network]", "net01 ansible_host=10.0.0.21", "net02 ansible_host=10.0.0.22", "",
+                "[compute]", "cmp01 ansible_host=10.0.0.31", "cmp02 ansible_host=10.0.0.32", "",
+                "[storage]", "str01 ansible_host=10.0.0.41", "",
+                "[monitoring]", "mon01 ansible_host=10.0.0.51", ""]));
+ok("przecięcie przez :children też wykryte", hasCode(r, "KOLOKACJA-CONTROL-COMPUTE"));
+
+r = runInv(inv(["[control]", "aio01 ansible_host=10.0.0.11", "", "[network]", "aio01", "",
+                "[compute]", "aio01", "", "[storage]", "aio01", "", "[monitoring]", "aio01", ""]));
+ok("AIO -> bez alarmu kolokacji", !hasCode(r, "KOLOKACJA-CONTROL-COMPUTE"));
+ok("AIO -> bez alarmu kolokacji magazynu", !hasCode(r, "KOLOKACJA-STORAGE"));
+
+console.log("[network] pod OVN (KV-11):");
+r = runInv(inv(["[control]", "ctl01 ansible_host=10.0.0.11", "ctl02 ansible_host=10.0.0.12",
+                "ctl03 ansible_host=10.0.0.13", "",
+                "[network:children]", "control", "",
+                "[compute]", "cmp01 ansible_host=10.0.0.31", "cmp02 ansible_host=10.0.0.32", "",
+                "[storage]", "str01 ansible_host=10.0.0.41", "",
+                "[monitoring]", "mon01 ansible_host=10.0.0.51", ""]));
+ok("[network:children] = control -> uwaga", hasCode(r, "KOLOKACJA-NETWORK"));
+ok("uwaga, nie błąd", find(r, "KOLOKACJA-NETWORK")[0].sev === "warn");
+ok("nazwany kompromis (enable-chassis-as-gw)",
+   /enable-chassis-as-gw/.test(find(r, "KOLOKACJA-NETWORK")[0].hint));
+ok("wskazany klucz łagodzący",
+   /neutron_ovn_distributed_fip/.test(find(r, "KOLOKACJA-NETWORK")[0].hint));
+
+r = runInv(inv(["[control]", "ctl01 ansible_host=10.0.0.11", "ctl02 ansible_host=10.0.0.12",
+                "ctl03 ansible_host=10.0.0.13", "",
+                "[network:children]", "compute", "",
+                "[compute]", "cmp01 ansible_host=10.0.0.31", "cmp02 ansible_host=10.0.0.32", "",
+                "[storage]", "str01 ansible_host=10.0.0.41", "",
+                "[monitoring]", "mon01 ansible_host=10.0.0.51", ""]));
+ok("[network:children] = compute -> poprawny wzorzec, cisza", !hasCode(r, "KOLOKACJA-NETWORK"));
+ok("i bez alarmu o braku HA bramy", !hasCode(r, "BRAMA-BEZ-HA"));
+
+r = runInv(inv(["[control]", "ctl01 ansible_host=10.0.0.11", "ctl02 ansible_host=10.0.0.12",
+                "ctl03 ansible_host=10.0.0.13", "",
+                "[network]", "ctl01", "net02 ansible_host=10.0.0.22", "",
+                "[compute]", "cmp01 ansible_host=10.0.0.31", "cmp02 ansible_host=10.0.0.32", "",
+                "[storage]", "str01 ansible_host=10.0.0.41", "",
+                "[monitoring]", "mon01 ansible_host=10.0.0.51", ""]));
+ok("częściowe przecięcie network/control -> uwaga", hasCode(r, "KOLOKACJA-NETWORK"));
+ok("wymienia konkretny host", /ctl01/.test(find(r, "KOLOKACJA-NETWORK")[0].msg));
+
+console.log("redundancja bramy:");
+r = runInv(inv(["[control]", "ctl01 ansible_host=10.0.0.11", "ctl02 ansible_host=10.0.0.12",
+                "ctl03 ansible_host=10.0.0.13", "",
+                "[network]", "net01 ansible_host=10.0.0.21", "",
+                "[compute]", "cmp01 ansible_host=10.0.0.31", "cmp02 ansible_host=10.0.0.32", "",
+                "[storage]", "str01 ansible_host=10.0.0.41", "",
+                "[monitoring]", "mon01 ansible_host=10.0.0.51", ""]));
+ok("1 węzeł sieciowy przy 2 obliczeniowych -> uwaga", hasCode(r, "BRAMA-BEZ-HA"));
+r = runInv(inv(DISJOINT));
+ok("2 węzły sieciowe -> cisza", !hasCode(r, "BRAMA-BEZ-HA"));
+r = runInv(inv(["[control]", "ctl01 ansible_host=10.0.0.11", "ctl02 ansible_host=10.0.0.12",
+                "ctl03 ansible_host=10.0.0.13", "",
+                "[network]", "net01 ansible_host=10.0.0.21", "",
+                "[compute]", "cmp01 ansible_host=10.0.0.31", "",
+                "[storage]", "str01 ansible_host=10.0.0.41", "",
+                "[monitoring]", "mon01 ansible_host=10.0.0.51", ""]));
+ok("1 węzeł sieciowy przy 1 obliczeniowym -> poniżej progu, cisza", !hasCode(r, "BRAMA-BEZ-HA"));
+
+console.log("kolokacja magazynu:");
+r = runInv(inv(["[control]", "ctl01 ansible_host=10.0.0.11", "ctl02 ansible_host=10.0.0.12",
+                "ctl03 ansible_host=10.0.0.13", "",
+                "[network]", "net01 ansible_host=10.0.0.21", "net02 ansible_host=10.0.0.22", "",
+                "[compute]", "cmp01 ansible_host=10.0.0.31", "cmp02 ansible_host=10.0.0.32", "",
+                "[storage]", "cmp01", "cmp02", "",
+                "[monitoring]", "mon01 ansible_host=10.0.0.51", ""]));
+ok("[storage] na węzłach compute -> informacja",
+   find(r, "KOLOKACJA-STORAGE")[0] && find(r, "KOLOKACJA-STORAGE")[0].sev === "info");
+ok("nazwany kompromis (rezerwa zasobów)",
+   /rezerw/.test(find(r, "KOLOKACJA-STORAGE")[0].hint));
+r = runInv(inv(DISJOINT));
+ok("magazyn osobno -> cisza", !hasCode(r, "KOLOKACJA-STORAGE"));
+
 console.log("raport:");
 var res = run("", "2026.1");
 var rep = T.buildReport(res, { e: 0, w: 0, i: 0 });
