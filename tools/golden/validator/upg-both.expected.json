@@ -1,0 +1,59 @@
+{
+  "release": "2024.2",
+  "upgradeTo": "2026.1",
+  "globals": true,
+  "findings": [
+    {
+      "code": "UPGRADE-KLUCZ-PRZEMIANOWANY",
+      "sev": "error",
+      "src": "globals",
+      "line": 3,
+      "refs": [
+        "globals:3"
+      ]
+    },
+    {
+      "code": "UPGRADE-KLUCZ-PRZEMIANOWANY",
+      "sev": "error",
+      "src": "globals",
+      "line": 4,
+      "refs": [
+        "globals:4"
+      ]
+    },
+    {
+      "code": "UPGRADE-GRUPA-PRZEMIANOWANY",
+      "sev": "error",
+      "src": "inventory",
+      "line": 22,
+      "refs": [
+        "inventory:22"
+      ]
+    },
+    {
+      "code": "UPGRADE-PROCEDURA",
+      "sev": "warn",
+      "src": "globals",
+      "line": 5,
+      "refs": [
+        "globals:5"
+      ]
+    },
+    {
+      "code": "UPGRADE-GRUPA-WYCOFANY",
+      "sev": "warn",
+      "src": "inventory",
+      "line": 25,
+      "refs": [
+        "inventory:25"
+      ]
+    },
+    {
+      "code": "WYDANIE",
+      "sev": "warn",
+      "src": "inventory",
+      "line": null,
+      "refs": []
+    }
+  ]
+}

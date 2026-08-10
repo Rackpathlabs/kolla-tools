@@ -1,0 +1,39 @@
+{
+  "release": "2023.1",
+  "upgradeTo": "2024.1",
+  "globals": false,
+  "findings": [
+    {
+      "code": "UPGRADE-GRUPA-WYCOFANY",
+      "sev": "warn",
+      "src": "inventory",
+      "line": 22,
+      "refs": [
+        "inventory:22"
+      ]
+    },
+    {
+      "code": "UPGRADE-GRUPA-WYCOFANY",
+      "sev": "warn",
+      "src": "inventory",
+      "line": 25,
+      "refs": [
+        "inventory:25"
+      ]
+    },
+    {
+      "code": "UPGRADE-LUKA",
+      "sev": "warn",
+      "src": "upgrade",
+      "line": null,
+      "refs": []
+    },
+    {
+      "code": "WYDANIE",
+      "sev": "warn",
+      "src": "inventory",
+      "line": null,
+      "refs": []
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "release": "2024.2",
+  "upgradeTo": "2026.1",
+  "globals": false,
+  "findings": [
+    {
+      "code": "UPGRADE-GRUPA-PRZEMIANOWANY",
+      "sev": "error",
+      "src": "inventory",
+      "line": 22,
+      "refs": [
+        "inventory:22"
+      ]
+    },
+    {
+      "code": "UPGRADE-GRUPA-WYCOFANY",
+      "sev": "warn",
+      "src": "inventory",
+      "line": 25,
+      "refs": [
+        "inventory:25"
+      ]
+    },
+    {
+      "code": "WYDANIE",
+      "sev": "warn",
+      "src": "inventory",
+      "line": null,
+      "refs": []
+    }
+  ]
+}

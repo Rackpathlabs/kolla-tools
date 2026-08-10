@@ -113,6 +113,49 @@ conflicts with that particular inventory. The interface says so next to the load
 and it is repeated here because it is the single most plausible way to over-trust these
 tools.
 
+## The upgrade path mode
+
+The validator can be given a target release in addition to the current one. It then reports
+what changed along the path between them — but only for things that exist in the files you
+loaded.
+
+**What it shows.** For every release between your current one and the target, any inventory
+group, service or `globals.yml` key present in your input that was renamed, removed, or had
+its surrounding arrangement changed. Each item names the release it changed in, the file and
+line in your own input, and what to do about it. Renames are errors because the old name
+stops being recognised; removed services are warnings; changes that only alter circumstances
+are informational.
+
+Some changes cannot be fixed by editing a file at all. Switching RabbitMQ queue type between
+deployments is the reference case: services try to redeclare existing queues with a different
+type, fail, and enter restart loops while the deployment reports success. Those items are
+marked as requiring an operational step rather than an edit, and the tool states that it
+cannot verify whether the step was taken — that needs deployment history, which is covered in
+the exclusions above.
+
+**What it does not show.**
+
+- It is not a summary of the release notes, and reading it is not a substitute for reading
+  them. It answers a narrower question: *what in my files is affected*. Everything that
+  changed in components you do not have, or in defaults you never set, is absent by design.
+- It only sees `globals.yml` and the inventory. Changes to anything else — role internals,
+  container images, service configuration under `/etc/kolla/config`, host packages — are
+  invisible to it.
+- It does not check image compatibility, database schema state, or whether the upgrade will
+  actually succeed. Nothing here inspects a running environment.
+- It reports changes introduced **after** your current release. A key already deprecated in
+  the release you run today is not a change along the path, and the validator does not lint
+  `globals.yml` on its own — that is the generator's job.
+- Downgrades are not supported and the tool says so instead of producing a list. Kolla-Ansible
+  does not support them; returning to an earlier release means restoring an environment, not
+  editing files.
+
+**Where the data is incomplete, it says so.** Deprecations are catalogued per release from the
+kolla-ansible release notes, and some releases have not been catalogued. A path crossing one
+of them produces an explicit warning naming the release, because an empty result and an
+unexamined release look identical from the outside. That warning is the difference between
+"nothing changed" and "we did not look".
+
 ## Design principles
 
 Three rules govern how findings are written. They are not aspirations; each one exists
@@ -136,6 +179,17 @@ already clean — while its own verification fell for the same trick. A guard me
 verify the Content-Security-Policy used a pattern that excluded apostrophes, and the
 policy text is full of them, so it found no policy tag at all and reported two correct
 files as broken. Both looked like working checks. Neither was.
+
+The strongest illustration came later, and it is the reason this principle extends to the
+test tooling itself rather than only to the checks. While deliberately breaking three new
+rules to watch them fail, all three produced the same failures in unrelated fixtures. The
+cause was in the machinery used to run the proof: a string substitution in the golden-file
+runner had silently matched nothing, so one side of a comparison gained a field the other
+never got, and seven fixtures were failing for a reason unrelated to any of the three
+breaks. Had the failures not been examined, seven false reds would have been accepted as
+the new expected output. The habit of watching a check fail caught a defect in the
+instrument that proves checks work — which is the case for applying it recursively, and
+not only to the guards.
 
 **An assertion answers a question someone asked; a golden file answers questions nobody
 asked.** Targeted assertions cover the cases their author thought of, which is exactly

@@ -84,6 +84,7 @@ textarea.plain.drag{box-shadow:inset 0 0 0 2px var(--accent-dim)}
 }
 .src.globals{color:var(--blue);border-color:#274058}
 .src.cross{color:var(--accent);border-color:var(--accent-dim)}
+.src.upgrade{color:var(--amber);border-color:#5a4a1e}
 .ack-row{display:flex;align-items:flex-start;gap:9px;padding:9px 12px;border-top:1px solid var(--line);cursor:pointer}
 .ack-row input{margin-top:3px;flex:0 0 auto}
 .ack-row .t-txt{font-size:12.5px;color:var(--muted);line-height:1.45}
@@ -215,6 +216,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           <label class="rel" for="release">wydanie
             <select id="release" title="Wydanie, względem którego sprawdzane są nazwy grup"></select>
           </label>
+          <label class="rel" for="release_to">&rarr; docelowe
+            <select id="release_to" title="Opcjonalnie: wydanie, na które planujesz przejść"></select>
+          </label>
           <button type="button" class="small ghost" id="btn-clear">Wyczyść</button>
           <input type="file" id="file" accept=".ini,.yml,.yaml,.txt,text/plain" class="sr" aria-hidden="true" tabindex="-1">
         </div>
@@ -313,8 +317,16 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
                   wspierane
      defaults:    domyślne wartości istotne dla decyzji wdrożeniowych; opis klucza
                   leży w keys[] — jeden opis na klucz, nie na wydanie
-     deprecated:  { kind: 'key'|'group'|'service', name, replacedBy, sev, note }
+     deprecationsCatalogued:
+                  czy deprecacje tego wydania zostały przejrzane w release notes.
+                  false NIE znaczy "nic się nie zmieniło" — znaczy "nie wiemy".
+                  Ścieżka aktualizacji przez takie wydanie zgłasza jawną lukę
+                  zamiast milczeć, bo pusta lista wygląda identycznie jak brak zmian.
+     deprecated:  { kind: 'key'|'group'|'service'|'procedure', name, replacedBy, sev, note }
                   kind 'key' konsumuje generator, 'group'/'service' — walidator;
+                  'procedure' oznacza zmianę wymagającą kroku operacyjnego, a nie
+                  edycji pliku — narzędzie ma o niej powiedzieć, nie udawać, że
+                  wystarczy poprawka w YAML-u;
                   sev ('error'|'warn'|'info') jest w danych, bo waga zależy od wpisu:
                   przemianowana grupa to błąd, usunięta usługa to uwaga, zmiana grupy
                   nadrzędnej to informacja */
@@ -361,6 +373,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         released: null, expected: "2026-09-30", endsOn: null,
         baseDistros: null, unpublished: [], hostOs: [],
         defaults: {},
+        deprecationsCatalogued: false,
         deprecated: []
       },
       {
@@ -373,6 +386,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           om_enable_rabbitmq_stream_fanout: true,
           om_rabbitmq_qos_prefetch_count: 50
         },
+        deprecationsCatalogued: true,
         deprecated: [
           { kind: "group", name: "kolla-toolbox", replacedBy: "kolla_toolbox", sev: "error",
             note: "Grupa i rola przemianowane — myślnik zastąpiony podkreśleniem. Stara nazwa nie zostanie rozpoznana." },
@@ -405,7 +419,32 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         defaults: {
           om_enable_rabbitmq_stream_fanout: true
         },
-        deprecated: []
+        deprecationsCatalogued: true,
+        /* release notes 21.0.0 (Flamingo) */
+        deprecated: [
+          /* "ironic-inspector: Service support dropped upstream." */
+          { kind: "service", name: "ironic-inspector", replacedBy: null, sev: "warn",
+            note: "Usługa wycofana w górę strumienia i usunięta z Kolli." },
+          /* "Variables renamed: ironic_inspector_kernel_cmdline_extras ->
+             ironic_kernel_cmdline_extras" */
+          { kind: "key", name: "ironic_inspector_kernel_cmdline_extras",
+            replacedBy: "ironic_kernel_cmdline_extras", sev: "error",
+            note: "Przemianowane przy wycofaniu ironic-inspector." },
+          /* "ironic_inspector_pxe_filter -> ironic_pxe_filter" */
+          { kind: "key", name: "ironic_inspector_pxe_filter",
+            replacedBy: "ironic_pxe_filter", sev: "error",
+            note: "Przemianowane przy wycofaniu ironic-inspector." },
+          /* "bifrost option: bifrost_enable_ironic_inspector deleted." */
+          { kind: "key", name: "bifrost_enable_ironic_inspector", replacedBy: null, sev: "warn",
+            note: "Usunięte — klucz nie ma już żadnego efektu." },
+          /* "neutron_legacy_iptables: Dropped entirely." */
+          { kind: "key", name: "neutron_legacy_iptables", replacedBy: null, sev: "warn",
+            note: "Usunięte." },
+          /* "Redis to Valkey migration: Set enable_redis: \"no\" and
+             enable_valkey: \"yes\" before upgrade." */
+          { kind: "key", name: "enable_redis", replacedBy: "enable_valkey", sev: "error",
+            note: "Migracja Redis → Valkey. Przełączenie musi nastąpić PRZED aktualizacją." }
+        ]
       },
       {
         id: "2025.1", name: "Epoxy", kolla: "20.x", status: "maintained",
@@ -419,6 +458,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           enable_ironic_inspector: false,
           enable_ironic_neutron_agent: false
         },
+        deprecationsCatalogued: true,
         deprecated: [
           { kind: "key", name: "om_enable_rabbitmq_high_availability", replacedBy: null, sev: "error",
             note: "Usunięte — kolejki quorum są od tego wydania obowiązkowe." },
@@ -433,7 +473,17 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           { kind: "key", name: "ceph_manila_keyring", replacedBy: null, sev: "warn", note: "Usunięte." },
           { kind: "key", name: "ceph_nova_keyring", replacedBy: null, sev: "warn", note: "Usunięte." },
           { kind: "service", name: "swift", replacedBy: null, sev: "warn",
-            note: "Wsparcie dla wdrożenia Swift usunięte w 2025.1." }
+            note: "Wsparcie dla wdrożenia Swift usunięte w 2025.1." },
+          /* KV-12b: zmiana typu kolejek między wdrożeniami psuje istniejące kolejki
+             (PRECONDITION_FAILED - inequivalent arg). Nie da się tego naprawić edycją
+             pliku — wymaga kroku operacyjnego na brokerze. */
+          { kind: "procedure", name: "om_enable_rabbitmq_quorum_queues", replacedBy: null,
+            sev: "warn",
+            note: "Od 2025.1 kolejki quorum są obowiązkowe. Jeśli wdrożenie startowało " +
+                  "z kolejkami klasycznymi, sama zmiana wartości nie wystarczy: usługi " +
+                  "spróbują zadeklarować istniejące kolejki z innym typem i dostaną " +
+                  "PRECONDITION_FAILED, a kontenery wejdą w pętlę restartów przy " +
+                  "wdrożeniu raportującym sukces." }
         ]
       },
       {
@@ -444,7 +494,21 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         hostOs: ["CentOS Stream 9", "Debian Bookworm (12)", "Rocky Linux 9",
                  "Ubuntu Jammy (22.04)", "Ubuntu Noble (24.04)"],
         defaults: {},
-        deprecated: []
+        deprecationsCatalogued: true,
+        /* release notes 19.0.0 (Dalmatian) */
+        deprecated: [
+          /* "Custom endpoints should be migrated to
+             prometheus_blackbox_exporter_endpoints_custom to avoid overriding the
+             default configuration." */
+          { kind: "key", name: "prometheus_blackbox_exporter_endpoints",
+            replacedBy: "prometheus_blackbox_exporter_endpoints_custom", sev: "error",
+            note: "Własne punkty pomiarowe trzeba przenieść do klucza _custom, inaczej " +
+                  "nadpiszą konfigurację domyślną." },
+          /* "Support for deploying prometheus-msteams has been dropped as the project
+             is no longer maintained." */
+          { kind: "service", name: "prometheus-msteams", replacedBy: null, sev: "warn",
+            note: "Projekt nieutrzymywany — wdrażanie usunięte." }
+        ]
       },
       {
         id: "2024.1", name: "Caracal", kolla: "18.x", status: "unmaintained",
@@ -455,20 +519,52 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
                  "openEuler 22.03 LTS", "Rocky Linux 9",
                  "Ubuntu Jammy (22.04)", "Ubuntu Noble (24.04)"],
         defaults: {},
-        deprecated: []
+        deprecationsCatalogued: true,
+        /* release notes 18.0.0 (Caracal), o ile nie zaznaczono inaczej */
+        deprecated: [
+          /* "Services removed: Freezer, Murano, Sahara, Senlin, Solum, Vitrage" */
+          { kind: "service", name: "freezer", replacedBy: null, sev: "warn",
+            note: "Usunięte w 2024.1." },
+          { kind: "service", name: "murano", replacedBy: null, sev: "warn",
+            note: "Usunięte w 2024.1." },
+          { kind: "service", name: "sahara", replacedBy: null, sev: "warn",
+            note: "Usunięte w 2024.1." },
+          { kind: "service", name: "senlin", replacedBy: null, sev: "warn",
+            note: "Usunięte w 2024.1." },
+          { kind: "service", name: "solum", replacedBy: null, sev: "warn",
+            note: "Usunięte w 2024.1." },
+          { kind: "service", name: "vitrage", replacedBy: null, sev: "warn",
+            note: "Usunięte w 2024.1." },
+          /* "...and outward RabbitMQ (only used for Murano)" */
+          { kind: "service", name: "outward-rabbitmq", replacedBy: null, sev: "warn",
+            note: "Usunięte razem z Murano, który był jedynym konsumentem." },
+          /* "Support for failing execution early ... by setting
+             kolla_ansible_setup_any_errors_fatal to true has been removed." (18.3.0) */
+          { kind: "key", name: "kolla_ansible_setup_any_errors_fatal", replacedBy: null,
+            sev: "warn",
+            note: "Usunięte. Odpowiednik: maksymalny procent awarii ustawiony na 0." },
+          /* "MariaDB backup now uses the same image as the running MariaDB server."
+             — mariabackup_image, mariabackup_tag, mariabackup_image_full (18.1.0) */
+          { kind: "key", name: "mariabackup_image", replacedBy: null, sev: "warn",
+            note: "Usunięte — kopia zapasowa używa obrazu działającego serwera MariaDB." },
+          { kind: "key", name: "mariabackup_tag", replacedBy: null, sev: "warn",
+            note: "Usunięte — kopia zapasowa używa obrazu działającego serwera MariaDB." },
+          { kind: "key", name: "mariabackup_image_full", replacedBy: null, sev: "warn",
+            note: "Usunięte — kopia zapasowa używa obrazu działającego serwera MariaDB." }
+        ]
       },
 
       /* Wydania poniżej są poza wsparciem. Macierz distro celowo pozostaje pusta:
          narzędzie ma powiedzieć "brak wsparcia", a nie sugerować konfigurację,
          której nikt już nie testuje. */
       { id: "2023.2", name: "Bobcat",   kolla: "17.x", status: "eol", released: "2023-10-04", expected: null, endsOn: "2025-04-30",
-        baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecated: [] },
+        baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecationsCatalogued: false, deprecated: [] },
       { id: "2023.1", name: "Antelope", kolla: "16.x", status: "eol", released: "2023-03-22", expected: null, endsOn: null,
-        baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecated: [] },
+        baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecationsCatalogued: false, deprecated: [] },
       { id: "zed",    name: "Zed",      kolla: "15.x", status: "eol", released: "2022-10-05", expected: null, endsOn: null,
-        baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecated: [] },
+        baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecationsCatalogued: false, deprecated: [] },
       { id: "yoga",   name: "Yoga",     kolla: "14.x", status: "eol", released: "2022-03-30", expected: null, endsOn: null,
-        baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecated: [] }
+        baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecationsCatalogued: false, deprecated: [] }
     ]
   };
   /* == KOLLA-MATRIX END == */
@@ -923,6 +1019,18 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     "iscsid,tgtd,multipathd,external-compute,external-ceph"
   ).split(",");
 
+  /* Grupy usunięte w którymkolwiek wydaniu też są nazwami Kolli — po prostu już
+     nieobsługiwanymi. Bez tego wykrywanie literówek zgłaszałoby je jako nieznane
+     obok wpisu o wycofaniu, czyli dwa razy o tej samej rzeczy, z czego raz
+     nieprawdziwie. Lista bierze się z macierzy, nie z drugiego wykazu. */
+  KOLLA_MATRIX.releases.forEach(function (r) {
+    r.deprecated.forEach(function (d) {
+      if (d.kind !== "group" && d.kind !== "service") return;
+      if (KNOWN.indexOf(d.name) === -1) KNOWN.push(d.name);
+      if (d.replacedBy && KNOWN.indexOf(d.replacedBy) === -1) KNOWN.push(d.replacedBy);
+    });
+  });
+
   var el = {
     src: document.getElementById("src"),
     gutter: document.getElementById("gutter"),
@@ -937,6 +1045,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     file: document.getElementById("file"),
     btnReport: document.getElementById("btn-report"),
     release: document.getElementById("release"),
+    releaseTo: document.getElementById("release_to"),
     gsrc: document.getElementById("gsrc"),
     gfile: document.getElementById("gfile"),
     gscope: document.getElementById("gscope"),
@@ -1801,7 +1910,129 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     return out;
   }
 
-  function analyse(parsed, release, glob, acks) {
+  /* ------------------------------------------------------------------ */
+  /* tryb aktualizacji: ścieżka X -> Y                                   */
+  /* ------------------------------------------------------------------ */
+
+  function releaseIndex(id) {
+    for (var i = 0; i < KOLLA_MATRIX.releases.length; i++) {
+      if (KOLLA_MATRIX.releases[i].id === id) return i;
+    }
+    return -1;
+  }
+
+  /* Wydania PO obecnym, do docelowego włącznie, rosnąco. Tablica releases jest
+     ułożona od najnowszego, więc nowsze wydanie ma NIŻSZY indeks. */
+  function upgradePath(fromId, toId) {
+    var a = releaseIndex(fromId), b = releaseIndex(toId);
+    if (a === -1 || b === -1) return null;
+    if (a === b) return [];
+    if (b > a) return "downgrade";
+    var out = [];
+    for (var i = a - 1; i >= b; i--) out.push(KOLLA_MATRIX.releases[i]);
+    return out;
+  }
+
+  /* Kod wpisu wynika z danych: obecność replacedBy rozróżnia przemianowanie od
+     wycofania, a waga 'info' — zmianę okoliczności (np. innej grupy nadrzędnej)
+     od usunięcia. Żadnej z tych decyzji nie ma w treści reguły. */
+  function upgradeCode(dep) {
+    if (dep.kind === "procedure") return "UPGRADE-PROCEDURA";
+    var base = (dep.kind === "key") ? "UPGRADE-KLUCZ" : "UPGRADE-GRUPA";
+    if (dep.replacedBy) return base + "-PRZEMIANOWANY";
+    if (dep.sev === "info") return base + "-ZMIANA";
+    return base + "-WYCOFANY";
+  }
+
+  function upgradeRules(groups, glob, fromId, toId) {
+    var out = [];
+    if (!fromId || !toId || fromId === toId) return out;
+
+    var path = upgradePath(fromId, toId);
+    if (path === null) return out;
+
+    if (path === "downgrade") {
+      out.push({
+        sev: "error", code: "UPGRADE-KIERUNEK", src: "upgrade", line: null,
+        msg: "Wydanie docelowe <code>" + esc(toId) + "</code> jest starsze niż obecne <code>" +
+             esc(fromId) + "</code>.",
+        hint: "Kolla-Ansible nie wspiera obniżania wersji i to narzędzie nie będzie udawać, " +
+              "że wspiera. Powrót do wcześniejszego wydania to odtworzenie środowiska " +
+              "z kopii zapasowej, nie zmiana w plikach."
+      });
+      return out;
+    }
+
+    var gaps = [];
+    path.forEach(function (rel) {
+      if (!rel.deprecationsCatalogued) { gaps.push(rel.id); return; }
+
+      rel.deprecated.forEach(function (dep) {
+        var isFileKey = (dep.kind === "key" || dep.kind === "procedure");
+
+        /* Rzecz, której nie ma w plikach użytkownika, nie ma prawa tu wystąpić. */
+        if (isFileKey) {
+          if (!glob || !glob.ok || !glob.keys[dep.name]) return;
+        } else {
+          if (!groups[dep.name]) return;
+        }
+
+        var line = isFileKey ? glob.keys[dep.name].line : groupLine(groups[dep.name]);
+        var where = isFileKey ? "globals" : "inventory";
+        var subject = dep.kind === "key" || dep.kind === "procedure"
+          ? "Klucz <code>" + esc(dep.name) + "</code>"
+          : "Grupa <code>[" + esc(dep.name) + "]</code>";
+
+        var what, todo;
+        if (dep.kind === "procedure") {
+          what = "zmienia się w wydaniu <code>" + esc(rel.id) + "</code> w sposób, którego " +
+                 "nie da się załatwić edycją pliku";
+          todo = "To wymaga kroku operacyjnego na działającym środowisku, nie poprawki w YAML-u. " +
+                 "Narzędzie nie sprawdzi, czy krok został wykonany — potrzebowałoby historii " +
+                 "wdrożenia, a nie treści pliku. Powód opisuje SCOPE.md.";
+        } else if (dep.replacedBy) {
+          what = "zostaje przemianowany" + (isFileKey ? "" : "a") + " na <code>" +
+                 esc(dep.replacedBy) + "</code> w wydaniu <code>" + esc(rel.id) + "</code>";
+          todo = "Zmień nazwę " + (isFileKey ? "klucza w globals.yml" : "sekcji w inventory") +
+                 " przed aktualizacją — stara nie zostanie rozpoznana.";
+        } else if (dep.sev === "info") {
+          what = "zmienia okoliczności w wydaniu <code>" + esc(rel.id) + "</code>";
+          todo = "Zmiana nie blokuje aktualizacji, ale warto ją odnotować.";
+        } else {
+          what = "przestaje być obsługiwan" + (isFileKey ? "y" : "a") +
+                 " w wydaniu <code>" + esc(rel.id) + "</code>";
+          todo = isFileKey
+            ? "Usuń klucz albo pogódź się z tym, że nic już nie robi."
+            : "Zaplanuj przeniesienie obciążenia i usuń grupę z inventory.";
+        }
+
+        out.push({
+          sev: dep.sev || "warn", code: upgradeCode(dep), src: where, line: line,
+          refs: [{ src: where, line: line }],
+          msg: subject + " " + what + ".",
+          hint: (dep.note ? dep.note + " " : "") + todo
+        });
+      });
+    });
+
+    if (gaps.length) {
+      out.push({
+        sev: "warn", code: "UPGRADE-LUKA", src: "upgrade", line: null,
+        msg: "Ścieżka prowadzi przez " +
+             plural(gaps.length, "wydanie", "wydania", "wydań") +
+             " bez skatalogowanych deprecacji: <code>" + gaps.map(esc).join("</code>, <code>") +
+             "</code>.",
+        hint: "Zmiany wprowadzone w " + (gaps.length === 1 ? "tym wydaniu" : "tych wydaniach") +
+              " nie są tu pokazane — nie dlatego, że ich nie było, tylko dlatego, że nie " +
+              "zostały przejrzane w release notes. Pusta lista wyglądałaby identycznie jak " +
+              "brak zmian, więc mówimy o luce wprost. Przejrzyj release notes tych wydań ręcznie."
+      });
+    }
+
+    return out;
+  }
+
+  function analyse(parsed, release, glob, acks, releaseTo) {
     var groups = parsed.groups;
     var order = parsed.order;
     var findings = parsed.findings.slice();
@@ -2039,6 +2270,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     crossRules(groups, order, effective, hostIndex, glob, acks || Object.create(null))
       .forEach(function (f) { findings.push(f); });
 
+    /* --- ścieżka aktualizacji --- */
+    upgradeRules(groups, glob, release, releaseTo).forEach(function (f) { findings.push(f); });
+
     /* --- reguły zależne od wydania --- */
     releaseRules(release, groups).forEach(function (f) { findings.push(f); });
 
@@ -2062,7 +2296,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     return {
       findings: findings, groups: groups, order: order,
       effective: effective, hostCount: hostNames.length,
-      release: findRelease(release), hasGlobals: !!glob
+      release: findRelease(release), hasGlobals: !!glob,
+      releaseTo: releaseTo ? findRelease(releaseTo) : null
     };
   }
 
@@ -2122,7 +2357,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     el.findings.innerHTML = list.map(function (f) {
       var label = f.sev === "error" ? "błąd" : (f.sev === "warn" ? "uwaga" : "info");
       var meta = "<span>" + f.code + "</span>";
-      var srcLabel = f.src === "globals" ? "globals" : (f.src === "cross" ? "oba pliki" : "inventory");
+      var srcLabel = { globals: "globals", cross: "oba pliki", upgrade: "ścieżka" }[f.src] || "inventory";
       meta += '<span class="src ' + (f.src === "inventory" ? "" : f.src) + '">' + srcLabel + "</span>";
       /* Kliknięcie prowadzi tylko do inventory — tylko ten edytor ma margines z liniami.
          Odsyłacz do globals jest etykietą, żeby nie obiecywać skoku, którego nie ma. */
@@ -2226,6 +2461,10 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     L.push("Rackpathlabs — raport walidacji inventory multinode");
     L.push("===================================================");
     L.push("Hosty: " + res.hostCount + "   Grupy: " + res.order.length);
+    if (res.releaseTo) {
+      L.push("Ścieżka aktualizacji: " + (res.release ? res.release.id : "?") +
+             " -> " + res.releaseTo.id);
+    }
     L.push("globals.yml: " + (res.hasGlobals
       ? "wczytany — działają też reguły wymagające obu plików"
       : "nie wczytano — wyłącznie reguły inventory"));
@@ -2292,7 +2531,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     var gtext = el.gsrc.value;
     var glob = gtext.trim() ? GLOBALS.parse(gtext) : null;
     var res = analyse(parse(text), el.release.value, glob,
-                      { ack_nobmc: el.ackNoBmc.checked });
+                      { ack_nobmc: el.ackNoBmc.checked }, el.releaseTo.value);
 
     var marks = {};
     res.findings.forEach(function (f) {
@@ -2479,14 +2718,19 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       development: "w rozwoju", maintained: "wspierane",
       unmaintained: "bez utrzymania", eol: "EOL"
     };
-    el.release.innerHTML = KOLLA_MATRIX.releases.map(function (r) {
+    var opts = KOLLA_MATRIX.releases.map(function (r) {
       return '<option value="' + esc(r.id) + '">' + esc(r.id) + " · " + esc(r.name) +
              " · " + esc(statusTag[r.status] || r.status) + "</option>";
     }).join("");
+    el.release.innerHTML = opts;
     el.release.value = defaultRelease();
+    /* Puste = tryb aktualizacji wyłączony; narzędzie zachowuje się jak dotąd. */
+    el.releaseTo.innerHTML = '<option value="">— bez planu aktualizacji —</option>' + opts;
+    el.releaseTo.value = "";
   }
 
   el.release.addEventListener("change", run);
+  el.releaseTo.addEventListener("change", run);
 
   /* ---- opcjonalny globals.yml ---- */
   function globalsState() {

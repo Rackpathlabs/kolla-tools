@@ -559,8 +559,16 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
                   wspierane
      defaults:    domyślne wartości istotne dla decyzji wdrożeniowych; opis klucza
                   leży w keys[] — jeden opis na klucz, nie na wydanie
-     deprecated:  { kind: 'key'|'group'|'service', name, replacedBy, sev, note }
+     deprecationsCatalogued:
+                  czy deprecacje tego wydania zostały przejrzane w release notes.
+                  false NIE znaczy "nic się nie zmieniło" — znaczy "nie wiemy".
+                  Ścieżka aktualizacji przez takie wydanie zgłasza jawną lukę
+                  zamiast milczeć, bo pusta lista wygląda identycznie jak brak zmian.
+     deprecated:  { kind: 'key'|'group'|'service'|'procedure', name, replacedBy, sev, note }
                   kind 'key' konsumuje generator, 'group'/'service' — walidator;
+                  'procedure' oznacza zmianę wymagającą kroku operacyjnego, a nie
+                  edycji pliku — narzędzie ma o niej powiedzieć, nie udawać, że
+                  wystarczy poprawka w YAML-u;
                   sev ('error'|'warn'|'info') jest w danych, bo waga zależy od wpisu:
                   przemianowana grupa to błąd, usunięta usługa to uwaga, zmiana grupy
                   nadrzędnej to informacja */
@@ -607,6 +615,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         released: null, expected: "2026-09-30", endsOn: null,
         baseDistros: null, unpublished: [], hostOs: [],
         defaults: {},
+        deprecationsCatalogued: false,
         deprecated: []
       },
       {
@@ -619,6 +628,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           om_enable_rabbitmq_stream_fanout: true,
           om_rabbitmq_qos_prefetch_count: 50
         },
+        deprecationsCatalogued: true,
         deprecated: [
           { kind: "group", name: "kolla-toolbox", replacedBy: "kolla_toolbox", sev: "error",
             note: "Grupa i rola przemianowane — myślnik zastąpiony podkreśleniem. Stara nazwa nie zostanie rozpoznana." },
@@ -651,7 +661,32 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         defaults: {
           om_enable_rabbitmq_stream_fanout: true
         },
-        deprecated: []
+        deprecationsCatalogued: true,
+        /* release notes 21.0.0 (Flamingo) */
+        deprecated: [
+          /* "ironic-inspector: Service support dropped upstream." */
+          { kind: "service", name: "ironic-inspector", replacedBy: null, sev: "warn",
+            note: "Usługa wycofana w górę strumienia i usunięta z Kolli." },
+          /* "Variables renamed: ironic_inspector_kernel_cmdline_extras ->
+             ironic_kernel_cmdline_extras" */
+          { kind: "key", name: "ironic_inspector_kernel_cmdline_extras",
+            replacedBy: "ironic_kernel_cmdline_extras", sev: "error",
+            note: "Przemianowane przy wycofaniu ironic-inspector." },
+          /* "ironic_inspector_pxe_filter -> ironic_pxe_filter" */
+          { kind: "key", name: "ironic_inspector_pxe_filter",
+            replacedBy: "ironic_pxe_filter", sev: "error",
+            note: "Przemianowane przy wycofaniu ironic-inspector." },
+          /* "bifrost option: bifrost_enable_ironic_inspector deleted." */
+          { kind: "key", name: "bifrost_enable_ironic_inspector", replacedBy: null, sev: "warn",
+            note: "Usunięte — klucz nie ma już żadnego efektu." },
+          /* "neutron_legacy_iptables: Dropped entirely." */
+          { kind: "key", name: "neutron_legacy_iptables", replacedBy: null, sev: "warn",
+            note: "Usunięte." },
+          /* "Redis to Valkey migration: Set enable_redis: \"no\" and
+             enable_valkey: \"yes\" before upgrade." */
+          { kind: "key", name: "enable_redis", replacedBy: "enable_valkey", sev: "error",
+            note: "Migracja Redis → Valkey. Przełączenie musi nastąpić PRZED aktualizacją." }
+        ]
       },
       {
         id: "2025.1", name: "Epoxy", kolla: "20.x", status: "maintained",
@@ -665,6 +700,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           enable_ironic_inspector: false,
           enable_ironic_neutron_agent: false
         },
+        deprecationsCatalogued: true,
         deprecated: [
           { kind: "key", name: "om_enable_rabbitmq_high_availability", replacedBy: null, sev: "error",
             note: "Usunięte — kolejki quorum są od tego wydania obowiązkowe." },
@@ -679,7 +715,17 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           { kind: "key", name: "ceph_manila_keyring", replacedBy: null, sev: "warn", note: "Usunięte." },
           { kind: "key", name: "ceph_nova_keyring", replacedBy: null, sev: "warn", note: "Usunięte." },
           { kind: "service", name: "swift", replacedBy: null, sev: "warn",
-            note: "Wsparcie dla wdrożenia Swift usunięte w 2025.1." }
+            note: "Wsparcie dla wdrożenia Swift usunięte w 2025.1." },
+          /* KV-12b: zmiana typu kolejek między wdrożeniami psuje istniejące kolejki
+             (PRECONDITION_FAILED - inequivalent arg). Nie da się tego naprawić edycją
+             pliku — wymaga kroku operacyjnego na brokerze. */
+          { kind: "procedure", name: "om_enable_rabbitmq_quorum_queues", replacedBy: null,
+            sev: "warn",
+            note: "Od 2025.1 kolejki quorum są obowiązkowe. Jeśli wdrożenie startowało " +
+                  "z kolejkami klasycznymi, sama zmiana wartości nie wystarczy: usługi " +
+                  "spróbują zadeklarować istniejące kolejki z innym typem i dostaną " +
+                  "PRECONDITION_FAILED, a kontenery wejdą w pętlę restartów przy " +
+                  "wdrożeniu raportującym sukces." }
         ]
       },
       {
@@ -690,7 +736,21 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         hostOs: ["CentOS Stream 9", "Debian Bookworm (12)", "Rocky Linux 9",
                  "Ubuntu Jammy (22.04)", "Ubuntu Noble (24.04)"],
         defaults: {},
-        deprecated: []
+        deprecationsCatalogued: true,
+        /* release notes 19.0.0 (Dalmatian) */
+        deprecated: [
+          /* "Custom endpoints should be migrated to
+             prometheus_blackbox_exporter_endpoints_custom to avoid overriding the
+             default configuration." */
+          { kind: "key", name: "prometheus_blackbox_exporter_endpoints",
+            replacedBy: "prometheus_blackbox_exporter_endpoints_custom", sev: "error",
+            note: "Własne punkty pomiarowe trzeba przenieść do klucza _custom, inaczej " +
+                  "nadpiszą konfigurację domyślną." },
+          /* "Support for deploying prometheus-msteams has been dropped as the project
+             is no longer maintained." */
+          { kind: "service", name: "prometheus-msteams", replacedBy: null, sev: "warn",
+            note: "Projekt nieutrzymywany — wdrażanie usunięte." }
+        ]
       },
       {
         id: "2024.1", name: "Caracal", kolla: "18.x", status: "unmaintained",
@@ -701,20 +761,52 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
                  "openEuler 22.03 LTS", "Rocky Linux 9",
                  "Ubuntu Jammy (22.04)", "Ubuntu Noble (24.04)"],
         defaults: {},
-        deprecated: []
+        deprecationsCatalogued: true,
+        /* release notes 18.0.0 (Caracal), o ile nie zaznaczono inaczej */
+        deprecated: [
+          /* "Services removed: Freezer, Murano, Sahara, Senlin, Solum, Vitrage" */
+          { kind: "service", name: "freezer", replacedBy: null, sev: "warn",
+            note: "Usunięte w 2024.1." },
+          { kind: "service", name: "murano", replacedBy: null, sev: "warn",
+            note: "Usunięte w 2024.1." },
+          { kind: "service", name: "sahara", replacedBy: null, sev: "warn",
+            note: "Usunięte w 2024.1." },
+          { kind: "service", name: "senlin", replacedBy: null, sev: "warn",
+            note: "Usunięte w 2024.1." },
+          { kind: "service", name: "solum", replacedBy: null, sev: "warn",
+            note: "Usunięte w 2024.1." },
+          { kind: "service", name: "vitrage", replacedBy: null, sev: "warn",
+            note: "Usunięte w 2024.1." },
+          /* "...and outward RabbitMQ (only used for Murano)" */
+          { kind: "service", name: "outward-rabbitmq", replacedBy: null, sev: "warn",
+            note: "Usunięte razem z Murano, który był jedynym konsumentem." },
+          /* "Support for failing execution early ... by setting
+             kolla_ansible_setup_any_errors_fatal to true has been removed." (18.3.0) */
+          { kind: "key", name: "kolla_ansible_setup_any_errors_fatal", replacedBy: null,
+            sev: "warn",
+            note: "Usunięte. Odpowiednik: maksymalny procent awarii ustawiony na 0." },
+          /* "MariaDB backup now uses the same image as the running MariaDB server."
+             — mariabackup_image, mariabackup_tag, mariabackup_image_full (18.1.0) */
+          { kind: "key", name: "mariabackup_image", replacedBy: null, sev: "warn",
+            note: "Usunięte — kopia zapasowa używa obrazu działającego serwera MariaDB." },
+          { kind: "key", name: "mariabackup_tag", replacedBy: null, sev: "warn",
+            note: "Usunięte — kopia zapasowa używa obrazu działającego serwera MariaDB." },
+          { kind: "key", name: "mariabackup_image_full", replacedBy: null, sev: "warn",
+            note: "Usunięte — kopia zapasowa używa obrazu działającego serwera MariaDB." }
+        ]
       },
 
       /* Wydania poniżej są poza wsparciem. Macierz distro celowo pozostaje pusta:
          narzędzie ma powiedzieć "brak wsparcia", a nie sugerować konfigurację,
          której nikt już nie testuje. */
       { id: "2023.2", name: "Bobcat",   kolla: "17.x", status: "eol", released: "2023-10-04", expected: null, endsOn: "2025-04-30",
-        baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecated: [] },
+        baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecationsCatalogued: false, deprecated: [] },
       { id: "2023.1", name: "Antelope", kolla: "16.x", status: "eol", released: "2023-03-22", expected: null, endsOn: null,
-        baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecated: [] },
+        baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecationsCatalogued: false, deprecated: [] },
       { id: "zed",    name: "Zed",      kolla: "15.x", status: "eol", released: "2022-10-05", expected: null, endsOn: null,
-        baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecated: [] },
+        baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecationsCatalogued: false, deprecated: [] },
       { id: "yoga",   name: "Yoga",     kolla: "14.x", status: "eol", released: "2022-03-30", expected: null, endsOn: null,
-        baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecated: [] }
+        baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecationsCatalogued: false, deprecated: [] }
     ]
   };
   /* == KOLLA-MATRIX END == */

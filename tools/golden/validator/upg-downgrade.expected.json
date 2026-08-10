@@ -1,0 +1,14 @@
+{
+  "release": "2026.1",
+  "upgradeTo": "2024.2",
+  "globals": false,
+  "findings": [
+    {
+      "code": "UPGRADE-KIERUNEK",
+      "sev": "error",
+      "src": "upgrade",
+      "line": null,
+      "refs": []
+    }
+  ]
+}

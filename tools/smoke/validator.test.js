@@ -380,6 +380,52 @@ ok("klasa A identyczna z globals i bez",
    JSON.stringify(duo.findings.filter(function (f) { return f.src === "inventory"; })
      .map(function (f) { return f.code + f.sev + f.line; })));
 
+/* ---- styk reguł wydania z trybem aktualizacji ---- */
+/* Walidator ma teraz dwa wydania. Podział pracy między releaseRules() a
+   upgradeRules() jest dziś skutkiem decyzji projektowej — te asercje robią z niego
+   zapisane oczekiwanie, żeby nikt nie odwrócił go przypadkiem. */
+
+function withPath(invText, from, to, globText) {
+  return T.analyse(T.parse(invText), from,
+                   globText ? T.GLOBALS.parse(globText) : null, {}, to || "");
+}
+function mentioning(res, needle) {
+  return res.findings.filter(function (f) { return (f.msg + (f.hint || "")).indexOf(needle) !== -1; });
+}
+
+var INV_ZUN = INV3 + "\n[zun]\nk1\n";
+
+console.log("podział pracy: wydanie obecne kontra ścieżka:");
+r = withPath(INV_ZUN, "2026.1", "");
+ok("grupa wycofana w wydaniu OBECNYM -> zgłasza releaseRules",
+   hasCode(r, "GRUPA-WYCOFANA") && !hasCode(r, "UPGRADE-GRUPA-WYCOFANY"));
+ok("i dokładnie raz", mentioning(r, "zun").length === 1,
+   JSON.stringify(mentioning(r, "zun").map(function (f) { return f.code; })));
+
+r = withPath(INV_ZUN, "2025.1", "2026.1");
+ok("grupa wycofana w wydaniu DOCELOWYM -> zgłasza tryb aktualizacji",
+   hasCode(r, "UPGRADE-GRUPA-WYCOFANY") && !hasCode(r, "GRUPA-WYCOFANA"));
+ok("i dokładnie raz, bez dubla w dwóch wagach", mentioning(r, "zun").length === 1,
+   JSON.stringify(mentioning(r, "zun").map(function (f) { return f.code + "/" + f.sev; })));
+
+/* Wydanie startowe nie jest punktem na ścieżce — ale jego własne deprecacje grup
+   nadal łapie releaseRules. To jest miejsce, w którym mogłaby powstać luka. */
+var INV_MURANO = INV3 + "\n[murano]\nc1\n";
+r = withPath(INV_MURANO, "2024.1", "2026.1");
+ok("deprecacja z wydania startowego nie ginie między regułami",
+   mentioning(r, "murano").length === 1 && hasCode(r, "GRUPA-WYCOFANA"));
+ok("i nie jest powtórzona przez tryb aktualizacji", !hasCode(r, "UPGRADE-GRUPA-WYCOFANY"));
+
+console.log("granica kluczy globals.yml:");
+var GLOB_LE = '---\nletsencrypt_cert_server: "https://acme-v02.api.letsencrypt.org/directory"\n';
+r = withPath(INV3, "2025.1", "", GLOB_LE);
+ok("klucz wycofany w wydaniu obecnym -> walidator milczy (to zakres generatora)",
+   mentioning(r, "letsencrypt_cert_server").length === 0);
+r = withPath(INV3, "2024.2", "2025.1", GLOB_LE);
+ok("ten sam klucz na ścieżce -> zgłoszony raz przez tryb aktualizacji",
+   mentioning(r, "letsencrypt_cert_server").length === 1 &&
+   hasCode(r, "UPGRADE-KLUCZ-PRZEMIANOWANY"));
+
 console.log("raport:");
 var res = run("", "2026.1");
 var rep = T.buildReport(res, { e: 0, w: 0, i: 0 });
