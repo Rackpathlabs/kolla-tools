@@ -19,7 +19,7 @@ for entry in $BLOCKS; do
   extract_block "$name" "$src" > "$block"
   [ -s "$block" ] || { rm -f "$block"; echo "  ! $src: pusty blok $name"; exit 1; }
 
-  for f in $TARGETS; do
+  for f in $(block_targets "$entry"); do
     if ! has_block "$name" "$f"; then
       rm -f "$block"
       echo "  ! $f: brak znaczników $name — wstaw je ręcznie"; exit 1

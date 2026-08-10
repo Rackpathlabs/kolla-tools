@@ -15,7 +15,7 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 rc=0
-for f in generator.html validator.html matrix.js globals-parser.js; do
+for f in generator.html validator.html index.html matrix.js globals-parser.js theme.css; do
   if [ ! -f "$f" ]; then
     echo "FAIL $f: brak pliku"; rc=1; continue
   fi

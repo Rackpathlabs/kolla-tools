@@ -8,11 +8,16 @@
 # Dodanie kolejnego bloku = dopisanie pary "NAZWA:plik" do BLOCKS. Skrypty niżej
 # nie znają żadnej nazwy z osobna.
 
-BLOCKS="KOLLA-MATRIX:matrix.js GLOBALS-PARSER:globals-parser.js"
-TARGETS="generator.html validator.html"
+# Format wpisu: NAZWA:plik-źródłowy:cel,cel,...
+# Cele są per blok, bo nie każdy blok należy wszędzie — hub w korzeniu potrzebuje
+# motywu, ale nie macierzy wydań ani parsera globals.
+BLOCKS="KOLLA-MATRIX:matrix.js:generator.html,validator.html
+GLOBALS-PARSER:globals-parser.js:generator.html,validator.html
+KOLLA-THEME:theme.css:generator.html,validator.html,index.html"
 
-block_name()   { echo "${1%%:*}"; }
-block_source() { echo "${1##*:}"; }
+block_name()    { echo "$1" | cut -d: -f1; }
+block_source()  { echo "$1" | cut -d: -f2; }
+block_targets() { echo "$1" | cut -d: -f3 | tr ',' ' '; }
 
 # extract_block NAZWA PLIK — wycina blok wraz z liniami znaczników
 extract_block() {

@@ -1,0 +1,24 @@
+/* Rackpathlabs — wspólny motyw wizualny.
+ *
+ * ŹRÓDŁO PRAWDY. Ten plik nie jest nigdzie ładowany — narzędzia i hub są
+ * samodzielnymi plikami HTML działającymi z file://, więc blok poniżej jest
+ * wklejony bajtowo identycznie do generator.html, validator.html i index.html.
+ *
+ * Zmiana motywu = edycja TEGO pliku, potem:
+ *     bash tools/sync-blocks.sh
+ *     bash tools/check-blocks.sh
+ *
+ * Wcięcie zerowe jest celowe — blok żyje na poziomie arkusza stylów, nie w regule.
+ */
+
+/* == KOLLA-THEME BEGIN — generowane z theme.css, nie edytuj w miejscu == */
+:root{
+  --bg:#0e1318; --panel:#151b22; --panel-2:#1b232c; --line:#26313c;
+  --fg:#e6edf3; --muted:#8b98a5; --dim:#87939f;
+  --accent:#3ddc97; --accent-dim:#1f7f58;
+  --blue:#5aa9ff; --amber:#e8b339; --red:#ef6a6a;
+  --mono:ui-monospace,SFMono-Regular,"JetBrains Mono","Cascadia Mono",Consolas,"Liberation Mono",monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --r:8px;
+}
+/* == KOLLA-THEME END == */
