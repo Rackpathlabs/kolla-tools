@@ -48,6 +48,10 @@ echo "== dokument granic =="
 bash tools/check-docs.sh || rc=1
 
 echo
+echo "== słownik interfejsu =="
+"$NODE" tools/check-i18n.js || rc=1
+
+echo
 echo "== spójność bloków współdzielonych =="
 bash tools/check-blocks.sh || rc=1
 

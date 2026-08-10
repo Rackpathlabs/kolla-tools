@@ -13,7 +13,8 @@
 # motywu, ale nie macierzy wydań ani parsera globals.
 BLOCKS="KOLLA-MATRIX:matrix.js:generator.html,validator.html
 GLOBALS-PARSER:globals-parser.js:generator.html,validator.html
-KOLLA-THEME:theme.css:generator.html,validator.html,index.html"
+KOLLA-THEME:theme.css:generator.html,validator.html,index.html
+KOLLA-I18N:i18n.js:generator.html,validator.html,index.html"
 
 block_name()    { echo "$1" | cut -d: -f1; }
 block_source()  { echo "$1" | cut -d: -f2; }

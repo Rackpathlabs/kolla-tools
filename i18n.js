@@ -1,181 +1,20 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- Polityka bezpieczeństwa treści. Narzędzie jest w całości inline i nie pobiera
-     niczego z sieci, więc default-src 'none' blokuje wszystko, a wyjątki dotyczą
-     wyłącznie własnego skryptu i stylu. Brak connect-src oznacza, że fetch,
-     XMLHttpRequest, WebSocket, EventSource i sendBeacon są odcięte przez default-src.
-     Wczytywanie plików przez input[type=file] i FileReader jest operacją lokalną,
-     której CSP nie dotyczy — polityki nie osłabiamy na zapas.
-     frame-ancestors celowo pominięte: w znaczniku meta jest ignorowane przez
-     przeglądarki, a GitHub Pages nie pozwala ustawić nagłówka HTTP. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
-<title>Rackpathlabs — Kolla-Ansible tools</title>
-<meta name="description" content="Two Kolla-Ansible tools: a globals.yml generator and an inventory validator. They run in your browser, offline, and upload nothing.">
-<style>
-/* == KOLLA-THEME BEGIN — generowane z theme.css, nie edytuj w miejscu == */
-:root{
-  --bg:#0e1318; --panel:#151b22; --panel-2:#1b232c; --line:#26313c;
-  --fg:#e6edf3; --muted:#8b98a5; --dim:#87939f;
-  --accent:#3ddc97; --accent-dim:#1f7f58;
-  --blue:#5aa9ff; --amber:#e8b339; --red:#ef6a6a;
-  --mono:ui-monospace,SFMono-Regular,"JetBrains Mono","Cascadia Mono",Consolas,"Liberation Mono",monospace;
-  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-  --r:8px;
-}
-/* == KOLLA-THEME END == */
+/* Rackpathlabs — słownik interfejsu.
+ *
+ * ŹRÓDŁO PRAWDY. Ten plik nie jest nigdzie ładowany — narzędzia i hub są
+ * samodzielnymi plikami HTML działającymi z file://, więc blok poniżej jest
+ * wklejony bajtowo identycznie do generator.html, validator.html i index.html.
+ *
+ * Zmiana tekstów = edycja TEGO pliku, potem:
+ *     bash tools/sync-blocks.sh
+ *     bash tools/check-blocks.sh
+ *
+ * Wcięcie dwóch spacji jest celowe — blok żyje wewnątrz IIFE w plikach HTML.
+ *
+ * KODY REGUŁ NIE SĄ TEKSTEM. KWORUM-LICZBA, KV-09-VIP-KOLIZJA i pozostałe to
+ * stabilne identyfikatory: nie tłumaczymy ich, żeby raporty i wzorce golden
+ * pozostały porównywalne między wersjami i między językami.
+ */
 
-*{box-sizing:border-box}
-html,body{margin:0;padding:0}
-body{
-  background:var(--bg); color:var(--fg); font-family:var(--sans);
-  font-size:15px; line-height:1.6; -webkit-font-smoothing:antialiased;
-}
-a{color:var(--blue)}
-.wrap{max-width:1000px;margin:0 auto;padding:0 20px 64px}
-
-header{border-bottom:1px solid var(--line);background:linear-gradient(180deg,#131a21,#0e1318)}
-.hdr{max-width:1000px;margin:0 auto;padding:18px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:11px;font-weight:650;letter-spacing:.2px}
-.logo{width:26px;height:26px;flex:0 0 26px}
-.brand small{display:block;font-weight:400;font-size:12px;color:var(--muted);letter-spacing:.3px}
-nav{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
-nav a{
-  color:var(--muted);text-decoration:none;font-size:13.5px;padding:6px 12px;
-  border:1px solid transparent;border-radius:var(--r)
-}
-nav a:hover{color:var(--fg);background:var(--panel-2)}
-nav a[aria-current="page"]{color:var(--fg);border-color:var(--line);background:var(--panel)}
-.lang{display:flex;gap:4px;margin-left:8px;align-items:center}
-.lang button{
-  font:inherit;font-size:12px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;
-  color:var(--muted);background:transparent;border:1px solid var(--line);
-  border-radius:var(--r);padding:5px 9px;cursor:pointer
-}
-.lang button:hover{color:var(--fg);background:var(--panel-2)}
-.lang button[aria-pressed="true"]{color:var(--fg);border-color:var(--accent-dim);background:var(--panel)}
-
-.skip{
-  position:absolute;left:-9999px;top:0;background:var(--panel-2);color:var(--fg);
-  padding:9px 14px;border:1px solid var(--accent-dim);border-radius:var(--r);z-index:60
-}
-.skip:focus{left:12px;top:12px}
-
-h1{font-size:24px;margin:34px 0 8px;font-weight:650;letter-spacing:-.3px}
-.lede{color:var(--muted);font-size:15px;margin:0 0 8px;max-width:70ch}
-.for-whom{color:var(--dim);font-size:13.5px;margin:0 0 30px;max-width:70ch}
-
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
-.card{
-  display:block;text-decoration:none;color:inherit;background:var(--panel);
-  border:1px solid var(--line);border-radius:10px;padding:20px;
-  transition:border-color .12s,background .12s
-}
-.card:hover,.card:focus-visible{border-color:var(--accent-dim);background:var(--panel-2);outline:none}
-.card h2{margin:0 0 4px;font-size:17px;font-weight:600;letter-spacing:-.2px}
-.card .file{font:12.5px var(--mono);color:var(--accent);display:block;margin-bottom:12px}
-.card p{margin:0 0 12px;font-size:14px;color:var(--muted)}
-.card ul{margin:0;padding-left:18px;font-size:13.5px;color:var(--dim)}
-.card li{margin:3px 0}
-.card .go{display:inline-block;margin-top:14px;font-size:13.5px;font-weight:550;color:var(--accent)}
-
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-top:26px}
-.panel h2{
-  margin:0;padding:12px 16px;font-size:12px;font-weight:600;text-transform:uppercase;
-  letter-spacing:.9px;color:var(--muted);border-bottom:1px solid var(--line)
-}
-.panel .body{padding:16px}
-.panel .body p{margin:0 0 10px;font-size:14px;color:#cbd5dd}
-.panel .body p:last-child{margin-bottom:0}
-code{font:12.5px var(--mono);background:#0c1116;border:1px solid var(--line);border-radius:4px;padding:1px 5px;color:#d6e2ec}
-
-footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:var(--dim);font-size:12.5px}
-footer a{color:var(--muted)}
-
-@media (max-width:560px){
-  h1{font-size:21px;margin-top:26px}
-  .wrap{padding:0 14px 48px}
-  .hdr{padding:14px}
-  .card{padding:16px}
-}
-</style>
-</head>
-<body>
-
-<a class="skip" href="#main" data-i18n="nav.skip">Skip to content</a>
-
-<header>
-  <div class="hdr">
-    <div class="brand">
-      <svg class="logo" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <rect x="2.5" y="3.5" width="19" height="5" rx="1.6" stroke="#3ddc97" stroke-width="1.5"/>
-        <rect x="2.5" y="15.5" width="19" height="5" rx="1.6" stroke="#3ddc97" stroke-width="1.5"/>
-        <path d="M6 8.5v7M18 8.5v7" stroke="#5aa9ff" stroke-width="1.5" stroke-linecap="round"/>
-        <circle cx="6" cy="6" r="1" fill="#3ddc97"/><circle cx="6" cy="18" r="1" fill="#3ddc97"/>
-      </svg>
-      <span>Rackpathlabs<small data-i18n="brand.sub">OpenStack tooling</small></span>
-    </div>
-    <nav id="nav" aria-label="Tools">
-      <a href="index.html" aria-current="page" data-i18n="nav.start">start</a>
-      <a href="generator.html" data-i18n="nav.generator">globals.yml</a>
-      <a href="validator.html" data-i18n="nav.validator">inventory validator</a>
-      <span class="lang" role="group" id="lang" aria-label="Language">
-        <button type="button" data-lang="en" aria-pressed="true">EN</button>
-        <button type="button" data-lang="pl" aria-pressed="false">PL</button>
-      </span>
-    </nav>
-  </div>
-</header>
-
-<main class="wrap" id="main">
-  <h1 data-i18n="hub.h1">Two tools for Kolla-Ansible</h1>
-  <p class="lede" data-i18n="hub.lede"></p>
-  <p class="for-whom" data-i18n="hub.forWhom"></p>
-
-  <div class="cards">
-    <a class="card" href="generator.html">
-      <h2 data-i18n="hub.gen.h"></h2>
-      <span class="file">generator.html</span>
-      <p data-i18n="hub.gen.p"></p>
-      <ul>
-        <li data-i18n="hub.gen.li1"></li>
-        <li data-i18n="hub.gen.li2"></li>
-        <li data-i18n="hub.gen.li3"></li>
-        <li data-i18n="hub.gen.li4"></li>
-      </ul>
-      <span class="go" data-i18n="hub.gen.go"></span>
-    </a>
-
-    <a class="card" href="validator.html">
-      <h2 data-i18n="hub.val.h"></h2>
-      <span class="file">validator.html</span>
-      <p data-i18n="hub.val.p"></p>
-      <ul>
-        <li data-i18n="hub.val.li1"></li>
-        <li data-i18n="hub.val.li2"></li>
-        <li data-i18n="hub.val.li3"></li>
-        <li data-i18n="hub.val.li4"></li>
-      </ul>
-      <span class="go" data-i18n="hub.val.go"></span>
-    </a>
-  </div>
-
-  <div class="panel">
-    <h2 data-i18n="hub.limits.h"></h2>
-    <div class="body">
-      <p data-i18n="hub.limits.offline"></p>
-      <p data-i18n="hub.limits.scope"></p>
-    </div>
-  </div>
-
-  <footer data-i18n="hub.footer"></footer>
-</main>
-
-<script>
-(function () {
-  "use strict";
   /* == KOLLA-I18N BEGIN — generowane z i18n.js, nie edytuj w miejscu == */
   /* Słownik interfejsu. Angielski jest domyślny i zawsze kompletny; polski jest
      przełącznikiem. Nie wykrywamy języka przeglądarki — przewidywalność jest tu
@@ -308,38 +147,3 @@ footer a{color:var(--muted)}
 
   var T = I18N.t;
   /* == KOLLA-I18N END == */
-
-  function apply() {
-    document.documentElement.lang = I18N.getLang();
-    document.title = T("hub.title");
-    var d = document.querySelector('meta[name="description"]');
-    if (d) d.setAttribute("content", T("hub.desc"));
-    var lg = document.getElementById("lang");
-    if (lg) lg.setAttribute("aria-label", T("lang.label"));
-    var nav = document.getElementById("nav");
-    if (nav) nav.setAttribute("aria-label", T("nav.tools"));
-    var nodes = document.querySelectorAll("[data-i18n]");
-    for (var i = 0; i < nodes.length; i++) {
-      nodes[i].innerHTML = T(nodes[i].getAttribute("data-i18n"));
-    }
-    var b = document.querySelectorAll("#lang button");
-    for (var j = 0; j < b.length; j++) {
-      b[j].setAttribute("aria-pressed", b[j].getAttribute("data-lang") === I18N.getLang() ? "true" : "false");
-      b[j].setAttribute("title", T(b[j].getAttribute("data-lang") === "pl" ? "lang.pl" : "lang.en"));
-    }
-  }
-
-  document.getElementById("lang").addEventListener("click", function (e) {
-    var b = e.target.closest ? e.target.closest("button[data-lang]") : null;
-    if (!b) return;
-    I18N.setLang(b.getAttribute("data-lang"));
-    I18N.save();
-    apply();
-  });
-
-  I18N.load();
-  apply();
-})();
-</script>
-</body>
-</html>
