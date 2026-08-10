@@ -249,13 +249,110 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           <div class="field">
             <label for="ext_if">neutron_external_interface <span class="req">wymagane</span></label>
             <input type="text" id="ext_if" spellcheck="false" placeholder="eth1"
-                   aria-required="true" aria-describedby="h-ext_if" maxlength="15">
-            <p class="hint" id="h-ext_if">Interfejs ruchu zewnętrznego. Bez adresu IP, bez konfiguracji — Neutron przejmuje go w całości.</p>
+                   aria-required="true" aria-describedby="h-ext_if" maxlength="64">
+            <p class="hint" id="h-ext_if">Interfejs ruchu zewnętrznego. Bez adresu IP, bez konfiguracji — Neutron przejmuje go w całości. Kilka interfejsów po przecinku = kilka sieci fizycznych.</p>
+          </div>
+
+          <div class="field">
+            <label for="br_name">neutron_bridge_name</label>
+            <input type="text" id="br_name" spellcheck="false" placeholder="br-ex"
+                   aria-describedby="h-br_name" maxlength="64">
+            <p class="hint" id="h-br_name">Mostki OVS, po jednym na interfejs zewnętrzny. Liczba musi się zgadzać.</p>
+          </div>
+
+          <div class="field">
+            <label for="api_if">api_interface</label>
+            <input type="text" id="api_if" spellcheck="false" placeholder="dziedziczy network_interface"
+                   aria-describedby="h-api_if" maxlength="15">
+            <p class="hint" id="h-api_if">Ruch API i pierścień Corosync. Puste = dziedziczy <code>network_interface</code>.</p>
+          </div>
+
+          <div class="field">
+            <label for="stg_if">storage_interface</label>
+            <input type="text" id="stg_if" spellcheck="false" placeholder="dziedziczy network_interface"
+                   aria-describedby="h-stg_if" maxlength="15">
+            <p class="hint" id="h-stg_if">Ruch magazynu (Ceph). Puste = dziedziczy <code>network_interface</code>.</p>
+          </div>
+
+          <div class="field">
+            <label for="mig_if">migration_interface</label>
+            <input type="text" id="mig_if" spellcheck="false" placeholder="dziedziczy api_interface"
+                   aria-describedby="h-mig_if" maxlength="15">
+            <p class="hint" id="h-mig_if">Migracja maszyn na żywo. Puste = dziedziczy <code>api_interface</code>.</p>
+          </div>
+
+          <div class="field">
+            <label for="ext_vip">kolla_external_vip_address</label>
+            <input type="text" id="ext_vip" spellcheck="false" placeholder="ten sam co wewnętrzny"
+                   aria-describedby="h-ext_vip" maxlength="15">
+            <p class="hint" id="h-ext_vip">Adres publicznych punktów końcowych. Puste = ten sam co wewnętrzny.</p>
+          </div>
+
+          <div class="field">
+            <label for="ext_vip_if">kolla_external_vip_interface</label>
+            <input type="text" id="ext_vip_if" spellcheck="false" placeholder="dziedziczy network_interface"
+                   aria-describedby="h-ext_vip_if" maxlength="15">
+            <p class="hint" id="h-ext_vip_if">Interfejs, na którym stoi zewnętrzny VIP.</p>
           </div>
         </fieldset>
 
         <fieldset>
+          <legend>Nazwy i TLS</legend>
+
+          <div class="field">
+            <label for="int_fqdn">kolla_internal_fqdn</label>
+            <input type="text" id="int_fqdn" spellcheck="false" placeholder="domyślnie adres VIP"
+                   aria-describedby="h-int_fqdn" maxlength="64">
+            <p class="hint" id="h-int_fqdn">Nazwa wewnętrznych punktów końcowych w katalogu usług.</p>
+          </div>
+
+          <div class="field">
+            <label for="ext_fqdn">kolla_external_fqdn</label>
+            <input type="text" id="ext_fqdn" spellcheck="false" placeholder="domyślnie adres VIP"
+                   aria-describedby="h-ext_fqdn" maxlength="64">
+            <p class="hint" id="h-ext_fqdn">Nazwa publicznych punktów końcowych. Musi różnić się od wewnętrznej.</p>
+          </div>
+
+          <label class="toggle" for="t_tls_int">
+            <input type="checkbox" id="t_tls_int">
+            <span class="t-txt"><span class="t-name">kolla_enable_tls_internal</span>
+              <span class="t-desc">TLS na ruchu wewnętrznym między usługami.</span></span>
+          </label>
+          <label class="toggle" for="t_copy_ca">
+            <input type="checkbox" id="t_copy_ca">
+            <span class="t-txt"><span class="t-name">kolla_copy_ca_into_containers</span>
+              <span class="t-desc">Wgranie własnego CA do magazynu zaufania kontenerów.</span></span>
+          </label>
+          <label class="toggle" for="t_letsencrypt">
+            <input type="checkbox" id="t_letsencrypt">
+            <span class="t-txt"><span class="t-name">kolla_enable_letsencrypt</span>
+              <span class="t-desc">Certyfikaty z Let's Encrypt — zaufanie systemowe obrazów wystarcza.</span></span>
+          </label>
+        </fieldset>
+
+        <fieldset>
           <legend>Usługi</legend>
+
+          <div class="field">
+            <label for="ml2">neutron_plugin_agent</label>
+            <select id="ml2" aria-describedby="h-ml2">
+              <option value="ovn">ovn</option>
+              <option value="openvswitch">openvswitch</option>
+            </select>
+            <p class="hint" id="h-ml2">Backend ML2. OVN i openvswitch wykluczają się wzajemnie.</p>
+          </div>
+
+          <div class="field">
+            <label for="storage">backend magazynu</label>
+            <select id="storage" aria-describedby="h-storage">
+              <option value="none">brak</option>
+              <option value="lvm">LVM (lokalny)</option>
+              <option value="nfs">NFS</option>
+              <option value="ceph">Ceph (zewnętrzny)</option>
+            </select>
+            <p class="hint" id="h-storage">Źródło wolumenów i obrazów. Kolla nie wdraża Cepha — klaster musi istnieć.</p>
+          </div>
+
           <label class="toggle" for="t_haproxy">
             <input type="checkbox" id="t_haproxy" checked>
             <span class="t-txt"><span class="t-name">enable_haproxy</span>
@@ -264,17 +361,92 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           <label class="toggle" for="t_cinder">
             <input type="checkbox" id="t_cinder">
             <span class="t-txt"><span class="t-name">enable_cinder</span>
-              <span class="t-desc">Wolumeny blokowe. Wymaga skonfigurowanego backendu magazynu.</span></span>
+              <span class="t-desc">Wolumeny blokowe. Wymaga wybranego backendu magazynu.</span></span>
+          </label>
+          <label class="toggle" for="t_heat">
+            <input type="checkbox" id="t_heat">
+            <span class="t-txt"><span class="t-name">enable_heat</span>
+              <span class="t-desc">Orkiestracja szablonami.</span></span>
+          </label>
+          <label class="toggle" for="t_horizon">
+            <input type="checkbox" id="t_horizon">
+            <span class="t-txt"><span class="t-name">enable_horizon</span>
+              <span class="t-desc">Panel webowy.</span></span>
+          </label>
+          <label class="toggle" for="t_barbican">
+            <input type="checkbox" id="t_barbican">
+            <span class="t-txt"><span class="t-name">enable_barbican</span>
+              <span class="t-desc">Magazyn sekretów. Wymagany przez Octavię do certyfikatów amfor.</span></span>
+          </label>
+          <label class="toggle" for="t_octavia">
+            <input type="checkbox" id="t_octavia">
+            <span class="t-txt"><span class="t-name">enable_octavia</span>
+              <span class="t-desc">Równoważenie obciążenia (amfory). Wymaga Barbicana i sieci zarządzającej.</span></span>
           </label>
           <label class="toggle" for="t_prometheus">
             <input type="checkbox" id="t_prometheus">
             <span class="t-txt"><span class="t-name">enable_prometheus</span>
               <span class="t-desc">Zbieranie metryk. Wymaga hostów w grupie <em>monitoring</em>.</span></span>
           </label>
+          <label class="toggle" for="t_grafana">
+            <input type="checkbox" id="t_grafana">
+            <span class="t-txt"><span class="t-name">enable_grafana</span>
+              <span class="t-desc">Panele metryk. Bez Prometheusa nie ma czego rysować.</span></span>
+          </label>
+          <label class="toggle" for="t_hacluster">
+            <input type="checkbox" id="t_hacluster">
+            <span class="t-txt"><span class="t-name">enable_hacluster</span>
+              <span class="t-desc">Corosync i Pacemaker. Pierścień Corosync idzie przez <code>api_interface</code>.</span></span>
+          </label>
+          <label class="toggle" for="t_masakari">
+            <input type="checkbox" id="t_masakari">
+            <span class="t-txt"><span class="t-name">enable_masakari</span>
+              <span class="t-desc">Automatyczna ewakuacja maszyn po awarii hosta.</span></span>
+          </label>
           <label class="toggle" for="t_provider">
             <input type="checkbox" id="t_provider">
             <span class="t-txt"><span class="t-name">enable_neutron_provider_networks</span>
               <span class="t-desc">Sieci provider (flat/VLAN) mapowane bezpośrednio na fizyczną sieć.</span></span>
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Octavia</legend>
+
+          <div class="field">
+            <label for="amp_net">octavia_amp_network — typ</label>
+            <select id="amp_net" aria-describedby="h-amp_net">
+              <option value="tenant">tenant</option>
+              <option value="flat">flat</option>
+              <option value="vlan">vlan</option>
+            </select>
+            <p class="hint" id="h-amp_net">Sieć zarządzająca amforami. <code>vlan</code> i <code>flat</code> wymagają sieci provider.</p>
+          </div>
+
+          <div class="field">
+            <label for="physnet">provider_physical_network</label>
+            <input type="text" id="physnet" spellcheck="false" placeholder="physnet1"
+                   aria-describedby="h-physnet" maxlength="32">
+            <p class="hint" id="h-physnet">Nazwa sieci fizycznej. Musi wynikać z listy interfejsów zewnętrznych.</p>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Decyzje świadome</legend>
+          <p class="hint" style="margin:0 0 10px">
+            Część reguł opisuje ryzyko, którego nie da się rozstrzygnąć z samego pliku.
+            Potwierdzenie nie wycisza wpisu — obniża go do informacji i zapisuje decyzję
+            w komentarzu wygenerowanego pliku.
+          </p>
+          <label class="toggle" for="ack_link">
+            <input type="checkbox" id="ack_link">
+            <span class="t-txt"><span class="t-name">wspólne łącze ma zapas i QoS</span>
+              <span class="t-desc">Zmierzony zapas pasma i kolejkowanie po stronie przełącznika dla ruchu magazynu i migracji.</span></span>
+          </label>
+          <label class="toggle" for="ack_migration">
+            <input type="checkbox" id="ack_migration">
+            <span class="t-txt"><span class="t-name">migracja ma osobną sieć poza Kollą</span>
+              <span class="t-desc">Wydzielony VLAN migracji ustawiony przez <code>live_migration_inbound_addr</code> w nadpisaniu nova-compute.</span></span>
           </label>
         </fieldset>
 
@@ -552,6 +724,105 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     return list.sort();
   })();
 
+  /* ------------------------------------------------------------------ */
+  /* reguły lintu (ruleset KV)                                           */
+  /* ------------------------------------------------------------------ */
+
+  /* Waga zależy od kontekstu — KV-05 jest błędem dopiero przy enable_hacluster,
+     KV-06 dopiero przy enable_masakari — więc tabela trzyma warianty, a kod
+     wybiera wariant. W treści reguł niżej nie ma ani jednego literału wagi.
+
+     ack: pole potwierdzenia świadomej decyzji. Potwierdzenie NIE wycisza wpisu,
+     tylko obniża go do informacji: rzecz, której nie da się rozstrzygnąć z pliku,
+     zostaje udokumentowana, a nie zamieciona. */
+  var LINT = {
+    "KV-05": {
+      ack: "ack_link", field: "stg_if",
+      sev: { hacluster: "error", plain: "warn" },
+      /* drabina eskalacji: pierwszy zapalony przełącznik wybiera wariant */
+      by: [["t_hacluster", "hacluster"], [null, "plain"]],
+      why: "Corosync bierze pierścień z <code>api_interface</code>. Backfill Cepha, " +
+           "wymiana OSD albo jedna migracja 64 GB potrafi wysycić łącze; Corosync gubi " +
+           "token (domyślnie 3000 ms), Pacemaker uznaje węzeł za utracony, a Masakari " +
+           "zaczyna ewakuować zdrowy host pod obciążeniem. Klasyczne „działało trzy " +
+           "tygodnie, po czym chmura zabiła własny węzeł obliczeniowy”.",
+      ackNote: "Potwierdzono zmierzony zapas pasma i kolejkowanie po stronie przełącznika. " +
+               "Sam bond niczego nie rozstrzyga — LACP hashuje per przepływ, jeden strumień " +
+               "migracji potrafi zająć całe łącze składowe."
+    },
+    "KV-06": {
+      ack: "ack_migration", field: "mig_if",
+      /* Waga stopniowana tym, co plik udowadnia. Bez narzędzi HA migracja przez
+         api_interface jest wartością domyślną Kolli i normą w laboratorium —
+         uwaga na każdym minimalnym pliku uczyłaby ignorowania lintu. */
+      sev: { masakari: "error", hacluster: "warn", plain: "info" },
+      by: [["t_masakari", "masakari"], ["t_hacluster", "hacluster"], [null, "plain"]],
+      why: "Ewakuacja po awarii hosta to seria migracji dokładnie w chwili, gdy " +
+           "płaszczyzna sterowania jest najbardziej obciążona. Ruch migracji zagładza " +
+           "RPC, <code>nova-compute</code> na zdrowych hostach gubi puls " +
+           "(<code>service_down_time</code>, domyślnie 60 s), Nova oznacza je jako " +
+           "niedostępne, a Masakari widzi kolejne hosty do ewakuacji. Lawina: awaria " +
+           "jednego hosta kładzie klaster.",
+      ackNote: "Potwierdzono wydzieloną sieć migracji skonfigurowaną poza Kollą przez " +
+               "<code>live_migration_inbound_addr</code> w nadpisaniu nova-compute."
+    },
+    "KV-10": {
+      ack: null, field: "ext_if",
+      sev: { direct: "error", shared: "warn" },
+      why: "Kolla wpina interfejs do mostka OVS i zdejmuje z niego adresację. Przy " +
+           "równości wprost tracisz łączność z hostem w trakcie wdrożenia, na zadaniu " +
+           "<code>neutron : Bootstrap</code>. Przy współdzielonym urządzeniu bazowym " +
+           "podinterfejs VLAN teoretycznie przeżywa wejście rodzica do OVS, ale zależy " +
+           "to od kolejności inicjalizacji przy starcie — wdrożenie przechodzi, host " +
+           "nie wraca po restarcie."
+    },
+    "KV-13": {
+      ack: null, field: "physnet",
+      sev: { missing: "error" },
+      why: "Wdrożenie przechodzi i <code>loadbalancer create</code> też. Amfora wstaje, " +
+           "w Novie jest ACTIVE — a load balancer wisi w <code>PENDING_CREATE</code> " +
+           "i po około 25 minutach umiera w <code>ERROR</code>: health manager nigdy " +
+           "nie dostaje pulsu UDP 5555."
+    },
+    "KV-14": {
+      ack: null, field: null,
+      sev: { ca: "error", fqdn: "error", vip: "error" },
+      why: ""
+    },
+    "ZALEZNOSC": {
+      ack: null, field: null,
+      sev: { missing: "error" },
+      why: ""
+    }
+  };
+
+  /* Klucze, które generator wypisuje jawnie zamiast zostawiać wartość domyślną
+     wydania. Kontrakt z KV-12a: plik wyprodukowany tym narzędziem nie ma prawa
+     wpadać we własną regułę walidacyjną. */
+  var EMITTED_KEYS = { om_enable_rabbitmq_stream_fanout: true };
+
+  /* Wybór wariantu dla reguł, których waga zależy wyłącznie od przełączników —
+     drabina siedzi w LINT[id].by, nie w warunku rozsianym po kodzie. */
+  function lintVariant(id, s) {
+    var by = LINT[id].by || [];
+    for (var i = 0; i < by.length; i++) {
+      if (by[i][0] === null || s[by[i][0]]) return by[i][1];
+    }
+    return null;
+  }
+
+  /* Potwierdzenie obniża wagę do informacji — jedno miejsce dla wszystkich reguł. */
+  function lintSev(id, variant, s) {
+    var r = LINT[id];
+    if (r.ack && s[r.ack]) return "info";
+    return r.sev[variant];
+  }
+
+  function lintHint(id, s) {
+    var r = LINT[id];
+    return (r.ack && s[r.ack] && r.ackNote) ? r.ackNote + " " + r.why : r.why;
+  }
+
   /* wydania sprzed schematu RRRR.N — nadal spotykane w migracjach */
   var NAMED_RELEASES = ["victoria", "wallaby", "xena", "yoga", "zed"];
 
@@ -561,15 +832,52 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     vip: "",
     net_if: "eth0",
     ext_if: "eth1",
+    br_name: "br-ex",
+    api_if: "",
+    stg_if: "",
+    mig_if: "",
+    ext_vip: "",
+    ext_vip_if: "",
+    int_fqdn: "",
+    ext_fqdn: "",
+    ml2: "ovn",
+    storage: "none",
+    amp_net: "tenant",
+    physnet: "physnet1",
     t_haproxy: true,
     t_cinder: false,
+    t_heat: false,
+    t_horizon: false,
+    t_barbican: false,
+    t_octavia: false,
     t_prometheus: false,
+    t_grafana: false,
+    t_hacluster: false,
+    t_masakari: false,
     t_provider: false,
+    t_tls_int: false,
+    t_copy_ca: false,
+    t_letsencrypt: false,
+    ack_link: false,
+    ack_migration: false,
     t_comments: true
   };
 
-  var TEXT_FIELDS = ["distro", "release", "vip", "net_if", "ext_if"];
-  var BOOL_FIELDS = ["t_haproxy", "t_cinder", "t_prometheus", "t_provider", "t_comments"];
+  var TEXT_FIELDS = ["distro", "release", "vip", "net_if", "ext_if", "br_name",
+    "api_if", "stg_if", "mig_if", "ext_vip", "ext_vip_if", "int_fqdn", "ext_fqdn",
+    "ml2", "storage", "amp_net", "physnet"];
+  var BOOL_FIELDS = ["t_haproxy", "t_cinder", "t_heat", "t_horizon", "t_barbican",
+    "t_octavia", "t_prometheus", "t_grafana", "t_hacluster", "t_masakari",
+    "t_provider", "t_tls_int", "t_copy_ca", "t_letsencrypt",
+    "ack_link", "ack_migration", "t_comments"];
+
+  /* Pola wyboru: wartość spoza listy (pamięć lokalna, rozszerzenie przeglądarki)
+     wraca do domyślnej, tak samo jak kolla_base_distro. */
+  var SELECT_VALUES = {
+    ml2: ["ovn", "openvswitch"],
+    storage: ["none", "lvm", "nfs", "ceph"],
+    amp_net: ["tenant", "flat", "vlan"]
+  };
 
   var el = {};
   TEXT_FIELDS.concat(BOOL_FIELDS).forEach(function (id) { el[id] = document.getElementById(id); });
@@ -610,6 +918,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       s[id] = (v === "" || !re || re.test(v)) ? v : DEFAULTS[id];
     });
     if (DISTROS.indexOf(s.distro) === -1) s.distro = DEFAULTS.distro;
+    Object.keys(SELECT_VALUES).forEach(function (id) {
+      if (SELECT_VALUES[id].indexOf(s[id]) === -1) s[id] = DEFAULTS[id];
+    });
     BOOL_FIELDS.forEach(function (id) {
       var v = raw ? raw[id] : null;
       s[id] = (typeof v === "boolean") ? v : DEFAULTS[id];
@@ -665,13 +976,65 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
   var RELEASE_RE = /^[A-Za-z0-9._\/-]{1,32}$/;
   var VIP_RE = /^[0-9.]{1,15}$/;
 
+  /* Kolla przyjmuje listę interfejsów zewnętrznych i listę mostków po przecinku —
+     każda pozycja to osobna sieć fizyczna. */
+  var IFACE_LIST_RE = /^[A-Za-z0-9][A-Za-z0-9._,-]{0,63}$/;
+  var FQDN_RE = /^[A-Za-z0-9]([A-Za-z0-9.-]{0,62}[A-Za-z0-9])?$/;
+  var PHYSNET_RE = /^[A-Za-z0-9_-]{1,32}$/;
+
   /* zestaw reguł wspólny dla walidacji i dla sanityzacji pamięci lokalnej */
   var FIELD_RE = {
     release: RELEASE_RE,
     vip: VIP_RE,
     net_if: IFACE_RE,
-    ext_if: IFACE_RE
+    ext_if: IFACE_LIST_RE,
+    br_name: IFACE_LIST_RE,
+    api_if: IFACE_RE,
+    stg_if: IFACE_RE,
+    mig_if: IFACE_RE,
+    ext_vip: VIP_RE,
+    ext_vip_if: IFACE_RE,
+    int_fqdn: FQDN_RE,
+    ext_fqdn: FQDN_RE,
+    physnet: PHYSNET_RE
   };
+
+  /* ------------------------------------------------------------------ */
+  /* interfejsy — wartości efektywne                                     */
+  /* ------------------------------------------------------------------ */
+
+  /* Kolla dziedziczy niewypełnione interfejsy: api i storage z network_interface,
+     migration z api_interface. Reguły muszą patrzeć na wartość efektywną, bo to
+     ona trafia na hosta — puste pole nie znaczy "brak ruchu". */
+  function ifaces(s) {
+    var net = s.net_if;
+    var api = s.api_if || net;
+    return {
+      net: net,
+      api: api,
+      stg: s.stg_if || net,
+      mig: s.mig_if || api,
+      extVip: s.ext_vip_if || net,
+      apiExplicit: !!s.api_if,
+      stgExplicit: !!s.stg_if,
+      migExplicit: !!s.mig_if
+    };
+  }
+
+  /* bond0.10 i bond0.20 to ten sam bond0 — porównanie po urządzeniu bazowym,
+     nie po całym napisie */
+  function baseDev(name) { return String(name || "").split(".")[0]; }
+
+  function splitList(value) {
+    return String(value || "").split(",").map(function (x) { return x.trim(); })
+      .filter(function (x) { return x.length; });
+  }
+
+  /* Sieci fizyczne wynikają z pozycji na liście interfejsów zewnętrznych:
+     pierwszy interfejs to physnet1, drugi physnet2 i tak dalej. */
+  function physnets(s) {
+    return splitList(s.ext_if).map(function (_, i) { return "physnet" + (i + 1); });
+  }
 
   function checkIface(name, label, d) {
     var tag = "<code>" + label + "</code>";
@@ -696,6 +1059,156 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     if (name === "lo") {
       d.push({ level: "error", field: label, msg: tag + ": interfejs pętli zwrotnej nie nadaje się do wdrożenia wielowęzłowego." });
     }
+  }
+
+  /* Reguły z rulesetu KV, klasa A po stronie globals.yml. Tutaj są wyłącznie
+     warunki i wybór wariantu wagi — teksty i wagi leżą w LINT. */
+  function lintRules(s, d) {
+    var f = ifaces(s);
+    var R = LINT;
+
+    /* --- KV-05: magazyn i pierścień Corosync na jednym łączu --- */
+    var sameLink = baseDev(f.stg) === baseDev(f.api);
+    var inheritsWithHa = !f.stgExplicit && s.t_hacluster && !sameLink;
+    if (sameLink || inheritsWithHa) {
+      d.push({
+        level: lintSev("KV-05", lintVariant("KV-05", s), s),
+        field: R["KV-05"].field,
+        msg: (sameLink
+          ? "<code>storage_interface</code> (<code>" + esc(f.stg) + "</code>) i " +
+            "<code>api_interface</code> (<code>" + esc(f.api) + "</code>) leżą na tym samym " +
+            "urządzeniu <code>" + esc(baseDev(f.api)) + "</code>."
+          : "<code>storage_interface</code> nie jest ustawione — dziedziczy " +
+            "<code>network_interface</code> (<code>" + esc(f.stg) + "</code>) przy włączonym " +
+            "<code>enable_hacluster</code>.") + " " + lintHint("KV-05", s)
+      });
+    }
+
+    /* --- KV-06: migracja na łączu API --- */
+    if (!f.migExplicit || baseDev(f.mig) === baseDev(f.api)) {
+      d.push({
+        level: lintSev("KV-06", lintVariant("KV-06", s), s),
+        field: R["KV-06"].field,
+        msg: (!f.migExplicit
+          ? "<code>migration_interface</code> nie jest ustawione — migracja pójdzie przez " +
+            "<code>api_interface</code> (<code>" + esc(f.api) + "</code>)."
+          : "<code>migration_interface</code> (<code>" + esc(f.mig) + "</code>) leży na tym " +
+            "samym urządzeniu co <code>api_interface</code>.") + " " + lintHint("KV-06", s)
+      });
+    }
+
+    /* --- KV-10: interfejs zewnętrzny kontra interfejsy zarządzania --- */
+    var mgmt = [];
+    function addMgmt(label, value) {
+      if (!value) return;
+      for (var i = 0; i < mgmt.length; i++) if (mgmt[i][1] === value) return;
+      mgmt.push([label, value]);
+    }
+    addMgmt("network_interface", f.net);
+    addMgmt("api_interface", f.api);
+    addMgmt("storage_interface", f.stg);
+
+    splitList(s.ext_if).forEach(function (ext) {
+      mgmt.forEach(function (p) {
+        if (ext === p[1]) {
+          d.push({
+            level: lintSev("KV-10", "direct", s), field: R["KV-10"].field,
+            msg: "<code>neutron_external_interface</code> (<code>" + esc(ext) + "</code>) to ten " +
+                 "sam interfejs co <code>" + p[0] + "</code>. " + lintHint("KV-10", s)
+          });
+        } else if (baseDev(p[1]) === ext || baseDev(ext) === p[1]) {
+          d.push({
+            level: lintSev("KV-10", "shared", s), field: R["KV-10"].field,
+            msg: "<code>neutron_external_interface</code> (<code>" + esc(ext) + "</code>) dzieli " +
+                 "urządzenie bazowe z <code>" + p[0] + "</code> (<code>" + esc(p[1]) + "</code>). " +
+                 lintHint("KV-10", s)
+          });
+        }
+      });
+    });
+
+    /* --- KV-13: sieć amfor na VLAN-ie provider --- */
+    if (s.t_octavia && s.amp_net === "vlan") {
+      var nets = physnets(s);
+      if (!s.t_provider) {
+        d.push({
+          level: lintSev("KV-13", "missing", s), field: "amp_net",
+          msg: "<code>octavia_amp_network</code> typu <code>vlan</code> wymaga " +
+               "<code>enable_neutron_provider_networks</code>. " + lintHint("KV-13", s)
+        });
+      }
+      if (nets.indexOf(s.physnet) === -1) {
+        d.push({
+          level: lintSev("KV-13", "missing", s), field: R["KV-13"].field,
+          msg: "<code>" + esc(s.physnet) + "</code> nie wynika z listy interfejsów zewnętrznych " +
+               "— dostępne: " + (nets.length ? "<code>" + nets.join("</code>, <code>") + "</code>" : "brak") +
+               ". Jeden interfejs zewnętrzny nie zmapuje dwóch sieci fizycznych. " +
+               lintHint("KV-13", s)
+        });
+      }
+    } else if (s.t_octavia && s.amp_net === "flat") {
+      d.push({
+        level: "info", field: "amp_net",
+        msg: "Sieć amfor typu <code>flat</code> również opiera się na sieci provider — " +
+             "upewnij się, że <code>enable_neutron_provider_networks</code> odpowiada projektowi."
+      });
+    }
+
+    /* --- KV-14: TLS wewnętrzny, nazwy i adresy --- */
+    if (s.t_tls_int && !s.t_copy_ca && !s.t_letsencrypt) {
+      d.push({
+        level: lintSev("KV-14", "ca", s), field: null,
+        msg: "<code>kolla_enable_tls_internal</code> bez <code>kolla_copy_ca_into_containers</code> " +
+             "i bez Let's Encrypt: kontenery nie zaufają własnemu CA. Przy bootstrapie Keystone " +
+             "albo pierwszym wywołaniu między usługami w każdym logu naraz pojawi się " +
+             "<code>SSLError: certificate verify failed</code>. Wygląda jak awaria Keystone, " +
+             "jest awarią magazynu zaufania."
+      });
+    }
+    if (s.int_fqdn && s.ext_fqdn && s.int_fqdn === s.ext_fqdn) {
+      d.push({
+        level: lintSev("KV-14", "fqdn", s), field: "ext_fqdn",
+        msg: "<code>kolla_internal_fqdn</code> i <code>kolla_external_fqdn</code> są identyczne. " +
+             "Wewnętrzne i publiczne punkty końcowe w katalogu usług wskazują wtedy to samo: " +
+             "ruch między usługami wychodzi przez zewnętrzny VIP, a punkty administracyjne " +
+             "stają się osiągalne z sieci publicznej. Znajduje to zwykle audyt, nie awaria."
+      });
+    }
+    if (!s.int_fqdn && !s.ext_fqdn && s.vip && s.ext_vip && s.vip !== s.ext_vip) {
+      d.push({
+        level: lintSev("KV-14", "fqdn", s), field: "ext_fqdn",
+        msg: "Adresy VIP są różne, a obie nazwy FQDN pozostają puste — oba wpisy w katalogu " +
+             "usług powstaną z adresów i rozjadą się z certyfikatem. Ustaw " +
+             "<code>kolla_internal_fqdn</code> i <code>kolla_external_fqdn</code> jawnie."
+      });
+    }
+    if (s.vip && s.ext_vip && s.vip === s.ext_vip && baseDev(f.extVip) !== baseDev(f.net)) {
+      d.push({
+        level: lintSev("KV-14", "vip", s), field: "ext_vip",
+        msg: "Ten sam adres VIP przy różnych interfejsach (<code>" + esc(f.net) + "</code> i " +
+             "<code>" + esc(f.extVip) + "</code>) — HAProxy próbowałby zająć ten sam adres dwa razy."
+      });
+    }
+
+    /* --- zależności usług --- */
+    [[s.t_cinder && s.storage === "none", "enable_cinder", "backendu magazynu",
+      "Cinder bez backendu nie utworzy wolumenu — wdrożenie przejdzie, pierwsze " +
+      "<code>volume create</code> skończy się w stanie <code>error</code>."],
+     [s.t_grafana && !s.t_prometheus, "enable_grafana", "enable_prometheus",
+      "Grafana bez źródła danych wstanie i pokaże puste panele."],
+     [s.t_octavia && !s.t_barbican, "enable_octavia", "enable_barbican",
+      "Octavia trzyma w Barbicanie certyfikaty amfor — bez niego nie utworzy load balancera."],
+     [s.t_masakari && !s.t_hacluster, "enable_masakari", "enable_hacluster",
+      "Monitor hostów Masakari opiera się na Pacemakerze i Corosync; bez nich nie ma " +
+      "skąd wziąć informacji o awarii węzła."]
+    ].forEach(function (r) {
+      if (!r[0]) return;
+      d.push({
+        level: lintSev("ZALEZNOSC", "missing", s), field: null,
+        msg: "<code>" + r[1] + "</code> wymaga " +
+             (r[2].indexOf("enable_") === 0 ? "<code>" + r[2] + "</code>" : r[2]) + ". " + r[3]
+      });
+    });
   }
 
   function validate(s) {
@@ -781,6 +1294,14 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         Object.keys(rel.defaults).forEach(function (key) {
           var meta = KOLLA_MATRIX.keys[key];
           if (!meta || !meta.notable) return;
+          if (EMITTED_KEYS[key]) {
+            d.push({
+              level: "info", field: null,
+              msg: "<code>" + esc(key) + "</code> jest w pliku ustawiony jawnie — wartość " +
+                   "nie zależy już od domyślnej wydania (" + meta.label + "). " + meta.why
+            });
+            return;
+          }
           d.push({
             level: meta.sev || "info", field: null,
             msg: "Plik nie ustawia <code>" + esc(key) + "</code> — obowiązuje wartość " +
@@ -840,13 +1361,29 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
     /* --- interfejsy --- */
     checkIface(s.net_if, "network_interface", d);
-    checkIface(s.ext_if, "neutron_external_interface", d);
-    if (s.net_if && s.ext_if && s.net_if === s.ext_if) {
+    var extList = splitList(s.ext_if);
+    if (!extList.length) {
+      d.push({ level: "error", field: "ext_if", msg: "Pole <code>neutron_external_interface</code> jest wymagane." });
+    } else {
+      extList.forEach(function (x) { checkIface(x, "neutron_external_interface", d); });
+    }
+    [["api_if", "api_interface"], ["stg_if", "storage_interface"],
+     ["mig_if", "migration_interface"], ["ext_vip_if", "kolla_external_vip_interface"]
+    ].forEach(function (p) {
+      if (s[p[0]]) checkIface(s[p[0]], p[1], d);
+    });
+
+    var brList = splitList(s.br_name);
+    if (brList.length && extList.length && brList.length !== extList.length) {
       d.push({
-        level: "error", field: "ext_if",
-        msg: "<code>network_interface</code> i <code>neutron_external_interface</code> muszą być różnymi interfejsami — Neutron przejmuje interfejs zewnętrzny i usuwa z niego adresację."
+        level: "error", field: "br_name",
+        msg: "<code>neutron_bridge_name</code> ma " + brList.length + " pozycji, a " +
+             "<code>neutron_external_interface</code> " + extList.length +
+             ". Każdemu interfejsowi zewnętrznemu odpowiada dokładnie jeden mostek."
       });
     }
+
+    lintRules(s, d);
 
     /* --- spójność usług --- */
     if (!s.t_haproxy) {
@@ -861,16 +1398,20 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         msg: "Prometheus wymaga co najmniej jednego hosta w grupie <code>monitoring</code> w inventory."
       });
     }
-    if (s.t_cinder) {
-      d.push({
-        level: "warn", field: null,
-        msg: "Cinder bez skonfigurowanego backendu (LVM, Ceph, NFS) nie utworzy wolumenów — uzupełnij ustawienia backendu przed wdrożeniem."
-      });
-    }
-    if (s.t_provider && s.ext_if) {
+    if (s.storage === "ceph") {
       d.push({
         level: "info", field: null,
-        msg: "Sieci provider wymagają mostka <code>neutron_bridge_name</code> (domyślnie <code>br-ex</code>) oraz portu przełącznika skonfigurowanego pod wybrany typ sieci."
+        msg: "Kolla-Ansible nie wdraża Cepha — klaster musi już istnieć, a pliki " +
+             "<code>ceph.conf</code> i keyringi trafiają do katalogu konfiguracji przed wdrożeniem."
+      });
+    }
+    if (s.t_provider && extList.length) {
+      d.push({
+        level: "info", field: null,
+        msg: "Sieci provider mapują się na " + (extList.length === 1
+              ? "jedną sieć fizyczną (<code>physnet1</code>)"
+              : extList.length + " sieci fizyczne (<code>" + physnets(s).join("</code>, <code>") + "</code>)") +
+             ". Port przełącznika musi być skonfigurowany zgodnie z typem sieci."
       });
     }
 
@@ -968,7 +1509,33 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     L.push("network_interface: " + fv(s, bad, "net_if"));
     L.push("neutron_external_interface: " + fv(s, bad, "ext_if"));
     L.push("kolla_internal_vip_address: " + fv(s, bad, "vip"));
+    if (s.br_name) L.push("neutron_bridge_name: " + fv(s, bad, "br_name"));
+
+    /* Interfejsy pochodne wypisujemy tylko wtedy, gdy operator je ustawił —
+       pusty klucz w globals.yml znaczy co innego niż jego brak. */
+    if (s.api_if) L.push("api_interface: " + fv(s, bad, "api_if"));
+    if (s.stg_if) L.push("storage_interface: " + fv(s, bad, "stg_if"));
+    if (s.mig_if) L.push("migration_interface: " + fv(s, bad, "mig_if"));
+    if (c && !s.mig_if) {
+      L.push("# migration_interface nie jest ustawione — migracja na żywo pójdzie przez");
+      L.push("# api_interface, tą samą drogą co RPC i pierścień Corosync.");
+    }
+    if (s.ext_vip) L.push("kolla_external_vip_address: " + fv(s, bad, "ext_vip"));
+    if (s.ext_vip_if) L.push("kolla_external_vip_interface: " + fv(s, bad, "ext_vip_if"));
     L.push("");
+
+    if (s.int_fqdn || s.ext_fqdn || s.t_tls_int || s.t_letsencrypt) {
+      if (c) { L.push(rule); L.push("# Nazwy punktów końcowych i TLS"); L.push(rule); }
+      if (s.int_fqdn) L.push("kolla_internal_fqdn: " + fv(s, bad, "int_fqdn"));
+      if (s.ext_fqdn) L.push("kolla_external_fqdn: " + fv(s, bad, "ext_fqdn"));
+      L.push("kolla_enable_tls_internal: " + yn(s.t_tls_int));
+      if (s.t_tls_int) L.push("kolla_copy_ca_into_containers: " + yn(s.t_copy_ca));
+      L.push("kolla_enable_letsencrypt: " + yn(s.t_letsencrypt));
+      if (c && s.t_tls_int && !s.t_copy_ca && !s.t_letsencrypt) {
+        L.push("# UWAGA: bez kolla_copy_ca_into_containers kontenery nie zaufają własnemu CA.");
+      }
+      L.push("");
+    }
 
     if (c) { L.push(rule); L.push("# Warstwa równoważenia obciążenia"); L.push(rule); }
     L.push("enable_haproxy: " + yn(s.t_haproxy));
@@ -981,28 +1548,92 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
     if (c) { L.push(rule); L.push("# Usługi OpenStack"); L.push(rule); }
     L.push("enable_cinder: " + yn(s.t_cinder));
-    if (c && s.t_cinder) {
-      L.push("# Cinder wymaga wskazania backendu. Odkomentuj i dostosuj jedną z opcji:");
-      L.push('#enable_cinder_backend_lvm: "yes"');
-      L.push('#cinder_volume_group: "cinder-volumes"');
-      L.push('#enable_cinder_backend_nfs: "yes"');
-      L.push('#cinder_backend_ceph: "yes"');
+    if (s.t_cinder) {
+      if (s.storage === "lvm") {
+        L.push('enable_cinder_backend_lvm: "yes"');
+        L.push('cinder_volume_group: "cinder-volumes"');
+      } else if (s.storage === "nfs") {
+        L.push('enable_cinder_backend_nfs: "yes"');
+      } else if (s.storage === "ceph") {
+        L.push('cinder_backend_ceph: "yes"');
+      }
     }
+    if (s.storage === "ceph") {
+      L.push('glance_backend_ceph: "yes"');
+      if (c) {
+        L.push("# Kolla-Ansible nie wdraża Cepha. Klaster musi istnieć, a ceph.conf");
+        L.push("# oraz keyringi trafiają do katalogu konfiguracji przed wdrożeniem.");
+      }
+    }
+    L.push("enable_heat: " + yn(s.t_heat));
+    L.push("enable_horizon: " + yn(s.t_horizon));
+    L.push("enable_barbican: " + yn(s.t_barbican));
+    L.push("enable_octavia: " + yn(s.t_octavia));
     L.push("enable_prometheus: " + yn(s.t_prometheus));
-    if (c && s.t_prometheus) {
-      L.push("# Prometheus wdraża się na hostach z grupy 'monitoring' w inventory.");
-      L.push("# Panele metryk wymagają dodatkowo:");
-      L.push('#enable_grafana: "yes"');
+    L.push("enable_grafana: " + yn(s.t_grafana));
+    L.push("enable_hacluster: " + yn(s.t_hacluster));
+    L.push("enable_masakari: " + yn(s.t_masakari));
+    if (c && s.t_masakari) {
+      L.push("# Masakari bez działającego STONITH nie jest wysoką dostępnością. Izolacja");
+      L.push("# sieciowa węzła wygląda jak jego awaria: instancja zostaje odtworzona,");
+      L.push("# podczas gdy pierwotna wciąż trzyma otwarty deskryptor RBD.");
     }
     L.push("");
 
     if (c) { L.push(rule); L.push("# Neutron"); L.push(rule); }
+    L.push("neutron_plugin_agent: " + q(s.ml2));
     L.push("enable_neutron_provider_networks: " + yn(s.t_provider));
     if (c && s.t_provider) {
       L.push("# Sieci provider mapują się bezpośrednio na sieć fizyczną podpiętą do");
       L.push("# neutron_external_interface (" + fc(s, bad, "ext_if") + "). Ruch wychodzi przez mostek");
       L.push("# neutron_bridge_name — domyślnie br-ex. Port przełącznika musi być");
       L.push("# skonfigurowany zgodnie z typem sieci (dostępowy dla flat, trunk 802.1Q dla VLAN).");
+    }
+    L.push("");
+
+    if (s.t_octavia) {
+      if (c) { L.push(rule); L.push("# Octavia"); L.push(rule); }
+      L.push('octavia_network_type: ' + q(s.amp_net === "tenant" ? "tenant" : "provider"));
+      if (s.amp_net !== "tenant") {
+        L.push("octavia_amp_network_type: " + q(s.amp_net));
+        L.push("octavia_amp_network_provider_physical_network: " + fv(s, bad, "physnet"));
+      }
+      if (c) {
+        L.push("# octavia_network_interface musi istnieć na KAŻDYM hoście z grupy");
+        L.push("# octavia-health-manager. Brak na jednym z trzech daje load balancery,");
+        L.push("# które tworzą się losowo — zależnie od tego, który HM dostał puls.");
+      }
+      L.push("");
+    }
+
+    /* Kontrakt KV-12a: klucz wypisujemy jawnie dla wydań, które mają go w macierzy.
+       Wartość domyślna zostaje wartością domyślną, ale przestaje być milcząca. */
+    var relFanout = bad.release ? null : findRelease(s.release);
+    if (relFanout && relFanout.defaults &&
+        Object.prototype.hasOwnProperty.call(relFanout.defaults, "om_enable_rabbitmq_stream_fanout")) {
+      if (c) { L.push(rule); L.push("# RabbitMQ"); L.push(rule); }
+      L.push("om_enable_rabbitmq_stream_fanout: " +
+             yn(relFanout.defaults.om_enable_rabbitmq_stream_fanout));
+      if (c) {
+        L.push("# Wartość domyślna wydania " + cmt(relFanout.id) + ", wypisana jawnie.");
+        L.push("# Przy true liderzy wszystkich strumieni potrafią wylądować na jednym");
+        L.push("# brokerze — po wdrożeniu zweryfikuj ich rozłożenie na węzłach.");
+      }
+      L.push("");
+    }
+
+    if (c && (s.ack_link || s.ack_migration)) {
+      L.push(rule);
+      L.push("# Decyzje potwierdzone świadomie");
+      if (s.ack_link) {
+        L.push("# - wspólne łącze dla ruchu magazynu i API: potwierdzony zapas pasma");
+        L.push("#   i kolejkowanie po stronie przełącznika");
+      }
+      if (s.ack_migration) {
+        L.push("# - migracja na wydzielonej sieci ustawionej poza Kollą przez");
+        L.push("#   live_migration_inbound_addr w nadpisaniu nova-compute");
+      }
+      L.push(rule);
     }
 
     var text = L.join("\n").replace(/\s+$/, "");

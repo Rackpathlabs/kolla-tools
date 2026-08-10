@@ -24,6 +24,8 @@ openstack_release: "2025.1"
 network_interface: "eth0"
 neutron_external_interface: "eth1"
 kolla_internal_vip_address: "10.0.0.250"
+# migration_interface nie jest ustawione — migracja na żywo pójdzie przez
+# api_interface, tą samą drogą co RPC i pierścień Corosync.
 
 ###############################################################################
 # Warstwa równoważenia obciążenia
@@ -34,9 +36,25 @@ enable_haproxy: "yes"
 # Usługi OpenStack
 ###############################################################################
 enable_cinder: "no"
+enable_heat: "no"
+enable_horizon: "no"
+enable_barbican: "no"
+enable_octavia: "no"
 enable_prometheus: "no"
+enable_grafana: "no"
+enable_hacluster: "no"
+enable_masakari: "no"
 
 ###############################################################################
 # Neutron
 ###############################################################################
+neutron_plugin_agent: ""
 enable_neutron_provider_networks: "no"
+
+###############################################################################
+# RabbitMQ
+###############################################################################
+om_enable_rabbitmq_stream_fanout: "yes"
+# Wartość domyślna wydania 2025.1, wypisana jawnie.
+# Przy true liderzy wszystkich strumieni potrafią wylądować na jednym
+# brokerze — po wdrożeniu zweryfikuj ich rozłożenie na węzłach.
