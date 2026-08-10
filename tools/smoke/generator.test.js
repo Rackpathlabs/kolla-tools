@@ -98,8 +98,12 @@ console.log("walidacja:");
 var d;
 d = T.validate(base());
 ok("2025.1/rocky bez błędów", levels(d, "error").length === 0, JSON.stringify(levels(d, "error")));
-ok("2025.1 podaje domyślne om_enable_rabbitmq_stream_fanout",
-   has(d, "info", /om_enable_rabbitmq_stream_fanout/));
+/* KV-12a: brak klucza = wartość domyślna = działa, ryzyko dopiero przy skali.
+   Uwaga, nie błąd — error na każdym labowym pliku uczy ignorowania narzędzia. */
+ok("brak om_enable_rabbitmq_stream_fanout -> uwaga, nie informacja",
+   has(d, "warn", /om_enable_rabbitmq_stream_fanout/) &&
+   !has(d, "info", /om_enable_rabbitmq_stream_fanout/));
+ok("komunikat mówi, że plik klucza nie ustawia", has(d, "warn", /Plik nie ustawia/));
 ok("2025.1 nie wspomina o kluczach nie-notable",
    !has(d, "info", /enable_ironic_inspector/));
 ok("2025.1 wypisuje systemy hosta", has(d, "info", /Ubuntu Noble/));
@@ -134,7 +138,12 @@ ok("2026.2 -> data planowanego wydania, nie końca wsparcia",
 d = T.validate(base({ release: "2026.1" }));
 ok("2026.1 (wspierane) -> brak uwagi o statusie",
    !has(d, "warn", /koniec życia|bez utrzymania|gałąź rozwojowa/));
-ok("2026.1 podaje prefetch QoS", has(d, "info", /om_rabbitmq_qos_prefetch_count/));
+ok("2026.1 podaje prefetch QoS jako informację, nie uwagę",
+   has(d, "info", /om_rabbitmq_qos_prefetch_count/) &&
+   !has(d, "warn", /om_rabbitmq_qos_prefetch_count/));
+ok("waga wpisu pochodzi z macierzy, nie z kodu",
+   M.keys.om_enable_rabbitmq_stream_fanout.sev === "warn" &&
+   M.keys.om_rabbitmq_qos_prefetch_count.sev === "info");
 
 d = T.validate(base({ release: "2019.1" }));
 ok("spoza macierzy -> uwaga", has(d, "warn", /nie występuje w macierzy/));

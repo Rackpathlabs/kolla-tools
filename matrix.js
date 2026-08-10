@@ -47,17 +47,20 @@
     /* Opis klucza żyje tu raz, nie przy każdym wydaniu.
        notable: klucz dotyczy każdego wdrożenia i narzędzie wspomina o nim zawsze.
                 false = klucz ma sens dopiero przy włączonej konkretnej usłudze,
-                więc czeka na przełączniki enable_* (issue #6). */
+                więc czeka na przełączniki enable_* (issue #6).
+       sev:     waga wpisu, gdy plik nie ustawia klucza jawnie. 'warn' zarezerwowane
+                dla wartości domyślnych, które działają, ale niosą ryzyko przy skali;
+                'info' dla zmian wartości bez ryzyka. */
     keys: {
       om_enable_rabbitmq_stream_fanout: {
-        notable: true,
+        notable: true, sev: "warn",
         label: "kolejki strumieniowe dla fanoutów RabbitMQ",
         why: "Przy wartości domyślnej <code>true</code> liderzy wszystkich strumieni potrafią " +
              "wylądować na jednym brokerze. Przy trzech węzłach control warto zweryfikować " +
              "rozłożenie liderów po wdrożeniu."
       },
       om_rabbitmq_qos_prefetch_count: {
-        notable: true,
+        notable: true, sev: "info",
         label: "prefetch QoS dla RabbitMQ",
         why: "Od 2026.1 domyślnie 50 zamiast wartości nieograniczonej — zmiana wpływa " +
              "na rozkład obciążenia między workerami."

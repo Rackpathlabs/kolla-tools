@@ -264,17 +264,20 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     /* Opis klucza żyje tu raz, nie przy każdym wydaniu.
        notable: klucz dotyczy każdego wdrożenia i narzędzie wspomina o nim zawsze.
                 false = klucz ma sens dopiero przy włączonej konkretnej usłudze,
-                więc czeka na przełączniki enable_* (issue #6). */
+                więc czeka na przełączniki enable_* (issue #6).
+       sev:     waga wpisu, gdy plik nie ustawia klucza jawnie. 'warn' zarezerwowane
+                dla wartości domyślnych, które działają, ale niosą ryzyko przy skali;
+                'info' dla zmian wartości bez ryzyka. */
     keys: {
       om_enable_rabbitmq_stream_fanout: {
-        notable: true,
+        notable: true, sev: "warn",
         label: "kolejki strumieniowe dla fanoutów RabbitMQ",
         why: "Przy wartości domyślnej <code>true</code> liderzy wszystkich strumieni potrafią " +
              "wylądować na jednym brokerze. Przy trzech węzłach control warto zweryfikować " +
              "rozłożenie liderów po wdrożeniu."
       },
       om_rabbitmq_qos_prefetch_count: {
-        notable: true,
+        notable: true, sev: "info",
         label: "prefetch QoS dla RabbitMQ",
         why: "Od 2026.1 domyślnie 50 zamiast wartości nieograniczonej — zmiana wpływa " +
              "na rozkład obciążenia między workerami."
@@ -996,6 +999,125 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     return out;
   }
 
+  /* ------------------------------------------------------------------ */
+  /* kolokacja ról (KV-04, KV-11)                                        */
+  /* ------------------------------------------------------------------ */
+
+  /* Progi kolokacji — reguły niżej nie zawierają liczb. */
+  var COLLOCATION = {
+    /* poniżej tylu węzłów w [network] nie ma przełączania bramy OVN */
+    minGateway: 2,
+    /* od tylu węzłów obliczeniowych brak redundancji bramy zaczyna boleć */
+    computeScale: 2,
+    /* ilu hostów wymieniamy w treści wpisu, zanim przejdziemy na wielokropek */
+    listLimit: 6
+  };
+
+  function intersect(a, b) {
+    var set = Object.create(null);
+    (b || []).forEach(function (h) { set[h] = 1; });
+    return (a || []).filter(function (h) { return set[h]; });
+  }
+
+  function hostList(names) {
+    var shown = names.slice(0, COLLOCATION.listLimit)
+      .map(function (n) { return "<code>" + esc(n) + "</code>"; }).join(", ");
+    return names.length > COLLOCATION.listLimit
+      ? shown + " i " + (names.length - COLLOCATION.listLimit) + " więcej" : shown;
+  }
+
+  function collocationRules(groups, effective, hostNames) {
+    var out = [];
+    var control = effective.control || [];
+    var compute = effective.compute || [];
+    var network = effective.network || [];
+    var storage = effective.storage || [];
+
+    /* All-in-one to jeden host w całym inventory — tam kolokacja jest całą
+       konstrukcją, nie usterką. Osobny wpis informacyjny wystawia reguła kworum. */
+    var aio = hostNames.length === 1;
+
+    /* --- KV-04: [control] i [compute] muszą być rozłączne --- */
+    var ctlCmp = intersect(control, compute);
+    if (ctlCmp.length && !aio) {
+      out.push({
+        sev: "error", code: "KOLOKACJA-CONTROL-COMPUTE",
+        msg: plural(ctlCmp.length, "Host pełni", "Hosty pełnią", "Hostów pełni") +
+             " jednocześnie rolę sterującą i obliczeniową: " + hostList(ctlCmp) + ".",
+        line: groupLine(groups.compute),
+        hint: "Wdrożenie przejdzie, laboratorium będzie działać bez zarzutu. Później " +
+              "albo Pacemaker Remote nie wystartuje na hoście będącym już pełnym " +
+              "członkiem Corosync, albo — przy <code>restrict_to_remotes = false</code> — " +
+              "hostmonitor uzna węzeł sterujący za kandydata do ewakuacji: restart " +
+              "serwisowy takiego hosta każe Masakari ewakuować maszyny z węzła, na " +
+              "którym stoją MariaDB i RabbitMQ, przez API, które właśnie leży. Kaskada."
+      });
+    }
+
+    /* --- KV-11: [network] pod OVN --- */
+    if (network.length) {
+      var sameAsControl = control.length && sameSet(network, control);
+      var ctlNet = intersect(network, control);
+
+      if (sameAsControl) {
+        out.push({
+          sev: "warn", code: "KOLOKACJA-NETWORK",
+          msg: "Obsada <code>[network]</code> jest identyczna z <code>[control]</code>.",
+          line: groupLine(groups.network),
+          hint: "Pod OVN hosty z <code>[network]</code> dostają " +
+                "<code>enable-chassis-as-gw</code> i stają się bramami. Domyślny wzorzec " +
+                "<code>[network:children] = control</code> przepycha cały ruch " +
+                "północ-południe (SNAT, pływające adresy bez DVR) przez kontrolery. " +
+                "Trzymaszynowe laboratorium tego nie pokaże; przy około pięćdziesięciu " +
+                "instancjach <code>ovn-controller</code> zaczyna walczyć o procesor " +
+                "z MariaDB i RabbitMQ, a przy przełączeniu bramy migocze BFD i pociąga " +
+                "za sobą Corosync. Klucz <code>neutron_ovn_distributed_fip: \"yes\"</code> " +
+                "łagodzi część z pływającymi adresami — SNAT nadal idzie przez bramy. " +
+                "Kolokacja z <code>[compute]</code> jest poprawnym wzorcem; alarm dotyczy " +
+                "wyłącznie dziedziczenia z <code>[control]</code>."
+        });
+      } else if (ctlNet.length) {
+        out.push({
+          sev: "warn", code: "KOLOKACJA-NETWORK",
+          msg: "Część węzłów sieciowych to zarazem węzły sterujące: " + hostList(ctlNet) + ".",
+          line: groupLine(groups.network),
+          hint: "Warstwa danych ląduje na płaszczyźnie sterowania — bramy OVN dzielą " +
+                "procesor z MariaDB i RabbitMQ. Skutki widać dopiero przy obciążeniu."
+        });
+      }
+
+      if (network.length < COLLOCATION.minGateway &&
+          compute.length >= COLLOCATION.computeScale) {
+        out.push({
+          sev: "warn", code: "BRAMA-BEZ-HA",
+          msg: "Grupa <code>[network]</code> ma " +
+               countLabel(network.length, "host", "hosty", "hostów") + " przy " +
+               countLabel(compute.length, "węźle", "węzłach", "węzłach") + " obliczeniowych.",
+          line: groupLine(groups.network),
+          hint: "Brama OVN nie ma gdzie się przełączyć — utrata tego hosta zabiera " +
+                "ruch północ-południe całej chmury. Redundancja zaczyna się od " +
+                COLLOCATION.minGateway + " węzłów sieciowych."
+        });
+      }
+    }
+
+    /* --- [storage] razem z [compute] --- */
+    var stgCmp = intersect(storage, compute);
+    if (stgCmp.length && !aio) {
+      out.push({
+        sev: "info", code: "KOLOKACJA-STORAGE",
+        msg: plural(stgCmp.length, "Host łączy", "Hosty łączą", "Hostów łączy") +
+             " rolę obliczeniową i magazynową: " + hostList(stgCmp) + ".",
+        line: groupLine(groups.storage),
+        hint: "Układ hiperkonwergentny. Usługi wolumenów konkurują o pamięć i procesor " +
+              "z maszynami wirtualnymi — węzeł pod presją pamięci degraduje magazyn " +
+              "dla całej chmury, nie tylko dla siebie. Zaplanuj rezerwę zasobów."
+      });
+    }
+
+    return out;
+  }
+
   function analyse(parsed, release) {
     var groups = parsed.groups;
     var order = parsed.order;
@@ -1239,16 +1361,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     });
 
     /* --- kolokacja ról --- */
-    var overlap = hostNames.filter(function (h) {
-      var gs = hostIndex[h].groups;
-      return gs.control && gs.compute;
-    });
-    if (overlap.length && hostNames.length > 1) {
-      add("info", "KOLOKACJA", plural(overlap.length, "Host pełni", "Hosty pełnią", "Hostów pełni") +
-          " jednocześnie rolę sterującą i obliczeniową: " +
-          overlap.slice(0, 6).map(function (n) { return "<code>" + esc(n) + "</code>"; }).join(", ") + ".",
-          null, "Konfiguracja hiperkonwergentna — zaplanuj rezerwę CPU i RAM na usługi sterowania.");
-    }
+    collocationRules(groups, effective, hostNames).forEach(function (f) { findings.push(f); });
 
     /* --- reguły zależne od wydania --- */
     releaseRules(release, groups).forEach(function (f) { findings.push(f); });
