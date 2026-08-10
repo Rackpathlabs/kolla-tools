@@ -30,6 +30,20 @@ extract_script() {
 
 rc=0
 
+echo "== higiena plików =="
+# Bajt NUL w pliku HTML to zawsze pomyłka edycji: parser HTML zamienia go na U+FFFD,
+# a narzędzia tekstowe (grep, diff) zaczynają traktować plik jak binarny i milczą.
+# Uwaga: nie da się tu użyć grepa z wzorcem $'\x00' — bash nie utrzyma bajtu NUL
+# w napisie, więc wzorzec jest pusty i pasuje do każdego pliku.
+for f in generator.html validator.html matrix.js; do
+  if [ "$(tr -cd '\0' < "$f" | wc -c)" -ne 0 ]; then
+    echo "  FAIL $f: zawiera bajt NUL"; rc=1
+  else
+    echo "  ok   $f"
+  fi
+done
+
+echo
 echo "== spójność macierzy =="
 bash tools/check-matrix.sh || rc=1
 
