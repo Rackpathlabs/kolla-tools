@@ -44,6 +44,10 @@ echo "== gwarancja offline =="
 "$NODE" tools/check-offline.js || rc=1
 
 echo
+echo "== dokument granic =="
+bash tools/check-docs.sh || rc=1
+
+echo
 echo "== spójność bloków współdzielonych =="
 bash tools/check-blocks.sh || rc=1
 

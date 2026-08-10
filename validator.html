@@ -195,8 +195,10 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
   <p class="lede">
     Sprawdza plik inventory w formacie INI: obecność i obsadę grup <code>control</code>,
     <code>network</code>, <code>compute</code>, <code>storage</code>, <code>monitoring</code>,
-    duplikaty hostów, puste grupy, sprzeczne zmienne i błędy składni. Analiza działa wyłącznie
+    duplikaty hostów, puste grupy, sprzeczne zmienne i błędy składni. Opcjonalnie przyjmuje
+    <code>globals.yml</code> i dokłada reguły wymagające obu plików naraz. Analiza działa wyłącznie
     w przeglądarce — plik nie jest nigdzie wysyłany ani zapisywany.
+    Zakres i granice opisuje <a href="https://github.com/Rackpathlabs/kolla-tools/blob/main/SCOPE.md">SCOPE.md</a>.
   </p>
 
   <div class="cols">
@@ -2193,8 +2195,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     el.verdict.classList.toggle("warn", e === 0 && w > 0);
 
     if (e) el.verdictTxt.textContent = "Inventory zawiera błędy blokujące wdrożenie.";
-    else if (w) el.verdictTxt.textContent = "Inventory poprawne składniowo — są uwagi do przeglądu.";
-    else el.verdictTxt.textContent = "Inventory poprawne. Nie wykryto problemów.";
+    else if (w) el.verdictTxt.textContent = "Składnia poprawna — są uwagi do przeglądu.";
+    else el.verdictTxt.textContent = "Brak zastrzeżeń w zakresie sprawdzanym przez to narzędzie.";
 
     var chips = "";
     if (e) chips += '<span class="chip e">' + countLabel(e, "błąd", "błędy", "błędów") + "</span>";
