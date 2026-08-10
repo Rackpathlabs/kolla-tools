@@ -1680,9 +1680,13 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     });
   }
 
-  function validate(s) {
+  /* doc: wczytany dokument globals.yml albo null dla trybu generowania od zera.
+     Parametr jest jawny, bo od niego zależy prawdziwość zdania o kluczach
+     krytycznych — a zdanie nieprawdziwe w diagnostyce jest gorsze niż jego brak. */
+  function validate(s, doc) {
     var d = [];
     var rel = findRelease(s.release);
+    doc = (doc === undefined) ? importedDoc : doc;
 
     /* --- obraz bazowy --- */
     if (DISTROS.indexOf(s.distro) === -1) {
@@ -1763,7 +1767,13 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         Object.keys(rel.defaults).forEach(function (key) {
           var meta = KOLLA_MATRIX.keys[key];
           if (!meta || !meta.notable) return;
-          if (EMITTED_KEYS[key]) {
+          /* Czy klucz znajdzie się w wyprodukowanym pliku? W trybie generowania
+             rozstrzyga kontrakt KV-12a (EMITTED_KEYS). W trybie importu rozstrzyga
+             sam wczytany plik: import niczego nie dopisuje, bo round-trip bajtowy
+             jest mocniejszą gwarancją niż uzupełnienie brakującego klucza.
+             „Stwórz mi plik" może dopisywać, „popraw mi plik" nie może. */
+          var present = doc ? !!doc.keys[key] : !!EMITTED_KEYS[key];
+          if (present) {
             d.push({
               level: "info", field: null,
               msg: "<code>" + esc(key) + "</code> jest w pliku ustawiony jawnie — wartość " +
@@ -1773,9 +1783,10 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           }
           d.push({
             level: meta.sev || "info", field: null,
-            msg: "Plik nie ustawia <code>" + esc(key) + "</code> — obowiązuje wartość " +
-                 "domyślna wydania <code>" + esc(String(rel.defaults[key])) + "</code> (" +
-                 meta.label + "). " + meta.why
+            msg: (doc ? "Wczytany plik nie ustawia " : "Plik nie ustawia ") +
+                 "<code>" + esc(key) + "</code> — obowiązuje wartość domyślna wydania <code>" +
+                 esc(String(rel.defaults[key])) + "</code> (" + meta.label + "). " + meta.why +
+                 (doc ? " Import nie dopisuje brakujących kluczy — eksport odtworzy plik bez zmian." : "")
           });
         });
       }
@@ -2365,7 +2376,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
   var saveTimer = null;
   function refresh() {
     var s = readState();
-    var d = validate(s).concat(importFindings);
+    var d = validate(s, importedDoc).concat(importFindings);
     var bad = badFields(d);
 
     var built;

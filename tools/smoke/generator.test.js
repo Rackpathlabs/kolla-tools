@@ -269,6 +269,30 @@ ok("podmiana tylko dla zmienionych kluczy",
 ok("bez zmian brak podmian",
    Object.keys(T.changedOverrides(doc, T.rawStateFromParsed(doc))).length === 0);
 
+console.log("styk kontraktu KV-12a z importem:");
+/* Jedyne miejsce, gdzie dwie zasady się stykają: kontrakt „generator wypisuje klucz
+   krytyczny jawnie" kontra „import niczego nie dopisuje". Wygrywa round-trip bajtowy,
+   a brak klucza ma być diagnostyką — nie edycją cudzego pliku. */
+var noKey = '---\nkolla_base_distro: "rocky"\nopenstack_release: "2025.1"\nenable_haproxy: "yes"\n';
+var docNo = P.parse(noKey);
+var stNo = T.rawStateFromParsed(docNo);
+var dNo = T.validate(stNo, docNo);
+ok("import bez klucza -> uwaga, a nie fałszywa informacja o jawnym ustawieniu",
+   has(dNo, "warn", /om_enable_rabbitmq_stream_fanout/) && !has(dNo, "info", /ustawiony jawnie/));
+ok("komunikat mówi wprost, że import nie dopisuje kluczy",
+   has(dNo, "warn", /nie dopisuje brakujących kluczy/));
+ok("eksport nie dopisuje klucza — plik wraca bajtowo identyczny",
+   P.emit(docNo, T.changedOverrides(docNo, stNo)).text === noKey);
+
+var docYes = P.parse(noKey.replace("enable_haproxy",
+  'om_enable_rabbitmq_stream_fanout: "yes"\nenable_haproxy'));
+ok("import z kluczem -> informacja o jawnym ustawieniu",
+   has(T.validate(T.rawStateFromParsed(docYes), docYes), "info", /ustawiony jawnie/));
+
+ok("tryb generowania od zera nadal spełnia kontrakt KV-12a",
+   has(T.validate(base(), null), "info", /ustawiony jawnie/) &&
+   !has(T.validate(base(), null), "warn", /om_enable_rabbitmq_stream_fanout/));
+
 console.log("YAML:");
 var y = T.buildYaml(base(), {});
 ok("nagłówek zawiera nazwę wydania", /Epoxy/.test(y.text), y.text.split("\n").slice(0, 8).join(" | "));
