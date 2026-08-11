@@ -92,6 +92,10 @@
       "t.import.dropped":       "Import dropped — the file is built from the form again.",
       "t.export.blocked":       "Export blocked — the configuration contains errors.",
 
+      /* --- generator: metka pola obowiązkowego ---
+         Rejestr: małą literą, bo to metka, nie krzyk. Wielkie litery należą do CSS. */
+      "g.field.required":      "required",
+
       /* --- generator: nagłówki sekcji ---
          Rejestr: fraza rzeczownikowa, bez rodzajnika, bez kropki. Wielkie litery
          należą do CSS, nie do treści. */

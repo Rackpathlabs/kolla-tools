@@ -261,14 +261,14 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           <legend data-i18n="g.h.baseImage"></legend>
 
           <div class="field">
-            <label for="distro">kolla_base_distro <span class="req">wymagane</span></label>
+            <label for="distro">kolla_base_distro <span class="req" data-i18n="g.field.required"></span></label>
             <!-- opcje pochodzą z macierzy wydań (KOLLA_MATRIX), nie z tego znacznika -->
             <select id="distro" aria-required="true" aria-describedby="h-distro"></select>
             <p class="hint" id="h-distro">Base distribution of the container images. Must match the images in the registry.</p>
           </div>
 
           <div class="field">
-            <label for="release">openstack_release <span class="req">wymagane</span></label>
+            <label for="release">openstack_release <span class="req" data-i18n="g.field.required"></span></label>
             <input type="text" id="release" list="releases" spellcheck="false" placeholder="2025.1"
                    aria-required="true" aria-describedby="h-release" maxlength="32">
             <!-- pozycje pochodzą z macierzy wydań (KOLLA_MATRIX), nie z tego znacznika -->
@@ -281,21 +281,21 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           <legend data-i18n="g.h.network"></legend>
 
           <div class="field">
-            <label for="vip">kolla_internal_vip_address <span class="req">wymagane</span></label>
+            <label for="vip">kolla_internal_vip_address <span class="req" data-i18n="g.field.required"></span></label>
             <input type="text" id="vip" spellcheck="false" placeholder="10.0.0.250"
                    aria-required="true" aria-describedby="h-vip" maxlength="15">
             <p class="hint" id="h-vip">A free IPv4 address on the management network — not held by any host.</p>
           </div>
 
           <div class="field">
-            <label for="net_if">network_interface <span class="req">wymagane</span></label>
+            <label for="net_if">network_interface <span class="req" data-i18n="g.field.required"></span></label>
             <input type="text" id="net_if" spellcheck="false" placeholder="eth0"
                    aria-required="true" aria-describedby="h-net_if" maxlength="15">
             <p class="hint" id="h-net_if">Management/API network interface. Needs an IP address on every node.</p>
           </div>
 
           <div class="field">
-            <label for="ext_if">neutron_external_interface <span class="req">wymagane</span></label>
+            <label for="ext_if">neutron_external_interface <span class="req" data-i18n="g.field.required"></span></label>
             <input type="text" id="ext_if" spellcheck="false" placeholder="eth1"
                    aria-required="true" aria-describedby="h-ext_if" maxlength="64">
             <p class="hint" id="h-ext_if">External traffic interface. No IP address, no configuration — Neutron takes it over entirely. Several comma-separated interfaces mean several physical networks.</p>
@@ -626,6 +626,10 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       "t.import.empty":         "The import field is empty.",
       "t.import.dropped":       "Import dropped — the file is built from the form again.",
       "t.export.blocked":       "Export blocked — the configuration contains errors.",
+
+      /* --- generator: metka pola obowiązkowego ---
+         Rejestr: małą literą, bo to metka, nie krzyk. Wielkie litery należą do CSS. */
+      "g.field.required":      "required",
 
       /* --- generator: nagłówki sekcji ---
          Rejestr: fraza rzeczownikowa, bez rodzajnika, bez kropki. Wielkie litery
