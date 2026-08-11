@@ -34,6 +34,18 @@ This covers claims about the tool itself. "All visible text is English" was merg
 completeness statement while eighteen notification messages were still Polish, living in
 code the assertion never reached.
 
+**A prediction is a control only when the only unknown in it is the thing it is meant to
+control.** A category was migrated against a prediction of forty; the result was
+thirty-five, and thirty-five is exactly five positions times seven scenarios. The model was
+right and the counter was right; the stale value was the number of scenarios, remembered
+as eight after one had been deleted two turns earlier. A prediction resting on a
+remembered figure tests two things at once — the mechanism and the memory — and then a
+miss cannot say which one failed. Everything in a prediction except its subject has to come
+from a measurement. This is the same rule as measuring the effect rather than the
+representation, turned on oneself: a belief about the state of the repository is a
+representation, the file is the thing, and beliefs go stale faster than code when the code
+changes every turn.
+
 **The name of a mechanism is a claim about its scope**, and it is held to the same
 standard as any other claim here: it may promise neither more nor less than the code does.
 Four failures in one week shared this single shape, and each looked like an isolated
