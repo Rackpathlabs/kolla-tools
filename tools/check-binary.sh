@@ -15,7 +15,12 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 rc=0
-for f in generator.html validator.html index.html matrix.js globals-parser.js theme.css; do
+# Oprzyrządowanie też. Do tools/check-dictionary.js trafiły dwa bajty NUL i przeszły
+# przez CI, bo lista obejmowała wyłącznie artefakty — a plik z NUL-em grep traktuje
+# jak binarny i przestaje w nim cokolwiek znajdować, po cichu.
+for f in generator.html validator.html index.html matrix.js globals-parser.js theme.css \
+         i18n.js tools/*.js tools/*.sh tools/smoke/*.js; do
+  [ -e "$f" ] || continue
   if [ ! -f "$f" ]; then
     echo "FAIL $f: brak pliku"; rc=1; continue
   fi
