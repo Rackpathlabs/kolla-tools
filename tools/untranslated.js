@@ -15,6 +15,14 @@
  *   - bloki współdzielone (słownik zawiera polski z definicji),
  *   - połówki pl: par {en, pl} — to jest tłumaczenie, nie jego brak,
  *   - komentarze w kodzie: nie trafiają do interfejsu.
+ *
+ * ZNANE OGRANICZENIE, nienaprawione: dla matrix.js licznik zwraca 0, mimo że plik
+ * zawiera kilkadziesiąt polskich wartości why/label/note. Po wycięciu komentarzy
+ * zostaje 8,6 kB treści, a mimo to żadne dopasowanie nie wchodzi — przyczyny nie
+ * ustaliłem. Do czasu jej znalezienia NIE traktować zera dla matrix.js jako
+ * potwierdzenia, że plik jest przetłumaczony; etap 3 musi to zweryfikować inaczej.
+ * Zapisane tutaj, a nie przemilczane, bo miernik z cichą dziurą jest gorszy od
+ * jego braku — to jest dokładnie ta klasa błędu, którą ten plik ma pomagać łapać.
  */
 
 var fs = require("fs");
@@ -22,7 +30,13 @@ var path = require("path");
 
 var root = path.join(__dirname, "..");
 var FILES = ["generator.html", "validator.html", "index.html", "globals-parser.js", "matrix.js"];
-var BLOCKS = ["KOLLA-MATRIX", "GLOBALS-PARSER", "KOLLA-I18N", "KOLLA-THEME"];
+/* Kopie bloków w plikach HTML liczyłyby ten sam tekst po raz drugi — mierzymy
+   źródła prawdy, nie ich odbicia. */
+var BLOCK_SOURCES = { "globals-parser.js": 1, "matrix.js": 1 };
+/* Wycinamy TYLKO słownik i motyw. Macierz i parser zawierają prozę podlegającą
+   tłumaczeniu — ich wycięcie dawało zero dla matrix.js, czyli pliku z największym
+   blokiem tekstu w repozytorium. Drugi raz ten sam licznik mierzył nie to. */
+var BLOCKS = ["KOLLA-I18N", "KOLLA-THEME"];
 var PL = /[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/;
 var list = process.argv.indexOf("--list") !== -1;
 
@@ -46,7 +60,12 @@ var total = 0;
 FILES.forEach(function (file) {
   var full = path.join(root, file);
   if (!fs.existsSync(full)) return;
-  var src = stripComments(stripBlocks(fs.readFileSync(full, "utf8")));
+  var raw = fs.readFileSync(full, "utf8");
+  /* W plikach HTML wycinamy bloki współdzielone, bo ich źródła liczymy osobno. */
+  var src = stripComments(BLOCK_SOURCES[file] ? raw
+    : raw.replace(/== KOLLA-MATRIX BEGIN[\s\S]*?== KOLLA-MATRIX END ==\s*\*\//g, " ")
+         .replace(/== GLOBALS-PARSER BEGIN[\s\S]*?== GLOBALS-PARSER END ==\s*\*\//g, " "));
+  src = stripBlocks(src);
 
   var hits = [];
   var re = /(pl:\s*)?"((?:[^"\\]|\\.){6,})"/g;
