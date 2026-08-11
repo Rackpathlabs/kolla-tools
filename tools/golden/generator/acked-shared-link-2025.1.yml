@@ -67,9 +67,9 @@ om_enable_rabbitmq_stream_fanout: "yes"
 # are distributed across the nodes after deploying.
 
 ###############################################################################
-# Accepted risks, recorded deliberately
-# - storage and API traffic share a link: headroom was measured and the
-#   switch applies queueing
-# - migration runs on a dedicated network configured outside Kolla, via
-#   live_migration_inbound_addr in a nova-compute override
+# Acknowledged by the operator; not verified by this tool:
+#   - storage and API traffic on a shared base device: headroom measured,
+#     switch applies queueing
+#   - migration over api_interface: dedicated network configured outside
+#     Kolla, via live_migration_inbound_addr in a nova-compute override
 ###############################################################################

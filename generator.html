@@ -2417,14 +2417,19 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
     if (c && (s.ack_link || s.ack_migration)) {
       L.push(rule);
-      L.push("# Accepted risks, recorded deliberately");
+      /* Nagłówek musi powiedzieć, CZYJE to twierdzenie. Narzędzie niczego tu nie
+         zmierzyło — operator oświadczył. Bez tego rozróżnienia inżynier czytający
+         ten plik za rok uzna, że pomiar był, bo tak stoi w komentarzu wygenerowanym
+         przez narzędzie. Ta sama zasada co przy findingach opartych na heurystyce:
+         mówimy, czego nie wiemy. */
+      L.push("# Acknowledged by the operator; not verified by this tool:");
       if (s.ack_link) {
-        L.push("# - storage and API traffic share a link: headroom was measured and the");
-        L.push("#   switch applies queueing");
+        L.push("#   - storage and API traffic on a shared base device: headroom measured,");
+        L.push("#     switch applies queueing");
       }
       if (s.ack_migration) {
-        L.push("# - migration runs on a dedicated network configured outside Kolla, via");
-        L.push("#   live_migration_inbound_addr in a nova-compute override");
+        L.push("#   - migration over api_interface: dedicated network configured outside");
+        L.push("#     Kolla, via live_migration_inbound_addr in a nova-compute override");
       }
       L.push(rule);
     }
