@@ -73,7 +73,12 @@ FILES.forEach(function (file) {
   while ((m = re.exec(src)) !== null) {
     if (m[1]) continue;                 // połówka pl: pary — już przetłumaczone
     if (!PL.test(m[2])) continue;
-    hits.push({ line: src.slice(0, m.index).split("\n").length, text: m[2] });
+    /* Numer linii liczymy w ORYGINALE, nie w tekście po wycięciach: wycinanie
+       bloków i komentarzy przesuwa wszystko, a numer, który nie wskazuje miejsca
+       w pliku, jest gorszy od jego braku — wysyła do niewłaściwej linii z pełnym
+       przekonaniem. Poprzednia wersja podawała właśnie takie. */
+    var at = raw.indexOf(m[2]);
+    hits.push({ line: at === -1 ? 0 : raw.slice(0, at).split("\n").length, text: m[2] });
   }
 
   total += hits.length;
