@@ -249,7 +249,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       <div class="panel" style="margin-top:18px">
         <h2><span data-i18n="v.topology"></span>
           <span class="sp"></span>
-          <span class="chip" id="chip-hosts">0 hostów</span>
+          <span class="chip" id="chip-hosts">0 hosts</span>
         </h2>
         <div class="body" id="topology"></div>
       </div>
@@ -654,7 +654,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       var docSeen = false;
 
       function fail(line, msg, hint) {
-        findings.push({ sev: "error", code: "NIEOBSLUGIWANE", line: line, msg: msg, hint: hint || null });
+        findings.push({ sev: "error", code: "UNSUPPORTED", line: line, msg: msg, hint: hint || null });
       }
 
       /* Tabulatory sprawdzamy przed pętlą główną: linie wewnątrz bloku podrzędnego
@@ -712,7 +712,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
         if (Object.prototype.hasOwnProperty.call(keys, key)) {
           findings.push({
-            sev: "warn", code: "KLUCZ-POWTORZONY", line: lineNo,
+            sev: "warn", code: "KEY-REPEATED", line: lineNo,
             msg: "Klucz <code>" + key + "</code> występuje ponownie w linii " + lineNo + ".",
             hint: "Ansible weźmie ostatnie wystąpienie; wcześniejsze są martwe."
           });
@@ -915,7 +915,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         if (dep[key]) {
           var d = dep[key];
           out.push({
-            sev: d.sev || "warn", code: "KLUCZ-WYCOFANY", key: key, line: e.line,
+            sev: d.sev || "warn", code: "KEY-DEPRECATED", key: key, line: e.line,
             msg: "<code>" + key + "</code> " + (d.replacedBy
               ? "został przemianowany na <code>" + d.replacedBy + "</code>"
               : "nie jest już obsługiwany") +
@@ -926,9 +926,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         }
         if (known && !known[key]) {
           out.push({
-            sev: "info", code: "KLUCZ-NIEZNANY", key: key, line: e.line,
-            msg: "<code>" + key + "</code> nie jest polem formularza.",
-            hint: "Klucz zostanie zachowany w pliku bez zmian — generator go nie interpretuje."
+            sev: "info", code: "KEY-UNKNOWN", key: key, line: e.line,
+            msg: "<code>" + key + "</code> is not a form field.",
+            hint: "The key is kept in the file unchanged — the generator does not interpret it."
           });
         }
       });
@@ -1369,14 +1369,14 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       if (body.charAt(0) === "[") {
         var hm = /^\[([^\[\]]*)\]$/.exec(body);
         if (!hm) {
-          add("error", "SKLADNIA", "Niepoprawny nagłówek sekcji: <code>" + esc(body) + "</code>.", lineNo,
+          add("error", "SYNTAX", "Niepoprawny nagłówek sekcji: <code>" + esc(body) + "</code>.", lineNo,
               "Oczekiwany format to <code>[nazwa]</code>, <code>[nazwa:children]</code> lub <code>[nazwa:vars]</code>.");
           current = null;
           continue;
         }
         var inner = hm[1].trim();
         if (!inner) {
-          add("error", "SKLADNIA", "Pusta nazwa grupy w nagłówku sekcji.", lineNo);
+          add("error", "SYNTAX", "Pusta nazwa grupy w nagłówku sekcji.", lineNo);
           current = null;
           continue;
         }
@@ -1384,19 +1384,19 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         var gname = parts[0].trim();
         var kind = parts.length > 1 ? parts[1].trim().toLowerCase() : "hosts";
         if (parts.length > 2 || (kind !== "hosts" && kind !== "vars" && kind !== "children")) {
-          add("error", "SKLADNIA", "Nieznany typ sekcji <code>" + esc(inner) + "</code>.", lineNo,
+          add("error", "SYNTAX", "Nieznany typ sekcji <code>" + esc(inner) + "</code>.", lineNo,
               "Ansible rozpoznaje wyłącznie <code>:children</code> i <code>:vars</code>.");
           current = null;
           continue;
         }
         if (!/^[A-Za-z0-9_.-]+$/.test(gname)) {
-          add("error", "NAZWA-GRUPY", "Nazwa grupy <code>" + esc(gname) + "</code> zawiera niedozwolone znaki.", lineNo,
+          add("error", "GROUP-NAME", "Nazwa grupy <code>" + esc(gname) + "</code> zawiera niedozwolone znaki.", lineNo,
               "Dozwolone są litery, cyfry oraz <code>_ . -</code>.");
         }
         var g = group(gname);
         if (kind === "hosts") {
           if (g.declaredAt.length) {
-            add("info", "SEKCJA-POWT", "Sekcja <code>[" + esc(gname) + "]</code> występuje ponownie (pierwsza w linii " +
+            add("info", "SECTION-REPEATED", "Sekcja <code>[" + esc(gname) + "]</code> występuje ponownie (pierwsza w linii " +
                 g.declaredAt[0] + "). Ansible scali wpisy.", lineNo);
           }
           g.declaredAt.push(lineNo);
@@ -1411,8 +1411,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
       /* ---- wpis poza sekcją ---- */
       if (!current) {
-        add("error", "POZA-GRUPA", "Wpis <code>" + esc(body.split(/\s+/)[0]) + "</code> znajduje się przed jakimkolwiek nagłówkiem grupy.",
-            lineNo, "Ansible przypisze go do grupy <code>ungrouped</code>, więc żadna rola Kolla go nie obejmie.");
+        add("error", "OUTSIDE-GROUP", "Entry <code>" + esc(body.split(/\s+/)[0]) + "</code> appears before any group header.",
+            lineNo, "Ansible puts it in <code>ungrouped</code>, so no Kolla role covers it.");
         continue;
       }
 
@@ -1427,9 +1427,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           if (veq < 1) {
             if (!varsReported) {
               varsReported = true;
-              add("error", "ZMIENNA-GRUPY", "W sekcji <code>[" + esc(current.group) + ":vars]</code> wpis <code>" +
-                  esc(body) + "</code> nie jest przypisaniem zmiennej.", lineNo,
-                  "Ansible oczekuje zapisu <code>klucz=wartość</code>, bez spacji wokół znaku równości.");
+              add("error", "GROUP-VAR", "In <code>[" + esc(current.group) + ":vars]</code> the entry <code>" +
+                  esc(body) + "</code> is not a variable assignment.", lineNo,
+                  "Ansible expects <code>key=value</code>, with no spaces around the equals sign.");
             }
             continue;
           }
@@ -1441,7 +1441,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       /* ---- lista dzieci ---- */
       if (current.kind === "children") {
         if (tokens.length > 1) {
-          add("error", "DZIECI-FORMAT", "Sekcja <code>[" + esc(current.group) + ":children]</code> może zawierać wyłącznie nazwy grup, po jednej w linii.",
+          add("error", "CHILDREN-FORMAT", "Sekcja <code>[" + esc(current.group) + ":children]</code> może zawierać wyłącznie nazwy grup, po jednej w linii.",
               lineNo, "Znaleziono dodatkowe człony: <code>" + esc(tokens.slice(1).join(" ")) + "</code>.");
         }
         group(head).referencedAt.push(lineNo);
@@ -1457,9 +1457,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         if (eq < 1) {
           if (!varReported) {
             varReported = true;
-            add("error", "HOST-ZMIENNA", "Człon <code>" + esc(tokens[t]) + "</code> przy hoście <code>" + esc(head) +
-                "</code> nie jest przypisaniem zmiennej.", lineNo,
-                "Zmienne hosta zapisuje się jako <code>klucz=wartość</code>, bez spacji wokół znaku równości.");
+            add("error", "HOST-VAR", "Token <code>" + esc(tokens[t]) + "</code> on host <code>" + esc(head) +
+                "</code> is not a variable assignment.", lineNo,
+                "Host variables are written as <code>key=value</code>, with no spaces around the equals sign.");
           }
           continue;
         }
@@ -1470,9 +1470,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       if (head.indexOf("[") !== -1 || head.indexOf("]") !== -1) {
         names = expandPattern(head, MAX_RANGE);
         if (!names) {
-          add("error", "ZAKRES", "Wzorzec <code>" + esc(head) + "</code> nie jest poprawnym zakresem hostów.", lineNo,
-              "Ansible wymaga zapisu <code>nazwa[01:10]</code> lub <code>nazwa[a:f]</code>, opcjonalnie z krokiem " +
-              "(<code>[01:10:2]</code>). Oba końce muszą być tej samej klasy, a przy wiodącym zerze także tej samej długości.");
+          add("error", "RANGE", "Pattern <code>" + esc(head) + "</code> is not a valid host range.", lineNo,
+              "Ansible expects <code>name[01:10]</code> or <code>name[a:f]</code>, optionally with a step " +
+              "(<code>[01:10:2]</code>). Both ends must be of the same kind, and with a leading zero also of the same length.");
           names = [];
         }
       }
@@ -1480,8 +1480,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       if (names.length > hostBudget) {
         if (!budgetHit) {
           budgetHit = true;
-          add("error", "LIMIT-HOSTOW", "Inventory przekracza limit " + MAX_HOSTS + " hostów obsługiwany przez to narzędzie.",
-              lineNo, "Dalsze wpisy nie zostały przeanalizowane. Podziel plik albo sprawdź, czy zakresy nie są szersze niż zamierzone.");
+          add("error", "HOST-LIMIT", "The inventory exceeds the " + MAX_HOSTS + " host limit this tool handles.",
+              lineNo, "Later entries were not analysed. Split the file, or check whether the ranges are wider than intended.");
         }
         names = names.slice(0, Math.max(0, hostBudget));
       }
@@ -1540,12 +1540,12 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     if (st && st.sev) {
       var dt = st.dateField ? rel[st.dateField] : null;
       out.push({
-        sev: st.sev, code: "WYDANIE",
-        msg: "Wybrane wydanie <code>" + esc(rel.id) + "</code> (" + esc(rel.name) +
+        sev: st.sev, code: "RELEASE",
+        msg: "Selected release <code>" + esc(rel.id) + "</code> (" + esc(rel.name) +
              (rel.kolla ? ", kolla-ansible " + esc(rel.kolla) : "") + "): " + T(st.textKey) +
              (dt ? " — " + T(st.dateLabelKey) + ": <code>" + esc(dt) + "</code>" : "") + ".",
         line: null,
-        hint: "Nazwy grup sprawdzane są względem tego wydania."
+        hint: "Group names are checked against this release."
       });
     }
 
@@ -1555,7 +1555,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       if (!g) return;
       out.push({
         sev: dep.sev || "warn",
-        code: dep.replacedBy ? "GRUPA-PRZEMIANOWANA" : "GRUPA-WYCOFANA",
+        code: dep.replacedBy ? "GROUP-RENAMED" : "GROUP-RETIRED",
         msg: T("v.r.group", { group: esc(dep.name) }) + (dep.replacedBy
           ? T("v.r.renamed", { rel: esc(rel.id), to: esc(dep.replacedBy) })
           : T("v.r.removed", { rel: esc(rel.id) })),
@@ -1654,11 +1654,11 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
       if (n === 1) {
         if (spec.name === "control" && aio) {
-          out.push({ sev: "info", code: "KWORUM-AIO",
+          out.push({ sev: "info", code: "QUORUM-AIO",
             msg: T("v.q.aio.msg"), line: line,
             hint: T("v.q.aio.hint", { min: QUORUM.minOdd }) });
         } else {
-          out.push({ sev: "error", code: "KWORUM-LICZBA",
+          out.push({ sev: "error", code: "QUORUM-COUNT",
             msg: T("v.q.single.msg", { group: esc(spec.name), label: spec.label }),
             line: line,
             hint: spec.fail + " " + T("v.q.needOdd", { min: QUORUM.minOdd }) });
@@ -1667,7 +1667,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       }
 
       if (n % 2 === 0 || n < QUORUM.minOdd) {
-        out.push({ sev: "error", code: "KWORUM-LICZBA",
+        out.push({ sev: "error", code: "QUORUM-COUNT",
           msg: T("v.q.count.msg", {
             group: esc(spec.name),
             count: I18N.count("n.host", n),
@@ -1695,19 +1695,18 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       var line = groupLine(g);
 
       if (n % 2 === 0 || n > QUORUM.ovnMax) {
-        out.push({ sev: "error", code: "KWORUM-OVN",
-          msg: "Grupa <code>[" + esc(spec.name) + "]</code> ma " +
-               countLabel(n, "host", "hosty", "hostów") + " — klaster RAFT wymaga 1 albo " +
+        out.push({ sev: "error", code: "QUORUM-OVN",
+          msg: "Group <code>[" + esc(spec.name) + "]</code> has " +
+               countLabel(n, "host", "hosts") + " — a RAFT cluster needs 1 or " +
                QUORUM.ovnMax + ".",
           line: line,
-          hint: "Klaster dwuwęzłowy ma gorszą dostępność niż pojedynczy węzeł: wdrożenie " +
-                "przechodzi, <code>ovn-nbctl show</code> działa, ale przy utracie jednego " +
-                "z dwóch węzłów RAFT traci kworum i baza przechodzi w tryb tylko do " +
-                "odczytu. Neutron przestaje tworzyć porty i grupy zabezpieczeń, podczas " +
-                "gdy istniejąca warstwa danych działa dalej — monitoring maszyn świeci " +
-                "na zielono, a chmura jest zamrożona." });
+          hint: "A two-node cluster is less available than a single node: the deployment " +
+                "succeeds, <code>ovn-nbctl show</code> works, but losing either of the two " +
+                "nodes costs RAFT its quorum and the database goes read-only. Neutron " +
+                "stops creating ports and security groups while the existing data plane " +
+                "keeps forwarding — host monitoring stays green and the cloud is frozen." });
       } else if (n === 1 && control.length > 1) {
-        out.push({ sev: "info", code: "KWORUM-OVN",
+        out.push({ sev: "info", code: "QUORUM-OVN",
           msg: T("v.q.ovnSpof.msg", {
             group: esc(spec.name), count: I18N.count("n.node", control.length)
           }),
@@ -1721,10 +1720,10 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     var dbRef = (nbHosts && nbHosts.length) ? nbHosts : ovnBase;
     if (northd && northd.length && dbRef && dbRef.length && !sameSet(northd, dbRef)) {
       out.push({ sev: "warn", code: "OVN-NORTHD",
-        msg: "Obsada <code>[ovn-northd]</code> różni się od obsady baz OVN.",
+        msg: "The hosts in <code>[ovn-northd]</code> differ from the OVN database hosts.",
         line: groupLine(groups["ovn-northd"]),
-        hint: "northd będzie łączyć się z bazą zdalnie. Zwykle obie grupy mają tę samą " +
-              "listę hostów." });
+        hint: "northd then connects to the database remotely. Both groups normally hold the " +
+              "same hosts." });
     }
 
     /* --- monitory Ceph --- */
@@ -1734,20 +1733,20 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     if (mon) {
       var monHosts = effective["ceph-mon"] || [];
       var monLine = groupLine(mon);
-      out.push({ sev: "info", code: "CEPH-POZA-KOLLA",
-        msg: "Grupa <code>[ceph-mon]</code> nie jest wdrażana przez Kolla-Ansible.",
+      out.push({ sev: "info", code: "CEPH-OUTSIDE-KOLLA",
+        msg: "Group <code>[ceph-mon]</code> is not deployed by Kolla-Ansible.",
         line: monLine,
-        hint: "Wdrażanie Cepha usunięto z Kolla-Ansible w wydaniu Ussuri. Klaster " +
-              "podłącza się jako zewnętrzny (<code>external-ceph</code>), a tę grupę " +
-              "obsługuje ceph-ansible albo cephadm — Kolla ją zignoruje." });
+        hint: "Ceph deployment was removed from Kolla-Ansible in the Ussuri release. The " +
+              "cluster is attached as external (<code>external-ceph</code>), and this group " +
+              "belongs to ceph-ansible or cephadm — Kolla ignores it." });
       if (monHosts.length && (monHosts.length % 2 === 0 || monHosts.length < QUORUM.minOdd)) {
-        out.push({ sev: monHosts.length === 1 ? "info" : "warn", code: "KWORUM-CEPH",
+        out.push({ sev: monHosts.length === 1 ? "info" : "warn", code: "QUORUM-CEPH",
           msg: T("v.q.ceph.msg", {
             count: I18N.count("n.host", monHosts.length), min: QUORUM.minOdd
           }),
           line: monLine,
-          hint: "Bez większości monitorów klaster wstrzymuje operacje wejścia-wyjścia. " +
-                "Przy dwóch monitorach utrata jednego zatrzymuje cały magazyn." });
+          hint: "Without a majority of monitors the cluster suspends I/O. With two " +
+                "monitors, losing one stops all storage." });
       }
     }
 
@@ -1801,7 +1800,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     if (ctlCmp.length && !aio) {
       var v4 = lintVariantB("KV-04", flags);
       out.push({
-        sev: lintSevB("KV-04", v4, null), code: "KOLOKACJA-CONTROL-COMPUTE",
+        sev: lintSevB("KV-04", v4, null), code: "COLLOCATION-CONTROL-COMPUTE",
         msg: T("v.c.ctlcmp.msg", {
           n: I18N.plural("v.c.n.hostServes", ctlCmp.length).replace("{n}", ctlCmp.length),
           hosts: hostList(ctlCmp)
@@ -1819,14 +1818,14 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
       if (sameAsControl) {
         out.push({
-          sev: "warn", code: "KOLOKACJA-NETWORK",
+          sev: "warn", code: "COLLOCATION-NETWORK",
           msg: T("v.c.net.same.msg"),
           line: groupLine(groups.network),
           hint: T("v.c.net.same.hint")
         });
       } else if (ctlNet.length) {
         out.push({
-          sev: "warn", code: "KOLOKACJA-NETWORK",
+          sev: "warn", code: "COLLOCATION-NETWORK",
           msg: T("v.c.net.partial.msg", { hosts: hostList(ctlNet) }),
           line: groupLine(groups.network),
           hint: T("v.c.net.partial.hint")
@@ -1836,7 +1835,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       if (network.length < COLLOCATION.minGateway &&
           compute.length >= COLLOCATION.computeScale) {
         out.push({
-          sev: "warn", code: "BRAMA-BEZ-HA",
+          sev: "warn", code: "GATEWAY-NO-HA",
           msg: T("v.c.gw.msg", {
             count: I18N.count("n.host", network.length),
             computeCount: I18N.count("n.computeNode", compute.length)
@@ -1851,7 +1850,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     var stgCmp = intersect(storage, compute);
     if (stgCmp.length && !aio) {
       out.push({
-        sev: "info", code: "KOLOKACJA-STORAGE",
+        sev: "info", code: "COLLOCATION-STORAGE",
         msg: T("v.c.storage.msg", {
           n: I18N.plural("v.c.n.hostCombines", stgCmp.length).replace("{n}", stgCmp.length),
           hosts: hostList(stgCmp)
@@ -1992,7 +1991,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     if (storage.length > 1 && !glob.keys.cinder_cluster_name && !lvmOnly) {
       out.push({
         sev: lintSevB("KV-07", lintVariantB("KV-07", flags), acks),
-        code: "KV-07-CINDER-KLASTER", src: "cross",
+        code: "KV-07-CINDER-CLUSTER", src: "cross",
         line: groupLine(groups.storage),
         refs: [{ src: "inventory", line: groupLine(groups.storage) },
                { src: "globals", line: null }],
@@ -2023,7 +2022,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         if (byAddr[vip]) {
           out.push({
             sev: lintSevB("KV-09", "collision", acks),
-            code: "KV-09-VIP-KOLIZJA", src: "cross", line: byAddr[vip].line,
+            code: "KV-09-VIP-COLLISION", src: "cross", line: byAddr[vip].line,
             refs: [{ src: "inventory", line: byAddr[vip].line },
                    { src: "globals", line: e.line }],
             msg: T("v.x.kv09.collision.msg", {
@@ -2042,7 +2041,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
         out.push({
           sev: lintSevB("KV-09", "subnet", acks),
-          code: "KV-09-VIP-PODSIEC", src: "cross", line: null,
+          code: "KV-09-VIP-SUBNET", src: "cross", line: null,
           refs: [{ src: "globals", line: e.line }],
           msg: T("v.x.kv09.subnet.msg", {
             key: esc(key), vip: esc(vip), prefix: esc(net.prefix), mask: net.mask
@@ -2082,11 +2081,11 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
      wycofania, a waga 'info' — zmianę okoliczności (np. innej grupy nadrzędnej)
      od usunięcia. Żadnej z tych decyzji nie ma w treści reguły. */
   function upgradeCode(dep) {
-    if (dep.kind === "procedure") return "UPGRADE-PROCEDURA";
-    var base = (dep.kind === "key") ? "UPGRADE-KLUCZ" : "UPGRADE-GRUPA";
-    if (dep.replacedBy) return base + "-PRZEMIANOWANY";
-    if (dep.sev === "info") return base + "-ZMIANA";
-    return base + "-WYCOFANY";
+    if (dep.kind === "procedure") return "UPGRADE-PROCEDURE";
+    var base = (dep.kind === "key") ? "UPGRADE-KEY" : "UPGRADE-GROUP";
+    if (dep.replacedBy) return base + "-RENAMED";
+    if (dep.sev === "info") return base + "-CHANGED";
+    return base + "-RETIRED";
   }
 
   function upgradeRules(groups, glob, fromId, toId) {
@@ -2098,12 +2097,12 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
     if (path === "downgrade") {
       out.push({
-        sev: "error", code: "UPGRADE-KIERUNEK", src: "upgrade", line: null,
-        msg: "Wydanie docelowe <code>" + esc(toId) + "</code> jest starsze niż obecne <code>" +
+        sev: "error", code: "UPGRADE-DIRECTION", src: "upgrade", line: null,
+        msg: "Target release <code>" + esc(toId) + "</code> is older than the current one <code>" +
              esc(fromId) + "</code>.",
-        hint: "Kolla-Ansible nie wspiera obniżania wersji i to narzędzie nie będzie udawać, " +
-              "że wspiera. Powrót do wcześniejszego wydania to odtworzenie środowiska " +
-              "z kopii zapasowej, nie zmiana w plikach."
+        hint: "Kolla-Ansible does not support downgrades, and this tool will not pretend it " +
+              "does. Going back to an earlier release means restoring the environment from " +
+              "a backup, not editing files."
       });
       return out;
     }
@@ -2125,29 +2124,28 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         var line = isFileKey ? glob.keys[dep.name].line : groupLine(groups[dep.name]);
         var where = isFileKey ? "globals" : "inventory";
         var subject = dep.kind === "key" || dep.kind === "procedure"
-          ? "Klucz <code>" + esc(dep.name) + "</code>"
-          : "Grupa <code>[" + esc(dep.name) + "]</code>";
+          ? "Key <code>" + esc(dep.name) + "</code>"
+          : "Group <code>[" + esc(dep.name) + "]</code>";
 
         var what, todo;
         if (dep.kind === "procedure") {
-          what = "zmienia się w wydaniu <code>" + esc(rel.id) + "</code> w sposób, którego " +
-                 "nie da się załatwić edycją pliku";
-          todo = "To wymaga kroku operacyjnego na działającym środowisku, nie poprawki w YAML-u. " +
-                 "Narzędzie nie sprawdzi, czy krok został wykonany — potrzebowałoby historii " +
-                 "wdrożenia, a nie treści pliku. Powód opisuje SCOPE.md.";
+          what = "changes in release <code>" + esc(rel.id) + "</code> in a way that editing " +
+                 "the file cannot settle";
+          todo = "This needs an operational step on the running environment, not a YAML fix. " +
+                 "The tool cannot tell whether that step was taken — it would need the " +
+                 "deployment history, not the file. SCOPE.md explains why.";
         } else if (dep.replacedBy) {
-          what = "zostaje przemianowany" + (isFileKey ? "" : "a") + " na <code>" +
-                 esc(dep.replacedBy) + "</code> w wydaniu <code>" + esc(rel.id) + "</code>";
+          what = "is renamed to <code>" +
+                 esc(dep.replacedBy) + "</code> in release <code>" + esc(rel.id) + "</code>";
           todo = T(isFileKey ? "v.u.todo.renameKey" : "v.u.todo.renameGroup");
         } else if (dep.sev === "info") {
-          what = "zmienia okoliczności w wydaniu <code>" + esc(rel.id) + "</code>";
-          todo = "Zmiana nie blokuje aktualizacji, ale warto ją odnotować.";
+          what = "changes its circumstances in release <code>" + esc(rel.id) + "</code>";
+          todo = "The change does not block the upgrade, but it is worth noting.";
         } else {
-          what = "przestaje być obsługiwan" + (isFileKey ? "y" : "a") +
-                 " w wydaniu <code>" + esc(rel.id) + "</code>";
+          what = "stops being supported in release <code>" + esc(rel.id) + "</code>";
           todo = isFileKey
-            ? "Usuń klucz albo pogódź się z tym, że nic już nie robi."
-            : "Zaplanuj przeniesienie obciążenia i usuń grupę z inventory.";
+            ? "Remove the key, or accept that it no longer does anything."
+            : "Plan where the workload moves, then drop the group from the inventory.";
         }
 
         out.push({
@@ -2161,10 +2159,10 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
     if (gaps.length) {
       out.push({
-        sev: "warn", code: "UPGRADE-LUKA", src: "upgrade", line: null,
-        msg: "Ścieżka prowadzi przez " +
-             plural(gaps.length, "wydanie", "wydania", "wydań") +
-             " bez skatalogowanych deprecacji: <code>" + gaps.map(esc).join("</code>, <code>") +
+        sev: "warn", code: "UPGRADE-GAP", src: "upgrade", line: null,
+        msg: "The path crosses " +
+             countLabel(gaps.length, "release", "releases") +
+             " with no catalogued deprecations: <code>" + gaps.map(esc).join("</code>, <code>") +
              "</code>.",
         hint: T("v.u.gap.hint", {
           which: T(gaps.length === 1 ? "v.u.gap.which1" : "v.u.gap.whichN")
@@ -2225,7 +2223,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     for (var ci = 0; ci < order.length; ci++) {
       var cyc = detectCycle(groups, order[ci], [order[ci]], cycleSeen);
       if (cyc) {
-        add("error", "CYKL-GRUP", "Cykliczna zależność grup: <code>" + cyc.cycle.map(esc).join(" &rarr; ") + "</code>.",
+        add("error", "GROUP-CYCLE", "Cykliczna zależność grup: <code>" + cyc.cycle.map(esc).join(" &rarr; ") + "</code>.",
             cyc.line, "Ansible odrzuci takie inventory przy wczytywaniu.");
         break;
       }
@@ -2236,19 +2234,19 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       var g = groups[name];
       var sev = CRITICAL[name] ? "error" : "warn";
       if (!g || (!g.declaredAt.length && !g.childrenAt.length)) {
-        add(sev, "BRAK-GRUPY", "Brak wymaganej grupy <code>[" + name + "]</code>.", null,
-            "Inventory multinode Kolla-Ansible opiera się na grupach: " +
+        add(sev, "MISSING-GROUP", "Required group <code>[" + name + "]</code> is missing.", null,
+            "A Kolla-Ansible multinode inventory is built on the groups: " +
             REQUIRED.map(function (r) { return "<code>" + r + "</code>"; }).join(", ") + ".");
         return;
       }
       if (effective[name].length === 0) {
-        add(sev, "PUSTA-GRUPA", "Grupa <code>[" + name + "]</code> jest zadeklarowana, ale nie ma żadnego hosta.",
+        add(sev, "EMPTY-GROUP", "Group <code>[" + name + "]</code> is declared but holds no host.",
             g.declaredAt[0] || g.childrenAt[0],
-            name === "compute" ? "Bez węzłów obliczeniowych nie uruchomisz żadnej instancji."
-              : name === "network" ? "Bez węzłów sieciowych nie wstaną agenty L3, DHCP ani metadata."
-              : name === "control" ? "Bez węzłów sterujących nie wdrożysz usług płaszczyzny sterowania."
-              : name === "storage" ? "Wdrożenie zadziała, ale usługi wolumenów (Cinder) nie będą miały gdzie wystartować."
-              : "Wdrożenie zadziała, ale Prometheus i Grafana nie będą miały gdzie wystartować.");
+            name === "compute" ? "With no compute nodes no instance can start."
+              : name === "network" ? "With no network nodes the L3, DHCP and metadata agents have nowhere to run."
+              : name === "control" ? "With no control nodes the control plane services cannot be deployed."
+              : name === "storage" ? "The deployment succeeds, but the volume services (Cinder) have nowhere to start."
+              : "The deployment succeeds, but Prometheus and Grafana have nowhere to start.");
       }
     });
 
@@ -2258,7 +2256,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       var g = groups[name];
       if (!g.declaredAt.length && !g.childrenAt.length && !g.varsAt.length) return;
       if (effective[name].length === 0) {
-        add("warn", "PUSTA-GRUPA", "Grupa <code>[" + esc(name) + "]</code> nie zawiera żadnego hosta.",
+        add("warn", "EMPTY-GROUP", "Group <code>[" + esc(name) + "]</code> holds no host.",
             g.declaredAt[0] || g.childrenAt[0] || g.varsAt[0],
             "Pusta grupa jest ignorowana przy wdrożeniu — usuń ją albo uzupełnij obsadę.");
       }
@@ -2270,11 +2268,11 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       var g = groups[name];
       if (g.declaredAt.length || g.childrenAt.length) return;
       if (g.referencedAt.length) {
-        add("error", "GRUPA-NIEZDEF", "Grupa <code>" + esc(name) + "</code> jest wskazana jako podgrupa, ale nigdzie nie została zdefiniowana.",
-            g.referencedAt[0], "Dodaj sekcję <code>[" + esc(name) + "]</code> albo usuń wpis z listy podgrup.");
+        add("error", "GROUP-UNDEFINED", "Group <code>" + esc(name) + "</code> is listed as a child group but defined nowhere.",
+            g.referencedAt[0], "Add a <code>[" + esc(name) + "]</code> section, or drop the entry from the children list.");
       } else if (g.varsAt.length) {
-        add("warn", "GRUPA-TYLKO-VARS", "Grupa <code>" + esc(name) + "</code> ma sekcję zmiennych, ale nie ma hostów ani podgrup.",
-            g.varsAt[0], "Zmienne nie zostaną nigdzie zastosowane.");
+        add("warn", "GROUP-VARS-ONLY", "Group <code>" + esc(name) + "</code> has a vars section but neither hosts nor child groups.",
+            g.varsAt[0], "The variables apply to nothing.");
       }
     });
 
@@ -2284,8 +2282,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       var seen = Object.create(null);
       g.hosts.forEach(function (h) {
         if (seen[h.name]) {
-          add("error", "DUPLIKAT-HOST", "Host <code>" + esc(h.name) + "</code> jest wpisany dwukrotnie w grupie <code>[" + esc(name) + "]</code>.",
-              h.line, "Pierwsze wystąpienie: linia " + seen[h.name] + ". Powielony wpis może nadpisać zmienne hosta.");
+          add("error", "DUPLICATE-HOST", "Host <code>" + esc(h.name) + "</code> is listed twice in group <code>[" + esc(name) + "]</code>.",
+              h.line, "First occurrence: line " + seen[h.name] + ". The repeated entry can override the host variables.");
         } else {
           seen[h.name] = h.line;
         }
@@ -2294,20 +2292,20 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       var seenChild = Object.create(null);
       g.children.forEach(function (c) {
         if (seenChild[c.name]) {
-          add("warn", "DUPLIKAT-PODGRUPA", "Podgrupa <code>" + esc(c.name) + "</code> jest wymieniona dwukrotnie w <code>[" + esc(name) + ":children]</code>.",
+          add("warn", "DUPLICATE-CHILD", "Podgrupa <code>" + esc(c.name) + "</code> jest wymieniona dwukrotnie w <code>[" + esc(name) + ":children]</code>.",
               c.line, "Pierwsze wystąpienie: linia " + seenChild[c.name] + ".");
         } else {
           seenChild[c.name] = c.line;
         }
         if (c.name === name) {
-          add("error", "PODGRUPA-SAMA", "Grupa <code>" + esc(name) + "</code> wskazuje samą siebie jako podgrupę.", c.line);
+          add("error", "CHILD-SELF", "Grupa <code>" + esc(name) + "</code> wskazuje samą siebie jako podgrupę.", c.line);
         }
       });
 
       var seenVar = Object.create(null);
       g.vars.forEach(function (v) {
         if (seenVar[v.key]) {
-          add("warn", "DUPLIKAT-ZMIENNEJ", "Zmienna <code>" + esc(v.key) + "</code> jest ustawiona dwukrotnie w <code>[" + esc(name) + ":vars]</code>.",
+          add("warn", "DUPLICATE-VAR", "Zmienna <code>" + esc(v.key) + "</code> jest ustawiona dwukrotnie w <code>[" + esc(name) + ":vars]</code>.",
               v.line, "Pierwsze wystąpienie: linia " + seenVar[v.key] + ". Obowiązuje wartość z ostatniego wpisu.");
         } else {
           seenVar[v.key] = v.line;
@@ -2324,9 +2322,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         Object.keys(d.vars).forEach(function (key) {
           if (!(key in values)) { values[key] = { val: d.vars[key], line: d.line }; return; }
           if (values[key].val !== d.vars[key]) {
-            add("error", "SPRZECZNA-ZMIENNA", "Host <code>" + esc(host) + "</code> ma dwie różne wartości <code>" + esc(key) +
-                "</code>: <code>" + esc(values[key].val) + "</code> (linia " + values[key].line + ") oraz <code>" + esc(d.vars[key]) + "</code>.",
-                d.line, "Ansible użyje ostatniej definicji — rozbieżność prawie zawsze oznacza błąd w pliku.");
+            add("error", "CONFLICTING-VAR", "Host <code>" + esc(host) + "</code> has two different values for <code>" + esc(key) +
+                "</code>: <code>" + esc(values[key].val) + "</code> (line " + values[key].line + ") and <code>" + esc(d.vars[key]) + "</code>.",
+                d.line, "Ansible takes the last definition — a mismatch here is almost always a mistake in the file.");
           }
         });
       });
@@ -2349,10 +2347,10 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     Object.keys(byEndpoint).forEach(function (endpoint) {
       var hosts = Object.keys(byEndpoint[endpoint]);
       if (hosts.length < 2) return;
-      add("error", "DUPLIKAT-ADRESU", "Punkt dostępu <code>" + esc(endpoint) + "</code> jest przypisany do różnych hostów: " +
+      add("error", "DUPLICATE-ENDPOINT", "Endpoint <code>" + esc(endpoint) + "</code> is assigned to different hosts: " +
           hosts.map(function (n) { return "<code>" + esc(n) + "</code>"; }).join(", ") + ".",
           byEndpoint[endpoint][hosts[1]],
-          "Kolla potraktuje je jako osobne węzły i wdroży na jedną maszynę sprzeczne konfiguracje.");
+          "Kolla treats them as separate nodes and deploys conflicting configurations onto one machine.");
     });
     Object.keys(byAddress).forEach(function (addr) {
       var hosts = Object.keys(byAddress[addr]);
@@ -2361,7 +2359,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         return e.indexOf(addr + ":") === 0 && Object.keys(byEndpoint[e]).length > 1;
       });
       if (conflicting) return;   // zgłoszone już jako błąd wyżej
-      add("info", "WSPOLNY-ADRES", "Adres <code>" + esc(addr) + "</code> obsługuje kilka hostów na różnych portach: " +
+      add("info", "SHARED-ADDRESS", "Adres <code>" + esc(addr) + "</code> obsługuje kilka hostów na różnych portach: " +
           hosts.map(function (n) { return "<code>" + esc(n) + "</code>"; }).join(", ") + ".",
           byAddress[addr][hosts[1]], "Poprawne przy NAT lub labie zagnieżdżonym — upewnij się, że taka była intencja.");
     });
@@ -2372,11 +2370,11 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
              host !== "localhost" && !/^\d{1,3}(\.\d{1,3}){3}$/.test(host) && host.indexOf(".") === -1;
     });
     if (noAddr.length) {
-      add("info", "BRAK-ADRESU", plural(noAddr.length, "Host", "Hosty", "Hostów") + " bez <code>ansible_host</code>: " +
+      add("info", "NO-ADDRESS", plural(noAddr.length, "Host", "Hosts") + " without <code>ansible_host</code>: " +
           noAddr.slice(0, 8).map(function (n) { return "<code>" + esc(n) + "</code>"; }).join(", ") +
-          (noAddr.length > 8 ? " i " + (noAddr.length - 8) + " więcej" : "") + ".",
+          (noAddr.length > 8 ? " and " + (noAddr.length - 8) + " more" : "") + ".",
           hostIndex[noAddr[0]].defs[0].line,
-          "Nazwa musi być rozwiązywalna przez DNS lub <code>/etc/hosts</code> na hoście wdrożeniowym.");
+          "The name must resolve through DNS or <code>/etc/hosts</code> on the deployment host.");
     }
 
     /* Liczebność grup obsługują quorumRules() i collocationRules(). Wcześniejsze
@@ -2397,11 +2395,11 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         });
       }
       if (best && bestD <= 2 && Math.abs(best.length - name.length) <= 2) {
-        add("warn", "LITEROWKA", "Grupa <code>" + esc(name) + "</code> przypomina standardową grupę <code>" + best + "</code>.",
-            line, "Kolla-Ansible nie rozpozna grupy o innej nazwie — sprawdź pisownię.");
+        add("warn", "TYPO", "Group <code>" + esc(name) + "</code> resembles the standard group <code>" + best + "</code>.",
+            line, "Kolla-Ansible will not recognise a group under a different name — check the spelling.");
       } else {
-        add("info", "GRUPA-WLASNA", "Grupa <code>" + esc(name) + "</code> nie występuje w referencyjnym inventory Kolla-Ansible.",
-            line, "To poprawne, o ile jest używana świadomie (np. własne role lub podział sprzętowy).");
+        add("info", "GROUP-CUSTOM", "Group <code>" + esc(name) + "</code> does not appear in the reference Kolla-Ansible inventory.",
+            line, "That is fine as long as it is used deliberately, for example for custom roles or a hardware split.");
       }
     });
 
@@ -2423,7 +2421,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     quorumRules(groups, effective, hostNames).forEach(function (f) { findings.push(f); });
 
     if (!hostNames.length && !findings.some(function (f) { return f.sev === "error"; })) {
-      add("error", "BRAK-HOSTOW", "Inventory nie zawiera żadnego hosta.", null);
+      add("error", "NO-HOSTS", "Inventory nie zawiera żadnego hosta.", null);
     }
 
     /* Plik był dotąd jeden, więc źródło findingu było niejawne. Od trybu łączonego
@@ -2454,13 +2452,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
 
-  function plural(n, one, few, many) {
-    if (n === 1) return one;
-    if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return few;
-    return many;
-  }
+  function plural(n, one, many) { return n === 1 ? one : many; }
 
-  function countLabel(n, one, few, many) { return n + " " + plural(n, one, few, many); }
+  function countLabel(n, one, many) { return n + " " + plural(n, one, many); }
 
   function renderGutter(text, marks) {
     var count = text.split(/\r?\n/).length;

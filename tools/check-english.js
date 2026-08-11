@@ -106,6 +106,47 @@ if (mode === "validator") {
   var diag = G.validate(st, null);
   diag.forEach(function (d, i) { addSeg("diagnostic " + (i + 1) + " (" + d.level + ")", d.msg); });
 
+  /* Jedna konfiguracja nie dosięga wszystkiego. Reguły wykluczają się nawzajem —
+     wydanie może być JEDNOCZEŚNIE tylko w jednym stanie — więc komunikat o wydaniu
+     spoza macierzy nie ma prawa paść w tym samym przebiegu co komunikat o wydaniu
+     wycofanym.
+
+     To nie jest hipoteza. Przy tłumaczeniu trzy komunikaty przeszły tę asercję
+     zielono i zostały złapane dopiero przez testy dymne: obrazy niepublikowane dla
+     wydania, wydanie spoza macierzy, brakujący klucz o wartości domyślnej. Asercja
+     mierząca jeden przebieg mierzy jedną ścieżkę, a nie narzędzie. */
+  var VARIANTS = [
+    { why: "distro dopuszczalne, ale bez publikowanych obrazów",
+      st: { release: "2026.1", distro: "centos" } },
+    { why: "wydanie spoza macierzy", st: { release: "stable/2019.2" } },
+    { why: "wydanie w rozwoju", st: { release: "2026.2" } },
+    { why: "wydanie bez utrzymania", st: { release: "2024.1" } },
+    { why: "sieć amfor typu flat", st: { t_octavia: true, amp_net: "flat" } },
+    { why: "różne VIP-y bez nazw FQDN",
+      st: { vip: "10.0.0.250", ext_vip: "10.0.1.250", int_fqdn: "", ext_fqdn: "" } },
+    { why: "usługi bez swoich zależności",
+      st: { t_cinder: true, storage: "none", t_grafana: true, t_prometheus: false,
+            t_octavia: true, t_barbican: false, t_masakari: true, t_hacluster: false } }
+  ];
+  VARIANTS.forEach(function (v) {
+    var alt = {};
+    Object.keys(G.DEFAULTS).forEach(function (k) { alt[k] = G.DEFAULTS[k]; });
+    Object.keys(v.st).forEach(function (k) { alt[k] = v.st[k]; });
+    G.validate(alt, null).forEach(function (d, i) {
+      addSeg("diagnostic [" + v.why + "] " + (i + 1) + " (" + d.level + ")", d.msg);
+    });
+  });
+
+  /* Klucz o wartości domyślnej wydania: komunikat pada tylko przy WCZYTANYM pliku,
+     który tego klucza nie ustawia — ścieżka nieosiągalna dla trybu od zera. */
+  var bare = G.GLOBALS.parse('---\nkolla_base_distro: "rocky"\n');
+  var withDoc = {};
+  Object.keys(G.DEFAULTS).forEach(function (k) { withDoc[k] = G.DEFAULTS[k]; });
+  withDoc.release = "2026.1";
+  G.validate(withDoc, bare).forEach(function (d, i) {
+    addSeg("diagnostic [wczytany plik bez klucza] " + (i + 1) + " (" + d.level + ")", d.msg);
+  });
+
   var built = G.buildYaml(st, G.badFields(diag));
   built.text.split("\n").forEach(function (line, i) {
     if (line.indexOf("#") !== -1) addSeg("emitted globals.yml line " + (i + 1), line);

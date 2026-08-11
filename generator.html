@@ -195,7 +195,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 </head>
 <body>
 
-<a class="skip" href="#main">Przejdź do treści</a>
+<a class="skip" href="#main">Skip to content</a>
 
 <header>
   <div class="hdr">
@@ -217,33 +217,33 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 </header>
 
 <main class="wrap" id="main">
-  <h1>Generator <code>globals.yml</code> dla Kolla-Ansible</h1>
+  <h1><code>globals.yml</code> generator for Kolla-Ansible</h1>
   <p class="lede">
-    Uzupełnij parametry wdrożenia — plik składa się na żywo po prawej stronie. Ustawienia
-    zapisują się lokalnie w przeglądarce, nic nie opuszcza tej maszyny.
+    Fill in the deployment parameters — the file assembles live on the right. Settings are
+    saved locally in the browser; nothing leaves this machine.
   </p>
 
   <div class="cols">
 
     <!-- ============ FORM ============ -->
     <form class="panel" id="form" autocomplete="off" novalidate>
-      <h2>Parametry wdrożenia</h2>
+      <h2>Deployment parameters</h2>
       <div class="body">
 
         <fieldset>
-          <legend>Import istniejącego pliku</legend>
+          <legend>Import an existing file</legend>
           <p class="hint" style="margin:0 0 10px">
-            Wklej albo przeciągnij <code>globals.yml</code>. Formularz wypełni się wartościami
-            z pliku, a eksport będzie odtąd <strong>poprawiał oryginał</strong> zamiast pisać go
-            od nowa — komentarze, kolejność kluczy i wpisy nieznane generatorowi zostają nietknięte.
+            Paste or drop a <code>globals.yml</code>. The form fills with the values from the
+            file, and from then on the export <strong>edits the original</strong> instead of
+            rewriting it — comments, key order and entries the generator does not know stay untouched.
           </p>
           <textarea id="import_src" rows="3" spellcheck="false" autocapitalize="off"
-            aria-label="Zawartość pliku globals.yml do importu"
+            aria-label="Contents of the globals.yml file to import"
             placeholder="---&#10;kolla_base_distro: &quot;rocky&quot;&#10;…"></textarea>
           <div class="btn-row" style="margin-top:10px">
             <button type="button" class="small" id="btn-import">Wczytaj z pola</button>
-            <button type="button" class="small ghost" id="btn-import-file">Wczytaj plik…</button>
-            <button type="button" class="small ghost" id="btn-import-clear" disabled>Porzuć import</button>
+            <button type="button" class="small ghost" id="btn-import-file">Load a file…</button>
+            <button type="button" class="small ghost" id="btn-import-clear" disabled>Discard the import</button>
             <input type="file" id="import_file" accept=".yml,.yaml,.txt,text/plain" class="sr" aria-hidden="true" tabindex="-1">
           </div>
         </fieldset>
@@ -255,7 +255,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
             <label for="distro">kolla_base_distro <span class="req">wymagane</span></label>
             <!-- opcje pochodzą z macierzy wydań (KOLLA_MATRIX), nie z tego znacznika -->
             <select id="distro" aria-required="true" aria-describedby="h-distro"></select>
-            <p class="hint" id="h-distro">Dystrybucja bazowa obrazów kontenerów. Musi być spójna z obrazami w rejestrze.</p>
+            <p class="hint" id="h-distro">Base distribution of the container images. Must match the images in the registry.</p>
           </div>
 
           <div class="field">
@@ -264,46 +264,46 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
                    aria-required="true" aria-describedby="h-release" maxlength="32">
             <!-- pozycje pochodzą z macierzy wydań (KOLLA_MATRIX), nie z tego znacznika -->
             <datalist id="releases"></datalist>
-            <p class="hint" id="h-release">Tag obrazów, np. <code>2025.1</code>. Powinien odpowiadać wersji kolla-ansible.</p>
+            <p class="hint" id="h-release">Image tag, for example <code>2025.1</code>. Should match the kolla-ansible version.</p>
           </div>
         </fieldset>
 
         <fieldset>
-          <legend>Sieć</legend>
+          <legend>Network</legend>
 
           <div class="field">
             <label for="vip">kolla_internal_vip_address <span class="req">wymagane</span></label>
             <input type="text" id="vip" spellcheck="false" placeholder="10.0.0.250"
                    aria-required="true" aria-describedby="h-vip" maxlength="15">
-            <p class="hint" id="h-vip">Wolny adres IPv4 w sieci zarządzania — nieprzypisany do żadnego hosta.</p>
+            <p class="hint" id="h-vip">A free IPv4 address on the management network — not held by any host.</p>
           </div>
 
           <div class="field">
             <label for="net_if">network_interface <span class="req">wymagane</span></label>
             <input type="text" id="net_if" spellcheck="false" placeholder="eth0"
                    aria-required="true" aria-describedby="h-net_if" maxlength="15">
-            <p class="hint" id="h-net_if">Interfejs sieci zarządzania / API. Musi mieć adres IP na każdym węźle.</p>
+            <p class="hint" id="h-net_if">Management/API network interface. Needs an IP address on every node.</p>
           </div>
 
           <div class="field">
             <label for="ext_if">neutron_external_interface <span class="req">wymagane</span></label>
             <input type="text" id="ext_if" spellcheck="false" placeholder="eth1"
                    aria-required="true" aria-describedby="h-ext_if" maxlength="64">
-            <p class="hint" id="h-ext_if">Interfejs ruchu zewnętrznego. Bez adresu IP, bez konfiguracji — Neutron przejmuje go w całości. Kilka interfejsów po przecinku = kilka sieci fizycznych.</p>
+            <p class="hint" id="h-ext_if">External traffic interface. No IP address, no configuration — Neutron takes it over entirely. Several comma-separated interfaces mean several physical networks.</p>
           </div>
 
           <div class="field">
             <label for="br_name">neutron_bridge_name</label>
             <input type="text" id="br_name" spellcheck="false" placeholder="br-ex"
                    aria-describedby="h-br_name" maxlength="64">
-            <p class="hint" id="h-br_name">Mostki OVS, po jednym na interfejs zewnętrzny. Liczba musi się zgadzać.</p>
+            <p class="hint" id="h-br_name">OVS bridges, one per external interface. The counts must match.</p>
           </div>
 
           <div class="field">
             <label for="api_if">api_interface</label>
             <input type="text" id="api_if" spellcheck="false" placeholder="dziedziczy network_interface"
                    aria-describedby="h-api_if" maxlength="15">
-            <p class="hint" id="h-api_if">Ruch API i pierścień Corosync. Puste = dziedziczy <code>network_interface</code>.</p>
+            <p class="hint" id="h-api_if">API traffic and the Corosync ring. Empty inherits <code>network_interface</code>.</p>
           </div>
 
           <div class="field">
@@ -317,21 +317,21 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
             <label for="mig_if">migration_interface</label>
             <input type="text" id="mig_if" spellcheck="false" placeholder="dziedziczy api_interface"
                    aria-describedby="h-mig_if" maxlength="15">
-            <p class="hint" id="h-mig_if">Migracja maszyn na żywo. Puste = dziedziczy <code>api_interface</code>.</p>
+            <p class="hint" id="h-mig_if">Live migration. Empty inherits <code>api_interface</code>.</p>
           </div>
 
           <div class="field">
             <label for="ext_vip">kolla_external_vip_address</label>
-            <input type="text" id="ext_vip" spellcheck="false" placeholder="ten sam co wewnętrzny"
+            <input type="text" id="ext_vip" spellcheck="false" placeholder="same as internal"
                    aria-describedby="h-ext_vip" maxlength="15">
-            <p class="hint" id="h-ext_vip">Adres publicznych punktów końcowych. Puste = ten sam co wewnętrzny.</p>
+            <p class="hint" id="h-ext_vip">Address of the public endpoints. Empty means the same as internal.</p>
           </div>
 
           <div class="field">
             <label for="ext_vip_if">kolla_external_vip_interface</label>
             <input type="text" id="ext_vip_if" spellcheck="false" placeholder="dziedziczy network_interface"
                    aria-describedby="h-ext_vip_if" maxlength="15">
-            <p class="hint" id="h-ext_vip_if">Interfejs, na którym stoi zewnętrzny VIP.</p>
+            <p class="hint" id="h-ext_vip_if">Interface that carries the external VIP.</p>
           </div>
         </fieldset>
 
@@ -340,37 +340,37 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
           <div class="field">
             <label for="int_fqdn">kolla_internal_fqdn</label>
-            <input type="text" id="int_fqdn" spellcheck="false" placeholder="domyślnie adres VIP"
+            <input type="text" id="int_fqdn" spellcheck="false" placeholder="VIP address by default"
                    aria-describedby="h-int_fqdn" maxlength="64">
-            <p class="hint" id="h-int_fqdn">Nazwa wewnętrznych punktów końcowych w katalogu usług.</p>
+            <p class="hint" id="h-int_fqdn">Name of the internal endpoints in the service catalogue.</p>
           </div>
 
           <div class="field">
             <label for="ext_fqdn">kolla_external_fqdn</label>
             <input type="text" id="ext_fqdn" spellcheck="false" placeholder="domyślnie adres VIP"
                    aria-describedby="h-ext_fqdn" maxlength="64">
-            <p class="hint" id="h-ext_fqdn">Nazwa publicznych punktów końcowych. Musi różnić się od wewnętrznej.</p>
+            <p class="hint" id="h-ext_fqdn">Name of the public endpoints. Must differ from the internal one.</p>
           </div>
 
           <label class="toggle" for="t_tls_int">
             <input type="checkbox" id="t_tls_int">
             <span class="t-txt"><span class="t-name">kolla_enable_tls_internal</span>
-              <span class="t-desc">TLS na ruchu wewnętrznym między usługami.</span></span>
+              <span class="t-desc">TLS on internal traffic between services.</span></span>
           </label>
           <label class="toggle" for="t_copy_ca">
             <input type="checkbox" id="t_copy_ca">
             <span class="t-txt"><span class="t-name">kolla_copy_ca_into_containers</span>
-              <span class="t-desc">Wgranie własnego CA do magazynu zaufania kontenerów.</span></span>
+              <span class="t-desc">Copies a private CA into the container trust store.</span></span>
           </label>
           <label class="toggle" for="t_letsencrypt">
             <input type="checkbox" id="t_letsencrypt">
             <span class="t-txt"><span class="t-name">kolla_enable_letsencrypt</span>
-              <span class="t-desc">Certyfikaty z Let's Encrypt — zaufanie systemowe obrazów wystarcza.</span></span>
+              <span class="t-desc">Let's Encrypt certificates — the images' system trust store suffices.</span></span>
           </label>
         </fieldset>
 
         <fieldset>
-          <legend>Usługi</legend>
+          <legend>Services</legend>
 
           <div class="field">
             <label for="ml2">neutron_plugin_agent</label>
@@ -378,7 +378,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
               <option value="ovn">ovn</option>
               <option value="openvswitch">openvswitch</option>
             </select>
-            <p class="hint" id="h-ml2">Backend ML2. OVN i openvswitch wykluczają się wzajemnie.</p>
+            <p class="hint" id="h-ml2">ML2 backend. OVN and openvswitch are mutually exclusive.</p>
           </div>
 
           <div class="field">
@@ -387,15 +387,15 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
               <option value="none">brak</option>
               <option value="lvm">LVM (lokalny)</option>
               <option value="nfs">NFS</option>
-              <option value="ceph">Ceph (zewnętrzny)</option>
+              <option value="ceph">Ceph (external)</option>
             </select>
-            <p class="hint" id="h-storage">Źródło wolumenów i obrazów. Kolla nie wdraża Cepha — klaster musi istnieć.</p>
+            <p class="hint" id="h-storage">Source of volumes and images. Kolla does not deploy Ceph — the cluster must already exist.</p>
           </div>
 
           <label class="toggle" for="t_haproxy">
             <input type="checkbox" id="t_haproxy" checked>
             <span class="t-txt"><span class="t-name">enable_haproxy</span>
-              <span class="t-desc">HAProxy + keepalived — wymagane dla VIP i HA punktów końcowych API.</span></span>
+              <span class="t-desc">HAProxy + keepalived — required for the VIP and HA API endpoints.</span></span>
           </label>
           <label class="toggle" for="t_cinder">
             <input type="checkbox" id="t_cinder">
@@ -415,27 +415,27 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           <label class="toggle" for="t_barbican">
             <input type="checkbox" id="t_barbican">
             <span class="t-txt"><span class="t-name">enable_barbican</span>
-              <span class="t-desc">Magazyn sekretów. Wymagany przez Octavię do certyfikatów amfor.</span></span>
+              <span class="t-desc">Secret store. Octavia needs it for the amphora certificates.</span></span>
           </label>
           <label class="toggle" for="t_octavia">
             <input type="checkbox" id="t_octavia">
             <span class="t-txt"><span class="t-name">enable_octavia</span>
-              <span class="t-desc">Równoważenie obciążenia (amfory). Wymaga Barbicana i sieci zarządzającej.</span></span>
+              <span class="t-desc">Load balancing (amphorae). Needs Barbican and a management network.</span></span>
           </label>
           <label class="toggle" for="t_prometheus">
             <input type="checkbox" id="t_prometheus">
             <span class="t-txt"><span class="t-name">enable_prometheus</span>
-              <span class="t-desc">Zbieranie metryk. Wymaga hostów w grupie <em>monitoring</em>.</span></span>
+              <span class="t-desc">Metrics collection. Needs hosts in the <em>monitoring</em> group.</span></span>
           </label>
           <label class="toggle" for="t_grafana">
             <input type="checkbox" id="t_grafana">
             <span class="t-txt"><span class="t-name">enable_grafana</span>
-              <span class="t-desc">Panele metryk. Bez Prometheusa nie ma czego rysować.</span></span>
+              <span class="t-desc">Metric dashboards. Without Prometheus there is nothing to draw.</span></span>
           </label>
           <label class="toggle" for="t_hacluster">
             <input type="checkbox" id="t_hacluster">
             <span class="t-txt"><span class="t-name">enable_hacluster</span>
-              <span class="t-desc">Corosync i Pacemaker. Pierścień Corosync idzie przez <code>api_interface</code>.</span></span>
+              <span class="t-desc">Corosync and Pacemaker. The Corosync ring runs over <code>api_interface</code>.</span></span>
           </label>
           <label class="toggle" for="t_masakari">
             <input type="checkbox" id="t_masakari">
@@ -445,7 +445,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           <label class="toggle" for="t_provider">
             <input type="checkbox" id="t_provider">
             <span class="t-txt"><span class="t-name">enable_neutron_provider_networks</span>
-              <span class="t-desc">Sieci provider (flat/VLAN) mapowane bezpośrednio na fizyczną sieć.</span></span>
+              <span class="t-desc">Provider networks (flat/VLAN) mapped straight onto the physical network.</span></span>
           </label>
         </fieldset>
 
@@ -459,45 +459,45 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
               <option value="flat">flat</option>
               <option value="vlan">vlan</option>
             </select>
-            <p class="hint" id="h-amp_net">Sieć zarządzająca amforami. <code>vlan</code> i <code>flat</code> wymagają sieci provider.</p>
+            <p class="hint" id="h-amp_net">Amphora management network. <code>vlan</code> and <code>flat</code> need a provider network.</p>
           </div>
 
           <div class="field">
             <label for="physnet">provider_physical_network</label>
             <input type="text" id="physnet" spellcheck="false" placeholder="physnet1"
                    aria-describedby="h-physnet" maxlength="32">
-            <p class="hint" id="h-physnet">Nazwa sieci fizycznej. Musi wynikać z listy interfejsów zewnętrznych.</p>
+            <p class="hint" id="h-physnet">Physical network name. Must follow from the external interface list.</p>
           </div>
         </fieldset>
 
         <fieldset>
-          <legend>Decyzje świadome</legend>
+          <legend>Deliberate decisions</legend>
           <p class="hint" style="margin:0 0 10px">
-            Część reguł opisuje ryzyko, którego nie da się rozstrzygnąć z samego pliku.
-            Potwierdzenie nie wycisza wpisu — obniża go do informacji i zapisuje decyzję
-            w komentarzu wygenerowanego pliku.
+            Some rules describe a risk the file alone cannot settle. An acknowledgment does
+            not silence the finding — it lowers it to information and records the decision as
+            a comment in the generated file.
           </p>
           <label class="toggle" for="ack_link">
             <input type="checkbox" id="ack_link">
-            <span class="t-txt"><span class="t-name">wspólne łącze ma zapas i QoS</span>
-              <span class="t-desc">Zmierzony zapas pasma i kolejkowanie po stronie przełącznika dla ruchu magazynu i migracji.</span></span>
+            <span class="t-txt"><span class="t-name">the shared link has headroom and QoS</span>
+              <span class="t-desc">Measured bandwidth headroom and switch-side queueing for storage and migration traffic.</span></span>
           </label>
           <label class="toggle" for="ack_migration">
             <input type="checkbox" id="ack_migration">
-            <span class="t-txt"><span class="t-name">migracja ma osobną sieć poza Kollą</span>
+            <span class="t-txt"><span class="t-name">migration has its own network outside Kolla</span>
               <span class="t-desc">Wydzielony VLAN migracji ustawiony przez <code>live_migration_inbound_addr</code> w nadpisaniu nova-compute.</span></span>
           </label>
         </fieldset>
 
         <fieldset>
-          <legend>Wyjście</legend>
+          <legend>Output</legend>
           <label class="toggle" for="t_comments">
             <input type="checkbox" id="t_comments" checked>
-            <span class="t-txt"><span class="t-name">Komentarze objaśniające</span>
-              <span class="t-desc">Nagłówki sekcji i uwagi wdrożeniowe wynikające z wybranej konfiguracji.</span></span>
+            <span class="t-txt"><span class="t-name">Explanatory comments</span>
+              <span class="t-desc">Section headers and deployment notes that follow from the chosen configuration.</span></span>
           </label>
           <div class="btn-row" style="margin-top:14px">
-            <button type="button" class="ghost" id="btn-reset">Przywróć domyślne</button>
+            <button type="button" class="ghost" id="btn-reset">Restore defaults</button>
           </div>
         </fieldset>
 
@@ -509,7 +509,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       <div class="panel">
         <div class="out-head">
           <span class="fname">/etc/kolla/globals.yml</span>
-          <span class="mode" id="out-mode" hidden>oryginał + poprawki</span>
+          <span class="mode" id="out-mode" hidden>original + edits</span>
           <span class="sp"></span>
           <button type="button" id="btn-copy" aria-describedby="status-txt">Kopiuj</button>
           <button type="button" class="primary" id="btn-download" aria-describedby="status-txt">Pobierz globals.yml</button>
@@ -531,7 +531,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
   </div>
 
   <footer>
-    Rackpathlabs — narzędzia OpenStack. Pojedynczy plik HTML, bez zależności zewnętrznych, działa offline.
+    Rackpathlabs — OpenStack tools. A single HTML file, no external dependencies, works offline.
   </footer>
 </main>
 
@@ -1129,7 +1129,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       var docSeen = false;
 
       function fail(line, msg, hint) {
-        findings.push({ sev: "error", code: "NIEOBSLUGIWANE", line: line, msg: msg, hint: hint || null });
+        findings.push({ sev: "error", code: "UNSUPPORTED", line: line, msg: msg, hint: hint || null });
       }
 
       /* Tabulatory sprawdzamy przed pętlą główną: linie wewnątrz bloku podrzędnego
@@ -1187,7 +1187,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
         if (Object.prototype.hasOwnProperty.call(keys, key)) {
           findings.push({
-            sev: "warn", code: "KLUCZ-POWTORZONY", line: lineNo,
+            sev: "warn", code: "KEY-REPEATED", line: lineNo,
             msg: "Klucz <code>" + key + "</code> występuje ponownie w linii " + lineNo + ".",
             hint: "Ansible weźmie ostatnie wystąpienie; wcześniejsze są martwe."
           });
@@ -1390,7 +1390,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         if (dep[key]) {
           var d = dep[key];
           out.push({
-            sev: d.sev || "warn", code: "KLUCZ-WYCOFANY", key: key, line: e.line,
+            sev: d.sev || "warn", code: "KEY-DEPRECATED", key: key, line: e.line,
             msg: "<code>" + key + "</code> " + (d.replacedBy
               ? "został przemianowany na <code>" + d.replacedBy + "</code>"
               : "nie jest już obsługiwany") +
@@ -1401,9 +1401,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         }
         if (known && !known[key]) {
           out.push({
-            sev: "info", code: "KLUCZ-NIEZNANY", key: key, line: e.line,
-            msg: "<code>" + key + "</code> nie jest polem formularza.",
-            hint: "Klucz zostanie zachowany w pliku bez zmian — generator go nie interpretuje."
+            sev: "info", code: "KEY-UNKNOWN", key: key, line: e.line,
+            msg: "<code>" + key + "</code> is not a form field.",
+            hint: "The key is kept in the file unchanged — the generator does not interpret it."
           });
         }
       });
@@ -1424,13 +1424,13 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
   /* dateField wskazuje, które pole daty ma sens dla danego statusu — wydanie
      jeszcze nieopublikowane ma datę planowaną, wycofane datę wycofania */
   var RELEASE_STATUS = {
-    development: { level: "warn", dateField: "expected", dateLabel: "planowane wydanie",
-      text: "gałąź rozwojowa — wydanie nie ukazało się jeszcze jako stabilne" },
+    development: { level: "warn", dateField: "expected", dateLabel: "expected release",
+      text: "development branch — the release is not out as stable yet" },
     maintained: { level: null, dateField: null, dateLabel: "", text: "" },
-    unmaintained: { level: "warn", dateField: "endsOn", dateLabel: "od",
-      text: "wydanie bez utrzymania — poprawki, w tym bezpieczeństwa, nie powstają" },
-    eol: { level: "warn", dateField: "endsOn", dateLabel: "od",
-      text: "wydanie osiągnęło koniec życia" }
+    unmaintained: { level: "warn", dateField: "endsOn", dateLabel: "since",
+      text: "the release is unmaintained — no fixes are produced, security ones included" },
+    eol: { level: "warn", dateField: "endsOn", dateLabel: "since",
+      text: "the release has reached end of life" }
   };
 
   /* wejściem bywa 'stable/2025.1' albo nazwa własna ('Epoxy') */
@@ -1474,14 +1474,15 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       sev: { hacluster: "error", plain: "warn" },
       /* drabina eskalacji: pierwszy zapalony przełącznik wybiera wariant */
       by: [["t_hacluster", "hacluster"], [null, "plain"]],
-      why: "Corosync bierze pierścień z <code>api_interface</code>. Backfill Cepha, " +
-           "wymiana OSD albo jedna migracja 64 GB potrafi wysycić łącze; Corosync gubi " +
-           "token (domyślnie 3000 ms), Pacemaker uznaje węzeł za utracony, a Masakari " +
-           "zaczyna ewakuować zdrowy host pod obciążeniem. Klasyczne „działało trzy " +
-           "tygodnie, po czym chmura zabiła własny węzeł obliczeniowy”.",
-      ackNote: "Potwierdzono zmierzony zapas pasma i kolejkowanie po stronie przełącznika. " +
-               "Sam bond niczego nie rozstrzyga — LACP hashuje per przepływ, jeden strumień " +
-               "migracji potrafi zająć całe łącze składowe."
+      why: "Corosync takes its ring from <code>api_interface</code>. A Ceph backfill, an " +
+           "OSD-replace rebalance or a single 64 GB migration can saturate the link; " +
+           "Corosync loses its token (3000 ms by default), Pacemaker declares the node " +
+           "lost, and Masakari starts evacuating a healthy host under load. The classic " +
+           "&ldquo;everything worked for three weeks and then the cloud killed its own " +
+           "compute node&rdquo;.",
+      ackNote: "Acknowledged: measured bandwidth headroom and switch-side queueing. The bond " +
+               "alone settles nothing — LACP hashes per flow, and one migration stream can " +
+               "own an entire member link."
     },
     "KV-06": {
       ack: "ack_migration", field: "mig_if",
@@ -1490,32 +1491,32 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
          uwaga na każdym minimalnym pliku uczyłaby ignorowania lintu. */
       sev: { masakari: "error", hacluster: "warn", plain: "info" },
       by: [["t_masakari", "masakari"], ["t_hacluster", "hacluster"], [null, "plain"]],
-      why: "Ewakuacja po awarii hosta to seria migracji dokładnie w chwili, gdy " +
-           "płaszczyzna sterowania jest najbardziej obciążona. Ruch migracji zagładza " +
-           "RPC, <code>nova-compute</code> na zdrowych hostach gubi puls " +
-           "(<code>service_down_time</code>, domyślnie 60 s), Nova oznacza je jako " +
-           "niedostępne, a Masakari widzi kolejne hosty do ewakuacji. Lawina: awaria " +
-           "jednego hosta kładzie klaster.",
-      ackNote: "Potwierdzono wydzieloną sieć migracji skonfigurowaną poza Kollą przez " +
-               "<code>live_migration_inbound_addr</code> w nadpisaniu nova-compute."
+      why: "A host-failure evacuation is a burst of migrations at exactly the moment the " +
+           "control plane is busiest. Migration traffic starves RPC, " +
+           "<code>nova-compute</code> on healthy hosts misses heartbeats " +
+           "(<code>service_down_time</code>, 60 s by default), Nova marks them down, and " +
+           "Masakari sees more hosts to evacuate. Avalanche: one host failure takes down " +
+           "the cluster.",
+      ackNote: "Acknowledged: a dedicated migration network configured outside Kolla through " +
+               "<code>live_migration_inbound_addr</code> in a nova-compute override."
     },
     "KV-10": {
       ack: null, field: "ext_if",
       sev: { direct: "error", shared: "warn" },
-      why: "Kolla wpina interfejs do mostka OVS i zdejmuje z niego adresację. Przy " +
-           "równości wprost tracisz łączność z hostem w trakcie wdrożenia, na zadaniu " +
-           "<code>neutron : Bootstrap</code>. Przy współdzielonym urządzeniu bazowym " +
-           "podinterfejs VLAN teoretycznie przeżywa wejście rodzica do OVS, ale zależy " +
-           "to od kolejności inicjalizacji przy starcie — wdrożenie przechodzi, host " +
-           "nie wraca po restarcie."
+      why: "Kolla plugs the interface into an OVS bridge and strips its addressing. On a " +
+           "direct match you lose the host mid-deploy, at the " +
+           "<code>neutron : Bootstrap</code> task. On a shared base device the VLAN " +
+           "subinterface theoretically survives its parent joining OVS, but that depends " +
+           "on initialisation order at boot — the deployment passes and the host does not " +
+           "come back after a reboot."
     },
     "KV-13": {
       ack: null, field: "physnet",
       sev: { missing: "error" },
-      why: "Wdrożenie przechodzi i <code>loadbalancer create</code> też. Amfora wstaje, " +
-           "w Novie jest ACTIVE — a load balancer wisi w <code>PENDING_CREATE</code> " +
-           "i po około 25 minutach umiera w <code>ERROR</code>: health manager nigdy " +
-           "nie dostaje pulsu UDP 5555."
+      why: "The deployment passes and so does <code>loadbalancer create</code>. The amphora " +
+           "boots and goes ACTIVE in Nova — while the load balancer hangs in " +
+           "<code>PENDING_CREATE</code> and dies to <code>ERROR</code> after about 25 " +
+           "minutes: the health manager never receives its UDP 5555 heartbeats."
     },
     "KV-14": {
       ack: null, field: null,
@@ -1818,7 +1819,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
   function checkIface(name, label, d) {
     var tag = "<code>" + label + "</code>";
     if (!name) {
-      d.push({ level: "error", field: label, msg: "Pole " + tag + " jest wymagane." });
+      d.push({ level: "error", field: label, msg: "Field " + tag + " is required." });
       return;
     }
     if (name.length > 15) {
@@ -1854,12 +1855,12 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         level: lintSev("KV-05", lintVariant("KV-05", s), s),
         field: R["KV-05"].field,
         msg: (sameLink
-          ? "<code>storage_interface</code> (<code>" + esc(f.stg) + "</code>) i " +
-            "<code>api_interface</code> (<code>" + esc(f.api) + "</code>) leżą na tym samym " +
-            "urządzeniu <code>" + esc(baseDev(f.api)) + "</code>."
-          : "<code>storage_interface</code> nie jest ustawione — dziedziczy " +
-            "<code>network_interface</code> (<code>" + esc(f.stg) + "</code>) przy włączonym " +
-            "<code>enable_hacluster</code>.") + " " + lintHint("KV-05", s)
+          ? "<code>storage_interface</code> (<code>" + esc(f.stg) + "</code>) and " +
+            "<code>api_interface</code> (<code>" + esc(f.api) + "</code>) sit on the same " +
+            "device <code>" + esc(baseDev(f.api)) + "</code>."
+          : "<code>storage_interface</code> is unset — it inherits " +
+            "<code>network_interface</code> (<code>" + esc(f.stg) + "</code>) while " +
+            "<code>enable_hacluster</code> is on.") + " " + lintHint("KV-05", s)
       });
     }
 
@@ -1869,10 +1870,10 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         level: lintSev("KV-06", lintVariant("KV-06", s), s),
         field: R["KV-06"].field,
         msg: (!f.migExplicit
-          ? "<code>migration_interface</code> nie jest ustawione — migracja pójdzie przez " +
+          ? "<code>migration_interface</code> is unset — migration goes over " +
             "<code>api_interface</code> (<code>" + esc(f.api) + "</code>)."
-          : "<code>migration_interface</code> (<code>" + esc(f.mig) + "</code>) leży na tym " +
-            "samym urządzeniu co <code>api_interface</code>.") + " " + lintHint("KV-06", s)
+          : "<code>migration_interface</code> (<code>" + esc(f.mig) + "</code>) sits on the " +
+            "same device as <code>api_interface</code>.") + " " + lintHint("KV-06", s)
       });
     }
 
@@ -1892,14 +1893,14 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         if (ext === p[1]) {
           d.push({
             level: lintSev("KV-10", "direct", s), field: R["KV-10"].field,
-            msg: "<code>neutron_external_interface</code> (<code>" + esc(ext) + "</code>) to ten " +
-                 "sam interfejs co <code>" + p[0] + "</code>. " + lintHint("KV-10", s)
+            msg: "<code>neutron_external_interface</code> (<code>" + esc(ext) + "</code>) is the " +
+                 "same interface as <code>" + p[0] + "</code>. " + lintHint("KV-10", s)
           });
         } else if (baseDev(p[1]) === ext || baseDev(ext) === p[1]) {
           d.push({
             level: lintSev("KV-10", "shared", s), field: R["KV-10"].field,
-            msg: "<code>neutron_external_interface</code> (<code>" + esc(ext) + "</code>) dzieli " +
-                 "urządzenie bazowe z <code>" + p[0] + "</code> (<code>" + esc(p[1]) + "</code>). " +
+            msg: "<code>neutron_external_interface</code> (<code>" + esc(ext) + "</code>) shares a " +
+                 "base device with <code>" + p[0] + "</code> (<code>" + esc(p[1]) + "</code>). " +
                  lintHint("KV-10", s)
           });
         }
@@ -1912,24 +1913,24 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       if (!s.t_provider) {
         d.push({
           level: lintSev("KV-13", "missing", s), field: "amp_net",
-          msg: "<code>octavia_amp_network</code> typu <code>vlan</code> wymaga " +
+          msg: "<code>octavia_amp_network</code> of type <code>vlan</code> requires " +
                "<code>enable_neutron_provider_networks</code>. " + lintHint("KV-13", s)
         });
       }
       if (nets.indexOf(s.physnet) === -1) {
         d.push({
           level: lintSev("KV-13", "missing", s), field: R["KV-13"].field,
-          msg: "<code>" + esc(s.physnet) + "</code> nie wynika z listy interfejsów zewnętrznych " +
-               "— dostępne: " + (nets.length ? "<code>" + nets.join("</code>, <code>") + "</code>" : "brak") +
-               ". Jeden interfejs zewnętrzny nie zmapuje dwóch sieci fizycznych. " +
+          msg: "<code>" + esc(s.physnet) + "</code> does not follow from the external interface " +
+               "list — available: " + (nets.length ? "<code>" + nets.join("</code>, <code>") + "</code>" : "none") +
+               ". One external interface cannot map two physical networks. " +
                lintHint("KV-13", s)
         });
       }
     } else if (s.t_octavia && s.amp_net === "flat") {
       d.push({
         level: "info", field: "amp_net",
-        msg: "Sieć amfor typu <code>flat</code> również opiera się na sieci provider — " +
-             "upewnij się, że <code>enable_neutron_provider_networks</code> odpowiada projektowi."
+        msg: "An amphora network of type <code>flat</code> also rests on a provider network — " +
+             "check that <code>enable_neutron_provider_networks</code> matches the design."
       });
     }
 
@@ -1937,54 +1938,55 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     if (s.t_tls_int && !s.t_copy_ca && !s.t_letsencrypt) {
       d.push({
         level: lintSev("KV-14", "ca", s), field: null,
-        msg: "<code>kolla_enable_tls_internal</code> bez <code>kolla_copy_ca_into_containers</code> " +
-             "i bez Let's Encrypt: kontenery nie zaufają własnemu CA. Przy bootstrapie Keystone " +
-             "albo pierwszym wywołaniu między usługami w każdym logu naraz pojawi się " +
-             "<code>SSLError: certificate verify failed</code>. Wygląda jak awaria Keystone, " +
-             "jest awarią magazynu zaufania."
+        msg: "<code>kolla_enable_tls_internal</code> without <code>kolla_copy_ca_into_containers</code> " +
+             "and without Let's Encrypt: the containers will not trust a private CA. At Keystone " +
+             "bootstrap, or on the first call between services, every log fills at once with " +
+             "<code>SSLError: certificate verify failed</code>. It looks like a Keystone " +
+             "failure; it is a trust store failure."
       });
     }
     if (s.int_fqdn && s.ext_fqdn && s.int_fqdn === s.ext_fqdn) {
       d.push({
         level: lintSev("KV-14", "fqdn", s), field: "ext_fqdn",
-        msg: "<code>kolla_internal_fqdn</code> i <code>kolla_external_fqdn</code> są identyczne. " +
-             "Wewnętrzne i publiczne punkty końcowe w katalogu usług wskazują wtedy to samo: " +
-             "ruch między usługami wychodzi przez zewnętrzny VIP, a punkty administracyjne " +
-             "stają się osiągalne z sieci publicznej. Znajduje to zwykle audyt, nie awaria."
+        msg: "<code>kolla_internal_fqdn</code> and <code>kolla_external_fqdn</code> are identical. " +
+             "The internal and public endpoints in the service catalogue then point at the same " +
+             "place: traffic between services leaves through the external VIP, and admin " +
+             "endpoints become reachable from the public network. An audit usually finds this, " +
+             "not an outage."
       });
     }
     if (!s.int_fqdn && !s.ext_fqdn && s.vip && s.ext_vip && s.vip !== s.ext_vip) {
       d.push({
         level: lintSev("KV-14", "fqdn", s), field: "ext_fqdn",
-        msg: "Adresy VIP są różne, a obie nazwy FQDN pozostają puste — oba wpisy w katalogu " +
-             "usług powstaną z adresów i rozjadą się z certyfikatem. Ustaw " +
-             "<code>kolla_internal_fqdn</code> i <code>kolla_external_fqdn</code> jawnie."
+        msg: "The VIP addresses differ while both FQDNs are empty — both service catalogue " +
+             "entries are then built from addresses and drift away from the certificate. Set " +
+             "<code>kolla_internal_fqdn</code> and <code>kolla_external_fqdn</code> explicitly."
       });
     }
     if (s.vip && s.ext_vip && s.vip === s.ext_vip && baseDev(f.extVip) !== baseDev(f.net)) {
       d.push({
         level: lintSev("KV-14", "vip", s), field: "ext_vip",
-        msg: "Ten sam adres VIP przy różnych interfejsach (<code>" + esc(f.net) + "</code> i " +
-             "<code>" + esc(f.extVip) + "</code>) — HAProxy próbowałby zająć ten sam adres dwa razy."
+        msg: "The same VIP address on different interfaces (<code>" + esc(f.net) + "</code> and " +
+             "<code>" + esc(f.extVip) + "</code>) — HAProxy would try to claim one address twice."
       });
     }
 
     /* --- zależności usług --- */
-    [[s.t_cinder && s.storage === "none", "enable_cinder", "backendu magazynu",
-      "Cinder bez backendu nie utworzy wolumenu — wdrożenie przejdzie, pierwsze " +
-      "<code>volume create</code> skończy się w stanie <code>error</code>."],
+    [[s.t_cinder && s.storage === "none", "enable_cinder", "a storage backend",
+      "Cinder without a backend will not create a volume — the deployment passes and the " +
+      "first <code>volume create</code> ends in <code>error</code>."],
      [s.t_grafana && !s.t_prometheus, "enable_grafana", "enable_prometheus",
-      "Grafana bez źródła danych wstanie i pokaże puste panele."],
+      "Grafana without a data source starts up and shows empty dashboards."],
      [s.t_octavia && !s.t_barbican, "enable_octavia", "enable_barbican",
-      "Octavia trzyma w Barbicanie certyfikaty amfor — bez niego nie utworzy load balancera."],
+      "Octavia keeps the amphora certificates in Barbican — without it no load balancer is created."],
      [s.t_masakari && !s.t_hacluster, "enable_masakari", "enable_hacluster",
-      "Monitor hostów Masakari opiera się na Pacemakerze i Corosync; bez nich nie ma " +
-      "skąd wziąć informacji o awarii węzła."]
+      "The Masakari host monitor rests on Pacemaker and Corosync; without them it has " +
+      "nowhere to learn that a node failed."]
     ].forEach(function (r) {
       if (!r[0]) return;
       d.push({
         level: lintSev("ZALEZNOSC", "missing", s), field: null,
-        msg: "<code>" + r[1] + "</code> wymaga " +
+        msg: "<code>" + r[1] + "</code> requires " +
              (r[2].indexOf("enable_") === 0 ? "<code>" + r[2] + "</code>" : r[2]) + ". " + r[3]
       });
     });
@@ -2014,15 +2016,15 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     } else if (rel && (rel.unpublished || []).indexOf(s.distro) !== -1) {
       d.push({
         level: "warn", field: "distro",
-        msg: "Wydanie <code>" + esc(rel.id) + "</code> dopuszcza <code>" + esc(s.distro) +
-             "</code> w konfiguracji, ale Kolla nie publikuje dla niego obrazów. " +
-             "Obrazy trzeba zbudować samodzielnie albo wybrać inny obraz bazowy."
+        msg: "Release <code>" + esc(rel.id) + "</code> allows <code>" + esc(s.distro) +
+             "</code> in the configuration, but Kolla publishes no images for it. " +
+             "Either build the images yourself or pick a different base image."
       });
     }
 
     /* --- wydanie --- */
     if (!s.release) {
-      d.push({ level: "error", field: "release", msg: "Pole <code>openstack_release</code> jest wymagane." });
+      d.push({ level: "error", field: "release", msg: "Field <code>openstack_release</code> is required." });
     } else if (!RELEASE_RE.test(s.release)) {
       d.push({
         level: "error", field: "release",
@@ -2051,8 +2053,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       if (base !== "master" && !rel) {
         d.push({
           level: "warn", field: "release",
-          msg: "<code>" + esc(base) + "</code> nie występuje w macierzy wydań (stan na " +
-               esc(KOLLA_MATRIX.updated) + "). Zgodności obrazu bazowego z wydaniem nie da się sprawdzić."
+          msg: "<code>" + esc(base) + "</code> does not appear in the release matrix (as of " +
+               esc(KOLLA_MATRIX.updated) + "). Base image compatibility with the release cannot be checked."
         });
       } else if (rel) {
         var st = RELEASE_STATUS[rel.status];
@@ -2086,17 +2088,17 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           if (present) {
             d.push({
               level: "info", field: null,
-              msg: "<code>" + esc(key) + "</code> jest w pliku ustawiony jawnie — wartość " +
-                   "nie zależy już od domyślnej wydania (" + meta.label + "). " + meta.why
+              msg: "<code>" + esc(key) + "</code> is set explicitly in the file — the value no " +
+                   "longer depends on the release default (" + meta.label + "). " + meta.why
             });
             return;
           }
           d.push({
             level: meta.sev || "info", field: null,
-            msg: (doc ? "Wczytany plik nie ustawia " : "Plik nie ustawia ") +
-                 "<code>" + esc(key) + "</code> — obowiązuje wartość domyślna wydania <code>" +
-                 esc(String(rel.defaults[key])) + "</code> (" + meta.label + "). " + meta.why +
-                 (doc ? " Import nie dopisuje brakujących kluczy — eksport odtworzy plik bez zmian." : "")
+            msg: (doc ? "The loaded file does not set " : "The file does not set ") +
+                 "<code>" + esc(key) + "</code> — the release default <code>" +
+                 esc(String(rel.defaults[key])) + "</code> applies (" + meta.label + "). " + meta.why +
+                 (doc ? " The import does not add missing keys — the export reproduces the file unchanged." : "")
           });
         });
       }
@@ -2104,7 +2106,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
     /* --- VIP --- */
     if (!s.vip) {
-      d.push({ level: "error", field: "vip", msg: "Pole <code>kolla_internal_vip_address</code> jest wymagane." });
+      d.push({ level: "error", field: "vip", msg: "Field <code>kolla_internal_vip_address</code> is required." });
     } else {
       var ip = parseIPv4(s.vip);
       if (!ip) {
@@ -2153,7 +2155,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     checkIface(s.net_if, "network_interface", d);
     var extList = splitList(s.ext_if);
     if (!extList.length) {
-      d.push({ level: "error", field: "ext_if", msg: "Pole <code>neutron_external_interface</code> jest wymagane." });
+      d.push({ level: "error", field: "ext_if", msg: "Field <code>neutron_external_interface</code> is required." });
     } else {
       extList.forEach(function (x) { checkIface(x, "neutron_external_interface", d); });
     }
@@ -2167,9 +2169,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     if (brList.length && extList.length && brList.length !== extList.length) {
       d.push({
         level: "error", field: "br_name",
-        msg: "<code>neutron_bridge_name</code> ma " + brList.length + " pozycji, a " +
-             "<code>neutron_external_interface</code> " + extList.length +
-             ". Każdemu interfejsowi zewnętrznemu odpowiada dokładnie jeden mostek."
+        msg: "<code>neutron_bridge_name</code> has " + brList.length + " entries and " +
+             "<code>neutron_external_interface</code> has " + extList.length +
+             ". Exactly one bridge belongs to each external interface."
       });
     }
 

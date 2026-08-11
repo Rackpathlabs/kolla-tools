@@ -35,19 +35,19 @@
   "findings": [],
   "review": [
     {
-      "code": "KLUCZ-WYCOFANY",
+      "code": "KEY-DEPRECATED",
       "sev": "error",
       "key": "om_enable_rabbitmq_high_availability",
       "line": 5
     },
     {
-      "code": "KLUCZ-WYCOFANY",
+      "code": "KEY-DEPRECATED",
       "sev": "error",
       "key": "letsencrypt_cert_server",
       "line": 6
     },
     {
-      "code": "KLUCZ-WYCOFANY",
+      "code": "KEY-DEPRECATED",
       "sev": "warn",
       "key": "ceph_cinder_keyring",
       "line": 7

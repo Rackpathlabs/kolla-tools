@@ -9,12 +9,12 @@
   ],
   "findings": [
     {
-      "code": "NIEOBSLUGIWANE",
+      "code": "UNSUPPORTED",
       "sev": "error",
       "line": 4
     },
     {
-      "code": "NIEOBSLUGIWANE",
+      "code": "UNSUPPORTED",
       "sev": "error",
       "line": 5
     }

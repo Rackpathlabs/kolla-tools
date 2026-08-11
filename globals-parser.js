@@ -112,7 +112,7 @@
       var docSeen = false;
 
       function fail(line, msg, hint) {
-        findings.push({ sev: "error", code: "NIEOBSLUGIWANE", line: line, msg: msg, hint: hint || null });
+        findings.push({ sev: "error", code: "UNSUPPORTED", line: line, msg: msg, hint: hint || null });
       }
 
       /* Tabulatory sprawdzamy przed pętlą główną: linie wewnątrz bloku podrzędnego
@@ -170,7 +170,7 @@
 
         if (Object.prototype.hasOwnProperty.call(keys, key)) {
           findings.push({
-            sev: "warn", code: "KLUCZ-POWTORZONY", line: lineNo,
+            sev: "warn", code: "KEY-REPEATED", line: lineNo,
             msg: "Klucz <code>" + key + "</code> występuje ponownie w linii " + lineNo + ".",
             hint: "Ansible weźmie ostatnie wystąpienie; wcześniejsze są martwe."
           });
@@ -373,7 +373,7 @@
         if (dep[key]) {
           var d = dep[key];
           out.push({
-            sev: d.sev || "warn", code: "KLUCZ-WYCOFANY", key: key, line: e.line,
+            sev: d.sev || "warn", code: "KEY-DEPRECATED", key: key, line: e.line,
             msg: "<code>" + key + "</code> " + (d.replacedBy
               ? "został przemianowany na <code>" + d.replacedBy + "</code>"
               : "nie jest już obsługiwany") +
@@ -384,9 +384,9 @@
         }
         if (known && !known[key]) {
           out.push({
-            sev: "info", code: "KLUCZ-NIEZNANY", key: key, line: e.line,
-            msg: "<code>" + key + "</code> nie jest polem formularza.",
-            hint: "Klucz zostanie zachowany w pliku bez zmian — generator go nie interpretuje."
+            sev: "info", code: "KEY-UNKNOWN", key: key, line: e.line,
+            msg: "<code>" + key + "</code> is not a form field.",
+            hint: "The key is kept in the file unchanged — the generator does not interpret it."
           });
         }
       });
