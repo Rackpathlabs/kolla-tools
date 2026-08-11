@@ -28,7 +28,52 @@ var cp = require("child_process");
 
 var root = path.join(__dirname, "..");
 var AUDIT_OUT = (process.argv[2] === "--texts") ? process.argv[3] : null;
-var FILES = ["validator.html", "generator.html", "index.html"];
+/* Scenariusze: JEDEN RENDER TO JEDNA ŚCIEŻKA. Zmierzone w przeglądarce, nie
+   założone — stan początkowy walidatora daje 36 napisów, przykład z błędami 173,
+   przykład poprawny 90 przy zupełnie innej warstwie tekstu (werdykt bez zastrzeżeń).
+
+   Scenariusz trybu aktualizacji MUSI mieć własne inventory z czymś, co upstream
+   przemianował albo usunął. Na wbudowanym przykładzie ścieżka 2024.1 -> 2026.1 daje
+   ZERO findingów upgrade — poprawnie, bo tryb pokazuje tylko to, co dotyczy plików
+   użytkownika, a przykład nie zawiera ani jednej deprecjonowanej rzeczy. Bez własnego
+   inventory upgradeRules nie mogłoby ani przejść, ani nie przejść: to trzeci wariant
+   pustego zielonego, ten sam, który opisuje docs/PRINCIPLES.md. */
+var DEPRECATED_INV = [
+  "[control]", "ctrl01 ansible_host=10.10.0.11", "",
+  "[network]", "ctrl01", "",
+  "[compute]", "cmp01 ansible_host=10.10.0.21", "",
+  "[storage]", "str01 ansible_host=10.10.0.31", "",
+  "[monitoring]", "ctrl01", "",
+  "[kolla-toolbox]", "ctrl01", "",
+  "[zun]", "ctrl01", ""
+].join("\\n");
+
+var FILES = [
+  { file: "validator.html", name: "stan początkowy", steps: "" },
+  { file: "validator.html", name: "przykład z błędami",
+    steps: 'document.getElementById("btn-sample-bad").click();' },
+  { file: "validator.html", name: "przykład poprawny",
+    steps: 'document.getElementById("btn-sample-ok").click();' },
+  { file: "validator.html", name: "tryb aktualizacji na własnym inventory",
+    steps: 'document.getElementById("src").value = "' + DEPRECATED_INV + '";' +
+           'document.getElementById("release").value = "2024.1";' +
+           'document.getElementById("release_to").value = "2026.1";' +
+           'document.getElementById("release").dispatchEvent(new Event("change"));' },
+  { file: "validator.html", name: "reguły dwuplikowe (globals + inventory)",
+    steps: 'document.getElementById("btn-sample-bad").click();' +
+           'var g = document.getElementById("gsrc");' +
+           'g.value = "---\\nenable_masakari: \\"yes\\"\\nenable_hacluster: \\"yes\\"\\n";' +
+           'g.dispatchEvent(new Event("input"));' },
+  { file: "generator.html", name: "stan początkowy", steps: "" },
+  { file: "generator.html", name: "usługi włączone",
+    steps: '["t_octavia","t_barbican","t_cinder","t_grafana","t_hacluster","t_masakari"]' +
+           '.forEach(function (id) { var e = document.getElementById(id);' +
+           ' if (e) { e.checked = true; e.dispatchEvent(new Event("change")); } });' },
+  { file: "generator.html", name: "wydanie wycofane",
+    steps: 'var r = document.getElementById("release");' +
+           'r.value = "2024.2"; r.dispatchEvent(new Event("change"));' },
+  { file: "index.html", name: "stan początkowy", steps: "" }
+];
 
 /* Kolejność prób: jawne wskazanie, potem typowe ścieżki Linuksa (CI), potem
    Windows (WSL). Brak przeglądarki ma być JAWNYM błędem, nie cichym pominięciem
@@ -58,6 +103,7 @@ var AUDIT = [
   '<script id="__audit_run">',
   'window.addEventListener("load", function () {',
   '  setTimeout(function () {',
+  '    try { /*__STEPS__*/ } catch (e) { document.title = "SCENARIUSZ PADŁ: " + e.message; }',
   '    var out = { visibleHidden: [], texts: [] };',
   '    var all = document.querySelectorAll("[hidden]");',
   '    for (var i = 0; i < all.length; i++) {',
@@ -92,7 +138,7 @@ var AUDIT = [
   '    box.id = "__audit_out";',
   '    box.textContent = JSON.stringify(out);',
   '    document.body.appendChild(box);',
-  '  }, 400);',
+  '  }, 700);',
   '});',
   "</" + "script>"
 ].join("\n");
@@ -106,29 +152,30 @@ var AUDIT = [
 
    Gwarancja jest konstrukcyjna, nie dyscyplinarna: nie da się o niej zapomnieć
    przy dopisywaniu kolejnego kroku scenariusza. */
-function writeAudited(target, srcPath, src) {
-  fs.writeFileSync(target, src.replace("</body>", AUDIT + "\n</body>"));
+function writeAudited(target, srcPath, src, steps) {
+  var block = AUDIT.replace("/*__STEPS__*/", steps || "");
+  fs.writeFileSync(target, src.replace("</body>", block + "\n</body>"));
   var back = fs.readFileSync(target, "utf8");
-  var stripped = Buffer.from(back.replace(AUDIT + "\n", ""), "utf8");
+  var stripped = Buffer.from(back.replace(block + "\n", ""), "utf8");
   if (Buffer.compare(stripped, fs.readFileSync(srcPath)) !== 0) {
     throw new Error("kopia różni się od źródła nie tylko wstrzykniętym blokiem — " +
                     "audyt mierzyłby plik, którego nikt nie wdroży");
   }
 }
 
-function render(chrome, file) {
+function render(chrome, file, steps) {
   var srcPath = path.join(root, file);
   var src = fs.readFileSync(srcPath, "utf8");
   var tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "kolla-render-"));
   var tmp = path.join(tmpDir, file);
-  writeAudited(tmp, srcPath, src);
+  writeAudited(tmp, srcPath, src, steps);
 
   /* Chrome pod Windowsem nie zobaczy ścieżki /tmp/... z WSL-a — w tym układzie
      kopia musi powstać w drzewie repozytorium, które widzą obie strony. */
   var winChrome = /\.exe$/i.test(chrome);
   if (winChrome) {
     tmp = path.join(root, ".render-audit.tmp.html");
-    writeAudited(tmp, srcPath, src);
+    writeAudited(tmp, srcPath, src, steps);
   }
 
   var url = "file:///" + tmp.replace(/\\/g, "/").replace(/^\//, "");
@@ -155,11 +202,19 @@ if (!chrome) {
 }
 console.log("przeglądarka: " + chrome);
 
+/* Scenariusz, po którym korpus jest IDENTYCZNY jak w stanie początkowym, niczego
+   nie uruchomił — a wtedy wszystko, co miał pokazać, nie może ani przejść, ani nie
+   przejść. To trzeci wariant pustego zielonego z docs/PRINCIPLES.md, tym razem
+   we własnym oprzyrządowaniu. Nie da się go wykryć psuciem, więc sprawdzamy wprost:
+   czy scenariusz w ogóle zmienił to, co widać. */
+var baseline = {};
+
 var bad = 0;
-FILES.forEach(function (file) {
+FILES.forEach(function (sc) {
+  var file = sc.file + " [" + sc.name + "]";
   var res;
   try {
-    res = render(chrome, file);
+    res = render(chrome, sc.file, sc.steps);
   } catch (e) {
     console.log("FAIL " + file + ": " + e.message);
     bad = 1;
@@ -169,6 +224,15 @@ FILES.forEach(function (file) {
   /* Ścieżka argumentem, nie zmienną środowiskową: proces Windows uruchomiony
      z WSL nie dziedziczy zmiennych bez WSLENV, więc raport cicho by nie powstał —
      a pusty raport wygląda dokładnie jak "wszystko pokryte". */
+  var fingerprint = res.texts.map(function (t) { return t.tag + "|" + t.text; }).join("\u0000");
+  if (!sc.steps) {
+    baseline[sc.file] = fingerprint;
+  } else if (baseline[sc.file] === fingerprint) {
+    console.log("FAIL " + file + ": scenariusz nie zmienił NICZEGO widocznego —" +
+                " nie ma czego mierzyć, więc zielone nic nie znaczy");
+    bad = 1;
+  }
+
   if (AUDIT_OUT) {
     var acc = [];
     try { acc = JSON.parse(fs.readFileSync(AUDIT_OUT, "utf8")); } catch (e) { acc = []; }
