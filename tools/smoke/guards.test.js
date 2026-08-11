@@ -52,4 +52,11 @@ R.ok("fixtura z NUL-em -> czerwone", nul.code !== 0, "kod " + nul.code);
 R.ok("i nazywa plik, w którym siedzi", /has-nul\.js/.test(nul.out),
      nul.out.split("\n").slice(-2).join(" | "));
 
+/* PRZYNĘTA: strażnik za czuły jest szkodliwy tak samo jak za luźny — produkuje szum,
+   aż ktoś go osłabi. Legalny UTF-8 nie ma prawa być naruszeniem, inaczej strażnik
+   przestałby przechodzić na własnych źródłach, bo komentarze są tu po polsku. */
+var bait = run("check-binary.sh", ["tools/fixtures/utf8-bait.js"]);
+R.ok("legalne znaki wielobajtowe NIE są naruszeniem", bait.code === 0,
+     bait.out.split("\n").slice(-2).join(" | "));
+
 R.finish();
