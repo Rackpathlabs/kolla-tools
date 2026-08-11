@@ -38,6 +38,22 @@ var AUDIT_OUT = (process.argv[2] === "--texts") ? process.argv[3] : null;
    użytkownika, a przykład nie zawiera ani jednej deprecjonowanej rzeczy. Bez własnego
    inventory upgradeRules nie mogłoby ani przejść, ani nie przejść: to trzeci wariant
    pustego zielonego, ten sam, który opisuje docs/PRINCIPLES.md. */
+/* Podstawienie wartości z wywołaniem zdarzenia — programowe przypisanie .value
+   nie zapala żadnego nasłuchu, więc bez dispatchEvent scenariusz byłby pusty. */
+function set(id, v) {
+  return 'var e = document.getElementById("' + id + '");' +
+         'if (!e) throw new Error("brak elementu #' + id + '");' +
+         'e.value = ' + JSON.stringify(v) + ';' +
+         'e.dispatchEvent(new Event("input", { bubbles: true }));' +
+         'e.dispatchEvent(new Event("change", { bubbles: true }));';
+}
+function check(id, on) {
+  return 'var e = document.getElementById("' + id + '");' +
+         'if (!e) throw new Error("brak elementu #' + id + '");' +
+         'e.checked = ' + (on ? "true" : "false") + ';' +
+         'e.dispatchEvent(new Event("change", { bubbles: true }));';
+}
+
 var DEPRECATED_INV = [
   "[control]", "ctrl01 ansible_host=10.10.0.11", "",
   "[network]", "ctrl01", "",
@@ -65,13 +81,39 @@ var FILES = [
            'g.value = "---\\nenable_masakari: \\"yes\\"\\nenable_hacluster: \\"yes\\"\\n";' +
            'g.dispatchEvent(new Event("input"));' },
   { file: "generator.html", name: "stan początkowy", steps: "" },
-  { file: "generator.html", name: "usługi włączone",
-    steps: '["t_octavia","t_barbican","t_cinder","t_grafana","t_hacluster","t_masakari"]' +
-           '.forEach(function (id) { var e = document.getElementById(id);' +
-           ' if (e) { e.checked = true; e.dispatchEvent(new Event("change")); } });' },
-  { file: "generator.html", name: "wydanie wycofane",
-    steps: 'var r = document.getElementById("release");' +
-           'r.value = "2024.2"; r.dispatchEvent(new Event("change"));' },
+
+  /* Scenariusze generatora celują w DIAGNOSTYKĘ, nie w przełączniki. Przełącznik
+     zmienia wartość w emitowanym pliku — a plik żyje w <code>/<span>, czyli
+     w kategorii wyjątku „dane, nie interfejs". Zmierzone: włączenie t_barbican
+     zmienia podgląd o JEDEN znak ("no" -> "yes") i ani jednego napisu interfejsu.
+     Diagnostyka natomiast produkuje tekst interfejsu, więc obrona przed pustym
+     scenariuszem ma na czym działać. */
+  { file: "generator.html", name: "KV-10: interfejs zewnętrzny na urządzeniu zarządzania",
+    steps: set("net_if", "bond0.10") + set("ext_if", "bond0") },
+  { file: "generator.html", name: "KV-06: Masakari bez interfejsu migracji",
+    steps: check("t_masakari", true) + check("t_hacluster", true) + set("mig_if", "") },
+  { file: "generator.html", name: "KV-05: magazyn i API na jednym bondzie, ze ścieżką potwierdzenia",
+    steps: check("t_hacluster", true) + set("api_if", "bond0.10") + set("stg_if", "bond0.20") +
+           check("ack_link", true) },
+  { file: "generator.html", name: "KV-13: amfory na VLAN-ie z obcym physnetem",
+    steps: check("t_octavia", true) + check("t_barbican", true) +
+           set("amp_net", "vlan") + set("physnet", "physnet9") + set("ext_if", "bond0") },
+  { file: "generator.html", name: "KV-14: TLS bez CA i równe FQDN",
+    steps: check("t_tls_int", true) + check("t_copy_ca", false) +
+           set("int_fqdn", "cloud.example.net") + set("ext_fqdn", "cloud.example.net") },
+  /* Scenariusza "puste pole wymagane" tu nie ma, bo VIP jest pusty od startu:
+     komunikat o polu wymaganym i werdykt niekompletnej konfiguracji stoją już
+     w stanie początkowym. Osobny scenariusz czyszczący puste pole nie zmieniał
+     niczego i obrona przed pustym scenariuszem słusznie go zgłosiła. */
+
+  /* Wyjęty spod obrony przed pustym scenariuszem, z powodem: ten scenariusz zmienia
+     WYŁĄCZNIE emitowany plik, który jest kategorią wyjątku. Brak zmiany w korpusie
+     interfejsu jest tu oczekiwany, nie objawem. Bez tego wyjątku obrona zaczęłaby
+     produkować fałszywe czerwone, a ktoś osłabiłby ją zamiast poprawić scenariusz. */
+  { file: "generator.html", name: "pojedynczy przełącznik (zmienia tylko emitowany plik)",
+    mayNotChangeInterface: true,
+    steps: check("t_barbican", true) },
+
   { file: "index.html", name: "stan początkowy", steps: "" }
 ];
 
@@ -227,7 +269,7 @@ FILES.forEach(function (sc) {
   var fingerprint = res.texts.map(function (t) { return t.tag + "|" + t.text; }).join("\u0000");
   if (!sc.steps) {
     baseline[sc.file] = fingerprint;
-  } else if (baseline[sc.file] === fingerprint) {
+  } else if (baseline[sc.file] === fingerprint && !sc.mayNotChangeInterface) {
     console.log("FAIL " + file + ": scenariusz nie zmienił NICZEGO widocznego —" +
                 " nie ma czego mierzyć, więc zielone nic nie znaczy");
     bad = 1;
