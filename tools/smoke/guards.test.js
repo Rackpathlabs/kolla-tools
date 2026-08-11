@@ -91,4 +91,11 @@ R.ok("bez zwolnienia — scenariusz przełącznika upada",
      /pojedynczy przełącznik[\s\S]*nie zmienił NICZEGO/.test(noEx.out) && noEx.code !== 0,
      "kod " + noEx.code);
 
+/* ---- check-i18n: klucz spoza słownika, z przynętami ---- */
+var keys = run("check-i18n.js", ["tools/fixtures/keys-one-typo.html"]);
+R.ok("fixtura z jedną literówką -> DOKŁADNIE jedno odwołanie spoza słownika",
+     /spoza słownika \(1\): v\.btn\.runn/.test(keys.out), keys.out.split("\n")[0]);
+R.ok("istniejący klucz, inny atrybut, T() w kodzie i T() ze spacjami NIE są naruszeniem",
+     !/v\.btn\.run,|t\.file\.read|t\.copied/.test(keys.out));
+
 R.finish();

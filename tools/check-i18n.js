@@ -56,7 +56,12 @@ var USE_RE = /data-i18n(?:-title|-label)?="([\w.]+)"|\bT\(\s*"([\w.]+)"|\bt\(\s*
 var known = Object.create(null);
 keys.forEach(function (k) { known[k] = true; });
 
-["generator.html", "validator.html", "index.html", "i18n.js"].forEach(function (f) {
+/* Lista konsumentów podmienialna argumentami — żeby strażnika dało się uruchomić
+   na fixturze o znanej charakterystyce, zamiast dowodzić jego upadku ręcznie raz. */
+var USERS = process.argv.length > 2
+  ? process.argv.slice(2)
+  : ["generator.html", "validator.html", "index.html", "i18n.js"];
+USERS.forEach(function (f) {
   var text = fs.readFileSync(path.join(root, f), "utf8"), u, missing = [];
   USE_RE.lastIndex = 0;
   while ((u = USE_RE.exec(text)) !== null) {
