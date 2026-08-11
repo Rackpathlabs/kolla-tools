@@ -236,11 +236,11 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
     <!-- ============ FORM ============ -->
     <form class="panel" id="form" autocomplete="off" novalidate>
-      <h2>Deployment parameters</h2>
+      <h2 data-i18n="g.h.params"></h2>
       <div class="body">
 
         <fieldset>
-          <legend>Import an existing file</legend>
+          <legend data-i18n="g.h.import"></legend>
           <p class="hint" style="margin:0 0 10px">
             Paste or drop a <code>globals.yml</code>. The form fills with the values from the
             file, and from then on the export <strong>edits the original</strong> instead of
@@ -258,7 +258,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         </fieldset>
 
         <fieldset>
-          <legend>Obraz bazowy</legend>
+          <legend data-i18n="g.h.baseImage"></legend>
 
           <div class="field">
             <label for="distro">kolla_base_distro <span class="req">wymagane</span></label>
@@ -278,7 +278,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         </fieldset>
 
         <fieldset>
-          <legend>Network</legend>
+          <legend data-i18n="g.h.network"></legend>
 
           <div class="field">
             <label for="vip">kolla_internal_vip_address <span class="req">wymagane</span></label>
@@ -345,7 +345,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         </fieldset>
 
         <fieldset>
-          <legend>Nazwy i TLS</legend>
+          <legend data-i18n="g.h.names"></legend>
 
           <div class="field">
             <label for="int_fqdn">kolla_internal_fqdn</label>
@@ -379,7 +379,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         </fieldset>
 
         <fieldset>
-          <legend>Services</legend>
+          <legend data-i18n="g.h.services"></legend>
 
           <div class="field">
             <label for="ml2">neutron_plugin_agent</label>
@@ -459,7 +459,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         </fieldset>
 
         <fieldset>
-          <legend>Octavia</legend>
+          <legend data-i18n="g.h.octavia"></legend>
 
           <div class="field">
             <label for="amp_net">octavia_amp_network — typ</label>
@@ -480,7 +480,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         </fieldset>
 
         <fieldset>
-          <legend>Deliberate decisions</legend>
+          <legend data-i18n="g.h.decisions"></legend>
           <p class="hint" style="margin:0 0 10px">
             Some rules describe a risk the file alone cannot settle. An acknowledgment does
             not silence the finding — it lowers it to information and records the decision as
@@ -499,7 +499,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         </fieldset>
 
         <fieldset>
-          <legend>Output</legend>
+          <legend data-i18n="g.h.output"></legend>
           <label class="toggle" for="t_comments">
             <input type="checkbox" id="t_comments" checked>
             <span class="t-txt"><span class="t-name">Explanatory comments</span>
@@ -527,7 +527,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       </div>
 
       <div class="panel" style="margin-top:18px">
-        <h2>Kontrola konfiguracji</h2>
+        <h2 data-i18n="g.h.lint"></h2>
         <div class="body">
           <div class="status" id="status" role="status" aria-live="polite">
             <span class="dot"></span><span id="status-txt">Konfiguracja poprawna.</span>
@@ -626,6 +626,20 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       "t.import.empty":         "The import field is empty.",
       "t.import.dropped":       "Import dropped — the file is built from the form again.",
       "t.export.blocked":       "Export blocked — the configuration contains errors.",
+
+      /* --- generator: nagłówki sekcji ---
+         Rejestr: fraza rzeczownikowa, bez rodzajnika, bez kropki. Wielkie litery
+         należą do CSS, nie do treści. */
+      "g.h.params":              "Deployment parameters",
+      "g.h.import":              "Import an existing file",
+      "g.h.baseImage":           "Base image",
+      "g.h.network":             "Networking",
+      "g.h.names":               "Names and TLS",
+      "g.h.services":            "Services",
+      "g.h.octavia":             "Octavia",
+      "g.h.decisions":           "Deliberate decisions",
+      "g.h.output":              "Output",
+      "g.h.lint":                "Configuration check",
 
       /* --- walidator: szkielet interfejsu --- */
       /* --- walidator: aktualność wyniku --- */

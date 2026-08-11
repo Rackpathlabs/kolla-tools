@@ -92,6 +92,20 @@
       "t.import.dropped":       "Import dropped — the file is built from the form again.",
       "t.export.blocked":       "Export blocked — the configuration contains errors.",
 
+      /* --- generator: nagłówki sekcji ---
+         Rejestr: fraza rzeczownikowa, bez rodzajnika, bez kropki. Wielkie litery
+         należą do CSS, nie do treści. */
+      "g.h.params":              "Deployment parameters",
+      "g.h.import":              "Import an existing file",
+      "g.h.baseImage":           "Base image",
+      "g.h.network":             "Networking",
+      "g.h.names":               "Names and TLS",
+      "g.h.services":            "Services",
+      "g.h.octavia":             "Octavia",
+      "g.h.decisions":           "Deliberate decisions",
+      "g.h.output":              "Output",
+      "g.h.lint":                "Configuration check",
+
       /* --- walidator: szkielet interfejsu --- */
       /* --- walidator: aktualność wyniku --- */
       "v.stale.bar":           "The input has changed since this result was produced.",
