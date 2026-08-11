@@ -1115,6 +1115,28 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 /* --- walidator: raport tekstowy --- */
 /* --- walidator: kworum (KV-02) --- */
 /* --- walidator: wbudowane przykłady (jedna linia komentarza, patrz kod) --- */
+/* --- walidator: reguły wymagające obu plików (KV-01, KV-07, KV-09) ---
+         Angielskie brzmienie wzięte z rulesetu, który powstał po angielsku
+         z terminologią upstreamu — nie z tłumaczenia polskiego kodu. */
+      "v.x.kv01.msg":          { en: "<code>enable_masakari</code> and <code>enable_hacluster</code> are on, and the inventory carries no management controller field at all (<code>ipmi_*</code>, <code>bmc_*</code>, <code>drac_*</code>, <code>ilo_*</code>, <code>redfish_*</code>) — fencing has nothing to be built from.",
+                                 pl: "<code>enable_masakari</code> i <code>enable_hacluster</code> są włączone, a inventory nie zawiera ani jednego pola kontrolera zarządzania (<code>ipmi_*</code>, <code>bmc_*</code>, <code>drac_*</code>, <code>ilo_*</code>, <code>redfish_*</code>) — fencing nie ma z czego powstać." },
+      "v.x.kv01.hint":         { en: "Network isolation of a compute node — not a real host failure — looks the same to hostmonitor: it reports the host down, Masakari evacuates, Nova rebuilds the VM elsewhere, and the original QEMU is still alive holding an open RBD descriptor. Two instances write to the same Ceph volume and the guest filesystem is corrupted. Without fencing there is no way to force-release the lock. Full confidence cannot come from these two files: <code>masakari-monitors.conf</code> (<code>disable_ipmi_check</code>, true by default) and the hacluster overrides live outside them.",
+                                 pl: "Izolacja sieciowa węzła obliczeniowego — a nie prawdziwa awaria hosta — wygląda dla hostmonitora tak samo: zgłasza host jako niedostępny, Masakari ewakuuje, Nova odtwarza maszynę gdzie indziej, a pierwotny QEMU wciąż żyje i trzyma otwarty deskryptor RBD. Dwie instancje zapisują ten sam wolumen Ceph i system plików gościa zostaje uszkodzony. Bez fencingu nie ma jak wymusić zwolnienia blokady. Pełnej pewności nie da się uzyskać z tych dwóch plików: <code>masakari-monitors.conf</code> (<code>disable_ipmi_check</code>, domyślnie true) i nadpisania hacluster leżą poza nimi." },
+
+      "v.x.kv07.msg":          { en: "Group <code>[storage]</code> has {count}, and <code>globals.yml</code> does not set <code>cinder_cluster_name</code>.",
+                                 pl: "Grupa <code>[storage]</code> ma {count}, a <code>globals.yml</code> nie ustawia <code>cinder_cluster_name</code>." },
+      "v.x.kv07.hint":         { en: "This is not high availability; it is as many independent backends as there are hosts, sharing one pool. Without clustering every volume gets <code>host = &lt;node&gt;@ceph#ceph</code> in the database. Everything works, because Ceph is shared and attach goes through Nova — until that node is lost. Then <code>delete</code>, <code>extend</code>, <code>retype</code> and <code>snapshot</code> on its volumes hang in <code>deleting</code> or <code>error</code> forever, because no other cinder-volume picks them up. The fix is a manual <code>cinder-manage volume update_host</code> against a production database.",
+                                 pl: "To nie jest wysoka dostępność, tylko tyle niezależnych backendów, ile hostów, dzielących jedną pulę. Bez klastrowania każdy wolumen dostaje w bazie <code>host = &lt;węzeł&gt;@ceph#ceph</code>. Działa, bo Ceph jest współdzielony, a podłączenie idzie przez Novę — dopóki ten węzeł żyje. Po jego utracie operacje <code>delete</code>, <code>extend</code>, <code>retype</code> i <code>snapshot</code> na jego wolumenach wiszą w <code>deleting</code> albo <code>error</code> na zawsze, bo żaden inny cinder-volume ich nie przejmie. Naprawa to ręczny <code>cinder-manage volume update_host</code> na produkcyjnej bazie." },
+
+      "v.x.kv09.collision.msg": { en: "<code>{key}</code> is set to <code>{vip}</code>, which is already the address of host {hosts}.",
+                                  pl: "<code>{key}</code> ma wartość <code>{vip}</code>, która jest już adresem hosta {hosts}." },
+      "v.x.kv09.collision.hint": { en: "The deployment will pass — keepalived raises the address without asking anyone. What follows is a duplicate IP, ARP flapping and random API timeouts visible only from parts of the network.",
+                                   pl: "Wdrożenie przejdzie — keepalived podnosi adres nie pytając nikogo o zgodę. Potem: zduplikowany adres IP, migotanie ARP i losowe przekroczenia czasu w API, widoczne tylko z części sieci." },
+      "v.x.kv09.subnet.msg":   { en: "<code>{key}</code> (<code>{vip}</code>) lies outside <code>{prefix}.0/{mask}</code>, the subnet inferred from the host addresses.",
+                                 pl: "<code>{key}</code> (<code>{vip}</code>) leży poza podsiecią <code>{prefix}.0/{mask}</code> wywnioskowaną z adresów hostów." },
+      "v.x.kv09.subnet.hint":  { en: "Assumption: every <code>ansible_host</code> address sits in one subnet with a <code>/{mask}</code> mask. Inventories rarely carry masks, so this is an inference rather than a reading — under a different network layout this finding is a false alarm, and you should ignore it. If it is not: HAProxy binds, keepalived raises the address, but return routing fails outside the local segment — \"works from the control node, not from a workstation\".",
+                                 pl: "Założenie: wszystkie adresy <code>ansible_host</code> mieszczą się w jednej podsieci o masce <code>/{mask}</code>. Inventory rzadko niesie maski, więc to jest wnioskowanie, a nie odczyt — przy innym podziale sieci ten wpis jest fałszywym alarmem i należy go zignorować. Jeśli nie jest: HAProxy się zwiąże, keepalived podniesie adres, ale ruch powrotny nie znajdzie drogi spoza segmentu — „działa z węzła sterującego, nie działa ze stacji”." },
+
       "v.sample.ok":           { en: "Multinode inventory: 3 control, 2 network, 4 compute nodes",
                                  pl: "Inventory multinode: 3 wezly sterujace, 2 sieciowe, 4 obliczeniowe" },
       "v.sample.bad":          { en: "Inventory with typical mistakes - to see what the validator does",
@@ -2062,17 +2084,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         code: "KV-01-FENCING", src: "cross", line: null,
         refs: [{ src: "globals", line: gline(glob, "enable_masakari") },
                { src: "globals", line: gline(glob, "enable_hacluster") }],
-        msg: "<code>enable_masakari</code> i <code>enable_hacluster</code> są włączone, " +
-             "a inventory nie zawiera ani jednego pola kontrolera zarządzania " +
-             "(<code>ipmi_*</code>, <code>bmc_*</code>, <code>drac_*</code>, <code>ilo_*</code>, " +
-             "<code>redfish_*</code>) — fencing nie ma z czego powstać.",
-        hint: "Izolacja sieciowa węzła obliczeniowego wygląda dla hostmonitora jak jego " +
-              "awaria: Masakari ewakuuje, Nova odtwarza maszynę gdzie indziej, a pierwotny " +
-              "QEMU wciąż żyje i trzyma otwarty deskryptor RBD. Dwie instancje zapisują ten " +
-              "sam wolumen — system plików gościa zostaje uszkodzony. Bez fencingu nie ma " +
-              "jak wymusić zwolnienia blokady. Pełnej pewności nie da się uzyskać z tych " +
-              "dwóch plików: <code>masakari-monitors.conf</code> i nadpisania hacluster leżą " +
-              "poza nimi."
+        msg: T("v.x.kv01.msg"),
+        hint: T("v.x.kv01.hint")
       });
     }
 
@@ -2086,17 +2099,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         line: groupLine(groups.storage),
         refs: [{ src: "inventory", line: groupLine(groups.storage) },
                { src: "globals", line: null }],
-        msg: "Grupa <code>[storage]</code> ma " +
-             countLabel(storage.length, "host", "hosty", "hostów") +
-             ", a <code>globals.yml</code> nie ustawia <code>cinder_cluster_name</code>.",
-        hint: "To nie jest wysoka dostępność, tylko tyle niezależnych backendów, ile " +
-              "hostów, dzielących jedną pulę. Każdy wolumen dostaje w bazie " +
-              "<code>host = &lt;węzeł&gt;@ceph#ceph</code>. Działa, dopóki ten węzeł żyje — " +
-              "po jego utracie operacje <code>delete</code>, <code>extend</code>, " +
-              "<code>retype</code> i <code>snapshot</code> na jego wolumenach wiszą " +
-              "w <code>deleting</code> albo <code>error</code> na zawsze, bo żaden inny " +
-              "cinder-volume ich nie przejmie. Naprawa to ręczny " +
-              "<code>cinder-manage volume update_host</code> na produkcyjnej bazie."
+        msg: T("v.x.kv07.msg", { count: I18N.count("n.host", storage.length) }),
+        hint: T("v.x.kv07.hint")
       });
     }
 
@@ -2125,12 +2129,11 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
             code: "KV-09-VIP-KOLIZJA", src: "cross", line: byAddr[vip].line,
             refs: [{ src: "inventory", line: byAddr[vip].line },
                    { src: "globals", line: e.line }],
-            msg: "<code>" + esc(key) + "</code> ma wartość <code>" + esc(vip) +
-                 "</code>, która jest już adresem hosta " +
-                 byAddr[vip].hosts.map(function (h) { return "<code>" + esc(h) + "</code>"; }).join(", ") + ".",
-            hint: "Wdrożenie przejdzie — keepalived podnosi adres nie pytając nikogo o zgodę. " +
-                  "Potem: zduplikowany adres IP, migotanie ARP i losowe przekroczenia czasu " +
-                  "w API, widoczne tylko z części sieci."
+            msg: T("v.x.kv09.collision.msg", {
+              key: esc(key), vip: esc(vip),
+              hosts: byAddr[vip].hosts.map(function (h) { return "<code>" + esc(h) + "</code>"; }).join(", ")
+            }),
+            hint: T("v.x.kv09.collision.hint")
           });
           return;
         }
@@ -2144,15 +2147,10 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           sev: lintSevB("KV-09", "subnet", acks),
           code: "KV-09-VIP-PODSIEC", src: "cross", line: null,
           refs: [{ src: "globals", line: e.line }],
-          msg: "<code>" + esc(key) + "</code> (<code>" + esc(vip) + "</code>) leży poza " +
-               "podsiecią <code>" + esc(net.prefix) + ".0/" + net.mask + "</code> " +
-               "wywnioskowaną z adresów hostów.",
-          hint: "Założenie: wszystkie adresy <code>ansible_host</code> mieszczą się w jednej " +
-                "podsieci o masce <code>/" + net.mask + "</code>. Inventory nie niesie masek, " +
-                "więc to jest heurystyka, a nie odczyt — przy innym podziale sieci ten wpis " +
-                "jest fałszywym alarmem. Jeśli maska jest inna, zignoruj go. Jeśli nie jest: " +
-                "HAProxy się zwiąże, keepalived podniesie adres, ale ruch powrotny nie znajdzie " +
-                "drogi spoza segmentu — „działa z węzła sterującego, nie działa ze stacji”."
+          msg: T("v.x.kv09.subnet.msg", {
+            key: esc(key), vip: esc(vip), prefix: esc(net.prefix), mask: net.mask
+          }),
+          hint: T("v.x.kv09.subnet.hint", { mask: net.mask })
         });
       });
     }

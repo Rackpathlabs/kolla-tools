@@ -325,6 +325,9 @@ r = withGlobals(INV3, HA);
 ok("Masakari + hacluster bez pól BMC -> błąd", find(r, "KV-01-FENCING")[0] &&
    find(r, "KV-01-FENCING")[0].sev === "error");
 ok("wpis wskazuje oba pliki jako źródło", find(r, "KV-01-FENCING")[0].src === "cross");
+ok("KV-01 zachowuje konkret trybu awarii",
+   /RBD descriptor/.test(find(r, "KV-01-FENCING")[0].hint) &&
+   /same Ceph volume/.test(find(r, "KV-01-FENCING")[0].hint));
 ok("odsyłacz do linii w globals",
    find(r, "KV-01-FENCING")[0].refs.some(function (x) { return x.src === "globals" && x.line === 2; }));
 r = withGlobals(INV3.replace("c1 ansible_host=10.80.0.11", "c1 ansible_host=10.80.0.11 ipmi_address=10.81.0.11"), HA);
@@ -341,6 +344,9 @@ console.log("KV-07 — klastrowanie Cindera:");
 r = withGlobals(INV3, '---\nenable_cinder: "yes"\ncinder_backend_ceph: "yes"\n');
 ok("dwa hosty storage bez cinder_cluster_name -> błąd",
    find(r, "KV-07-CINDER-KLASTER")[0] && find(r, "KV-07-CINDER-KLASTER")[0].sev === "error");
+ok("KV-07 zachowuje konkret naprawy",
+   /cinder-manage volume update_host/.test(find(r, "KV-07-CINDER-KLASTER")[0].hint) &&
+   /@ceph#ceph/.test(find(r, "KV-07-CINDER-KLASTER")[0].hint));
 ok("wskazuje linię grupy w inventory i brak klucza w globals",
    find(r, "KV-07-CINDER-KLASTER")[0].refs.some(function (x) { return x.src === "inventory" && x.line > 0; }) &&
    find(r, "KV-07-CINDER-KLASTER")[0].refs.some(function (x) { return x.src === "globals" && !x.line; }));
@@ -358,9 +364,18 @@ ok("wskazuje host w inventory i klucz w globals",
 r = withGlobals(INV3, '---\nkolla_internal_vip_address: "192.168.5.9"\n');
 ok("VIP poza wnioskowaną podsiecią -> uwaga, nie błąd",
    find(r, "KV-09-VIP-PODSIEC")[0] && find(r, "KV-09-VIP-PODSIEC")[0].sev === "warn");
-ok("wpis podaje założoną maskę wprost",
+/* Maska musi paść w treści — reguła bez tego zdania jest blefem. Sprawdzamy to
+   w OBU językach, bo zgubienie zastrzeżenia w tłumaczeniu byłoby cichą utratą
+   pokory, a nie usterką kosmetyczną. */
+ok("wpis podaje założoną maskę wprost (en)",
    /10\.80\.0\.0\/24/.test(find(r, "KV-09-VIP-PODSIEC")[0].msg) &&
-   /heurystyka/.test(find(r, "KV-09-VIP-PODSIEC")[0].hint));
+   /inference rather than a reading/.test(find(r, "KV-09-VIP-PODSIEC")[0].hint));
+T.I18N.setLang("pl");
+var rPl = withGlobals(INV3, '---\nkolla_internal_vip_address: "192.168.5.9"\n');
+ok("wpis podaje założoną maskę wprost (pl)",
+   /10\.80\.0\.0\/24/.test(find(rPl, "KV-09-VIP-PODSIEC")[0].msg) &&
+   /wnioskowanie, a nie odczyt/.test(find(rPl, "KV-09-VIP-PODSIEC")[0].hint));
+T.I18N.setLang("en");
 r = withGlobals(INV3, '---\nkolla_internal_vip_address: "10.80.0.250"\n');
 ok("VIP wolny w tej samej podsieci -> cisza",
    !hasCode(r, "KV-09-VIP-KOLIZJA") && !hasCode(r, "KV-09-VIP-PODSIEC"));
