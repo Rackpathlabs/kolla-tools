@@ -110,6 +110,17 @@ no way to. Eighteen Polish notifications passed a language scan because they fir
 paths nobody invoked; forbidding a literal inside `toast()` catches them whatever language
 they are in and whoever calls them.
 
+**A check can measure the wrong thing by reporting what is correct, not only by
+letting through what is not.** Every case above runs one way — the check misses
+something. This one ran the other way, at a scale of eight hundred items. The corpus a
+completeness criterion compared against was split on spaces as well as on placeholders,
+so it consisted of single words: the commonest segments were "the", "and", "a", "is". A
+sentence from the dictionary had nothing to match, and correctly translated text was
+reported as missing. Both people looking at it had predicted the opposite failure — false
+passes from short segments — and the truth came out only because someone asked for the
+distribution of segment lengths instead of accepting the count. A number nobody has looked
+at does not belong in a commit message or in a conversation.
+
 **Parts that are each correct compose into an answer that is wrong.** A counter measuring
 translation progress filtered by file path, paired quotes to find strings, and numbered
 lines after stripping comments. Every step was defensible alone; together they hid

@@ -209,6 +209,19 @@ function writeAudited(target, srcPath, src, steps) {
   }
 }
 
+/* Sprzątanie w finally, nie na końcu szczęśliwej ścieżki. Audyt, który rzuci
+   wyjątkiem w połowie scenariusza — albo zostanie przerwany — zostawiał kopię
+   i proces przeglądarki. Po kilku takich przerwaniach w jednej sesji uzbierało
+   się kilkadziesiąt osieroconych procesów i pomiar, który wcześniej trwał
+   półtorej minuty, przestał się kończyć.
+
+   To ta sama klasa co setInterval trzymający pętlę zdarzeń Node'a: sprzątanie,
+   które wykonuje się wyłącznie wtedy, gdy nic złego się nie stało. */
+function cleanup(tmp, tmpDir) {
+  try { if (tmp) fs.unlinkSync(tmp); } catch (e) { /* nie jest wynikiem testu */ }
+  try { if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true }); } catch (e) { /* jw. */ }
+}
+
 function render(chrome, file, steps) {
   var srcPath = path.join(root, file);
   var src = fs.readFileSync(srcPath, "utf8");
@@ -226,13 +239,15 @@ function render(chrome, file, steps) {
 
   var url = "file:///" + tmp.replace(/\\/g, "/").replace(/^\//, "");
 
-  var dom = cp.execSync(
+  var dom;
+  try {
+    dom = cp.execSync(
     JSON.stringify(chrome) + " --headless --disable-gpu --no-sandbox --dump-dom" +
     " --virtual-time-budget=4000 " + JSON.stringify(url),
-    { maxBuffer: 64 * 1024 * 1024, stdio: ["ignore", "pipe", "ignore"] }).toString();
-
-  try { fs.unlinkSync(tmp); } catch (e) { /* sprzątanie nie jest wynikiem testu */ }
-  try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch (e) { /* jw. */ }
+      { maxBuffer: 64 * 1024 * 1024, stdio: ["ignore", "pipe", "ignore"] }).toString();
+  } finally {
+    cleanup(tmp, tmpDir);
+  }
 
   var m = dom.match(/<script type="application\/json" id="__audit_out">([\s\S]*?)<\/script>/);
   if (!m) throw new Error("strona nie wypisała wyniku audytu — czy JS się wykonał?");
