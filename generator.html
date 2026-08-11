@@ -592,6 +592,32 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       "hub.limits.offline":    "<strong>Everything happens in your browser.</strong> Files are never uploaded or stored, the tools make no network requests at all, and each one is a single HTML file — download it and use it offline, from <code>file://</code>.",
       "hub.limits.scope":      "<strong>The tools do not check everything</strong>, and they say so outright. Some failures do not follow from the contents of these files: deployment history, switch configuration and database state cannot be read out of YAML. <a href=\"SCOPE.md\">SCOPE.md</a> lists what is deliberately left out, where an answer is an inference rather than a fact, and what an empty result means. The document is in English.",
 
+      /* --- powiadomienia (toasty) ---
+         Trzymane w słowniku, nie wpisane w kod. Nie chodzi o wielojęzyczność —
+         narzędzia są jednojęzyczne — tylko o to, że słownik jest JEDYNYM miejscem,
+         w którym widać wszystkie komunikaty naraz, a asercja kompletności czyta
+         właśnie jego. Toast wpisany w kod jest niewidzialny dla asercji: osiemnaście
+         takich przetrwało migrację na angielski i zostało zauważonych dopiero
+         przypadkiem. Strażnik w check-english.js pilnuje, żeby nie wróciły. */
+      "t.file.read":            "Loaded {name}",
+      "t.file.failed":          "Could not read the file.",
+      "t.report.copied":        "Report copied to the clipboard.",
+      "t.report.copyFailed":    "Could not copy the report.",
+      "t.sample.ok":            "Loaded the clean example.",
+      "t.sample.bad":           "Loaded the example with problems.",
+      "t.globals.loaded":       "Loaded globals.yml — the two-file rules are on.",
+      "t.globals.cleared":      "Dropped globals.yml — the inventory rules remain.",
+      "t.parser.unsupported":   "The file uses constructs the parser does not handle.",
+      "t.import.loaded":        "Loaded {count} keys from the file.",
+      "t.copied":               "Copied to the clipboard.",
+      "t.copyFailed":           "Could not copy — select the text and press Ctrl+C.",
+      "t.download.handed":      "Handed {name} to the browser.",
+      "t.download.blocked":     "The browser blocked the download — use the Copy button.",
+      "t.defaults.restored":    "Defaults restored.",
+      "t.import.empty":         "The import field is empty.",
+      "t.import.dropped":       "Import dropped — the file is built from the form again.",
+      "t.export.blocked":       "Export blocked — the configuration contains errors.",
+
       /* --- walidator: szkielet interfejsu --- */
       "v.title":               "Rackpathlabs — multinode inventory validator (Kolla-Ansible)",
       "v.desc":                "Validator for a Kolla-Ansible multinode inventory: groups, duplicates, empty groups. Runs offline, with no external dependencies.",
@@ -2659,7 +2685,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       importFindings = found;
       setImportMode(false);
       refresh();
-      toast("Plik zawiera konstrukcje nieobsługiwane przez parser.", true);
+      toast(T("t.parser.unsupported"), true);
       return;
     }
 
@@ -2690,7 +2716,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     applyState(clean);
     setImportMode(true);
     refresh();
-    toast("Wczytano " + parsed.order.length + " kluczy z pliku.");
+    toast(T("t.import.loaded", { count: parsed.order.length }));
   }
 
   var saveTimer = null;
@@ -2754,7 +2780,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     if (navigator.clipboard && window.isSecureContext) {
       try {
         navigator.clipboard.writeText(text).then(
-          function () { toast("Skopiowano do schowka."); },
+          function () { toast(T("t.copied")); },
           function () { legacyCopy(text); }
         );
         return;
@@ -2773,7 +2799,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     var ok = false;
     try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
     document.body.removeChild(ta);
-    toast(ok ? "Skopiowano do schowka." : "Nie udało się skopiować — zaznacz treść i użyj Ctrl+C.", !ok);
+    toast(T(ok ? "t.copied" : "t.copyFailed"), !ok);
   }
 
   function download(text, filename) {
@@ -2787,9 +2813,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       a.click();
       document.body.removeChild(a);
       setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-      toast("Przekazano " + filename + " do pobrania.");
+      toast(T("t.download.handed", { name: filename }));
     } catch (e) {
-      toast("Przeglądarka zablokowała pobieranie — użyj przycisku Kopiuj.", true);
+      toast(T("t.download.blocked"), true);
     }
   }
 
@@ -2805,7 +2831,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
   document.getElementById("btn-reset").addEventListener("click", function () {
     applyState(DEFAULTS);
     clearImport();
-    toast("Przywrócono wartości domyślne.");
+    toast(T("t.defaults.restored"));
   });
 
   /* ---- import ---- */
@@ -2816,12 +2842,12 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     if (!file) return;
     var r = new FileReader();
     r.onload = function () { impSrc.value = String(r.result); doImport(String(r.result)); };
-    r.onerror = function () { toast("Nie udało się odczytać pliku.", true); };
+    r.onerror = function () { toast(T("t.file.failed"), true); };
     r.readAsText(file);
   }
 
   document.getElementById("btn-import").addEventListener("click", function () {
-    if (!impSrc.value.trim()) { toast("Pole importu jest puste.", true); return; }
+    if (!impSrc.value.trim()) { toast(T("t.import.empty"), true); return; }
     doImport(impSrc.value);
   });
   document.getElementById("btn-import-file").addEventListener("click", function () { impFile.click(); });
@@ -2831,7 +2857,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
   });
   document.getElementById("btn-import-clear").addEventListener("click", function () {
     clearImport();
-    toast("Porzucono import — plik powstaje od nowa z formularza.");
+    toast(T("t.import.dropped"));
   });
 
   ["dragenter", "dragover"].forEach(function (ev) {
@@ -2855,7 +2881,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     if (!(e.ctrlKey || e.metaKey) || !e.key) return;
     if (e.key.toLowerCase() !== "s") return;
     e.preventDefault();
-    if (hasErrors) { toast("Eksport zablokowany — konfiguracja zawiera błędy.", true); return; }
+    if (hasErrors) { toast(T("t.export.blocked"), true); return; }
     download(exportText(), "globals.yml");
   });
 

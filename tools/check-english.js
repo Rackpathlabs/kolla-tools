@@ -172,6 +172,27 @@ var body = html.slice(html.indexOf("<body"), html.indexOf("</body>"));
 body = body.replace(/<script[\s\S]*?<\/script>/g, " ").replace(/<!--[\s\S]*?-->/g, " ");
 body.replace(/<[^>]+>/g, "\n").split("\n").forEach(function (line) { addSeg("markup", line.trim()); });
 
+/* Powiadomienia MUSZĄ iść przez słownik.
+   Osiemnaście toastów wpisanych wprost w kod przetrwało całą migrację na angielski
+   i przeszło tę asercję na zielono, bo nie ma ich ani w znacznikach, ani w słowniku,
+   a padają tylko w obsłudze zdarzeń, których asercja nie wywołuje. Twierdzenie
+   „cały widoczny tekst jest po angielsku" było wtedy nieprawdziwe.
+   Skanowanie treści nic by nie dało — angielski literał wpisany w kod przeszedłby
+   tak samo. Zakazujemy więc SAMEJ KONSTRUKCJI: komunikat ma mieć klucz, bo tylko
+   wtedy widać go w słowniku, a słownik jest tym, co asercja czyta. */
+var inlineToasts = [];
+html.replace(/\btoast\(\s*(["'])/g, function (whole, q, at) {
+  var line = html.slice(0, at).split("\n").length;
+  inlineToasts.push(line + ": " + html.slice(at, at + 70).split("\n")[0]);
+  return whole;
+});
+if (inlineToasts.length) {
+  console.log("FAIL [" + mode + "] powiadomienie z literałem zamiast klucza słownika, " +
+              inlineToasts.length + " razy:");
+  inlineToasts.forEach(function (h) { console.log("  " + h); });
+  process.exit(1);
+}
+
 var hits = [], excusedCount = 0;
 segments.forEach(function (seg) {
   var plain = String(seg.text).replace(/<[^>]*>/g, " ");
