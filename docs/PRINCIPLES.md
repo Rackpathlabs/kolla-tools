@@ -34,6 +34,20 @@ This covers claims about the tool itself. "All visible text is English" was merg
 completeness statement while eighteen notification messages were still Polish, living in
 code the assertion never reached.
 
+**The name of a mechanism is a claim about its scope**, and it is held to the same
+standard as any other claim here: it may promise neither more nor less than the code does.
+Four failures in one week shared this single shape, and each looked like an isolated
+oversight until they were put side by side. A category called "the content of `<code>` and
+`<span>`" covered interface text as well as data, and excused the very words it existed to
+find. A guard described as the repository's byte-hygiene check skipped `tools/`, the
+directory holding its own source. A command meant to kill browser processes orphaned by an
+audit matched every process sharing that image name and closed the user's windows. And a
+check reporting that "the scenario changed nothing visible" compared a fingerprint that
+included the file preview, so it measured something wider than its own message.
+
+The control is one question per mechanism, and it costs a single look: what does its NAME
+cover, and what does its CODE cover. That question would have caught all four.
+
 ### Where a check has to stand, and how wide
 
 **A check nobody has seen fail is not a check.** Every guard here has been broken on
