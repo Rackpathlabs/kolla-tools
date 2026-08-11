@@ -4,7 +4,7 @@
   "globals": false,
   "findings": [
     {
-      "code": "UPGRADE-GRUPA-WYCOFANY",
+      "code": "UPGRADE-GROUP-RETIRED",
       "sev": "warn",
       "src": "inventory",
       "line": 22,
@@ -13,7 +13,7 @@
       ]
     },
     {
-      "code": "UPGRADE-GRUPA-WYCOFANY",
+      "code": "UPGRADE-GROUP-RETIRED",
       "sev": "warn",
       "src": "inventory",
       "line": 25,
@@ -22,14 +22,14 @@
       ]
     },
     {
-      "code": "UPGRADE-LUKA",
+      "code": "UPGRADE-GAP",
       "sev": "warn",
       "src": "upgrade",
       "line": null,
       "refs": []
     },
     {
-      "code": "WYDANIE",
+      "code": "RELEASE",
       "sev": "warn",
       "src": "inventory",
       "line": null,

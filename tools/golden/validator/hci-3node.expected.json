@@ -4,21 +4,21 @@
   "globals": false,
   "findings": [
     {
-      "code": "KOLOKACJA-CONTROL-COMPUTE",
+      "code": "COLLOCATION-CONTROL-COMPUTE",
       "sev": "warn",
       "src": "inventory",
       "line": 10,
       "refs": []
     },
     {
-      "code": "KOLOKACJA-NETWORK",
+      "code": "COLLOCATION-NETWORK",
       "sev": "warn",
       "src": "inventory",
       "line": 16,
       "refs": []
     },
     {
-      "code": "KOLOKACJA-STORAGE",
+      "code": "COLLOCATION-STORAGE",
       "sev": "info",
       "src": "inventory",
       "line": 13,

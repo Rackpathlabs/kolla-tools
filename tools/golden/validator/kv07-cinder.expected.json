@@ -4,7 +4,7 @@
   "globals": true,
   "findings": [
     {
-      "code": "KV-07-CINDER-KLASTER",
+      "code": "KV-07-CINDER-CLUSTER",
       "sev": "error",
       "src": "cross",
       "line": 15,

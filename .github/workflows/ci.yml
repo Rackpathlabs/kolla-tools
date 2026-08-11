@@ -41,7 +41,7 @@ jobs:
       - name: Higiena plików (bajty NUL)
         run: bash tools/check-binary.sh
 
-      - name: Słownik interfejsu (kompletność, sieroty)
+      - name: Słownik interfejsu (sieroty, puste wpisy)
         run: node tools/check-i18n.js
 
       - name: Spójność bloków współdzielonych

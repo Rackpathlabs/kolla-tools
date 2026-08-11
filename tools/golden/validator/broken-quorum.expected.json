@@ -4,35 +4,35 @@
   "globals": false,
   "findings": [
     {
-      "code": "KWORUM-LICZBA",
+      "code": "QUORUM-COUNT",
       "sev": "error",
       "src": "inventory",
       "line": 5,
       "refs": []
     },
     {
-      "code": "KWORUM-OVN",
+      "code": "QUORUM-OVN",
       "sev": "error",
       "src": "inventory",
       "line": 22,
       "refs": []
     },
     {
-      "code": "GRUPA-PRZEMIANOWANA",
+      "code": "GROUP-RENAMED",
       "sev": "error",
       "src": "inventory",
       "line": 26,
       "refs": []
     },
     {
-      "code": "BRAMA-BEZ-HA",
+      "code": "GATEWAY-NO-HA",
       "sev": "warn",
       "src": "inventory",
       "line": 9,
       "refs": []
     },
     {
-      "code": "GRUPA-WYCOFANA",
+      "code": "GROUP-RETIRED",
       "sev": "warn",
       "src": "inventory",
       "line": 29,

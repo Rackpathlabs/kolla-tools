@@ -25,26 +25,23 @@ function fail(msg) { console.log("FAIL " + msg); rc = 1; }
 
 /* Klucze czytamy z tekstu źródła, a nie przez wykonanie bloku: strażnik ma
    działać także wtedy, gdy blok jest składniowo zepsuty. */
-var entryRe = /"([A-Za-z0-9_.\-]+)":\s*\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/g;
+var entryRe = /"([A-Za-z0-9_.\-]+)":\s*("(?:[^"\\]|\\.)*")/g;
 var seen = Object.create(null);
 var keys = [];
 var m;
 
 while ((m = entryRe.exec(src)) !== null) {
   var key = m[1], body = m[2];
+  if (body === '""') fail("klucz " + key + " ma pustą treść");
   if (seen[key]) { fail("klucz zdublowany w słowniku: " + key); continue; }
   seen[key] = true;
   keys.push(key);
 
-  ["en", "pl"].forEach(function (lang) {
-    var re = new RegExp("(^|[,{\\s])" + lang + ":\\s*\"");
-    if (!re.test(body)) fail("klucz " + key + " nie ma tłumaczenia: " + lang);
-  });
-  if (/(^|[,{\s])(en|pl):\s*""/.test(body)) fail("klucz " + key + " ma puste tłumaczenie");
+
 }
 
 if (!keys.length) { fail("nie znalazłem ani jednego wpisu słownika"); }
-else { console.log("OK   " + keys.length + " kluczy, każdy w obu językach"); }
+else { console.log("OK   " + keys.length + " kluczy"); }
 
 /* --- sieroty --- */
 var consumers = ["generator.html", "validator.html", "index.html"].map(function (f) {
@@ -69,37 +66,6 @@ if (orphans.length) {
 } else {
   console.log("OK   żaden klucz nie jest sierotą");
 }
-
-/* --- pary {en, pl} w tabelach danych ---
-   Teksty żyjące przy danych (tabele reguł, macierz wydań) nie mają kluczy
-   słownika — i to jest świadoma decyzja, żeby opis nie odrywał się od rzeczy,
-   którą opisuje. Ale kompletność musi obowiązywać je tak samo: wpis z samym
-   "en" ma wywalić build dokładnie jak brakujący klucz słownika. */
-["generator.html", "validator.html", "matrix.js", "globals-parser.js"].forEach(function (file) {
-  var full = path.join(root, file);
-  if (!fs.existsSync(full)) return;
-  var text = fs.readFileSync(full, "utf8");
-  /* Blok słownika sprawdzamy osobno wyżej — tu interesują nas pary przy danych. */
-  var body = text.replace(/== KOLLA-I18N BEGIN[\s\S]*?== KOLLA-I18N END ==\s*\*\//, " ");
-
-  var re = /\ben:\s*"/g, m, lone = [];
-  while ((m = re.exec(body)) !== null) {
-    /* Para jest zapisywana jako { en: "…", pl: "…" }, więc "pl:" musi wystąpić
-       przed kolejnym "en:". Okno zamiast liczenia nawiasów, bo wartości zawierają
-       wstawki {nazwa} i licznik nawiasów by się na nich wykładał. */
-    var rest = body.slice(m.index + 1);
-    var nextEn = rest.search(/\ben:\s*"/);
-    var window = nextEn === -1 ? rest : rest.slice(0, nextEn);
-    if (!/\bpl:\s*"/.test(window)) {
-      lone.push(file + ":" + (body.slice(0, m.index).split("\n").length));
-    }
-  }
-  if (lone.length) {
-    fail("pary {en, pl} bez polskiej połowy (" + lone.length + "): " + lone.slice(0, 8).join(", "));
-  } else {
-    console.log("OK   " + file + " — pary przy danych kompletne");
-  }
-});
 
 console.log(rc === 0 ? "Słownik spójny." : "Słownik wymaga uwagi.");
 process.exit(rc);

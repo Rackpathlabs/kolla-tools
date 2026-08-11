@@ -9,7 +9,7 @@
   ],
   "findings": [
     {
-      "code": "NIEOBSLUGIWANE",
+      "code": "UNSUPPORTED",
       "sev": "error",
       "line": 3
     }

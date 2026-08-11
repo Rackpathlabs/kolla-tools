@@ -71,6 +71,13 @@ echo "== walidator =="
 "$NODE" tools/smoke/validator.test.js .val.test.tmp.js || rc=1
 
 echo
+echo "== kompletność: wyłącznie angielski =="
+extract_script index.html .idx.test.tmp.js
+"$NODE" tools/check-english.js .val.test.tmp.js validator.html validator || rc=1
+"$NODE" tools/check-english.js .gen.test.tmp.js generator.html generator || rc=1
+"$NODE" tools/check-english.js .idx.test.tmp.js index.html hub || rc=1
+
+echo
 echo "== golden: generator =="
 "$NODE" tools/golden/generator.golden.js .gen.test.tmp.js $GOLDEN_FLAG || rc=1
 
