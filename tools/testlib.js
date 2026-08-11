@@ -48,10 +48,15 @@ function installDom() {
   };
   global.window = {
     isSecureContext: false,
-    getComputedStyle: function () { return { lineHeight: "21px", fontSize: "13px" }; }
+    getComputedStyle: function () { return { lineHeight: "21px", fontSize: "13px" }; },
+    /* Walidator nasłuchuje pageshow, żeby złapać powrót z bfcache. */
+    addEventListener: function () {},
+    removeEventListener: function () {}
   };
   global.getComputedStyle = global.window.getComputedStyle;
   global.navigator = {};
+  /* run() planuje odświeżanie oznaczenia nieaktualności — stub musi mieć zegary. */
+  if (!global.setInterval) global.setInterval = function () { return 0; };
   global.localStorage = {
     _m: {},
     setItem: function (k, v) { this._m[k] = String(v); },

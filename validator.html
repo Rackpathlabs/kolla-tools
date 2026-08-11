@@ -77,6 +77,16 @@ h1{font-size:20px;margin:26px 0 4px;font-weight:600;letter-spacing:-.2px}
   padding:6px 8px;font:13px/1.3 var(--mono);cursor:pointer
 }
 .rel select:focus-visible{outline:none;border-color:var(--accent-dim);box-shadow:0 0 0 3px rgba(61,220,151,.14)}
+.stale{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid #5a4a1e;
+  background:#221d12;color:var(--amber);font-size:13px
+}
+.stale button{
+  font:inherit;font-size:12.5px;font-weight:600;color:var(--fg);background:var(--panel-2);
+  border:1px solid var(--line);border-radius:var(--r);padding:4px 10px;cursor:pointer;margin-left:auto
+}
+.stale button:hover{background:#232d38}
+.findings.stale-dim{opacity:.45}
 textarea.plain{
   width:100%;min-height:120px;padding:10px 12px;background:#0c1116;color:var(--fg);resize:vertical;
   border:0;border-top:1px solid var(--line);font:12.5px/1.6 var(--mono);display:block
@@ -227,6 +237,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           <label class="rel" for="release_to"><span data-i18n="v.releaseTo.label"></span>
             <select id="release_to" data-i18n-title="v.releaseTo.title"></select>
           </label>
+          <button type="button" class="small" id="btn-run" data-i18n="v.btn.run" data-i18n-title="v.btn.run.title"></button>
           <button type="button" class="small ghost" id="btn-clear" data-i18n="v.btn.clear"></button>
           <input type="file" id="file" accept=".ini,.yml,.yaml,.txt,text/plain" class="sr" aria-hidden="true" tabindex="-1">
         </div>
@@ -279,6 +290,10 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
             <span class="dot"></span>
             <span id="verdict-txt"></span>
             <span class="counts" id="counts"></span>
+          </div>
+          <div class="stale" id="stale" hidden>
+            <span data-i18n="v.stale.bar"></span>
+            <button type="button" id="btn-stale-run" data-i18n="v.stale.run"></button>
           </div>
           <ul class="findings" id="findings"></ul>
         </div>
@@ -1060,6 +1075,14 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
                                  pl: "<strong>Narzędzia nie sprawdzają wszystkiego</strong>, i mówią o tym wprost. Część awarii nie wynika z treści tych plików: historii wdrożenia, konfiguracji przełącznika czy stanu bazy nie da się odczytać z YAML-a. <a href=\"SCOPE.md\">SCOPE.md</a> wymienia, czego świadomie nie sprawdzamy, gdzie odpowiedzi są wnioskowaniem, a nie faktem, i co znaczy pusta lista wyników. Dokument jest po angielsku." },
 
       /* --- walidator: szkielet interfejsu --- */
+/* --- walidator: aktualność wyniku --- */
+      "v.stale.bar":           { en: "The input has changed since this result was produced.",
+                                 pl: "Wejście zmieniło się od czasu, gdy powstał ten wynik." },
+      "v.stale.run":           { en: "Analyse now", pl: "Przelicz teraz" },
+      "v.btn.run":             { en: "Analyse", pl: "Przelicz" },
+      "v.btn.run.title":       { en: "Run the analysis against the current contents of the fields",
+                                 pl: "Uruchom analizę na bieżącej treści pól" },
+
       "v.title":               { en: "Rackpathlabs — multinode inventory validator (Kolla-Ansible)",
                                  pl: "Rackpathlabs — walidator inventory multinode (Kolla-Ansible)" },
       "v.desc":                { en: "Validator for a Kolla-Ansible multinode inventory: groups, duplicates, empty groups. Runs offline, with no external dependencies.",
@@ -1374,7 +1397,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     gscope: document.getElementById("gscope"),
     chipGlobals: document.getElementById("chip-globals"),
     btnGclear: document.getElementById("btn-gclear"),
-    ackNoBmc: document.getElementById("ack_nobmc")
+    ackNoBmc: document.getElementById("ack_nobmc"),
+    stale: document.getElementById("stale"),
+    btnRun: document.getElementById("btn-run")
   };
 
   var lastReport = null;
@@ -2813,6 +2838,25 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     el.chipHosts.textContent = I18N.count("n.host", 0);
     lastReport = null;
     el.btnReport.disabled = true;
+    lastInput = inputFingerprint();
+    markStale();
+  }
+
+  /* Odcisk wejścia, na którym powstał ostatni wynik. Porównanie z bieżącym stanem
+     wykrywa KAŻDĄ zmianę, także taką, po której nie poleciało żadne zdarzenie —
+     autouzupełnianie, przywrócenie strony z bfcache, rozszerzenie przeglądarki.
+     Naprawa brakujących wyzwalaczy leczy przypadki znane; to leczy klasę. */
+  var lastInput = null;
+
+  function inputFingerprint() {
+    return [el.src.value, el.gsrc.value, el.release.value, el.releaseTo.value,
+            el.ackNoBmc.checked ? "1" : "0", I18N.getLang()].join("\u0000");
+  }
+
+  function markStale() {
+    var stale = lastInput !== null && lastInput !== inputFingerprint();
+    el.stale.hidden = !stale;
+    el.findings.classList.toggle("stale-dim", stale);
   }
 
   function run() {
@@ -2843,6 +2887,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     var tally = renderVerdict(res.findings);
     lastReport = buildReport(res, tally);
     el.btnReport.disabled = false;
+    lastInput = inputFingerprint();
+    markStale();
   }
 
   var debounceTimer = null;
@@ -2865,6 +2911,16 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
   }
 
   el.src.addEventListener("input", scheduleRun);
+  /* change łapie autouzupełnianie i zatwierdzenie wartości przy utracie ogniska,
+     po których w części przeglądarek nie leci input. */
+  el.src.addEventListener("change", scheduleRun);
+  el.gsrc.addEventListener("change", function () { globalsState(); scheduleRun(); });
+  /* Powrót do karty z bfcache przywraca treść pól bez żadnego zdarzenia wejścia. */
+  window.addEventListener("pageshow", function () { globalsState(); markStale(); });
+  /* Ostatnia siatka bezpieczeństwa: wartość pola potrafi zmienić się bez zdarzenia
+     (rozszerzenia, przywrócenie sesji). Nie przeliczamy w tle — tylko oznaczamy
+     wynik jako nieaktualny, żeby nikt nie czytał odpowiedzi na nieaktualne pytanie. */
+  setInterval(markStale, 700);
   el.src.addEventListener("scroll", function () { el.gutter.scrollTop = el.src.scrollTop; });
 
   el.findings.addEventListener("click", function (e) {
@@ -2906,6 +2962,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
     if (f) readFile(f);
   });
+
+  el.btnRun.addEventListener("click", run);
+  document.getElementById("btn-stale-run").addEventListener("click", run);
 
   el.btnReport.addEventListener("click", function () {
     if (!lastReport) return;

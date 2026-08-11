@@ -86,6 +86,14 @@
                                  pl: "<strong>Narzędzia nie sprawdzają wszystkiego</strong>, i mówią o tym wprost. Część awarii nie wynika z treści tych plików: historii wdrożenia, konfiguracji przełącznika czy stanu bazy nie da się odczytać z YAML-a. <a href=\"SCOPE.md\">SCOPE.md</a> wymienia, czego świadomie nie sprawdzamy, gdzie odpowiedzi są wnioskowaniem, a nie faktem, i co znaczy pusta lista wyników. Dokument jest po angielsku." },
 
       /* --- walidator: szkielet interfejsu --- */
+/* --- walidator: aktualność wyniku --- */
+      "v.stale.bar":           { en: "The input has changed since this result was produced.",
+                                 pl: "Wejście zmieniło się od czasu, gdy powstał ten wynik." },
+      "v.stale.run":           { en: "Analyse now", pl: "Przelicz teraz" },
+      "v.btn.run":             { en: "Analyse", pl: "Przelicz" },
+      "v.btn.run.title":       { en: "Run the analysis against the current contents of the fields",
+                                 pl: "Uruchom analizę na bieżącej treści pól" },
+
       "v.title":               { en: "Rackpathlabs — multinode inventory validator (Kolla-Ansible)",
                                  pl: "Rackpathlabs — walidator inventory multinode (Kolla-Ansible)" },
       "v.desc":                { en: "Validator for a Kolla-Ansible multinode inventory: groups, duplicates, empty groups. Runs offline, with no external dependencies.",

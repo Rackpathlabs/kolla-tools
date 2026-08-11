@@ -4,7 +4,8 @@ var lib = require("../testlib");
 lib.installDom();
 var T = lib.loadTool(process.argv[2],
   ["parse", "analyse", "buildReport", "KOLLA_MATRIX", "findRelease",
-   "defaultRelease", "SAMPLE_OK", "SAMPLE_BAD", "GLOBALS", "I18N"]);
+   "defaultRelease", "SAMPLE_OK", "SAMPLE_BAD", "GLOBALS", "I18N",
+   "inputFingerprint", "markStale"]);
 
 var R = lib.runner();
 var ok = R.ok;
@@ -554,6 +555,27 @@ var ack = bothLangs(function () {
 ok("potwierdzenie obniża wagę, a nie wycisza wpis (obie wersje)",
    ack.en.sev === "info" && ack.pl.sev === "info" &&
    ack.en.msg.length > 0 && ack.pl.msg.length > 0);
+
+/* ---- aktualność wyniku (#38) ----
+   Odcisk wejścia jest jedyną częścią rozwiązania, która chroni przed przypadkiem,
+   którego nie przewidzieliśmy: naprawa wyzwalaczy leczy znane, odcisk leczy klasę. */
+console.log("odcisk wejścia:");
+var el = { src: "src", gsrc: "gsrc", release: "release", release_to: "release_to" };
+var fp1 = T.inputFingerprint();
+ok("odcisk jest napisem", typeof fp1 === "string" && fp1.length > 0);
+document.getElementById("src").value = "[control]\nc1\n";
+ok("zmiana inventory zmienia odcisk", T.inputFingerprint() !== fp1);
+var fp2 = T.inputFingerprint();
+document.getElementById("gsrc").value = "---\nenable_masakari: \"yes\"\n";
+ok("zmiana globals zmienia odcisk", T.inputFingerprint() !== fp2);
+var fp3 = T.inputFingerprint();
+document.getElementById("release_to").value = "2026.1";
+ok("zmiana wydania docelowego zmienia odcisk", T.inputFingerprint() !== fp3);
+var fp4 = T.inputFingerprint();
+T.I18N.setLang("pl");
+ok("zmiana języka zmienia odcisk", T.inputFingerprint() !== fp4);
+T.I18N.setLang("en");
+ok("powrót języka przywraca odcisk", T.inputFingerprint() === fp4);
 
 console.log("raport:");
 var res = run("", "2026.1");
