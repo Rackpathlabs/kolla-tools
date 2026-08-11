@@ -296,6 +296,7 @@ footer a{color:var(--muted)}
                                  pl: "Rackpathlabs — narzędzia OpenStack. Pojedynczy plik HTML, bez zależności zewnętrznych, działa offline." },
 
       /* --- liczebniki: en dwie formy, pl trzy --- */
+      "n.node":                { en: "node|nodes", pl: "węzeł|węzły|węzłów" },
       "n.host":                { en: "host|hosts", pl: "host|hosty|hostów" },
       "n.error":               { en: "error|errors", pl: "błąd|błędy|błędów" },
       "n.warning":             { en: "warning|warnings", pl: "uwaga|uwagi|uwag" },
@@ -305,6 +306,60 @@ footer a{color:var(--muted)}
 /* --- walidator: reguły wymagające obu plików (KV-01, KV-07, KV-09) ---
          Angielskie brzmienie wzięte z rulesetu, który powstał po angielsku
          z terminologią upstreamu — nie z tłumaczenia polskiego kodu. */
+/* --- walidator: kolokacja ról (KV-04, KV-11) — brzmienie z rulesetu,
+         wraz z sekcjami "Not a bug when", bo to one odróżniają regułę od alarmu --- */
+/* --- walidator: reguły wydania i tryb aktualizacji --- */
+      "v.r.renamed":           { en: "was renamed to <code>{to}</code> in release <code>{rel}</code>.",
+                                 pl: "została w wydaniu <code>{rel}</code> przemianowana na <code>{to}</code>." },
+      "v.r.removed":           { en: "is no longer supported in release <code>{rel}</code>.",
+                                 pl: "nie jest już obsługiwana w wydaniu <code>{rel}</code>." },
+      "v.r.group":             { en: "Group <code>[{group}]</code> ", pl: "Grupa <code>[{group}]</code> " },
+
+      "v.q.ovnSpof.msg":       { en: "Group <code>[{group}]</code> has one host against {count} control nodes.",
+                                 pl: "Grupa <code>[{group}]</code> ma jeden host przy {count} sterujących." },
+      "v.q.ovnSpof.hint":      { en: "Allowed, but {label} becomes a single point of failure for the network control plane.",
+                                 pl: "Dopuszczalne, ale {label} staje się pojedynczym punktem awarii płaszczyzny sterowania sieci." },
+      "v.q.ceph.msg":          { en: "Group <code>[ceph-mon]</code> has {count} — Ceph monitors need an odd number, no fewer than {min}.",
+                                 pl: "Grupa <code>[ceph-mon]</code> ma {count} — monitory Ceph wymagają nieparzystej liczby, nie mniejszej niż {min}." },
+
+      "v.u.todo.renameKey":    { en: "Rename the key in globals.yml before upgrading — the old one will not be recognised.",
+                                 pl: "Zmień nazwę klucza w globals.yml przed aktualizacją — stara nie zostanie rozpoznana." },
+      "v.u.todo.renameGroup":  { en: "Rename the section in the inventory before upgrading — the old name will not be recognised.",
+                                 pl: "Zmień nazwę sekcji w inventory przed aktualizacją — stara nie zostanie rozpoznana." },
+      "v.u.gap.hint":          { en: "Changes made in {which} are not shown here — not because there were none, but because they have not been reviewed against the release notes. An empty list would look exactly like no changes, so the gap is stated outright. Read the release notes for those releases yourself.",
+                                 pl: "Zmiany wprowadzone w {which} nie są tu pokazane — nie dlatego, że ich nie było, tylko dlatego, że nie zostały przejrzane w release notes. Pusta lista wyglądałaby identycznie jak brak zmian, więc mówimy o luce wprost. Przejrzyj release notes tych wydań ręcznie." },
+      "v.u.gap.which1":        { en: "that release", pl: "tym wydaniu" },
+      "v.u.gap.whichN":        { en: "those releases", pl: "tych wydaniach" },
+
+      "v.c.ctlcmp.msg":        { en: "{n} also serves as both a control node and a compute node: {hosts}.",
+                                 pl: "{n} jednocześnie rolę sterującą i obliczeniową: {hosts}." },
+      "v.c.ctlcmp.escalated":  { en: "The <code>globals.yml</code> shows HA tooling, so the escalation condition is met and this is an error rather than a trade-off. ",
+                                 pl: "W <code>globals.yml</code> widać narzędzia HA, więc warunek eskalacji jest spełniony i to jest błąd, nie kompromis. " },
+      "v.c.ctlcmp.hint":       { en: "Without Masakari this is a valid hyperconverged layout — plan a CPU and memory reserve for the control services. With <code>enable_masakari</code> the same configuration is an error that risks data corruption: either Pacemaker Remote cannot start on a host that is already a full Corosync member, or — with <code>restrict_to_remotes = false</code> — hostmonitor treats a control node as an evacuation candidate, and a maintenance reboot makes Masakari evacuate VMs from the host running MariaDB and RabbitMQ, through an API that is currently down. Cascade.",
+                                 pl: "Bez Masakari to poprawny układ hiperkonwergentny — zaplanuj rezerwę procesora i pamięci na usługi sterowania. Z <code>enable_masakari</code> ta sama konfiguracja jest błędem grożącym uszkodzeniem danych: albo Pacemaker Remote nie wystartuje na hoście będącym już pełnym członkiem Corosync, albo — przy <code>restrict_to_remotes = false</code> — hostmonitor uzna węzeł sterujący za kandydata do ewakuacji i restart serwisowy każe Masakari ewakuować maszyny z węzła, na którym stoją MariaDB i RabbitMQ, przez API, które właśnie leży. Kaskada." },
+      "v.c.ctlcmp.needGlobals": { en: " Settling it needs the <code>globals.yml</code> — load it in the panel alongside and the tool can make the call.",
+                                  pl: " Rozstrzygnięcie wymaga <code>globals.yml</code> — wczytaj go w panelu obok, żeby narzędzie mogło je podjąć." },
+
+      "v.c.net.same.msg":      { en: "The membership of <code>[network]</code> is identical to <code>[control]</code>.",
+                                 pl: "Obsada <code>[network]</code> jest identyczna z <code>[control]</code>." },
+      "v.c.net.same.hint":     { en: "Under OVN the hosts in <code>[network]</code> get <code>enable-chassis-as-gw</code> and become gateway chassis. The default <code>[network:children] = control</code> pattern therefore pushes all north-south traffic — SNAT and non-DVR floating IPs — through the controllers. A three-VM lab never shows it; at around fifty instances <code>ovn-controller</code> competes for CPU with MariaDB and RabbitMQ, and on gateway failover BFD flaps and takes Corosync with it. Setting <code>neutron_ovn_distributed_fip: \"yes\"</code> softens the floating-IP part, but SNAT still goes through the gateway chassis. Collocation with <code>[compute]</code> is a valid pattern — the alarm is specifically about inheriting from <code>[control]</code>.",
+                                 pl: "Pod OVN hosty z <code>[network]</code> dostają <code>enable-chassis-as-gw</code> i stają się bramami. Domyślny wzorzec <code>[network:children] = control</code> przepycha więc cały ruch północ-południe — SNAT i pływające adresy bez DVR — przez kontrolery. Trzymaszynowe laboratorium tego nie pokaże; przy około pięćdziesięciu instancjach <code>ovn-controller</code> zaczyna walczyć o procesor z MariaDB i RabbitMQ, a przy przełączeniu bramy migocze BFD i pociąga za sobą Corosync. Klucz <code>neutron_ovn_distributed_fip: \"yes\"</code> łagodzi część z pływającymi adresami — SNAT nadal idzie przez bramy. Kolokacja z <code>[compute]</code> jest poprawnym wzorcem; alarm dotyczy wyłącznie dziedziczenia z <code>[control]</code>." },
+      "v.c.net.partial.msg":   { en: "Some network nodes are also control nodes: {hosts}.",
+                                 pl: "Część węzłów sieciowych to zarazem węzły sterujące: {hosts}." },
+      "v.c.net.partial.hint":  { en: "The dataplane lands on the control plane — OVN gateways share CPU with MariaDB and RabbitMQ. The effect only shows under load.",
+                                 pl: "Warstwa danych ląduje na płaszczyźnie sterowania — bramy OVN dzielą procesor z MariaDB i RabbitMQ. Skutki widać dopiero przy obciążeniu." },
+      "v.c.gw.msg":            { en: "Group <code>[network]</code> has {count} against {computeCount} compute nodes.",
+                                 pl: "Grupa <code>[network]</code> ma {count} przy {computeCount} obliczeniowych." },
+      "v.c.gw.hint":           { en: "The OVN gateway has nowhere to fail over to — losing that host takes north-south traffic for the whole cloud with it. Redundancy starts at {min} network nodes.",
+                                 pl: "Brama OVN nie ma gdzie się przełączyć — utrata tego hosta zabiera ruch północ-południe całej chmury. Redundancja zaczyna się od {min} węzłów sieciowych." },
+      "v.c.storage.msg":       { en: "{n} combines the compute and storage roles: {hosts}.",
+                                 pl: "{n} rolę obliczeniową i magazynową: {hosts}." },
+      "v.c.storage.hint":      { en: "A hyperconverged layout. Volume services compete for memory and CPU with the virtual machines — a node under memory pressure degrades storage for the whole cloud, not only for itself. Plan a resource reserve.",
+                                 pl: "Układ hiperkonwergentny. Usługi wolumenów konkurują o pamięć i procesor z maszynami wirtualnymi — węzeł pod presją pamięci degraduje magazyn dla całej chmury, nie tylko dla siebie. Zaplanuj rezerwę zasobów." },
+      "v.c.n.hostServes":      { en: "One host|{n} hosts", pl: "Host pełni|Hosty pełnią|Hostów pełni" },
+      "v.c.n.hostCombines":    { en: "One host|{n} hosts", pl: "Host łączy|Hosty łączą|Hostów łączy" },
+      "n.computeNode":         { en: "compute node|compute nodes", pl: "węźle|węzłach|węzłach" },
+
       "v.x.kv01.msg":          { en: "<code>enable_masakari</code> and <code>enable_hacluster</code> are on, and the inventory carries no management controller field at all (<code>ipmi_*</code>, <code>bmc_*</code>, <code>drac_*</code>, <code>ilo_*</code>, <code>redfish_*</code>) — fencing has nothing to be built from.",
                                  pl: "<code>enable_masakari</code> i <code>enable_hacluster</code> są włączone, a inventory nie zawiera ani jednego pola kontrolera zarządzania (<code>ipmi_*</code>, <code>bmc_*</code>, <code>drac_*</code>, <code>ilo_*</code>, <code>redfish_*</code>) — fencing nie ma z czego powstać." },
       "v.x.kv01.hint":         { en: "Network isolation of a compute node — not a real host failure — looks the same to hostmonitor: it reports the host down, Masakari evacuates, Nova rebuilds the VM elsewhere, and the original QEMU is still alive holding an open RBD descriptor. Two instances write to the same Ceph volume and the guest filesystem is corrupted. Without fencing there is no way to force-release the lock. Full confidence cannot come from these two files: <code>masakari-monitors.conf</code> (<code>disable_ipmi_check</code>, true by default) and the hacluster overrides live outside them.",

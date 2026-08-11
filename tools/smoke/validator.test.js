@@ -214,7 +214,10 @@ ok("opisany tryb awarii (kaskada Masakari)",
 ok("wpis nazywa warunek eskalacji",
    /enable_masakari/.test(find(r, "KOLOKACJA-CONTROL-COMPUTE")[0].hint));
 ok("wpis mówi, że bez Masakari to poprawny wzorzec",
-   /poprawny układ hiperkonwergentny/.test(find(r, "KOLOKACJA-CONTROL-COMPUTE")[0].hint));
+   /valid hyperconverged layout/.test(find(r, "KOLOKACJA-CONTROL-COMPUTE")[0].hint));
+ok("KV-04 zachowuje konkret kaskady",
+   /restrict_to_remotes = false/.test(find(r, "KOLOKACJA-CONTROL-COMPUTE")[0].hint) &&
+   /Cascade/.test(find(r, "KOLOKACJA-CONTROL-COMPUTE")[0].hint));
 
 /* regresja: stara reguła patrzyła na bezpośrednie członkostwo i tego nie widziała */
 r = runInv(inv(["[control]", "ctl01 ansible_host=10.0.0.11", "ctl02 ansible_host=10.0.0.12", "",
@@ -242,6 +245,8 @@ ok("[network:children] = control -> uwaga", hasCode(r, "KOLOKACJA-NETWORK"));
 ok("uwaga, nie błąd", find(r, "KOLOKACJA-NETWORK")[0].sev === "warn");
 ok("nazwany kompromis (enable-chassis-as-gw)",
    /enable-chassis-as-gw/.test(find(r, "KOLOKACJA-NETWORK")[0].hint));
+ok("KV-11 niesie wyjątek z rulesetu (kolokacja z compute jest poprawna)",
+   /valid pattern/.test(find(r, "KOLOKACJA-NETWORK")[0].hint));
 ok("wskazany klucz łagodzący",
    /neutron_ovn_distributed_fip/.test(find(r, "KOLOKACJA-NETWORK")[0].hint));
 
@@ -291,7 +296,7 @@ r = runInv(inv(["[control]", "ctl01 ansible_host=10.0.0.11", "ctl02 ansible_host
 ok("[storage] na węzłach compute -> informacja",
    find(r, "KOLOKACJA-STORAGE")[0] && find(r, "KOLOKACJA-STORAGE")[0].sev === "info");
 ok("nazwany kompromis (rezerwa zasobów)",
-   /rezerw/.test(find(r, "KOLOKACJA-STORAGE")[0].hint));
+   /resource reserve/.test(find(r, "KOLOKACJA-STORAGE")[0].hint));
 r = runInv(inv(DISJOINT));
 ok("magazyn osobno -> cisza", !hasCode(r, "KOLOKACJA-STORAGE"));
 
@@ -496,6 +501,59 @@ console.log("wbudowane przykłady w obu językach:");
   ok(pair[0] + " — struktura poniżej komentarza nietknięta",
      en.split("\n").slice(1).join("\n") === pl.split("\n").slice(1).join("\n"));
 });
+
+/* ---- teksty niosące pokorę i zastrzeżenia ----
+   Te zdania istnieją po to, żeby narzędzie nie twierdziło więcej, niż udowadnia.
+   Zgubienie któregokolwiek w tłumaczeniu nie byłoby usterką kosmetyczną, tylko
+   cichą utratą uczciwości — dlatego każde jest przypięte w OBU językach. */
+console.log("pokora i zastrzeżenia w obu językach:");
+
+function bothLangs(fn) {
+  var out = {};
+  ["en", "pl"].forEach(function (l) { T.I18N.setLang(l); out[l] = fn(); });
+  T.I18N.setLang("en");
+  return out;
+}
+
+/* Werdykt przy zerze findingów nie ma prawa twierdzić poprawności — powstał
+   właśnie po to, żeby jej NIE twierdzić. */
+var clean = bothLangs(function () { return T.I18N.t("v.verdict.clean"); });
+ok("werdykt czysty ogranicza się do zakresu narzędzia (en)",
+   /within what this tool checks/.test(clean.en), clean.en);
+ok("werdykt czysty ogranicza się do zakresu narzędzia (pl)",
+   /w zakresie sprawdzanym przez to narzędzie/.test(clean.pl), clean.pl);
+ok("werdykt czysty nie twierdzi poprawności w żadnym języku",
+   !/\bcorrect\b|\bvalid\b/i.test(clean.en) && !/poprawn/i.test(clean.pl));
+
+/* Notka o zakresie w trybie łączonym — najważniejszy tekst w interfejsie. */
+var note = bothLangs(function () { return T.I18N.t("v.scope.note"); });
+ok("notka o zakresie: pusta lista nie znaczy poprawności (en)",
+   /does not mean the file is correct/.test(note.en));
+ok("notka o zakresie: pusta lista nie znaczy poprawności (pl)",
+   /nie znaczy, że plik jest poprawny/.test(note.pl));
+ok("notka o zakresie mówi, czyją robotą jest lint globals (obie wersje)",
+   /generator/i.test(note.en) && /generator/i.test(note.pl));
+
+var gap = bothLangs(function () {
+  var r = T.analyse(T.parse(inv(["[control]", "c1 ansible_host=10.9.0.11", "c2 ansible_host=10.9.0.12",
+    "c3 ansible_host=10.9.0.13", "", "[network]", "n1 ansible_host=10.9.0.21", "n2 ansible_host=10.9.0.22", "",
+    "[compute]", "k1 ansible_host=10.9.0.31", "k2 ansible_host=10.9.0.32", "",
+    "[storage]", "s1 ansible_host=10.9.0.41", "", "[monitoring]", "m1 ansible_host=10.9.0.51", "",
+    "[murano]", "c1", ""])), "2023.1", null, {}, "2024.1");
+  return find(r, "UPGRADE-LUKA")[0];
+});
+ok("UPGRADE-LUKA mówi, że luka to brak przeglądu, nie brak zmian (en)",
+   /not because there were none/.test(gap.en.hint) && /would look exactly like no changes/.test(gap.en.hint));
+ok("UPGRADE-LUKA zachowuje to samo zastrzeżenie (pl)",
+   /nie dlatego, że ich nie było/.test(gap.pl.hint) && /wyglądałaby identycznie jak brak zmian/.test(gap.pl.hint));
+
+var ack = bothLangs(function () {
+  return find(withGlobals(INV3, '---\nenable_masakari: "yes"\nenable_hacluster: "yes"\n',
+                          { ack_nobmc: true }), "KV-01-FENCING")[0];
+});
+ok("potwierdzenie obniża wagę, a nie wycisza wpis (obie wersje)",
+   ack.en.sev === "info" && ack.pl.sev === "info" &&
+   ack.en.msg.length > 0 && ack.pl.msg.length > 0);
 
 console.log("raport:");
 var res = run("", "2026.1");
