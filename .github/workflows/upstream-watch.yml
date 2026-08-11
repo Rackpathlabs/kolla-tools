@@ -10,9 +10,16 @@ on:
     - cron: "17 6 * * 1"
   workflow_dispatch:
 
+# pull-requests: świadomie BRAK. Repozytorium ma wyłączone "Allow GitHub Actions
+# to create and approve pull requests", a GitHub wiąże tworzenie i zatwierdzanie
+# w jednym przełączniku — nie da się dać samego tworzenia. Bramką ma być człowiek,
+# więc bot nie powinien mieć technicznej możliwości bycia bramką, nawet nieużywanej.
+# Uprawnienie zostaje w repo na stałe i przeżyje każdego, kto pamięta, po co je
+# włączono; "żaden nasz workflow tego nie robi" jest twierdzeniem o dziś.
+#
+# Zamiast PR-a: watcher pushuje gałąź i zakłada zgłoszenie z gotową komendą.
 permissions:
   contents: write
-  pull-requests: write
   issues: write
 
 jobs:
@@ -60,13 +67,15 @@ jobs:
           bash tools/sync-blocks.sh
           bash tools/check-blocks.sh
 
-      # Draft, nigdy auto-merge: merge to deploy na Pages, więc bramka zostaje
-      # po stronie człowieka. PR dotyka wyłącznie matrix.js plus bloków przepisanych
-      # przez sync-blocks.sh — nigdy edycji bloku w miejscu.
-      - name: Draft PR ze zmianami mechanicznymi
+      # Gałąź, nie PR. Otwarcie PR-a to jedno wklejenie linijki dwa razy do roku,
+      # przy zmianie, którą i tak trzeba przeczytać — a alternatywą byłoby stałe
+      # uprawnienie bota do zatwierdzania PR-ów. Asymetria jest jednoznaczna.
+      #
+      # Gałąź dotyka wyłącznie matrix.js plus bloków przepisanych przez
+      # sync-blocks.sh — nigdy edycji bloku w miejscu.
+      - name: Gałąź ze zmianami mechanicznymi
+        id: branch
         if: steps.compare.outputs.rc == '1'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if git diff --quiet; then
             echo "brak zmian mechanicznych do naniesienia"; exit 0
@@ -87,8 +96,61 @@ jobs:
           } > /tmp/commit-msg.txt
           git commit -F /tmp/commit-msg.txt
           git push -u origin "$BR"
-          gh pr create --draft --title "Sync release matrix with upstream" \
-            --body "$(printf 'Automatyczne porównanie macierzy z danymi OpenStacka.\n\n```\n%s\n```\n\nNaniesione:\n\n```\n%s\n```\n\nPR dotyka wyłącznie `matrix.js`; bloki w `generator.html` i `validator.html` przepisał `tools/sync-blocks.sh`.\n\n**Draft celowo.** Merge to deploy na Pages — bramka zostaje po stronie człowieka.\n' "$(cat /tmp/report.txt)" "$(cat /tmp/applied.txt)")"
+          echo "name=$BR" >> "$GITHUB_OUTPUT"
+
+      - name: Zgłoszenie z gotową komendą
+        if: steps.branch.outputs.name != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BR: ${{ steps.branch.outputs.name }}
+        run: |
+          TITLE="Upstream drift on branch $BR — open the PR"
+
+          # Treść przez heredoc do pliku, nie przez printf z zagnieżdżonymi
+          # cudzysłowami. Komenda w treści sama zawiera cudzysłowy i backticki,
+          # a printf, w którym trzeba je uciekać, psuje się po cichu — czego
+          # dowodzi ten workflow dwa commity wstecz.
+          cat > /tmp/issue-body.md <<EOF
+          Watcher naniósł zmiany mechaniczne i wypchnął gałąź \`$BR\`.
+
+          PR-a zakłada człowiek. Bot celowo nie ma uprawnienia do tworzenia ani
+          zatwierdzania PR-ów: GitHub wiąże jedno z drugim w tym samym przełączniku,
+          a bramką ma być człowiek — więc bot nie powinien mieć technicznej
+          możliwości bycia bramką, nawet nieużywanej.
+
+          Do wklejenia:
+
+          \`\`\`bash
+          gh pr create --draft --base main --head $BR \\
+            --title "Sync release matrix with upstream"
+          \`\`\`
+
+          Naniesione:
+
+          \`\`\`
+          $(cat /tmp/applied.txt)
+          \`\`\`
+
+          Pełny raport:
+
+          \`\`\`
+          $(cat /tmp/report.txt)
+          \`\`\`
+
+          _Treść tego zgłoszenia jest nadpisywana przy każdym przebiegu._
+          EOF
+          # Wcięcie z bloku YAML-a trzeba zdjąć — inaczej wszystko byłoby blokiem kodu.
+          sed -i 's/^          //' /tmp/issue-body.md
+
+          # patrz komentarz o gh issue list niżej — to samo dotyczy tego tytułu
+          NUM="$(gh issue list --state open --limit 200 --json number,title \
+                   --jq ".[] | select(.title == \"$TITLE\") | .number" | head -1)"
+          if [ -n "$NUM" ]; then
+            gh issue edit "$NUM" --body-file /tmp/issue-body.md
+          else
+            gh issue create --title "$TITLE" --label "area:repo,p2" \
+              --body-file /tmp/issue-body.md
+          fi
 
       # Klasa 2, część ciągła: nowe noty wydania wymieniające nazwę, którą macierz
       # zna. Jedno issue o stałym tytule, którego treść jest NADPISYWANA, a nie
@@ -110,10 +172,15 @@ jobs:
           TITLE="Upstream release notes: candidates for the matrix"
           BODY="$(printf 'Noty wydania nowe w najświeższej serii, wymieniające nazwę, którą zna `matrix.js`. Słowa kluczowe pochodzą z macierzy, nie z listy w kodzie.\n\n**Cytaty są surowe.** Skrypt nie przypisuje `kind` ani `sev` — to wymaga przeczytania noty ze zrozumieniem, a zgadnięta klasyfikacja trafiłaby do reguł, o których ktoś potem założy, że ktoś je sprawdził.\n\n```\n%s\n```\n\n_Treść tego zgłoszenia jest nadpisywana przy każdym przebiegu._\n' "$(cat /tmp/notes.txt)")"
 
-          # Bez --search: dwukropek w tytule rozbija składnię kwalifikatorów, a
-          # indeks wyszukiwania jest opóźniony o minuty — świeżo założone zgłoszenie
-          # nie zostaje znalezione i przebieg zakłada drugie. Zwykła lista plus
-          # dokładne porównanie tytułu nie ma ani jednej z tych właściwości.
+          # NIE UŻYWAJ `gh issue list --search "... in:title"` DO SZUKANIA PO TYTULE.
+          # Zawodzi z dwóch NIEZALEŻNYCH powodów, więc naprawienie jednego nie
+          # wystarczy i obie awarie wyglądają tak samo: "nie znaleziono".
+          #   1. Dwukropek w tytule rozbija składnię kwalifikatorów wyszukiwania.
+          #      Tytuły tutaj mają dwukropek, bo tak się je czyta.
+          #   2. Indeks wyszukiwania jest opóźniony o minuty względem zakładania
+          #      zgłoszeń. Nawet poprawne zapytanie nie widzi świeżego wpisu.
+          # Skutek w produkcji: przebieg założył drugą kopię tego samego zgłoszenia.
+          # Zwykła lista plus dokładne porównanie tytułu nie ma żadnej z tych cech.
           NUM="$(gh issue list --state open --limit 200 --json number,title \
                    --jq ".[] | select(.title == \"$TITLE\") | .number" | head -1)"
           if [ -n "$NUM" ]; then
