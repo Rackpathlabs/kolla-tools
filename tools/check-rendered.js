@@ -90,18 +90,38 @@ var AUDIT = [
   "</" + "script>"
 ].join("\n");
 
+/* Kopia mierzona przez audyt musi różnić się od pliku w repozytorium WYŁĄCZNIE
+   wstrzykniętym blokiem. Czytamy ją z powrotem z dysku, wycinamy blok i porównujemy
+   bajtowo ze źródłem. Bez tego "audyt przeszedł" znaczyłoby "przeszedł na czymś, co
+   powstało z pliku" — a im więcej wstrzykujemy (kolektor, potem scenariusze:
+   kliknięcia, podstawienia, zmiany wyboru), tym bliżej do zielonego wyniku
+   dotyczącego czegoś, czego nikt nie wdroży.
+
+   Gwarancja jest konstrukcyjna, nie dyscyplinarna: nie da się o niej zapomnieć
+   przy dopisywaniu kolejnego kroku scenariusza. */
+function writeAudited(target, srcPath, src) {
+  fs.writeFileSync(target, src.replace("</body>", AUDIT + "\n</body>"));
+  var back = fs.readFileSync(target, "utf8");
+  var stripped = Buffer.from(back.replace(AUDIT + "\n", ""), "utf8");
+  if (Buffer.compare(stripped, fs.readFileSync(srcPath)) !== 0) {
+    throw new Error("kopia różni się od źródła nie tylko wstrzykniętym blokiem — " +
+                    "audyt mierzyłby plik, którego nikt nie wdroży");
+  }
+}
+
 function render(chrome, file) {
-  var src = fs.readFileSync(path.join(root, file), "utf8");
+  var srcPath = path.join(root, file);
+  var src = fs.readFileSync(srcPath, "utf8");
   var tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "kolla-render-"));
   var tmp = path.join(tmpDir, file);
-  fs.writeFileSync(tmp, src.replace("</body>", AUDIT + "\n</body>"));
+  writeAudited(tmp, srcPath, src);
 
   /* Chrome pod Windowsem nie zobaczy ścieżki /tmp/... z WSL-a — w tym układzie
      kopia musi powstać w drzewie repozytorium, które widzą obie strony. */
   var winChrome = /\.exe$/i.test(chrome);
   if (winChrome) {
     tmp = path.join(root, ".render-audit.tmp.html");
-    fs.writeFileSync(tmp, src.replace("</body>", AUDIT + "\n</body>"));
+    writeAudited(tmp, srcPath, src);
   }
 
   var url = "file:///" + tmp.replace(/\\/g, "/").replace(/^\//, "");
