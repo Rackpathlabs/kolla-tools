@@ -30,6 +30,9 @@ for f in generator.html validator.html index.html matrix.js globals-parser.js th
     echo "FAIL $f: $n bajtów NUL"; rc=1; continue
   fi
 
+  # Nazwy zamiast samych znaków SĄ KONIECZNE, nie ozdobne: ten plik jest w zakresie
+  # własnej kontroli, więc dosłowny separator w komentarzu wywala strażnika na jego
+  # własnym źródle. Czytelniej byłoby wpisać znak — i nie dałoby się tego zacommitować.
   # Ta sama klasa pomyłki co NUL, tylko trudniejsza do zobaczenia: escape U+0085,
   # U+2028 albo U+2029 zapisany jako znak dosłowny. U+2028 i U+2029 są w JavaScripcie
   # separatorami linii — w literale wyrażenia regularnego dają błąd składni, a w

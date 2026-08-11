@@ -63,6 +63,22 @@ unchanged numbers as agreement would have been the staleness probe again: a corr
 to a different question. The only defence is to know what ought to be in view and check
 that it was, which no amount of deliberate breakage can substitute for.
 
+**The tooling is part of the system, not something beside it.** Production code here has
+golden files, guards and three hundred assertions. The tooling had none of that, and it is
+the tooling that failed: a progress counter three times over, a probe that read an
+attribute instead of the screen, a set of exception categories that excused the very text
+they were built to find, and two NUL bytes that sat in a guard's own source while the one
+check written for NUL bytes did not look at the directory it lived in. Six failures, none
+of them in the product.
+
+The pattern is always the same. A scope looks reasonable — artefacts and shared sources —
+and nobody questions it, exactly as nobody questioned a category that excused "the content
+of <code> and <span>". So the question has to be asked of every guard in turn, and asked
+about what it actually covers rather than what it was meant to cover: is the tooling in
+scope, and if not, is that a decision or an oversight? For some the answer is a clean no —
+a content-security policy has nothing to say about a CI script. For others it is a hole
+that has been open since the guard was written.
+
 **An assertion answers a question someone asked; a golden file answers questions nobody
 asked.** Targeted assertions cover the cases their author thought of, which is exactly
 their blind spot. A duplicated quorum rule once produced two findings for one fault at two
