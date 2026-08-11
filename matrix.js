@@ -277,7 +277,7 @@
          której nikt już nie testuje. */
       { id: "2023.2", name: "Bobcat",   kolla: "17.x", status: "eol", released: "2023-10-04", expected: null, endsOn: "2025-04-30",
         baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecationsCatalogued: false, deprecated: [] },
-      { id: "2023.1", name: "Antelope", kolla: "16.x", status: "eol", released: "2023-03-22", expected: null, endsOn: null,
+      { id: "2023.1", name: "Antelope", kolla: "16.x", status: "unmaintained", released: "2023-03-22", expected: null, endsOn: null,
         baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecationsCatalogued: false, deprecated: [] },
       { id: "zed",    name: "Zed",      kolla: "15.x", status: "unmaintained", released: "2022-10-05", expected: null, endsOn: null,
         baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecationsCatalogued: false, deprecated: [] },
