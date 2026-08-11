@@ -152,6 +152,21 @@ var AUDIT = [
   '  setTimeout(function () {',
   '    try { /*__STEPS__*/ } catch (e) { document.title = "SCENARIUSZ PADŁ: " + e.message; }',
   '    var out = { visibleHidden: [], texts: [] };',
+  /* Wejscie czytamy PO wykonaniu scenariusza, prosto z pol — dzieki temu dziala
+     takze dla scenariuszy klikajacych wbudowane przyklady, ktorych tresci
+     uruchamiajacy nie zna. */
+  '    var INPUT_TOKENS = {};',
+  '    ["src", "gsrc"].forEach(function (id) {',
+  '      var e = document.getElementById(id);',
+  '      if (!e || !e.value) return;',
+  '      e.value.split(/\\s+/).forEach(function (w) {',
+  '        if (!w) return;',
+  '        INPUT_TOKENS[w] = 1;',
+  '        INPUT_TOKENS[w.replace(/^\\[|\\]$/g, "")] = 1;',
+  '        var eq = w.indexOf("=");',
+  '        if (eq > 0) { INPUT_TOKENS[w.slice(0, eq)] = 1; INPUT_TOKENS[w.slice(eq + 1)] = 1; }',
+  '      });',
+  '    });',
   '    var all = document.querySelectorAll("[hidden]");',
   '    for (var i = 0; i < all.length; i++) {',
   '      var e = all[i], cs = getComputedStyle(e);',
@@ -182,7 +197,16 @@ var AUDIT = [
      wejścia. To przodek rozstrzyga, nie znacznik — <span class="s"> w podglądzie to
      dane, <span class="sev"> na liście findingów to interfejs. */
   '      var inData = !!p.closest("#out, #src, #gsrc, .editor, .yaml");',
-  '      out.texts.push({ tag: p.tagName, cls: p.className || "", text: own, inData: inData });',
+  /* POCHODZENIE, nie polozenie. Napis jest danymi, jesli KAZDY jego token wystepuje
+     doslownie w tym, co scenariusz wprowadzil do pol wejsciowych. Kryterium obejmuje
+     kazde miejsce, w ktorym tresc uzytkownika wychodzi na ekran — takze widoki,
+     ktorych jeszcze nie ma. Lista kontenerow starzala sie przy kazdym nowym widoku
+     i zestarzala sie dwa razy. Dopasowanie po CALYCH tokenach, nie po podciagu:
+     inaczej "control" z [control] zwolniloby kazdy napis zawierajacy to slowo. */
+  '      var fromInput = own.split(/\\s+/).length > 0 && own.split(/\\s+/).every(function (w) {',
+  '        return w.length === 0 || INPUT_TOKENS[w];',
+  '      });',
+  '      out.texts.push({ tag: p.tagName, cls: p.className || "", text: own, inData: inData, fromInput: fromInput });',
   '    }',
   '    var box = document.createElement("script");',
   '    box.type = "application/json";',

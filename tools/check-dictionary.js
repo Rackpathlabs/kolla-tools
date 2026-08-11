@@ -110,6 +110,12 @@ var CATEGORIES = [
      i zwalniała 1922 napisy, w tym „błąd", „wymagane" i „uwaga" — czyli dokładnie
      tę polszczyznę, której kryterium miało szukać. Lista znaczników nie da się
      obronić; zdanie o przodku tak. */
+  /* POCHODZENIE. Kategoria kontenerowa zostaje NIZEJ jako szybsza sciezka, ale
+     liczniki obu sa raportowane osobno — jesli kontenerowa zwalnia cokolwiek,
+     czego ta nie zwalnia, mamy dwie definicje jednej rzeczy i trzeba wybrac. */
+  { why: "dane po POCHODZENIU: treść wprowadzona przez scenariusz do pól",
+    test: function (f) { return f.fromInput === true; } },
+
   { why: "dane: treść podglądu pliku i edytora wejścia",
     test: function (f) { return f.inData === true; } },
 
@@ -161,7 +167,7 @@ report.forEach(function (f) {
   var t = String(f.text).replace(/\s+/g, " ").trim();
   if (!t) return;
   total++;
-  var cat = excused({ tag: f.tag, text: t, inData: f.inData });
+  var cat = excused({ tag: f.tag, text: t, inData: f.inData, fromInput: f.fromInput });
   if (cat) { byCategory[cat.why] = (byCategory[cat.why] || 0) + 1; ok++; return; }
   var low = norm(t);
   for (var i = 0; i < SEGS.length; i++) {
