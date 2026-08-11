@@ -39,6 +39,16 @@ var root = path.join(__dirname, "..");
 /* ---- korpus ze słownika ---------------------------------------------------- */
 /* Wpisy niosą znaczniki i wstawki {name}. Tniemy na segmenty literalne: to one,
    a nie całe wpisy, pojawiają się na ekranie po podstawieniu. */
+/* Liczby znikaja z OBU stron przed porownaniem.
+   "5 hosts" i "0 hosts" sprowadzaja sie do "hosts", ktore w slowniku jest — a igla
+   dluzsza od siana przestaje byc powodem falszywego braku. Nic to nie przepuszcza:
+   "5 bledow" normalizuje sie do "bledow", ktorego w slowniku nie ma, wiec dalej jest
+   niepokryte. Fixtura pilnuje obu polowek naraz, wiec poluzowanie kryterium nie jest
+   wyjsciem — jedynym wyjsciem jest zrobic to poprawnie. */
+function norm(t) {
+  return String(t).replace(/[0-9]+/g, " ").replace(/\s+/g, " ").trim().toLowerCase();
+}
+
 function corpus() {
   var s = fs.readFileSync(path.join(root, "i18n.js"), "utf8");
   var segs = [], m;
@@ -47,7 +57,7 @@ function corpus() {
     var joined = m[1].replace(/"\s*\+\s*"/g, "").replace(/^"|"\s*$/g, "");
     joined.replace(/<[^>]+>/g, " ").split(/\{[^}]*\}| |\|/).forEach(function (seg) {
       seg = seg.replace(/\\"/g, '"').replace(/\s+/g, " ").trim();
-      if (seg) segs.push(seg.toLowerCase());
+      if (seg) segs.push(norm(seg));
     });
   }
   return segs;
@@ -115,7 +125,7 @@ report.forEach(function (f) {
   total++;
   var cat = excused({ tag: f.tag, text: t, inData: f.inData });
   if (cat) { byCategory[cat.why] = (byCategory[cat.why] || 0) + 1; ok++; return; }
-  var low = t.toLowerCase();
+  var low = norm(t);
   for (var i = 0; i < SEGS.length; i++) {
     if (wordsIn(SEGS[i], low)) { ok++; return; }
   }
