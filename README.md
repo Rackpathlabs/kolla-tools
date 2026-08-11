@@ -5,9 +5,6 @@ multinode inventory. Both run entirely in your browser, as single HTML files.
 
 **[rackpathlabs.github.io/kolla-tools](https://rackpathlabs.github.io/kolla-tools/)**
 
-> The tool interfaces are in Polish. This README, [SCOPE.md](SCOPE.md) and the issue
-> tracker are in English.
-
 ## The tools
 
 ### Generator — `globals.yml`
