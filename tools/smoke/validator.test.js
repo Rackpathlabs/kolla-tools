@@ -4,7 +4,7 @@ var lib = require("../testlib");
 lib.installDom();
 var T = lib.loadTool(process.argv[2],
   ["parse", "analyse", "buildReport", "KOLLA_MATRIX", "findRelease",
-   "defaultRelease", "SAMPLE_OK", "GLOBALS"]);
+   "defaultRelease", "SAMPLE_OK", "GLOBALS", "I18N"]);
 
 var R = lib.runner();
 var ok = R.ok;
@@ -91,8 +91,12 @@ r = runInv(inv(["[control]", "ctl01 ansible_host=10.0.0.11", "ctl02 ansible_host
                 "[network]", "ctl01", "", "[compute]", "cmp01 ansible_host=10.0.0.21", "",
                 "[storage]", "cmp01", "", "[monitoring]", "ctl01", ""]));
 ok("2 węzły -> błąd", find(r, "KWORUM-LICZBA")[0] && find(r, "KWORUM-LICZBA")[0].sev === "error");
-ok("2 węzły -> komunikat o parzystości", /liczba parzysta/.test(find(r, "KWORUM-LICZBA")[0].msg));
+ok("2 węzły -> komunikat o parzystości (domyślnie po angielsku)",
+   /an even number/.test(find(r, "KWORUM-LICZBA")[0].msg), find(r, "KWORUM-LICZBA")[0].msg);
 ok("2 węzły -> opisany tryb awarii", /non-Primary/.test(find(r, "KWORUM-LICZBA")[0].hint));
+ok("konkret trybu awarii zachowany w tłumaczeniu",
+   /read-only/.test(find(r, "KWORUM-LICZBA")[0].hint) &&
+   /returns 500/.test(find(r, "KWORUM-LICZBA")[0].hint));
 
 r = runInv(inv(["[control]", "ctl[01:04] ansible_host=10.0.0.1[1:4]", "",
                 "[network]", "ctl01", "", "[compute]", "cmp01 ansible_host=10.0.0.21", "",
@@ -426,10 +430,53 @@ ok("ten sam klucz na ścieżce -> zgłoszony raz przez tryb aktualizacji",
    mentioning(r, "letsencrypt_cert_server").length === 1 &&
    hasCode(r, "UPGRADE-KLUCZ-PRZEMIANOWANY"));
 
+/* ---- niezależność wyniku od języka ---- */
+console.log("dwa języki, ten sam wynik:")
+var CASES = [
+  inv(CTL3.concat(["[mariadb]", "ctl01", "ctl02", ""])),
+  inv(["[control]", "ctl01 ansible_host=10.0.0.11", "ctl02 ansible_host=10.0.0.12", "",
+       "[network]", "ctl01", "", "[compute]", "cmp01 ansible_host=10.0.0.21", "",
+       "[storage]", "cmp01", "", "[monitoring]", "ctl01", ""]),
+  inv(CTL3.concat(["[zun]", "cmp01", ""]))
+];
+function shapeOf(text) {
+  return T.analyse(T.parse(text), "2026.1", null, {}).findings
+    .map(function (f) { return f.code + "/" + f.sev + "/" + f.src + "/" + f.line; }).join(";");
+}
+function proseOf(text) {
+  return T.analyse(T.parse(text), "2026.1", null, {}).findings
+    .map(function (f) { return f.msg + "|" + (f.hint || ""); }).join(";");
+}
+/* Kształt wyniku sprawdzamy na wszystkich przypadkach — musi być niezależny od
+   języka już teraz. Różnicę treści sprawdzamy na razie na rodzinach, które są
+   przetłumaczone; ta lista rośnie razem z etapem 2 i na jego koniec obejmie
+   wszystkie przypadki. Póki co jej zawężenie jest jawne, a nie przemilczane. */
+var TRANSLATED = [CASES[0]];
+var sameShape = true, differentProse = true;
+CASES.forEach(function (c) {
+  T.I18N.setLang("en"); var en = shapeOf(c), enP = proseOf(c);
+  T.I18N.setLang("pl"); var pl = shapeOf(c), plP = proseOf(c);
+  if (en !== pl) sameShape = false;
+  if (TRANSLATED.indexOf(c) !== -1 && enP === plP) differentProse = false;
+});
+T.I18N.setLang("en");
+ok("kody, wagi, źródła i linie identyczne w obu językach", sameShape);
+ok("treść komunikatów faktycznie się różni (rodziny przetłumaczone)", differentProse);
+
 console.log("raport:");
 var res = run("", "2026.1");
 var rep = T.buildReport(res, { e: 0, w: 0, i: 0 });
-ok("zawiera wiersz z wydaniem", /Wydanie: 2026\.1 Gazpacho \(kolla-ansible 22\.x\)/.test(rep),
+ok("zawiera wiersz z wydaniem", /Release: 2026\.1 Gazpacho \(kolla-ansible 22\.x\)/.test(rep),
    rep.split("\n").slice(0, 6).join(" | "));
+/* Etykieta języka zostaje po angielsku w obu wersjach — to metadane dla kogoś,
+   kto nie zna języka reszty dokumentu. Wartość jest kodem ISO. */
+ok("raport niesie język, w którym powstał", /^Language: en$/m.test(rep));
+T.I18N.setLang("pl");
+var repPl = T.buildReport(res, { e: 0, w: 0, i: 0 });
+ok("po polsku etykieta nadal angielska, wartość to kod", /^Language: pl$/m.test(repPl));
+ok("reszta nagłówka tłumaczy się normalnie", /Wydanie: 2026\.1 Gazpacho/.test(repPl));
+ok("kody reguł nie zależą od języka",
+   T.analyse(T.parse(INV3), "2026.1", null, {}).findings.map(function (f) { return f.code; }).join(",") ===
+   (T.I18N.setLang("en"), T.analyse(T.parse(INV3), "2026.1", null, {}).findings.map(function (f) { return f.code; }).join(",")));
 
 R.finish();

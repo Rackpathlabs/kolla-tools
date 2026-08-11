@@ -1112,6 +1112,44 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       "n.host":                { en: "host|hosts", pl: "host|hosty|hostów" },
       "n.error":               { en: "error|errors", pl: "błąd|błędy|błędów" },
       "n.warning":             { en: "warning|warnings", pl: "uwaga|uwagi|uwag" },
+/* --- walidator: raport tekstowy --- */
+/* --- walidator: kworum (KV-02) --- */
+      "v.q.aio.msg":           { en: "All-in-one inventory: the only host in <code>[control]</code> is also a compute node.",
+                                 pl: "Inventory all-in-one: jedyny host w <code>[control]</code> pełni równocześnie rolę obliczeniową." },
+      "v.q.aio.hint":          { en: "A lab layout — the absence of high availability is a choice here, not a fault. A production deployment needs at least {min} control nodes.",
+                                 pl: "Układ laboratoryjny — brak wysokiej dostępności jest tu wyborem, nie usterką. Do wdrożenia produkcyjnego potrzebne są co najmniej {min} węzły sterujące." },
+      "v.q.single.msg":        { en: "Group <code>[{group}]</code> has one host — {label} has neither quorum nor redundancy.",
+                                 pl: "Grupa <code>[{group}]</code> ma jeden host — {label} nie ma kworum ani redundancji." },
+      "v.q.needOdd":           { en: "An odd number of hosts is required, no fewer than {min}.",
+                                 pl: "Wymagana nieparzysta liczba hostów, nie mniejsza niż {min}." },
+      "v.q.count.msg":         { en: "Group <code>[{group}]</code> has {count} — {reason} for quorum ({label}).",
+                                 pl: "Grupa <code>[{group}]</code> ma {count} — {reason} dla kworum ({label})." },
+      "v.q.even":              { en: "an even number", pl: "liczba parzysta" },
+      "v.q.tooFew":            { en: "too few", pl: "za mało" },
+
+      "v.rep.title":           { en: "Rackpathlabs — multinode inventory validation report",
+                                 pl: "Rackpathlabs — raport walidacji inventory multinode" },
+      "v.rep.hosts":           { en: "Hosts: {hosts}   Groups: {groups}",
+                                 pl: "Hosty: {hosts}   Grupy: {groups}" },
+      "v.rep.path":            { en: "Upgrade path: {from} -> {to}",
+                                 pl: "Ścieżka aktualizacji: {from} -> {to}" },
+      "v.rep.globalsYes":      { en: "globals.yml: loaded — the rules needing both files are active",
+                                 pl: "globals.yml: wczytany — działają też reguły wymagające obu plików" },
+      "v.rep.globalsNo":       { en: "globals.yml: not loaded — inventory rules only",
+                                 pl: "globals.yml: nie wczytano — wyłącznie reguły inventory" },
+      "v.rep.release":         { en: "Release: {id} {name}{kolla}", pl: "Wydanie: {id} {name}{kolla}" },
+      "v.rep.result":          { en: "Result: {errors}, {warnings}, {info} info",
+                                 pl: "Wynik: {errors}, {warnings}, {info} info" },
+      "v.rep.clean":           { en: "No problems found.", pl: "Nie wykryto problemów." },
+      "v.rep.topology":        { en: "Topology:", pl: "Topologia:" },
+      "v.rep.absent":          { en: "group not present", pl: "grupa nie występuje" },
+      "v.rep.refLine":         { en: "line {line}", pl: "linia {line}" },
+      "v.rep.refMissing":      { en: "key absent", pl: "klucza brak" },
+      "v.rep.both":            { en: "both", pl: "oba" },
+      "v.sev.error":           { en: "ERROR", pl: "BŁĄD " },
+      "v.sev.warn":            { en: "WARN ", pl: "UWAGA" },
+      "v.sev.info":            { en: "INFO ", pl: "INFO " },
+
       "v.verdict.errors":      { en: "The inventory contains errors that block deployment.",
                                  pl: "Inventory zawiera błędy blokujące wdrożenie." },
       "v.verdict.warnings":    { en: "Syntax is valid — there are warnings to review.",
@@ -1577,31 +1615,36 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
   /* Grupy niosące własne kworum. Sprawdzane osobno, bo w inventory potrafią
      dostać własną obsadę zamiast dziedziczyć z [control]. */
   var QUORUM_GROUPS = [
-    { name: "control", label: "płaszczyzna sterowania",
-      why: "Na tej samej liście hostów stoją trzy niezależne mechanizmy kworum: " +
-           "Galera, kolejki quorum RabbitMQ i Corosync.",
-      fail: "Przy dwóch węzłach utrata jednego wprowadza Galerę w stan non-Primary — " +
-            "baza przechodzi w tryb tylko do odczytu, a każde zapisujące wywołanie API " +
-            "kończy się błędem 500. Przy czterech utrata dwóch (jedna szafa, jeden " +
-            "przełącznik) zabija kworum, mimo że dwa sprawne węzły zostają. Ujawnia się " +
-            "przy pierwszym prawdziwym przełączeniu albo podczas kolejkowego restartu " +
-            "przy aktualizacjach." },
-    { name: "mariadb", label: "Galera",
-      why: "Grupa ma własną obsadę zamiast dziedziczyć z <code>[control]</code>.",
-      fail: "Utrata połowy węzłów wprowadza klaster w stan non-Primary — baza staje się " +
-            "tylko do odczytu." },
-    { name: "rabbitmq", label: "RabbitMQ",
-      why: "Grupa ma własną obsadę zamiast dziedziczyć z <code>[control]</code>.",
-      fail: "Kolejki quorum wymagają większości. Bez niej publikacja wiadomości blokuje " +
-            "się, a wywołania RPC między usługami wygasają." },
-    { name: "hacluster", label: "Corosync/Pacemaker",
-      why: "Grupa ma własną obsadę zamiast dziedziczyć z <code>[control]</code>.",
-      fail: "Parzysty klaster Corosync przy podziale sieci nie wyłoni większości — " +
-            "żadna połowa nie przejmie zasobów." },
-    { name: "etcd", label: "etcd",
-      why: "Grupa ma własną obsadę zamiast dziedziczyć z <code>[control]</code>.",
-      fail: "etcd bez większości przechodzi w tryb tylko do odczytu — usługi tracące " +
-            "z nim łączność nie zapiszą stanu." }
+    { name: "control",
+      label: { en: "the control plane", pl: "płaszczyzna sterowania" },
+      why: { en: "Three independent quorum mechanisms ride on this one host list: Galera, RabbitMQ quorum queues and Corosync.",
+             pl: "Na tej samej liście hostów stoją trzy niezależne mechanizmy kworum: Galera, kolejki quorum RabbitMQ i Corosync." },
+      fail: { en: "With two nodes, losing one puts Galera into non-Primary — the database goes read-only and every write API call returns 500. With four, losing two (one rack, one switch) kills quorum even though two healthy nodes remain. It surfaces at the first real failover, or during a rolling reboot while patching.",
+              pl: "Przy dwóch węzłach utrata jednego wprowadza Galerę w stan non-Primary — baza przechodzi w tryb tylko do odczytu, a każde zapisujące wywołanie API kończy się błędem 500. Przy czterech utrata dwóch (jedna szafa, jeden przełącznik) zabija kworum, mimo że dwa sprawne węzły zostają. Ujawnia się przy pierwszym prawdziwym przełączeniu albo podczas kolejkowego restartu przy aktualizacjach." } },
+    { name: "mariadb",
+      label: { en: "Galera", pl: "Galera" },
+      why: { en: "The group carries its own membership instead of inheriting from <code>[control]</code>.",
+             pl: "Grupa ma własną obsadę zamiast dziedziczyć z <code>[control]</code>." },
+      fail: { en: "Losing half the nodes puts the cluster into non-Primary — the database goes read-only.",
+              pl: "Utrata połowy węzłów wprowadza klaster w stan non-Primary — baza staje się tylko do odczytu." } },
+    { name: "rabbitmq",
+      label: { en: "RabbitMQ", pl: "RabbitMQ" },
+      why: { en: "The group carries its own membership instead of inheriting from <code>[control]</code>.",
+             pl: "Grupa ma własną obsadę zamiast dziedziczyć z <code>[control]</code>." },
+      fail: { en: "Quorum queues need a majority. Without one, publishing blocks and RPC calls between services time out.",
+              pl: "Kolejki quorum wymagają większości. Bez niej publikacja wiadomości blokuje się, a wywołania RPC między usługami wygasają." } },
+    { name: "hacluster",
+      label: { en: "Corosync/Pacemaker", pl: "Corosync/Pacemaker" },
+      why: { en: "The group carries its own membership instead of inheriting from <code>[control]</code>.",
+             pl: "Grupa ma własną obsadę zamiast dziedziczyć z <code>[control]</code>." },
+      fail: { en: "An even Corosync cluster cannot form a majority under a network partition — neither half takes over the resources.",
+              pl: "Parzysty klaster Corosync przy podziale sieci nie wyłoni większości — żadna połowa nie przejmie zasobów." } },
+    { name: "etcd",
+      label: { en: "etcd", pl: "etcd" },
+      why: { en: "The group carries its own membership instead of inheriting from <code>[control]</code>.",
+             pl: "Grupa ma własną obsadę zamiast dziedziczyć z <code>[control]</code>." },
+      fail: { en: "Without a majority etcd goes read-only — services that lose contact with it cannot persist state.",
+              pl: "etcd bez większości przechodzi w tryb tylko do odczytu — usługi tracące z nim łączność nie zapiszą stanu." } }
   ];
 
   /* W referencyjnym inventory [ovn-nb-db] i [ovn-sb-db] dziedziczą z [ovn-database],
@@ -1609,10 +1652,24 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
      tylko wtedy, gdy ktoś nadał im własną listę — inaczej ten sam błąd zgłosiłby się
      trzy razy. */
   var OVN_DB_GROUPS = [
-    { name: "ovn-database", label: "bazy OVN", base: true },
-    { name: "ovn-nb-db", label: "baza northbound OVN" },
-    { name: "ovn-sb-db", label: "baza southbound OVN" }
+    { name: "ovn-database", base: true,
+      label: { en: "the OVN databases", pl: "bazy OVN" } },
+    { name: "ovn-nb-db",
+      label: { en: "the OVN northbound database", pl: "baza northbound OVN" } },
+    { name: "ovn-sb-db",
+      label: { en: "the OVN southbound database", pl: "baza southbound OVN" } }
   ];
+
+  /* Teksty żyjące w tabelach danych trzymają pary {en, pl} przy wartości, zamiast
+     chować się za kluczami słownika — dzięki temu opis nie odrywa się od rzeczy,
+     którą opisuje. L() wyciąga właściwy język; strażnik kompletności pilnuje,
+     żeby każda para miała oba. */
+  function L(value) {
+    if (value === null || value === undefined) return "";
+    if (typeof value === "string") return value;
+    var v = value[I18N.getLang()];
+    return (v === undefined || v === null) ? (value.en || "") : v;
+  }
 
   function sameSet(a, b) {
     if (!a || !b || a.length !== b.length) return false;
@@ -1649,31 +1706,27 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       if (n === 1) {
         if (spec.name === "control" && aio) {
           out.push({ sev: "info", code: "KWORUM-AIO",
-            msg: "Inventory all-in-one: jedyny host w <code>[control]</code> pełni " +
-                 "równocześnie rolę obliczeniową.",
-            line: line,
-            hint: "Układ laboratoryjny — brak wysokiej dostępności jest tu wyborem, " +
-                  "nie usterką. Do wdrożenia produkcyjnego potrzebne są co najmniej " +
-                  QUORUM.minOdd + " węzły sterujące." });
+            msg: T("v.q.aio.msg"), line: line,
+            hint: T("v.q.aio.hint", { min: QUORUM.minOdd }) });
         } else {
           out.push({ sev: "error", code: "KWORUM-LICZBA",
-            msg: "Grupa <code>[" + esc(spec.name) + "]</code> ma jeden host — " +
-                 spec.label + " nie ma kworum ani redundancji.",
+            msg: T("v.q.single.msg", { group: esc(spec.name), label: L(spec.label) }),
             line: line,
-            hint: spec.fail + " Wymagana nieparzysta liczba hostów, nie mniejsza niż " +
-                  QUORUM.minOdd + "." });
+            hint: L(spec.fail) + " " + T("v.q.needOdd", { min: QUORUM.minOdd }) });
         }
         return;
       }
 
       if (n % 2 === 0 || n < QUORUM.minOdd) {
         out.push({ sev: "error", code: "KWORUM-LICZBA",
-          msg: "Grupa <code>[" + esc(spec.name) + "]</code> ma " +
-               countLabel(n, "host", "hosty", "hostów") + " — " +
-               (n % 2 === 0 ? "liczba parzysta" : "za mało") +
-               " dla kworum (" + spec.label + ").",
+          msg: T("v.q.count.msg", {
+            group: esc(spec.name),
+            count: I18N.count("n.host", n),
+            reason: T(n % 2 === 0 ? "v.q.even" : "v.q.tooFew"),
+            label: L(spec.label)
+          }),
           line: line,
-          hint: spec.why + " " + spec.fail });
+          hint: L(spec.why) + " " + L(spec.fail) });
       }
     });
 
@@ -2650,48 +2703,56 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
   function buildReport(res, tally) {
     var L = [];
-    L.push("Rackpathlabs — raport walidacji inventory multinode");
+    L.push(T("v.rep.title"));
     L.push("===================================================");
-    L.push("Hosty: " + res.hostCount + "   Grupy: " + res.order.length);
+    /* Etykieta języka zostaje po angielsku, a wartość jest kodem ISO: to jedyny
+       wiersz, który musi zrozumieć ktoś nieznający języka reszty dokumentu.
+       "Język: polski" w polskim raporcie jest bezużyteczne dokładnie dla tej
+       osoby, dla której powstało. To metadane, nie treść. */
+    L.push("Language: " + I18N.getLang());
+    L.push(T("v.rep.hosts", { hosts: res.hostCount, groups: res.order.length }));
     if (res.releaseTo) {
-      L.push("Ścieżka aktualizacji: " + (res.release ? res.release.id : "?") +
-             " -> " + res.releaseTo.id);
+      L.push(T("v.rep.path", { from: res.release ? res.release.id : "?", to: res.releaseTo.id }));
     }
-    L.push("globals.yml: " + (res.hasGlobals
-      ? "wczytany — działają też reguły wymagające obu plików"
-      : "nie wczytano — wyłącznie reguły inventory"));
+    L.push(T(res.hasGlobals ? "v.rep.globalsYes" : "v.rep.globalsNo"));
     if (res.release) {
-      L.push("Wydanie: " + res.release.id + " " + res.release.name +
-             (res.release.kolla ? " (kolla-ansible " + res.release.kolla + ")" : ""));
+      L.push(T("v.rep.release", {
+        id: res.release.id, name: res.release.name,
+        kolla: res.release.kolla ? " (kolla-ansible " + res.release.kolla + ")" : ""
+      }));
     }
-    L.push("Wynik: " + countLabel(tally.e, "błąd", "błędy", "błędów") +
-           ", " + countLabel(tally.w, "uwaga", "uwagi", "uwag") +
-           ", " + tally.i + " info");
+    L.push(T("v.rep.result", {
+      errors: I18N.count("n.error", tally.e),
+      warnings: I18N.count("n.warning", tally.w),
+      info: tally.i
+    }));
     L.push("");
 
     if (!res.findings.length) {
-      L.push("Nie wykryto problemów.");
+      L.push(T("v.rep.clean"));
     } else {
       res.findings.forEach(function (f) {
-        var sev = f.sev === "error" ? "BŁĄD " : (f.sev === "warn" ? "UWAGA" : "INFO ");
-        var where = f.src === "cross" ? "oba" : f.src;
+        var sev = T(f.sev === "error" ? "v.sev.error" : (f.sev === "warn" ? "v.sev.warn" : "v.sev.info"));
+        var where = f.src === "cross" ? T("v.rep.both") : f.src;
         L.push("[" + sev + "] " + pad(f.line ? where + ":" + f.line : where, 16) +
                pad(f.code, 24) + stripTags(f.msg));
         (f.refs || []).forEach(function (r) {
-          L.push("          -> " + r.src + (r.line ? ": linia " + r.line : ": klucza brak"));
+          L.push("          -> " + r.src + ": " +
+                 (r.line ? T("v.rep.refLine", { line: r.line }) : T("v.rep.refMissing")));
         });
         if (f.hint) L.push("          " + stripTags(f.hint));
       });
     }
 
     L.push("");
-    L.push("Topologia:");
+    L.push(T("v.rep.topology"));
     var shown = REQUIRED.concat(res.order.filter(function (g) {
       return REQUIRED.indexOf(g) === -1 && !IMPLICIT[g];
     }));
     shown.forEach(function (name) {
       var hosts = res.effective[name];
-      L.push("  " + pad(name, 16) + (hosts ? countLabel(hosts.length, "host", "hosty", "hostów") : "grupa nie występuje"));
+      L.push("  " + pad(name, 16) +
+             (hosts ? I18N.count("n.host", hosts.length) : T("v.rep.absent")));
     });
     return L.join("\n");
   }
