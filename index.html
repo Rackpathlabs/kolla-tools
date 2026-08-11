@@ -215,6 +215,32 @@ footer a{color:var(--muted)}
       "hub.limits.offline":    "<strong>Everything happens in your browser.</strong> Files are never uploaded or stored, the tools make no network requests at all, and each one is a single HTML file — download it and use it offline, from <code>file://</code>.",
       "hub.limits.scope":      "<strong>The tools do not check everything</strong>, and they say so outright. Some failures do not follow from the contents of these files: deployment history, switch configuration and database state cannot be read out of YAML. <a href=\"SCOPE.md\">SCOPE.md</a> lists what is deliberately left out, where an answer is an inference rather than a fact, and what an empty result means. The document is in English.",
 
+      /* --- powiadomienia (toasty) ---
+         Trzymane w słowniku, nie wpisane w kod. Nie chodzi o wielojęzyczność —
+         narzędzia są jednojęzyczne — tylko o to, że słownik jest JEDYNYM miejscem,
+         w którym widać wszystkie komunikaty naraz, a asercja kompletności czyta
+         właśnie jego. Toast wpisany w kod jest niewidzialny dla asercji: osiemnaście
+         takich przetrwało migrację na angielski i zostało zauważonych dopiero
+         przypadkiem. Strażnik w check-english.js pilnuje, żeby nie wróciły. */
+      "t.file.read":            "Loaded {name}",
+      "t.file.failed":          "Could not read the file.",
+      "t.report.copied":        "Report copied to the clipboard.",
+      "t.report.copyFailed":    "Could not copy the report.",
+      "t.sample.ok":            "Loaded the clean example.",
+      "t.sample.bad":           "Loaded the example with problems.",
+      "t.globals.loaded":       "Loaded globals.yml — the two-file rules are on.",
+      "t.globals.cleared":      "Dropped globals.yml — the inventory rules remain.",
+      "t.parser.unsupported":   "The file uses constructs the parser does not handle.",
+      "t.import.loaded":        "Loaded {count} keys from the file.",
+      "t.copied":               "Copied to the clipboard.",
+      "t.copyFailed":           "Could not copy — select the text and press Ctrl+C.",
+      "t.download.handed":      "Handed {name} to the browser.",
+      "t.download.blocked":     "The browser blocked the download — use the Copy button.",
+      "t.defaults.restored":    "Defaults restored.",
+      "t.import.empty":         "The import field is empty.",
+      "t.import.dropped":       "Import dropped — the file is built from the form again.",
+      "t.export.blocked":       "Export blocked — the configuration contains errors.",
+
       /* --- walidator: szkielet interfejsu --- */
       "v.title":               "Rackpathlabs — multinode inventory validator (Kolla-Ansible)",
       "v.desc":                "Validator for a Kolla-Ansible multinode inventory: groups, duplicates, empty groups. Runs offline, with no external dependencies.",
