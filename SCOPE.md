@@ -171,6 +171,15 @@ with a Pacemaker cluster and only informational without either, because without 
 tooling it is the upstream default and normal in a lab. The out-of-subnet VIP warning
 described above is the fourth instance of the same rule.
 
+The same rule has a second half, on the output side. A tool may not claim to have
+*checked* something when it only accepted an operator's word for it. An acknowledgment
+recorded in a generated `globals.yml` as "headroom measured, switch applies queueing"
+reads as a finding to whoever opens that repository a year later; the tool measured
+nothing, somebody ticked a box. It now says "acknowledged by the operator; not verified
+by this tool". The mistake was easy to make because output feels like a product the tool
+hands over rather than one more place where the tool makes a claim — and it is the one
+place no deploy takes back.
+
 **A check nobody has seen fail is not a check.** Every guard in the test suite has been
 broken on purpose once, to watch it turn red. This is not ceremony. A guard meant to
 reject NUL bytes was written with a shell pattern that could not contain a NUL byte, so

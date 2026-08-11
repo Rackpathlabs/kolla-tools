@@ -804,26 +804,26 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     keys: {
       om_enable_rabbitmq_stream_fanout: {
         notable: true, sev: "warn",
-        label: "kolejki strumieniowe dla fanoutów RabbitMQ",
-        why: "Przy wartości domyślnej <code>true</code> liderzy wszystkich strumieni potrafią " +
-             "wylądować na jednym brokerze. Przy trzech węzłach control warto zweryfikować " +
-             "rozłożenie liderów po wdrożeniu."
+        label: "RabbitMQ stream fanout queues",
+        why: "With the default of <code>true</code>, every stream leader can end up on one " +
+             "broker. On three control nodes it is worth checking how the leaders are " +
+             "distributed once the deployment is up."
       },
       om_rabbitmq_qos_prefetch_count: {
         notable: true, sev: "info",
-        label: "prefetch QoS dla RabbitMQ",
-        why: "Od 2026.1 domyślnie 50 zamiast wartości nieograniczonej — zmiana wpływa " +
-             "na rozkład obciążenia między workerami."
+        label: "RabbitMQ QoS prefetch",
+        why: "From 2026.1 the default is 50 rather than unlimited, which changes how work " +
+             "spreads across the workers."
       },
       enable_ironic_inspector: {
         notable: false,
         label: "Ironic Inspector",
-        why: "Projekt wycofany; od 2025.1 domyślnie wyłączony i przewidziany do usunięcia."
+        why: "The project is retired; disabled by default from 2025.1 and slated for removal."
       },
       enable_ironic_neutron_agent: {
         notable: false,
-        label: "agent Neutron dla Ironic",
-        why: "Od 2025.1 domyślnie wyłączony."
+        label: "Neutron agent for Ironic",
+        why: "Disabled by default from 2025.1."
       }
     },
 
@@ -849,25 +849,25 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         deprecationsCatalogued: true,
         deprecated: [
           { kind: "group", name: "kolla-toolbox", replacedBy: "kolla_toolbox", sev: "error",
-            note: "Grupa i rola przemianowane — myślnik zastąpiony podkreśleniem. Stara nazwa nie zostanie rozpoznana." },
+            note: "Group and role renamed, hyphen to underscore. The old name is not recognised." },
           { kind: "service", name: "zun", replacedBy: null, sev: "warn",
-            note: "Usunięte w 2026.1 (niedziałające)." },
+            note: "Removed in 2026.1; it had stopped working." },
           { kind: "service", name: "kuryr", replacedBy: null, sev: "warn",
-            note: "Usunięte razem z Zun, który był jedynym konsumentem." },
+            note: "Removed along with Zun, its only consumer." },
           { kind: "service", name: "influxdb", replacedBy: null, sev: "warn",
-            note: "Usunięte — InfluxDB v1 osiągnęło EOL, migracji do v2 nie zaplanowano." },
+            note: "Removed: InfluxDB v1 reached end of life and no migration to v2 was planned." },
           { kind: "service", name: "telegraf", replacedBy: null, sev: "warn",
-            note: "Usunięte po wcześniejszej deprecjacji." },
+            note: "Removed after an earlier deprecation." },
           { kind: "service", name: "venus", replacedBy: null, sev: "warn",
-            note: "Usunięte z powodu braku aktywności projektu." },
+            note: "Removed because the project became inactive." },
           { kind: "group", name: "cinder-volume", replacedBy: null, sev: "info",
-            note: "Domyślna grupa nadrzędna zmieniona ze <code>storage</code> na <code>cinder</code>." },
+            note: "Default parent group changed from <code>storage</code> to <code>cinder</code>." },
           { kind: "group", name: "cinder-backup", replacedBy: null, sev: "info",
-            note: "Domyślna grupa nadrzędna zmieniona ze <code>storage</code> na <code>cinder</code>." },
+            note: "Default parent group changed from <code>storage</code> to <code>cinder</code>." },
           { kind: "key", name: "distro_python_version", replacedBy: null, sev: "warn",
-            note: "Usunięte." },
+            note: "Removed." },
           { kind: "key", name: "lightbits_JWT", replacedBy: "lightbits_jwt", sev: "error",
-            note: "Przemianowane — zmieniona wielkość liter." }
+            note: "Renamed; the letter case changed." }
         ]
       },
       {
@@ -884,26 +884,26 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         deprecated: [
           /* "ironic-inspector: Service support dropped upstream." */
           { kind: "service", name: "ironic-inspector", replacedBy: null, sev: "warn",
-            note: "Usługa wycofana w górę strumienia i usunięta z Kolli." },
+            note: "Retired upstream and removed from Kolla." },
           /* "Variables renamed: ironic_inspector_kernel_cmdline_extras ->
              ironic_kernel_cmdline_extras" */
           { kind: "key", name: "ironic_inspector_kernel_cmdline_extras",
             replacedBy: "ironic_kernel_cmdline_extras", sev: "error",
-            note: "Przemianowane przy wycofaniu ironic-inspector." },
+            note: "Renamed when ironic-inspector was retired." },
           /* "ironic_inspector_pxe_filter -> ironic_pxe_filter" */
           { kind: "key", name: "ironic_inspector_pxe_filter",
             replacedBy: "ironic_pxe_filter", sev: "error",
-            note: "Przemianowane przy wycofaniu ironic-inspector." },
+            note: "Renamed when ironic-inspector was retired." },
           /* "bifrost option: bifrost_enable_ironic_inspector deleted." */
           { kind: "key", name: "bifrost_enable_ironic_inspector", replacedBy: null, sev: "warn",
-            note: "Usunięte — klucz nie ma już żadnego efektu." },
+            note: "Removed; the key no longer has any effect." },
           /* "neutron_legacy_iptables: Dropped entirely." */
           { kind: "key", name: "neutron_legacy_iptables", replacedBy: null, sev: "warn",
-            note: "Usunięte." },
+            note: "Removed." },
           /* "Redis to Valkey migration: Set enable_redis: \"no\" and
              enable_valkey: \"yes\" before upgrade." */
           { kind: "key", name: "enable_redis", replacedBy: "enable_valkey", sev: "error",
-            note: "Migracja Redis → Valkey. Przełączenie musi nastąpić PRZED aktualizacją." }
+            note: "Redis to Valkey migration. The switch must happen BEFORE the upgrade." }
         ]
       },
       {
@@ -921,29 +921,29 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         deprecationsCatalogued: true,
         deprecated: [
           { kind: "key", name: "om_enable_rabbitmq_high_availability", replacedBy: null, sev: "error",
-            note: "Usunięte — kolejki quorum są od tego wydania obowiązkowe." },
+            note: "Removed; quorum queues are mandatory from this release." },
           { kind: "key", name: "letsencrypt_cert_server", replacedBy: "letsencrypt_external_cert_server", sev: "error",
-            note: "Przemianowane." },
+            note: "Renamed." },
           { kind: "key", name: "openstack_previous_release_name", replacedBy: "ironic_pin_release_version", sev: "error",
-            note: "Przemianowane." },
-          { kind: "key", name: "ceph_cinder_keyring", replacedBy: null, sev: "warn", note: "Usunięte." },
-          { kind: "key", name: "ceph_cinder_backup_keyring", replacedBy: null, sev: "warn", note: "Usunięte." },
-          { kind: "key", name: "ceph_glance_keyring", replacedBy: null, sev: "warn", note: "Usunięte." },
-          { kind: "key", name: "ceph_gnocchi_keyring", replacedBy: null, sev: "warn", note: "Usunięte." },
-          { kind: "key", name: "ceph_manila_keyring", replacedBy: null, sev: "warn", note: "Usunięte." },
-          { kind: "key", name: "ceph_nova_keyring", replacedBy: null, sev: "warn", note: "Usunięte." },
+            note: "Renamed." },
+          { kind: "key", name: "ceph_cinder_keyring", replacedBy: null, sev: "warn", note: "Removed." },
+          { kind: "key", name: "ceph_cinder_backup_keyring", replacedBy: null, sev: "warn", note: "Removed." },
+          { kind: "key", name: "ceph_glance_keyring", replacedBy: null, sev: "warn", note: "Removed." },
+          { kind: "key", name: "ceph_gnocchi_keyring", replacedBy: null, sev: "warn", note: "Removed." },
+          { kind: "key", name: "ceph_manila_keyring", replacedBy: null, sev: "warn", note: "Removed." },
+          { kind: "key", name: "ceph_nova_keyring", replacedBy: null, sev: "warn", note: "Removed." },
           { kind: "service", name: "swift", replacedBy: null, sev: "warn",
-            note: "Wsparcie dla wdrożenia Swift usunięte w 2025.1." },
+            note: "Support for deploying Swift was removed in 2025.1." },
           /* KV-12b: zmiana typu kolejek między wdrożeniami psuje istniejące kolejki
              (PRECONDITION_FAILED - inequivalent arg). Nie da się tego naprawić edycją
              pliku — wymaga kroku operacyjnego na brokerze. */
           { kind: "procedure", name: "om_enable_rabbitmq_quorum_queues", replacedBy: null,
             sev: "warn",
-            note: "Od 2025.1 kolejki quorum są obowiązkowe. Jeśli wdrożenie startowało " +
-                  "z kolejkami klasycznymi, sama zmiana wartości nie wystarczy: usługi " +
-                  "spróbują zadeklarować istniejące kolejki z innym typem i dostaną " +
-                  "PRECONDITION_FAILED, a kontenery wejdą w pętlę restartów przy " +
-                  "wdrożeniu raportującym sukces." }
+            note: "Quorum queues are mandatory from 2025.1. If the deployment started out with " +
+                  "classic queues, changing the value is not enough on its own: services " +
+                  "try to redeclare existing queues with a different type, get " +
+                  "PRECONDITION_FAILED, and the containers enter restart loops while the " +
+                  "deployment reports success." }
         ]
       },
       {
@@ -962,12 +962,12 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
              default configuration." */
           { kind: "key", name: "prometheus_blackbox_exporter_endpoints",
             replacedBy: "prometheus_blackbox_exporter_endpoints_custom", sev: "error",
-            note: "Własne punkty pomiarowe trzeba przenieść do klucza _custom, inaczej " +
-                  "nadpiszą konfigurację domyślną." },
+            note: "Custom endpoints must move to the _custom key, otherwise they override the " +
+                  "default configuration." },
           /* "Support for deploying prometheus-msteams has been dropped as the project
              is no longer maintained." */
           { kind: "service", name: "prometheus-msteams", replacedBy: null, sev: "warn",
-            note: "Projekt nieutrzymywany — wdrażanie usunięte." }
+            note: "The project is unmaintained; deployment support was removed." }
         ]
       },
       {
@@ -984,33 +984,33 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         deprecated: [
           /* "Services removed: Freezer, Murano, Sahara, Senlin, Solum, Vitrage" */
           { kind: "service", name: "freezer", replacedBy: null, sev: "warn",
-            note: "Usunięte w 2024.1." },
+            note: "Removed in 2024.1." },
           { kind: "service", name: "murano", replacedBy: null, sev: "warn",
-            note: "Usunięte w 2024.1." },
+            note: "Removed in 2024.1." },
           { kind: "service", name: "sahara", replacedBy: null, sev: "warn",
-            note: "Usunięte w 2024.1." },
+            note: "Removed in 2024.1." },
           { kind: "service", name: "senlin", replacedBy: null, sev: "warn",
-            note: "Usunięte w 2024.1." },
+            note: "Removed in 2024.1." },
           { kind: "service", name: "solum", replacedBy: null, sev: "warn",
-            note: "Usunięte w 2024.1." },
+            note: "Removed in 2024.1." },
           { kind: "service", name: "vitrage", replacedBy: null, sev: "warn",
-            note: "Usunięte w 2024.1." },
+            note: "Removed in 2024.1." },
           /* "...and outward RabbitMQ (only used for Murano)" */
           { kind: "service", name: "outward-rabbitmq", replacedBy: null, sev: "warn",
-            note: "Usunięte razem z Murano, który był jedynym konsumentem." },
+            note: "Removed along with Murano, its only consumer." },
           /* "Support for failing execution early ... by setting
              kolla_ansible_setup_any_errors_fatal to true has been removed." (18.3.0) */
           { kind: "key", name: "kolla_ansible_setup_any_errors_fatal", replacedBy: null,
             sev: "warn",
-            note: "Usunięte. Odpowiednik: maksymalny procent awarii ustawiony na 0." },
+            note: "Removed. The equivalent is a maximum failure percentage of 0." },
           /* "MariaDB backup now uses the same image as the running MariaDB server."
              — mariabackup_image, mariabackup_tag, mariabackup_image_full (18.1.0) */
           { kind: "key", name: "mariabackup_image", replacedBy: null, sev: "warn",
-            note: "Usunięte — kopia zapasowa używa obrazu działającego serwera MariaDB." },
+            note: "Removed; backups use the image of the running MariaDB server." },
           { kind: "key", name: "mariabackup_tag", replacedBy: null, sev: "warn",
-            note: "Usunięte — kopia zapasowa używa obrazu działającego serwera MariaDB." },
+            note: "Removed; backups use the image of the running MariaDB server." },
           { kind: "key", name: "mariabackup_image_full", replacedBy: null, sev: "warn",
-            note: "Usunięte — kopia zapasowa używa obrazu działającego serwera MariaDB." }
+            note: "Removed; backups use the image of the running MariaDB server." }
         ]
       },
 
