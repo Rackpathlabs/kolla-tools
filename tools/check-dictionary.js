@@ -49,6 +49,8 @@ function norm(t) {
   return String(t).replace(/[0-9]+/g, " ").replace(/\s+/g, " ").trim().toLowerCase();
 }
 
+var EMPTY_SEGMENTS = 0;
+
 function corpus() {
   var s = fs.readFileSync(path.join(root, "i18n.js"), "utf8");
   var segs = [], m;
@@ -63,7 +65,13 @@ function corpus() {
        dokladnie odwrotnie, niz podejrzewalismy po skoku liczby segmentow. */
     joined.replace(/<[^>]+>/g, " ").split(/\{[^}]*\}|\|/).forEach(function (seg) {
       seg = seg.replace(/\\"/g, '"').replace(/\s+/g, " ").trim();
-      if (seg) segs.push(norm(seg));
+      /* Pusty segment to ta sama pusta igla, wchodzaca DRUGA DROGA: nie
+         z normalizacji napisu z ekranu, tylko z budowy korpusu. Wpis zlozony
+         z samej wstawki ("{count}") po cieciu po {…} nie zostawia nic.
+         Liczba odfiltrowanych jest raportowana, zeby drugie zrodlo tej awarii
+         nie bylo niewidoczne. */
+      var n = norm(seg);
+      if (n) segs.push(n); else EMPTY_SEGMENTS++;
     });
   }
   return segs;
@@ -76,6 +84,11 @@ function corpus() {
    "Clear", ale "has" przestaje pokrywac "has 5 hosts". */
 var MIN_CONTAIN = 4;
 function wordsIn(hay, needle) {
+  /* Pusta igla zawiesza petle NA ZAWSZE: hay.indexOf("", i + 1) przycina sie
+     do dlugosci siana i nigdy nie zwraca -1. Igla robi sie pusta po normalizacji
+     liczb — napis zlozony z samych cyfr, na przyklad numer linii w marginesie,
+     redukuje sie do niczego. To zawiesilo pomiar na dziewiec minut. */
+  if (!needle) return false;
   if (hay.length < MIN_CONTAIN) return hay === needle;
   var i = hay.indexOf(needle);
   while (i !== -1) {
@@ -105,6 +118,19 @@ var CATEGORIES = [
      kropki, więc nie są identyfikatorami według reguły niżej, a leżą poza podglądem.
      Bez tej kategorii trafiłyby na listę braków i najtańszym ruchem byłoby dopisanie
      ich po napisie — czyli to, czego ta lista ma nie zawierać. */
+  /* Kategoria wrocila RAZEM Z PRZYPADKIEM, ktory ja uruchamia — tak, jak ustalilismy,
+     ze wracaja usuniete wyjatki. Wczesniej nie zwalniala niczego, bo audyt nie siegal
+     numerow linii w marginesie; po poprawieniu scenariuszy i normalizacji siega,
+     a napis z samych cyfr nie jest tekstem interfejsu. */
+  /* USUNIETA 2026-08-11, PRZYWROCONA 2026-08-11 — to nie jest niezdecydowanie,
+     tylko dwie poprawne decyzje przy dwoch roznych stanach. Usunieta, bo nie
+     zwalniala ANI JEDNEGO napisu: pusty wyjatek jest gorszy od pustej kontroli,
+     bo wyglada na przemyslany. Przywrocona tego samego dnia, bo poprawione
+     scenariusze i normalizacja liczb sprawily, ze audyt siega numerow linii
+     w marginesie — kategoria wrocila RAZEM Z PRZYPADKIEM, ktory ja uruchamia. */
+  { why: "liczby i interpunkcja: napis bez ani jednej litery",
+    test: function (f) { return !/[A-Za-z\u0104-\u017c]/.test(f.text); } },
+
   { why: "wartość konfiguracji: treść <option> i wartości kontrolek",
     test: function (f) { return f.tag === "OPTION"; } },
 
@@ -145,7 +171,8 @@ report.forEach(function (f) {
   miss.push(f);
 });
 
-console.log("segmentów w słowniku: " + SEGS.length);
+console.log("segmentów w słowniku: " + SEGS.length +
+            "   pustych odfiltrowanych: " + EMPTY_SEGMENTS);
 console.log("widocznych napisów:   " + total + "   ze słownika lub wyjątku: " + ok +
             "   BEZ POKRYCIA: " + miss.length +
             "   (w tym krótsze niż " + SHORT + " znaki: " + missShort + ")");
