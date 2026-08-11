@@ -19,8 +19,10 @@ rc=0
 # przez CI, bo lista obejmowała wyłącznie artefakty — a plik z NUL-em grep traktuje
 # jak binarny i przestaje w nim cokolwiek znajdować, po cichu.
 for f in generator.html validator.html index.html matrix.js globals-parser.js theme.css \
-         i18n.js tools/*.js tools/*.sh tools/smoke/*.js; do
+         i18n.js tools/*.js tools/*.sh tools/smoke/*.js "$@"; do
   [ -e "$f" ] || continue
+  # tools/fixtures/ nie trafia tu przez glob (tools/*.js nie sięga podkatalogu),
+  # a podana jawnie fixtura MA być sprawdzona — na tym polega dowód.
   if [ ! -f "$f" ]; then
     echo "FAIL $f: brak pliku"; rc=1; continue
   fi

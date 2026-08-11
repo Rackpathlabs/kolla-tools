@@ -36,7 +36,13 @@ var fs = require("fs");
 var path = require("path");
 
 var root = path.join(__dirname, "..");
-var FILES = ["validator.html", "generator.html", "index.html", "globals-parser.js"];
+/* Lista plików jest podmienialna argumentami, żeby strażnika dało się uruchomić na
+   fixturze o znanej charakterystyce. Dowód, że kontrola potrafi upaść, ma być TESTEM,
+   a nie czynnością wykonaną raz w dniu, w którym powstawała: czynność nie powtarza się
+   przy zmianie strażnika i nie łapie regresu. */
+var FILES = process.argv.length > 2
+  ? process.argv.slice(2)
+  : ["validator.html", "generator.html", "index.html", "globals-parser.js"];
 
 /* Ujścia, którymi tekst trafia na ekran. */
 var SINKS = [

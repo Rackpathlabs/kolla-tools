@@ -71,6 +71,16 @@ they were built to find, and two NUL bytes that sat in a guard's own source whil
 check written for NUL bytes did not look at the directory it lived in. Six failures, none
 of them in the product.
 
+Being part of the system means the same rules apply, including the one about proving a
+check can fail. Until now that proof was an ACT: break something by hand on the day the
+guard is written, watch it turn red, put it back. It worked every time and it is not a
+control — it does not repeat when the guard changes and it catches no regression. So the
+guards now run against fixtures of known characteristic and the assertion is on the COUNT,
+not the colour. "Red" says only that the guard is alive; "exactly three" is what would
+have caught a counter tallying the Polish halves of pairs, a counter losing concatenated
+strings, and a counter with its quote pairing shifted — three of the six tooling failures
+that nothing caught.
+
 The pattern is always the same. A scope looks reasonable — artefacts and shared sources —
 and nobody questions it, exactly as nobody questioned a category that excused "the content
 of <code> and <span>". So the question has to be asked of every guard in turn, and asked
