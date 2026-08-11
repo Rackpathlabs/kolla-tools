@@ -28,6 +28,11 @@ var cp = require("child_process");
 
 var root = path.join(__dirname, "..");
 var AUDIT_OUT = (process.argv[2] === "--texts") ? process.argv[3] : null;
+/* Wylacza zwolnienia, zeby test mogl udowodnic, ze scenariusz z mayNotChangeInterface
+   BEZ tego zwolnienia upada. Dowodzilismy dotad upadku kontroli, ani razu upadku
+   WYJATKU — a zwolnienie, ktorego nikt nie widzial jako potrzebnego, jest tym samym
+   co kontrola, ktorej nikt nie widzial jako upadajacej. */
+var NO_EXEMPTIONS = process.argv.indexOf("--no-exemptions") !== -1;
 /* Scenariusze: JEDEN RENDER TO JEDNA ŚCIEŻKA. Zmierzone w przeglądarce, nie
    założone — stan początkowy walidatora daje 36 napisów, przykład z błędami 173,
    przykład poprawny 90 przy zupełnie innej warstwie tekstu (werdykt bez zastrzeżeń).
@@ -288,7 +293,8 @@ FILES.forEach(function (sc) {
   var fingerprint = res.texts.map(function (t) { return t.tag + "|" + t.text; }).join("\u0000");
   if (!sc.steps) {
     baseline[sc.file] = fingerprint;
-  } else if (baseline[sc.file] === fingerprint && !sc.mayNotChangeInterface) {
+  } else if (baseline[sc.file] === fingerprint &&
+             !(sc.mayNotChangeInterface && !NO_EXEMPTIONS)) {
     console.log("FAIL " + file + ": scenariusz nie zmienił NICZEGO widocznego —" +
                 " nie ma czego mierzyć, więc zielone nic nie znaczy");
     bad = 1;

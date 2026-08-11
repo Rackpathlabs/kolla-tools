@@ -24,3 +24,9 @@ Przynęty, obecne i planowane:
 
 Dwie ostatnie zamieniają dzisiejszy problem w przypadek testowy: „5 hosts" przestaje
 być zagadką i staje się przynętą, na której normalizacja musi się udowodnić.
+
+Przynety rozpisuje sie Z DEFINICJI KATEGORII, nigdy z listy brakow. Wzieta z listy
+brakow przyneta potwierdza stan zastany zamiast sprawdzac wymaganie — to ta sama
+roznica co miedzy miernikiem postawionym przed praca a po niej. Przy dopisywaniu
+kolejnej naturalnym odruchem bedzie siegniecie po pozycje, ktora akurat swieci na
+czerwono; wlasnie dlatego to zdanie tu stoi.
