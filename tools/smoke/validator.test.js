@@ -449,7 +449,6 @@ ok("ten sam klucz na ścieżce -> zgłoszony raz przez tryb aktualizacji",
    Odcisk wejścia jest jedyną częścią rozwiązania, która chroni przed przypadkiem,
    którego nie przewidzieliśmy: naprawa wyzwalaczy leczy znane, odcisk leczy klasę. */
 console.log("odcisk wejścia:");
-var el = { src: "src", gsrc: "gsrc", release: "release", release_to: "release_to" };
 var fp1 = T.inputFingerprint();
 ok("odcisk jest napisem", typeof fp1 === "string" && fp1.length > 0);
 document.getElementById("src").value = "[control]\nc1\n";
@@ -461,18 +460,19 @@ var fp3 = T.inputFingerprint();
 document.getElementById("release_to").value = "2026.1";
 ok("zmiana wydania docelowego zmienia odcisk", T.inputFingerprint() !== fp3);
 var fp4 = T.inputFingerprint();
-T.I18N.setLang("pl");
-ok("zmiana języka zmienia odcisk", T.inputFingerprint() !== fp4);
-T.I18N.setLang("en");
-ok("powrót języka przywraca odcisk", T.inputFingerprint() === fp4);
+document.getElementById("ack_nobmc").checked = true;
+ok("zmiana potwierdzenia zmienia odcisk", T.inputFingerprint() !== fp4);
+document.getElementById("ack_nobmc").checked = false;
+ok("cofnięcie potwierdzenia przywraca odcisk", T.inputFingerprint() === fp4);
+/* Odcisk musi zależeć WYŁĄCZNIE od wejścia. Gdyby zależał od czegokolwiek innego,
+   pasek nieaktualności zapalałby się bez powodu i nauczyłby ignorowania siebie. */
+ok("ten sam stan pól daje ten sam odcisk", T.inputFingerprint() === T.inputFingerprint());
 
 console.log("raport:");
 var res = run("", "2026.1");
 var rep = T.buildReport(res, { e: 0, w: 0, i: 0 });
 ok("zawiera wiersz z wydaniem", /Release: 2026\.1 Gazpacho \(kolla-ansible 22\.x\)/.test(rep),
    rep.split("\n").slice(0, 6).join(" | "));
-/* Etykieta języka zostaje po angielsku w obu wersjach — to metadane dla kogoś,
-   kto nie zna języka reszty dokumentu. Wartość jest kodem ISO. */
 ok("raport nie niesie wiersza o języku — narzędzie jest jednojęzyczne",
    !/^Language:/m.test(rep));
 R.finish();
