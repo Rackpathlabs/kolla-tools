@@ -110,13 +110,19 @@ var CATEGORIES = [
      i zwalniała 1922 napisy, w tym „błąd", „wymagane" i „uwaga" — czyli dokładnie
      tę polszczyznę, której kryterium miało szukać. Lista znaczników nie da się
      obronić; zdanie o przodku tak. */
-  /* POCHODZENIE. Kategoria kontenerowa zostaje NIZEJ jako szybsza sciezka, ale
-     liczniki obu sa raportowane osobno — jesli kontenerowa zwalnia cokolwiek,
-     czego ta nie zwalnia, mamy dwie definicje jednej rzeczy i trzeba wybrac. */
-  { why: "dane po POCHODZENIU: treść wprowadzona przez scenariusz do pól",
+  /* DWIE ROZŁĄCZNE KATEGORIE DANYCH, nie jedna z szybszą ścieżką. Zmierzone:
+     części wspólnej ZERO — 1003 zwolnień po jednej stronie, 95 po drugiej.
+     Pierwsza to treść, którą wprowadził użytkownik, gdziekolwiek się pojawi:
+     nazwa grupy z jego inventory w findingu albo w tabeli topologii. Druga to
+     treść pliku, który wyprodukowało narzędzie — komentarze, klucze i wartości
+     domyślne, których użytkownik nigdzie nie wpisał, więc pochodzenie nie ma
+     prawa ich zwolnić. Obie są danymi i żadna nie jest przybliżeniem drugiej.
+     Nazwa "szybsza ścieżka" obiecywała podzbiór i była szóstym przypadkiem
+     nazwy węższej niż kod — złapanym, zanim zdążył kosztować. */
+  { why: "dane użytkownika: treść wprowadzona do pól, gdziekolwiek się pojawi",
     test: function (f) { return f.fromInput === true; } },
 
-  { why: "dane: treść podglądu pliku i edytora wejścia",
+  { why: "wytwór narzędzia: treść wygenerowanego pliku w podglądzie",
     test: function (f) { return f.inData === true; } },
 
   /* WARTOŚCI KONFIGURACJI to też dane. „rocky", „ubuntu", „eth0", „bond0",
