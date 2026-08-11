@@ -203,6 +203,17 @@ Seven fixtures were red for reasons belonging to none of the three breaks, and u
 they would have been accepted as the new expected output. Watching a check fail caught a
 defect in the machinery that proves checks fail.
 
+**A green result means nothing if the subject was not there to be measured.** This is the
+third way a check can pass while proving nothing, and the worst of the three, because the
+other two can be caught by breaking something on purpose and this one cannot: breaking the
+thing does not light the lamp either, when the thing is absent. A category was narrowed so
+that table headings would face the dictionary criterion instead of an exception, and the
+measured numbers did not move — not because the narrowing held, but because that scenario
+renders no findings, so no table exists and not one heading reached the audit. Reporting
+unchanged numbers as agreement would have been the staleness probe again: a correct answer
+to a different question. The only defence is to know what ought to be in view and check
+that it was, which no amount of deliberate breakage can substitute for.
+
 **An assertion answers a question someone asked; a golden file answers questions nobody
 asked.** Targeted assertions cover the cases their author thought of, which is exactly
 their blind spot. A duplicated quorum rule once produced two findings for one fault at two
