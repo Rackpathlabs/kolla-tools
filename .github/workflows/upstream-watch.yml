@@ -108,7 +108,7 @@ jobs:
           [ "$rc" -eq 1 ] || exit 0
 
           TITLE="Upstream release notes: candidates for the matrix"
-          BODY="$(printf 'Noty wydania nowe w najświeższej serii, wymieniające nazwę, którą zna \`matrix.js\`. Słowa kluczowe pochodzą z macierzy, nie z listy w kodzie.\n\n**Cytaty są surowe.** Skrypt nie przypisuje \`kind\` ani \`sev\` — to wymaga przeczytania noty ze zrozumieniem, a zgadnięta klasyfikacja trafiłaby do reguł, o których ktoś potem założy, że ktoś je sprawdził.\n\n```\n%s\n```\n\n_Treść tego zgłoszenia jest nadpisywana przy każdym przebiegu._\n' "$(cat /tmp/notes.txt)")"
+          BODY="$(printf 'Noty wydania nowe w najświeższej serii, wymieniające nazwę, którą zna `matrix.js`. Słowa kluczowe pochodzą z macierzy, nie z listy w kodzie.\n\n**Cytaty są surowe.** Skrypt nie przypisuje `kind` ani `sev` — to wymaga przeczytania noty ze zrozumieniem, a zgadnięta klasyfikacja trafiłaby do reguł, o których ktoś potem założy, że ktoś je sprawdził.\n\n```\n%s\n```\n\n_Treść tego zgłoszenia jest nadpisywana przy każdym przebiegu._\n' "$(cat /tmp/notes.txt)")"
 
           NUM="$(gh issue list --state open --search "$TITLE in:title" \
                    --json number,title \
