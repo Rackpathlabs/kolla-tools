@@ -290,7 +290,16 @@ FILES.forEach(function (sc) {
   /* Ścieżka argumentem, nie zmienną środowiskową: proces Windows uruchomiony
      z WSL nie dziedziczy zmiennych bez WSLENV, więc raport cicho by nie powstał —
      a pusty raport wygląda dokładnie jak "wszystko pokryte". */
-  var fingerprint = res.texts.map(function (t) { return t.tag + "|" + t.text; }).join("\u0000");
+  /* Odcisk WYLACZNIE z czesci interfejsowej. Wczesniej obejmowal caly zebrany
+     tekst, wiec i podglad emitowanego pliku — przelaczenie uslugi ruszalo odcisk,
+     choc interfejs stal w miejscu, a komunikat mowil o "niczym widocznym".
+     Nazwa mechanizmu obiecywala wezej, niz kod robil, i przez to zwolnienie
+     mayNotChangeInterface nie zapalalo sie ANI RAZU: martwy wyjatek z uzasadnieniem,
+     grozniejszy od martwej kategorii bez niego, bo uzasadnienie jest wlasnie tym,
+     co powstrzymuje przed sprawdzeniem. */
+  var fingerprint = res.texts.filter(function (t) { return !t.inData; })
+                            .map(function (t) { return t.tag + "|" + t.text; })
+                            .join("\u0000");
   if (!sc.steps) {
     baseline[sc.file] = fingerprint;
   } else if (baseline[sc.file] === fingerprint &&

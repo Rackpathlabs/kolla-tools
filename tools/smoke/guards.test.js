@@ -77,4 +77,18 @@ R.ok("napis ze słownika z liczbą z przodu NIE jest brakiem",
 R.ok("krótki segment nie pokrywa przez zawieranie", /has 5 hosts/.test(dict.out));
 R.ok("normalizacja nie przepuszcza polskiego z liczbą", /5 błędów/.test(dict.out));
 
+/* ---- dowód upadku WYJĄTKU, nie tylko kontroli ----
+   Dowodziliśmy upadku kontroli wielokrotnie i ani razu upadku zwolnienia. Gdy
+   spróbowaliśmy pierwszy raz, okazało się martwe: odcisk obejmował podgląd pliku,
+   więc kontrola, od której zwolnienie miało uwalniać, na tym scenariuszu nigdy nie
+   zapalała. Miało komentarz, przechodziło testy i zgodne liczby — nie było czego
+   zauważyć. Ta asercja pilnuje, żeby zwolnienie dalej BYŁO POTRZEBNE. */
+var withEx = run("check-rendered.js", []);
+R.ok("ze zwolnieniem — pełny audyt zielony", withEx.code === 0, "kod " + withEx.code);
+
+var noEx = run("check-rendered.js", ["--no-exemptions"]);
+R.ok("bez zwolnienia — scenariusz przełącznika upada",
+     /pojedynczy przełącznik[\s\S]*nie zmienił NICZEGO/.test(noEx.out) && noEx.code !== 0,
+     "kod " + noEx.code);
+
 R.finish();
