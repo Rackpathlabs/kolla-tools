@@ -468,6 +468,38 @@ ok("cofnięcie potwierdzenia przywraca odcisk", T.inputFingerprint() === fp4);
    pasek nieaktualności zapalałby się bez powodu i nauczyłby ignorowania siebie. */
 ok("ten sam stan pól daje ten sam odcisk", T.inputFingerprint() === T.inputFingerprint());
 
+/* ---- tabela wyzwalaczy (#38) ----
+   Zgłoszenie brzmiało "wynik czasem się nie odświeża". Diagnoza: KAŻDE pole musi
+   mieć podpięte zdarzenie, którym przeglądarka rzeczywiście sygnalizuje zmianę —
+   a to nie zawsze jest 'input'. Autouzupełnianie i zatwierdzenie wartości przy
+   utracie ogniska dają w części przeglądarek wyłącznie 'change'; powrót karty
+   z bfcache nie daje żadnego zdarzenia i wymaga 'pageshow'.
+
+   Ta tabela jest asercją, nie komentarzem: stub DOM zapamiętuje podpięcia, więc
+   brak wyzwalacza nie przechodzi. Bez tego test sprawdzałby tylko, że wywołanie
+   addEventListener nie rzuca. */
+console.log("wyzwalacze ponownej analizy:");
+var TRIGGERS = [
+  ["src", "input", "pisanie i wklejanie w inventory"],
+  ["src", "change", "autouzupełnianie i zatwierdzenie przy utracie ogniska"],
+  ["gsrc", "input", "pisanie i wklejanie w globals"],
+  ["gsrc", "change", "autouzupełnianie w globals"],
+  ["release", "change", "zmiana wydania"],
+  ["release_to", "change", "zmiana wydania docelowego"],
+  ["ack_nobmc", "change", "potwierdzenie świadomej decyzji"],
+  ["file", "change", "wybór pliku inventory z dialogu"],
+  ["gfile", "change", "wybór pliku globals z dialogu"]
+];
+TRIGGERS.forEach(function (t) {
+  ok(t[0] + " nasłuchuje " + t[1] + " — " + t[2],
+     document.getElementById(t[0]).listensTo(t[1]));
+});
+ok("edytor przyjmuje upuszczenie pliku", document.getElementById("editor").listensTo("drop"));
+ok("pole globals przyjmuje upuszczenie pliku", document.getElementById("gsrc").listensTo("drop"));
+/* Powrót z bfcache nie daje żadnego zdarzenia wejścia — bez pageshow pola wracają
+   wypełnione, a na ekranie zostaje wynik sprzed uśpienia karty. */
+ok("okno nasłuchuje pageshow — powrót karty z bfcache", window.listensTo("pageshow"));
+
 console.log("raport:");
 var res = run("", "2026.1");
 var rep = T.buildReport(res, { e: 0, w: 0, i: 0 });

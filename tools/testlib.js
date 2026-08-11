@@ -25,7 +25,12 @@ function stubNode(id) {
     removeAttribute: function (k) { delete this._a[k]; },
     hasAttribute: function (k) { return Object.prototype.hasOwnProperty.call(this._a, k); },
     getAttribute: function (k) { return this._a[k]; },
-    addEventListener: function () {}, appendChild: function () {},
+    /* Zapamiętujemy, CO zostało podpięte. Bez tego test wyzwalaczy sprawdzałby
+       tylko, że wywołanie addEventListener nie rzuca — czyli nic. Issue #38 wzięło
+       się z brakującego wyzwalacza, więc asercja musi umieć go nie znaleźć. */
+    addEventListener: function (ev) { (this._ev || (this._ev = {}))[ev] = true; },
+    listensTo: function (ev) { return !!(this._ev && this._ev[ev]); },
+    appendChild: function () {},
     removeChild: function () {}, click: function () {}, select: function () {},
     querySelector: function () { return null; }
   };
@@ -39,7 +44,8 @@ function installDom() {
   global.document = {
     getElementById: function (id) { return nodes[id] || (nodes[id] = stubNode(id)); },
     createElement: function () { return stubNode("tmp"); },
-    addEventListener: function () {},
+    addEventListener: function (ev) { (this._ev || (this._ev = {}))[ev] = true; },
+    listensTo: function (ev) { return !!(this._ev && this._ev[ev]); },
     body: stubNode("body"),
     documentElement: stubNode("html"),
     querySelector: function () { return null; },
@@ -50,13 +56,19 @@ function installDom() {
     isSecureContext: false,
     getComputedStyle: function () { return { lineHeight: "21px", fontSize: "13px" }; },
     /* Walidator nasłuchuje pageshow, żeby złapać powrót z bfcache. */
-    addEventListener: function () {},
+    addEventListener: function (ev) { (this._ev || (this._ev = {}))[ev] = true; },
+    listensTo: function (ev) { return !!(this._ev && this._ev[ev]); },
     removeEventListener: function () {}
   };
   global.getComputedStyle = global.window.getComputedStyle;
   global.navigator = {};
-  /* run() planuje odświeżanie oznaczenia nieaktualności — stub musi mieć zegary. */
-  if (!global.setInterval) global.setInterval = function () { return 0; };
+  /* Walidator rejestruje setInterval na oznaczanie nieaktualności wyniku. Pod
+     Node'em ZAWSZE go zaślepiamy, także gdy prawdziwy istnieje: żywy zegar trzyma
+     pętlę zdarzeń i proces nigdy nie kończy się sam. Warunek "jeśli nie ma" tego
+     nie łapał — na Node'ie setInterval jest zawsze, więc rejestrował się prawdziwy,
+     a harness wisiał do timeoutu i wyglądał na zawieszoną analizę. */
+  global.setInterval = function () { return 0; };
+  global.clearInterval = function () {};
   global.localStorage = {
     _m: {},
     setItem: function (k, v) { this._m[k] = String(v); },
