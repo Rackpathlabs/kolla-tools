@@ -108,6 +108,9 @@ bash tools/run-tests.sh --update   # regenerate golden files after an intended c
 bash tools/sync-blocks.sh          # push shared blocks into the HTML files
 ```
 
+Rules for changing this code — severity against evidence, what a tool may claim, where a
+check has to stand — are in [docs/PRINCIPLES.md](docs/PRINCIPLES.md).
+
 Code shared between tools lives in `matrix.js`, `globals-parser.js` and `theme.css`, and
 is pasted byte-identically into each file that needs it; CI fails if the copies drift.
 Tests need only Node.
