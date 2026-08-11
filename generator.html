@@ -391,7 +391,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           </div>
 
           <div class="field">
-            <label for="storage">backend magazynu</label>
+            <label for="storage" data-i18n="g.field.storage"></label>
             <select id="storage" aria-describedby="h-storage">
               <option value="none">brak</option>
               <option value="lvm">LVM (lokalny)</option>
@@ -462,7 +462,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           <legend data-i18n="g.h.octavia"></legend>
 
           <div class="field">
-            <label for="amp_net">octavia_amp_network — typ</label>
+            <label for="amp_net"><code>octavia_amp_network</code> <span data-i18n="g.field.ampNetType"></span></label>
             <select id="amp_net" aria-describedby="h-amp_net">
               <option value="tenant">tenant</option>
               <option value="flat">flat</option>
@@ -626,6 +626,13 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       "t.import.empty":         "The import field is empty.",
       "t.import.dropped":       "Import dropped — the file is built from the form again.",
       "t.export.blocked":       "Export blocked — the configuration contains errors.",
+
+      /* --- generator: etykiety pól, które nie są samą nazwą klucza ---
+         Rejestr: nazwa klucza zostaje nazwą klucza. Gdy etykieta niesie coś poza
+         nią, dopisek jest ROZDZIELANY strukturalnie, a nie tłumaczony razem
+         z identyfikatorem ani zwalniany rozszerzonym wyjątkiem. */
+      "g.field.storage":       "storage backend",
+      "g.field.ampNetType":    "type",
 
       /* --- generator: metka pola obowiązkowego ---
          Rejestr: małą literą, bo to metka, nie krzyk. Wielkie litery należą do CSS. */

@@ -34,6 +34,17 @@ This covers claims about the tool itself. "All visible text is English" was merg
 completeness statement while eighteen notification messages were still Polish, living in
 code the assertion never reached.
 
+**When a string falls out of an exception because something was appended to it, split it —
+do not translate it and do not widen the exception.** A field label read
+`octavia_amp_network — typ`: an identifier with a Polish word stuck on, so the whole string
+failed the identifier category. Translating it would have put a key name in the dictionary,
+which is wrong because key names are data. Widening the exception would have excused Polish
+prose alongside the key. Splitting leaves the identifier as data and makes the appended word
+a separate piece of interface. The cheapest of the three is always one of the wrong two.
+This is the same decision as taking table headings out of the cell exception, and like that
+one it is a structural improvement the guard merely happened to find: the key can now be
+copied without its tail, and a screen reader stops reading the two as one phrase.
+
 **A prediction is a control only when the only unknown in it is the thing it is meant to
 control.** A category was migrated against a prediction of forty; the result was
 thirty-five, and thirty-five is exactly five positions times seven scenarios. The model was

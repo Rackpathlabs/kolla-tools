@@ -92,6 +92,13 @@
       "t.import.dropped":       "Import dropped — the file is built from the form again.",
       "t.export.blocked":       "Export blocked — the configuration contains errors.",
 
+      /* --- generator: etykiety pól, które nie są samą nazwą klucza ---
+         Rejestr: nazwa klucza zostaje nazwą klucza. Gdy etykieta niesie coś poza
+         nią, dopisek jest ROZDZIELANY strukturalnie, a nie tłumaczony razem
+         z identyfikatorem ani zwalniany rozszerzonym wyjątkiem. */
+      "g.field.storage":       "storage backend",
+      "g.field.ampNetType":    "type",
+
       /* --- generator: metka pola obowiązkowego ---
          Rejestr: małą literą, bo to metka, nie krzyk. Wielkie litery należą do CSS. */
       "g.field.required":      "required",
