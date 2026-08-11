@@ -4,7 +4,8 @@ var lib = require("../testlib");
 lib.installDom();
 var T = lib.loadTool(process.argv[2],
   ["parse", "analyse", "buildReport", "KOLLA_MATRIX", "findRelease",
-   "defaultRelease", "SAMPLE_OK", "SAMPLE_BAD", "GLOBALS", "I18N"]);
+   "defaultRelease", "SAMPLE_OK", "SAMPLE_BAD", "GLOBALS", "I18N",
+   "inputFingerprint", "markStale"]);
 
 var R = lib.runner();
 var ok = R.ok;
@@ -444,13 +445,66 @@ ok("ten sam klucz na ścieżce -> zgłoszony raz przez tryb aktualizacji",
    mentioning(r, "letsencrypt_cert_server").length === 1 &&
    hasCode(r, "UPGRADE-KEY-RENAMED"));
 
+/* ---- aktualność wyniku (#38) ----
+   Odcisk wejścia jest jedyną częścią rozwiązania, która chroni przed przypadkiem,
+   którego nie przewidzieliśmy: naprawa wyzwalaczy leczy znane, odcisk leczy klasę. */
+console.log("odcisk wejścia:");
+var fp1 = T.inputFingerprint();
+ok("odcisk jest napisem", typeof fp1 === "string" && fp1.length > 0);
+document.getElementById("src").value = "[control]\nc1\n";
+ok("zmiana inventory zmienia odcisk", T.inputFingerprint() !== fp1);
+var fp2 = T.inputFingerprint();
+document.getElementById("gsrc").value = "---\nenable_masakari: \"yes\"\n";
+ok("zmiana globals zmienia odcisk", T.inputFingerprint() !== fp2);
+var fp3 = T.inputFingerprint();
+document.getElementById("release_to").value = "2026.1";
+ok("zmiana wydania docelowego zmienia odcisk", T.inputFingerprint() !== fp3);
+var fp4 = T.inputFingerprint();
+document.getElementById("ack_nobmc").checked = true;
+ok("zmiana potwierdzenia zmienia odcisk", T.inputFingerprint() !== fp4);
+document.getElementById("ack_nobmc").checked = false;
+ok("cofnięcie potwierdzenia przywraca odcisk", T.inputFingerprint() === fp4);
+/* Odcisk musi zależeć WYŁĄCZNIE od wejścia. Gdyby zależał od czegokolwiek innego,
+   pasek nieaktualności zapalałby się bez powodu i nauczyłby ignorowania siebie. */
+ok("ten sam stan pól daje ten sam odcisk", T.inputFingerprint() === T.inputFingerprint());
+
+/* ---- tabela wyzwalaczy (#38) ----
+   Zgłoszenie brzmiało "wynik czasem się nie odświeża". Diagnoza: KAŻDE pole musi
+   mieć podpięte zdarzenie, którym przeglądarka rzeczywiście sygnalizuje zmianę —
+   a to nie zawsze jest 'input'. Autouzupełnianie i zatwierdzenie wartości przy
+   utracie ogniska dają w części przeglądarek wyłącznie 'change'; powrót karty
+   z bfcache nie daje żadnego zdarzenia i wymaga 'pageshow'.
+
+   Ta tabela jest asercją, nie komentarzem: stub DOM zapamiętuje podpięcia, więc
+   brak wyzwalacza nie przechodzi. Bez tego test sprawdzałby tylko, że wywołanie
+   addEventListener nie rzuca. */
+console.log("wyzwalacze ponownej analizy:");
+var TRIGGERS = [
+  ["src", "input", "pisanie i wklejanie w inventory"],
+  ["src", "change", "autouzupełnianie i zatwierdzenie przy utracie ogniska"],
+  ["gsrc", "input", "pisanie i wklejanie w globals"],
+  ["gsrc", "change", "autouzupełnianie w globals"],
+  ["release", "change", "zmiana wydania"],
+  ["release_to", "change", "zmiana wydania docelowego"],
+  ["ack_nobmc", "change", "potwierdzenie świadomej decyzji"],
+  ["file", "change", "wybór pliku inventory z dialogu"],
+  ["gfile", "change", "wybór pliku globals z dialogu"]
+];
+TRIGGERS.forEach(function (t) {
+  ok(t[0] + " nasłuchuje " + t[1] + " — " + t[2],
+     document.getElementById(t[0]).listensTo(t[1]));
+});
+ok("edytor przyjmuje upuszczenie pliku", document.getElementById("editor").listensTo("drop"));
+ok("pole globals przyjmuje upuszczenie pliku", document.getElementById("gsrc").listensTo("drop"));
+/* Powrót z bfcache nie daje żadnego zdarzenia wejścia — bez pageshow pola wracają
+   wypełnione, a na ekranie zostaje wynik sprzed uśpienia karty. */
+ok("okno nasłuchuje pageshow — powrót karty z bfcache", window.listensTo("pageshow"));
+
 console.log("raport:");
 var res = run("", "2026.1");
 var rep = T.buildReport(res, { e: 0, w: 0, i: 0 });
 ok("zawiera wiersz z wydaniem", /Release: 2026\.1 Gazpacho \(kolla-ansible 22\.x\)/.test(rep),
    rep.split("\n").slice(0, 6).join(" | "));
-/* Etykieta języka zostaje po angielsku w obu wersjach — to metadane dla kogoś,
-   kto nie zna języka reszty dokumentu. Wartość jest kodem ISO. */
 ok("raport nie niesie wiersza o języku — narzędzie jest jednojęzyczne",
    !/^Language:/m.test(rep));
 R.finish();
