@@ -148,6 +148,17 @@
 /* --- walidator: kolokacja ról (KV-04, KV-11) — brzmienie z rulesetu,
          wraz z sekcjami "Not a bug when", bo to one odróżniają regułę od alarmu --- */
 /* --- walidator: reguły wydania i tryb aktualizacji --- */
+/* --- walidator: status wydania --- */
+      "v.rs.development":      { en: "a development branch — the release has not shipped as stable yet",
+                                 pl: "gałąź rozwojowa — wydanie nie ukazało się jeszcze jako stabilne" },
+      "v.rs.unmaintained":     { en: "unmaintained — no fixes are produced for it, security ones included",
+                                 pl: "wydanie bez utrzymania — poprawki, w tym bezpieczeństwa, nie powstają" },
+      "v.rs.eol":              { en: "the release has reached end of life", pl: "wydanie osiągnęło koniec życia" },
+      "v.src.path":            { en: "path", pl: "ścieżka" },
+      "v.src.both":            { en: "both files", pl: "oba pliki" },
+      "v.rel.planned":         { en: "planned release", pl: "planowane wydanie" },
+      "v.rel.since":           { en: "since", pl: "od" },
+
       "v.r.renamed":           { en: "was renamed to <code>{to}</code> in release <code>{rel}</code>.",
                                  pl: "została w wydaniu <code>{rel}</code> przemianowana na <code>{to}</code>." },
       "v.r.removed":           { en: "is no longer supported in release <code>{rel}</code>.",

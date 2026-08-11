@@ -53,7 +53,10 @@ function stripComments(src) {
   return src
     .replace(/<!--[\s\S]*?-->/g, " ")
     .replace(/\/\*[\s\S]*?\*\//g, " ")
-    .replace(/^[ \t]*\/\/.*$/gm, " ");
+    /* Komentarze końcowe też, ale nie kosztem adresów: "//" poprzedzone
+       dwukropkiem to https://, a nie komentarz. */
+    .replace(/^[ \t]*\/\/.*$/gm, " ")
+    .replace(/([^:])\/\/[^\n]*/g, "$1");
 }
 
 var total = 0;
@@ -68,17 +71,27 @@ FILES.forEach(function (file) {
   src = stripBlocks(src);
 
   var hits = [];
-  var re = /(pl:\s*)?"((?:[^"\\]|\\.){6,})"/g;
+  /* Literały wyszukujemy JEDNYM wzorcem od początku pliku, a przedrostek "pl:"
+     sprawdzamy oglądając się wstecz. Poprzednia wersja miała opcjonalny przedrostek
+     WEWNĄTRZ wzorca — przez co dopasowanie mogło zacząć się przed cudzysłowem,
+     parowanie cudzysłowów przesuwało się o jeden i wzorzec łapał ODSTĘPY MIĘDZY
+     napisami zamiast napisów. Raz rozjechane zostawało rozjechane do końca pliku:
+     dla matrix.js dawało 281 dopasowań i zero polskich, choć polskie napisy tam są. */
+  var re = /"(?:[^"\\]|\\.)*"/g;
   var m;
   while ((m = re.exec(src)) !== null) {
-    if (m[1]) continue;                 // połówka pl: pary — już przetłumaczone
-    if (!PL.test(m[2])) continue;
-    /* Numer linii liczymy w ORYGINALE, nie w tekście po wycięciach: wycinanie
-       bloków i komentarzy przesuwa wszystko, a numer, który nie wskazuje miejsca
-       w pliku, jest gorszy od jego braku — wysyła do niewłaściwej linii z pełnym
-       przekonaniem. Poprzednia wersja podawała właśnie takie. */
-    var at = raw.indexOf(m[2]);
-    hits.push({ line: at === -1 ? 0 : raw.slice(0, at).split("\n").length, text: m[2] });
+    var text = m[0].slice(1, -1);
+    if (text.length < 6 || !PL.test(text)) continue;
+    var before = src.slice(Math.max(0, m.index - 8), m.index);
+    if (/pl:\s*$/.test(before)) continue;   // połówka pary {en, pl} — już przetłumaczone
+    /* Parowanie cudzysłowów rozjeżdża się na cudzysłowach wewnątrz wyrażeń
+       regularnych (np. /[^"\\]/) i napisów w apostrofach — dokładne policzenie
+       wymagałoby tokenizera. Trafienie, którego nie da się odnaleźć w oryginale,
+       jest właśnie takim artefaktem, więc je odrzucamy. To jest narzędzie robocze,
+       nie strażnik: lepiej niedoszacować niż wskazywać nieistniejące miejsca. */
+    var at = raw.indexOf(text);
+    if (at === -1) continue;
+    hits.push({ line: raw.slice(0, at).split("\n").length, text: text });
   }
 
   total += hits.length;
