@@ -110,8 +110,11 @@ jobs:
           TITLE="Upstream release notes: candidates for the matrix"
           BODY="$(printf 'Noty wydania nowe w najświeższej serii, wymieniające nazwę, którą zna `matrix.js`. Słowa kluczowe pochodzą z macierzy, nie z listy w kodzie.\n\n**Cytaty są surowe.** Skrypt nie przypisuje `kind` ani `sev` — to wymaga przeczytania noty ze zrozumieniem, a zgadnięta klasyfikacja trafiłaby do reguł, o których ktoś potem założy, że ktoś je sprawdził.\n\n```\n%s\n```\n\n_Treść tego zgłoszenia jest nadpisywana przy każdym przebiegu._\n' "$(cat /tmp/notes.txt)")"
 
-          NUM="$(gh issue list --state open --search "$TITLE in:title" \
-                   --json number,title \
+          # Bez --search: dwukropek w tytule rozbija składnię kwalifikatorów, a
+          # indeks wyszukiwania jest opóźniony o minuty — świeżo założone zgłoszenie
+          # nie zostaje znalezione i przebieg zakłada drugie. Zwykła lista plus
+          # dokładne porównanie tytułu nie ma ani jednej z tych właściwości.
+          NUM="$(gh issue list --state open --limit 200 --json number,title \
                    --jq ".[] | select(.title == \"$TITLE\") | .number" | head -1)"
           if [ -n "$NUM" ]; then
             gh issue edit "$NUM" --body "$BODY"
@@ -134,7 +137,7 @@ jobs:
           # Tytuł niesie nazwę serii, więc cotygodniowy przebieg nie zakłada
           # dziesiątego zgłoszenia o tym samym, dopóki nikt się nim nie zajmie.
           TITLE="Upstream: new OpenStack series $SERIES needs a ruleset review"
-          if gh issue list --state all --search "$TITLE in:title" --json title \
+          if gh issue list --state all --limit 200 --json title \
                --jq ".[] | select(.title == \"$TITLE\")" | grep -q .; then
             echo "zgłoszenie dla $SERIES już istnieje"; exit 0
           fi
