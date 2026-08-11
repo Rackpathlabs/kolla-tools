@@ -25,6 +25,15 @@
   --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   --r:8px;
 }
+
+/* Atrybut hidden MUSI ukrywać.
+   Arkusz przeglądarki daje [hidden]{display:none}, ale to reguła o najniższym
+   pierwszeństwie — dowolna autorska klasa z własnym display ją unieważnia, bez
+   żadnego ostrzeżenia. Pasek nieaktualności walidatora miał .stale{display:flex}
+   i wisiał na ekranie z ustawionym hidden: kod robił swoje, CSS je odwoływał.
+   Reguła stoi tutaj, a nie przy .stale, bo problem dotyczy każdego elementu,
+   który kiedykolwiek dostanie własny display — a to widać dopiero na ekranie. */
+[hidden]{display:none !important}
 /* == KOLLA-THEME END == */
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}

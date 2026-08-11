@@ -62,6 +62,15 @@ jobs:
       - name: Pełny zestaw testów
         run: bash tools/run-tests.sh
 
+      # Kontrola mierzona na WYRENDEROWANEJ stronie, nie na jej reprezentacji.
+      # Pasek nieaktualności walidatora miał ustawiony atrybut hidden i był widoczny:
+      # .stale{display:flex} unieważniało [hidden]{display:none} z arkusza przeglądarki.
+      # Sonda sprawdzająca obecność atrybutu odpowiadała "ukryty" — na inne pytanie
+      # niż zadane. Chrome jest w obrazie runnera, więc silnik układu graficznego
+      # kosztuje nas zero i nie wymaga npm.
+      - name: Widoczność mierzona w przeglądarce
+        run: node tools/check-rendered.js
+
       # Komparator upstreamu żyje w osobnym workflow, ale jego dowód poprawności
       # należy tutaj: gdyby psuł się tylko w cotygodniowym cronie, dowiedzielibyśmy
       # się o tym z braku alarmu, czyli dokładnie tak, jak się nie da.
