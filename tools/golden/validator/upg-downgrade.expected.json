@@ -4,7 +4,7 @@
   "globals": false,
   "findings": [
     {
-      "code": "UPGRADE-KIERUNEK",
+      "code": "UPGRADE-DIRECTION",
       "sev": "error",
       "src": "upgrade",
       "line": null,

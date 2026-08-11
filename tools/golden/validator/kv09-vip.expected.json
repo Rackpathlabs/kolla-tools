@@ -4,7 +4,7 @@
   "globals": true,
   "findings": [
     {
-      "code": "KV-09-VIP-KOLIZJA",
+      "code": "KV-09-VIP-COLLISION",
       "sev": "error",
       "src": "cross",
       "line": 3,
@@ -14,7 +14,7 @@
       ]
     },
     {
-      "code": "KV-09-VIP-PODSIEC",
+      "code": "KV-09-VIP-SUBNET",
       "sev": "warn",
       "src": "cross",
       "line": null,

@@ -4,7 +4,7 @@
   "globals": false,
   "findings": [
     {
-      "code": "UPGRADE-GRUPA-PRZEMIANOWANY",
+      "code": "UPGRADE-GROUP-RENAMED",
       "sev": "error",
       "src": "inventory",
       "line": 22,
@@ -13,7 +13,7 @@
       ]
     },
     {
-      "code": "UPGRADE-GRUPA-WYCOFANY",
+      "code": "UPGRADE-GROUP-RETIRED",
       "sev": "warn",
       "src": "inventory",
       "line": 25,
@@ -22,7 +22,7 @@
       ]
     },
     {
-      "code": "WYDANIE",
+      "code": "RELEASE",
       "sev": "warn",
       "src": "inventory",
       "line": null,

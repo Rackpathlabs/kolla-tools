@@ -95,7 +95,10 @@ instead of staying silent.
 | Yoga | 14.x | end of life | no |
 
 Base image distributions: `centos`, `debian`, `rocky`, `ubuntu`, validated per release.
-Matrix data verified 2026-08-10 against `docs.openstack.org` and `releases.openstack.org`.
+Matrix data verified 2026-08-11 against `docs.openstack.org` and `releases.openstack.org`.
+A weekly job compares the matrix against the OpenStack release data and opens a draft PR
+when a series status or date has moved. It never guesses: anything touching what a rule
+means — a new flag, a changed default, a deprecation — is filed for review instead.
 
 ## Working on this repository
 
@@ -111,6 +114,11 @@ bash tools/sync-blocks.sh          # push shared blocks into the HTML files
 Code shared between tools lives in `matrix.js`, `globals-parser.js` and `theme.css`, and
 is pasted byte-identically into each file that needs it; CI fails if the copies drift.
 Tests need only Node.
+
+The zero-dependency rule covers the product, not the tooling: nothing shipped to a user
+may pull in a library, but a CI script that never reaches the artefacts may (the upstream
+watcher uses Python and PyYAML). Tooling that needs a dependency lives in `tools/` or
+`.github/workflows/` and stays there.
 
 ## Licence
 

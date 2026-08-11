@@ -41,7 +41,7 @@ jobs:
       - name: Higiena plików (bajty NUL)
         run: bash tools/check-binary.sh
 
-      - name: Słownik interfejsu (kompletność, sieroty)
+      - name: Słownik interfejsu (sieroty, puste wpisy)
         run: node tools/check-i18n.js
 
       - name: Spójność bloków współdzielonych
@@ -61,3 +61,10 @@ jobs:
       # Składnia (node --check), testy dymne i golden-file dla obu narzędzi.
       - name: Pełny zestaw testów
         run: bash tools/run-tests.sh
+
+      # Komparator upstreamu żyje w osobnym workflow, ale jego dowód poprawności
+      # należy tutaj: gdyby psuł się tylko w cotygodniowym cronie, dowiedzielibyśmy
+      # się o tym z braku alarmu, czyli dokładnie tak, jak się nie da.
+      # Sam test nie rusza sieci — podstawia zafałszowaną macierz z pamięci.
+      - name: Komparator upstreamu wykrywa rozjazd
+        run: python3 tools/upstream_watch.py --self-test

@@ -75,42 +75,42 @@ ok("2025.1/rocky bez błędów", levels(d, "error").length === 0, JSON.stringify
 /* Kontrakt KV-12a: generator wypisuje ten klucz jawnie, więc jego własny plik
    nie wpada we własną regułę — wpis schodzi z uwagi do informacji. */
 ok("om_enable_rabbitmq_stream_fanout -> informacja o jawnym ustawieniu",
-   has(d, "info", /ustawiony jawnie/) &&
+   has(d, "info", /set explicitly in the file/) &&
    !has(d, "warn", /om_enable_rabbitmq_stream_fanout/));
 ok("2025.1 nie wspomina o kluczach nie-notable",
    !has(d, "info", /enable_ironic_inspector/));
 ok("2025.1 wypisuje systemy hosta", has(d, "info", /Ubuntu Noble/));
 
 d = T.validate(base({ release: "2025.2", distro: "centos" }));
-ok("centos w 2025.2 -> uwaga o braku obrazów", has(d, "warn", /nie publikuje dla niego obrazów/));
+ok("centos w 2025.2 -> uwaga o braku obrazów", has(d, "warn", /publishes no images for it/));
 
 /* docs 2025.1: "Kolla does not publish CS9/10 based images" */
 d = T.validate(base({ release: "2025.1", distro: "centos" }));
-ok("centos w 2025.1 -> uwaga o braku obrazów", has(d, "warn", /nie publikuje dla niego obrazów/));
+ok("centos w 2025.1 -> uwaga o braku obrazów", has(d, "warn", /publishes no images for it/));
 
 /* docs 2024.1: "Kolla does not publish CS9 based images" */
 d = T.validate(base({ release: "2024.1", distro: "centos" }));
-ok("centos w 2024.1 -> uwaga o braku obrazów", has(d, "warn", /nie publikuje dla niego obrazów/));
+ok("centos w 2024.1 -> uwaga o braku obrazów", has(d, "warn", /publishes no images for it/));
 
 d = T.validate(base({ release: "2025.1", distro: "rocky" }));
 ok("rocky w 2025.1 -> bez uwagi o obrazach", !has(d, "warn", /nie publikuje/));
 
 d = T.validate(base({ release: "2024.2" }));
-ok("2024.2 -> uwaga o EOL", has(d, "warn", /koniec życia/));
-ok("2024.2 -> data wycofania z pola endsOn", has(d, "warn", /od: <code>2026-04-29<\/code>/));
+ok("2024.2 -> uwaga o EOL", has(d, "warn", /end of life/));
+ok("2024.2 -> data wycofania z pola endsOn", has(d, "warn", /since: <code>2026-04-29<\/code>/));
 
 d = T.validate(base({ release: "2024.1" }));
-ok("2024.1 -> uwaga o braku utrzymania", has(d, "warn", /bez utrzymania/));
-ok("2024.1 bez znanej daty -> bez ogona z datą", !has(d, "warn", /bez utrzymania.* — od:/));
+ok("2024.1 -> uwaga o braku utrzymania", has(d, "warn", /unmaintained/));
+ok("2024.1 bez znanej daty -> bez ogona z datą", !has(d, "warn", /unmaintained.* — since:/));
 
 d = T.validate(base({ release: "2026.2" }));
-ok("2026.2 -> uwaga o gałęzi rozwojowej", has(d, "warn", /gałąź rozwojowa/));
+ok("2026.2 -> uwaga o gałęzi rozwojowej", has(d, "warn", /development branch/));
 ok("2026.2 -> data planowanego wydania, nie końca wsparcia",
-   has(d, "warn", /planowane wydanie: <code>2026-09-30<\/code>/));
+   has(d, "warn", /expected release: <code>2026-09-30<\/code>/));
 
 d = T.validate(base({ release: "2026.1" }));
 ok("2026.1 (wspierane) -> brak uwagi o statusie",
-   !has(d, "warn", /koniec życia|bez utrzymania|gałąź rozwojowa/));
+   !has(d, "warn", /end of life|unmaintained|development branch/));
 ok("2026.1 podaje prefetch QoS jako informację, nie uwagę",
    has(d, "info", /om_rabbitmq_qos_prefetch_count/) &&
    !has(d, "warn", /om_rabbitmq_qos_prefetch_count/));
@@ -119,31 +119,31 @@ ok("waga wpisu pochodzi z macierzy, nie z kodu",
    M.keys.om_rabbitmq_qos_prefetch_count.sev === "info");
 
 d = T.validate(base({ release: "2019.1" }));
-ok("spoza macierzy -> uwaga", has(d, "warn", /nie występuje w macierzy/));
+ok("spoza macierzy -> uwaga", has(d, "warn", /does not appear in the release matrix/));
 
 d = T.validate(base({ release: "master" }));
-ok("master -> bez uwagi o macierzy", !has(d, "warn", /nie występuje w macierzy/));
+ok("master -> bez uwagi o macierzy", !has(d, "warn", /does not appear in the release matrix/));
 
 /* ---- ruleset KV po stronie globals.yml ---- */
 
 console.log("KV-05 — magazyn i Corosync na jednym łączu:");
 d = T.validate(base());
-ok("domyślnie storage dziedziczy network -> uwaga", has(d, "warn", /leżą na tym samym urządzeniu/));
+ok("domyślnie storage dziedziczy network -> uwaga", has(d, "warn", /sit on the same device/));
 d = T.validate(base({ t_hacluster: true }));
-ok("z enable_hacluster -> błąd", has(d, "error", /leżą na tym samym urządzeniu/));
+ok("z enable_hacluster -> błąd", has(d, "error", /sit on the same device/));
 d = T.validate(base({ t_hacluster: true, ack_link: true }));
-ok("potwierdzenie obniża do informacji", has(d, "info", /leżą na tym samym urządzeniu/));
+ok("potwierdzenie obniża do informacji", has(d, "info", /sit on the same device/));
 ok("potwierdzenie nie wycisza wpisu",
-   !has(d, "error", /leżą na tym samym urządzeniu/) && has(d, "info", /zmierzony zapas pasma/));
+   !has(d, "error", /sit on the same device/) && has(d, "info", /measured bandwidth headroom/));
 d = T.validate(base({ api_if: "eth0", stg_if: "eth2" }));
-ok("osobne urządzenia -> cisza", !has(d, "warn", /leżą na tym samym urządzeniu/));
+ok("osobne urządzenia -> cisza", !has(d, "warn", /sit on the same device/));
 d = T.validate(base({ api_if: "bond0.10", stg_if: "bond0.20" }));
 ok("bond0.10 vs bond0.20 -> to samo bond0", has(d, "warn", /bond0/));
 ok("porównanie po urządzeniu bazowym", T.baseDev("bond0.20") === "bond0");
 
 console.log("KV-06 — migracja na łączu API:");
 /* Drabina z Amendment: waga nie przekracza tego, co plik udowadnia. */
-var MIG = /migration_interface<\/code> nie jest ustawione/;
+var MIG = /migration_interface<\/code> is unset/;
 d = T.validate(base());
 ok("bez narzędzi HA -> informacja", has(d, "info", MIG) && !has(d, "warn", MIG));
 d = T.validate(base({ t_hacluster: true }));
@@ -154,59 +154,59 @@ ok("drabina wag pochodzi z tabeli, nie z warunku w kodzie",
    JSON.stringify(T.LINT["KV-06"].sev) ===
    JSON.stringify({ masakari: "error", hacluster: "warn", plain: "info" }));
 d = T.validate(base({ t_masakari: true, t_hacluster: true, ack_migration: true }));
-ok("potwierdzenie obniża do informacji", has(d, "info", /migration_interface<\/code> nie jest ustawione/));
+ok("potwierdzenie obniża do informacji", has(d, "info", /migration_interface<\/code> is unset/));
 d = T.validate(base({ api_if: "eth0", mig_if: "eth3" }));
 ok("osobny interfejs migracji -> cisza", !has(d, "warn", /migration_interface/));
 
 console.log("KV-10 — interfejs zewnętrzny kontra zarządzanie:");
 d = T.validate(base({ net_if: "eth0", ext_if: "eth0" }));
-ok("równość wprost -> błąd", has(d, "error", /to ten sam interfejs co/));
+ok("równość wprost -> błąd", has(d, "error", /is the same interface as/));
 d = T.validate(base({ net_if: "bond0.10", ext_if: "bond0" }));
-ok("wspólny bond -> uwaga", has(d, "warn", /dzieli urządzenie bazowe/));
+ok("wspólny bond -> uwaga", has(d, "warn", /shares a base device/));
 d = T.validate(base());
-ok("różne urządzenia -> cisza", !has(d, "warn", /dzieli urządzenie bazowe/));
+ok("różne urządzenia -> cisza", !has(d, "warn", /shares a base device/));
 
 console.log("KV-13 — sieć amfor Octavii:");
 var oct = { t_octavia: true, t_barbican: true, amp_net: "vlan", physnet: "physnet1" };
 d = T.validate(base(oct));
-ok("vlan bez sieci provider -> błąd", has(d, "error", /wymaga <code>enable_neutron_provider_networks/));
+ok("vlan bez sieci provider -> błąd", has(d, "error", /requires <code>enable_neutron_provider_networks/));
 d = T.validate(base(Object.assign({}, oct, { t_provider: true })));
-ok("physnet1 przy jednym interfejsie -> cisza", !has(d, "error", /nie wynika z listy/));
+ok("physnet1 przy jednym interfejsie -> cisza", !has(d, "error", /does not follow from the external interface list/));
 d = T.validate(base(Object.assign({}, oct, { t_provider: true, physnet: "physnet2" })));
-ok("physnet2 przy jednym interfejsie -> błąd", has(d, "error", /nie wynika z listy/));
+ok("physnet2 przy jednym interfejsie -> błąd", has(d, "error", /does not follow from the external interface list/));
 d = T.validate(base(Object.assign({}, oct, { t_provider: true, physnet: "physnet2",
                                             ext_if: "eth1,eth2", br_name: "br-ex,br-ex2" })));
-ok("dwa interfejsy -> physnet2 dostępny", !has(d, "error", /nie wynika z listy/));
+ok("dwa interfejsy -> physnet2 dostępny", !has(d, "error", /does not follow from the external interface list/));
 ok("physnety wynikają z pozycji na liście",
    T.physnets({ ext_if: "eth1,eth2,eth3" }).join(",") === "physnet1,physnet2,physnet3");
 d = T.validate(base({ ext_if: "eth1,eth2", br_name: "br-ex" }));
-ok("liczba mostków != liczba interfejsów -> błąd", has(d, "error", /odpowiada dokładnie jeden mostek/));
+ok("liczba mostków != liczba interfejsów -> błąd", has(d, "error", /Exactly one bridge belongs/));
 
 console.log("KV-14 — TLS wewnętrzny, nazwy i adresy:");
 d = T.validate(base({ t_tls_int: true }));
-ok("TLS bez CA i bez Let's Encrypt -> błąd", has(d, "error", /nie zaufają własnemu CA/));
+ok("TLS bez CA i bez Let's Encrypt -> błąd", has(d, "error", /will not trust a private CA/));
 d = T.validate(base({ t_tls_int: true, t_copy_ca: true }));
-ok("z kolla_copy_ca_into_containers -> cisza", !has(d, "error", /nie zaufają własnemu CA/));
+ok("z kolla_copy_ca_into_containers -> cisza", !has(d, "error", /will not trust a private CA/));
 d = T.validate(base({ t_tls_int: true, t_letsencrypt: true }));
-ok("z Let's Encrypt -> cisza", !has(d, "error", /nie zaufają własnemu CA/));
+ok("z Let's Encrypt -> cisza", !has(d, "error", /will not trust a private CA/));
 d = T.validate(base({ int_fqdn: "cloud.example.net", ext_fqdn: "cloud.example.net" }));
-ok("identyczne FQDN -> błąd", has(d, "error", /są identyczne/));
+ok("identyczne FQDN -> błąd", has(d, "error", /are identical/));
 d = T.validate(base({ ext_vip: "203.0.113.10" }));
-ok("różne VIP-y bez FQDN -> błąd", has(d, "error", /obie nazwy FQDN pozostają puste/));
+ok("różne VIP-y bez FQDN -> błąd", has(d, "error", /both FQDNs are empty/));
 d = T.validate(base({ ext_vip: "10.0.0.250", ext_vip_if: "eth9" }));
-ok("ten sam VIP na innym interfejsie -> błąd", has(d, "error", /ten sam adres dwa razy/));
+ok("ten sam VIP na innym interfejsie -> błąd", has(d, "error", /claim one address twice/));
 
 console.log("zależności usług:");
 d = T.validate(base({ t_cinder: true }));
-ok("Cinder bez backendu -> błąd", has(d, "error", /enable_cinder<\/code> wymaga backendu/));
+ok("Cinder bez backendu -> błąd", has(d, "error", /enable_cinder<\/code> requires a storage backend/));
 d = T.validate(base({ t_cinder: true, storage: "lvm" }));
 ok("Cinder z LVM -> cisza", !has(d, "error", /enable_cinder<\/code> wymaga/));
 d = T.validate(base({ t_grafana: true }));
-ok("Grafana bez Prometheusa -> błąd", has(d, "error", /enable_grafana<\/code> wymaga/));
+ok("Grafana bez Prometheusa -> błąd", has(d, "error", /enable_grafana<\/code> requires/));
 d = T.validate(base({ t_octavia: true }));
-ok("Octavia bez Barbicana -> błąd", has(d, "error", /enable_octavia<\/code> wymaga/));
+ok("Octavia bez Barbicana -> błąd", has(d, "error", /enable_octavia<\/code> requires/));
 d = T.validate(base({ t_masakari: true }));
-ok("Masakari bez hacluster -> błąd", has(d, "error", /enable_masakari<\/code> wymaga/));
+ok("Masakari bez hacluster -> błąd", has(d, "error", /enable_masakari<\/code> requires/));
 
 /* ---- parser globals.yml (blok współdzielony, issue #7) ---- */
 
@@ -255,11 +255,11 @@ console.log("parser — przegląd kluczy wobec wydania:");
 doc = P.parse('---\nom_enable_rabbitmq_high_availability: "yes"\nnieznany_klucz: 1\n');
 var rv = P.review(doc, T.findRelease("2025.1"), { om_enable_rabbitmq_high_availability: 1 });
 ok("wycofany klucz z wagą z macierzy",
-   rv.some(function (f) { return f.code === "KLUCZ-WYCOFANY" && f.sev === "error" && f.line === 2; }));
+   rv.some(function (f) { return f.code === "KEY-DEPRECATED" && f.sev === "error" && f.line === 2; }));
 ok("nieznany klucz jako informacja",
-   rv.some(function (f) { return f.code === "KLUCZ-NIEZNANY" && f.sev === "info" && f.line === 3; }));
+   rv.some(function (f) { return f.code === "KEY-UNKNOWN" && f.sev === "info" && f.line === 3; }));
 ok("bez wydania brak uwag o wycofaniu",
-   !P.review(doc, null, {}).some(function (f) { return f.code === "KLUCZ-WYCOFANY"; }));
+   !P.review(doc, null, {}).some(function (f) { return f.code === "KEY-DEPRECATED"; }));
 
 console.log("import do formularza:");
 doc = P.parse('---\nkolla_base_distro: "ubuntu"\nenable_cinder: "yes"\ncinder_backend_ceph: "yes"\n' +
@@ -290,19 +290,19 @@ var docNo = P.parse(noKey);
 var stNo = T.rawStateFromParsed(docNo);
 var dNo = T.validate(stNo, docNo);
 ok("import bez klucza -> uwaga, a nie fałszywa informacja o jawnym ustawieniu",
-   has(dNo, "warn", /om_enable_rabbitmq_stream_fanout/) && !has(dNo, "info", /ustawiony jawnie/));
+   has(dNo, "warn", /om_enable_rabbitmq_stream_fanout/) && !has(dNo, "info", /set explicitly in the file/));
 ok("komunikat mówi wprost, że import nie dopisuje kluczy",
-   has(dNo, "warn", /nie dopisuje brakujących kluczy/));
+   has(dNo, "warn", /does not add missing keys/));
 ok("eksport nie dopisuje klucza — plik wraca bajtowo identyczny",
    P.emit(docNo, T.changedOverrides(docNo, stNo)).text === noKey);
 
 var docYes = P.parse(noKey.replace("enable_haproxy",
   'om_enable_rabbitmq_stream_fanout: "yes"\nenable_haproxy'));
 ok("import z kluczem -> informacja o jawnym ustawieniu",
-   has(T.validate(T.rawStateFromParsed(docYes), docYes), "info", /ustawiony jawnie/));
+   has(T.validate(T.rawStateFromParsed(docYes), docYes), "info", /set explicitly in the file/));
 
 ok("tryb generowania od zera nadal spełnia kontrakt KV-12a",
-   has(T.validate(base(), null), "info", /ustawiony jawnie/) &&
+   has(T.validate(base(), null), "info", /set explicitly in the file/) &&
    !has(T.validate(base(), null), "warn", /om_enable_rabbitmq_stream_fanout/));
 
 console.log("YAML:");

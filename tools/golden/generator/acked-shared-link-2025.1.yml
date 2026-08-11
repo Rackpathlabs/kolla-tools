@@ -1,25 +1,25 @@
 ---
 # Generated with Rackpathlabs globals.yml generator
 #
-# Plik konfiguracyjny Kolla-Ansible: /etc/kolla/globals.yml
-# Docelowe wydanie: 2025.1   |   obraz bazowy: rocky
-# Epoxy, kolla-ansible 20.x, status wsparcia: maintained
+# Kolla-Ansible configuration file: /etc/kolla/globals.yml
+# Target release: 2025.1   |   base image: rocky
+# Epoxy, kolla-ansible 20.x, support status: maintained
 #
-# Zweryfikuj wartości na docelowych hostach przed uruchomieniem
-# 'kolla-ansible prechecks' oraz 'kolla-ansible deploy'.
+# Verify these values against the target hosts before running
+# 'kolla-ansible prechecks' and 'kolla-ansible deploy'.
 
 ###############################################################################
-# Obraz bazowy i wydanie
+# Base image and release
 ###############################################################################
 kolla_base_distro: "rocky"
 openstack_release: "2025.1"
 
 ###############################################################################
-# Sieć
+# Network
 #
-# network_interface           - sieć zarządzania / API, wymaga adresu IP na każdym węźle
-# neutron_external_interface  - ruch zewnętrzny, interfejs bez adresu IP i bez konfiguracji
-# kolla_internal_vip_address  - wolny adres w sieci zarządzania, nieprzypisany do hosta
+# network_interface           - management/API network, needs an IP on every node
+# neutron_external_interface  - external traffic; no IP and no configuration on it
+# kolla_internal_vip_address  - free address on the management network, not held by a host
 ###############################################################################
 network_interface: "bond0"
 neutron_external_interface: "eth3"
@@ -30,12 +30,12 @@ storage_interface: "bond0"
 migration_interface: "bond0"
 
 ###############################################################################
-# Warstwa równoważenia obciążenia
+# Load balancing
 ###############################################################################
 enable_haproxy: "yes"
 
 ###############################################################################
-# Usługi OpenStack
+# OpenStack services
 ###############################################################################
 enable_cinder: "yes"
 enable_cinder_backend_lvm: "yes"
@@ -48,9 +48,9 @@ enable_prometheus: "no"
 enable_grafana: "no"
 enable_hacluster: "yes"
 enable_masakari: "yes"
-# Masakari bez działającego STONITH nie jest wysoką dostępnością. Izolacja
-# sieciowa węzła wygląda jak jego awaria: instancja zostaje odtworzona,
-# podczas gdy pierwotna wciąż trzyma otwarty deskryptor RBD.
+# Masakari without working STONITH is not high availability. Network isolation
+# of a node looks like its failure: the instance is rebuilt elsewhere while the
+# original still holds an open RBD descriptor.
 
 ###############################################################################
 # Neutron
@@ -62,14 +62,14 @@ enable_neutron_provider_networks: "no"
 # RabbitMQ
 ###############################################################################
 om_enable_rabbitmq_stream_fanout: "yes"
-# Wartość domyślna wydania 2025.1, wypisana jawnie.
-# Przy true liderzy wszystkich strumieni potrafią wylądować na jednym
-# brokerze — po wdrożeniu zweryfikuj ich rozłożenie na węzłach.
+# Set to the 2025.1 default on purpose rather than left implicit.
+# With true, all stream leaders can end up on a single broker; check how they
+# are distributed across the nodes after deploying.
 
 ###############################################################################
-# Decyzje potwierdzone świadomie
-# - wspólne łącze dla ruchu magazynu i API: potwierdzony zapas pasma
-#   i kolejkowanie po stronie przełącznika
-# - migracja na wydzielonej sieci ustawionej poza Kollą przez
-#   live_migration_inbound_addr w nadpisaniu nova-compute
+# Acknowledged by the operator; not verified by this tool:
+#   - storage and API traffic on a shared base device: headroom measured,
+#     switch applies queueing
+#   - migration over api_interface: dedicated network configured outside
+#     Kolla, via live_migration_inbound_addr in a nova-compute override
 ###############################################################################

@@ -20,7 +20,7 @@
   "findings": [],
   "review": [
     {
-      "code": "KLUCZ-NIEZNANY",
+      "code": "KEY-UNKNOWN",
       "sev": "info",
       "key": "octavia_provider_drivers",
       "line": 3

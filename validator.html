@@ -41,14 +41,6 @@ nav{margin-left:auto;display:flex;gap:6px}
 nav a{color:var(--muted);text-decoration:none;font-size:13.5px;padding:6px 12px;border:1px solid transparent;border-radius:var(--r)}
 nav a:hover{color:var(--fg);background:var(--panel-2)}
 nav a[aria-current="page"]{color:var(--fg);border-color:var(--line);background:var(--panel)}
-.lang{display:flex;gap:4px;margin-left:8px;align-items:center}
-.lang button{
-  font:inherit;font-size:12px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;
-  color:var(--muted);background:transparent;border:1px solid var(--line);
-  border-radius:var(--r);padding:5px 9px;cursor:pointer
-}
-.lang button:hover{color:var(--fg);background:var(--panel-2)}
-.lang button[aria-pressed="true"]{color:var(--fg);border-color:var(--accent-dim);background:var(--panel)}
 
 .skip{
   position:absolute;left:-9999px;top:0;background:var(--panel-2);color:var(--fg);
@@ -208,10 +200,6 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       <a href="index.html" data-i18n="nav.start">start</a>
       <a href="generator.html" data-i18n="nav.generator">globals.yml</a>
       <a href="validator.html" aria-current="page" data-i18n="nav.validator">inventory validator</a>
-      <span class="lang" role="group" id="lang" aria-label="Language">
-        <button type="button" data-lang="en" aria-pressed="true">EN</button>
-        <button type="button" data-lang="pl" aria-pressed="false">PL</button>
-      </span>
     </nav>
   </div>
 </header>
@@ -272,7 +260,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       <div class="panel" style="margin-top:18px">
         <h2><span data-i18n="v.topology"></span>
           <span class="sp"></span>
-          <span class="chip" id="chip-hosts">0 hostów</span>
+          <span class="chip" id="chip-hosts">0 hosts</span>
         </h2>
         <div class="body" id="topology"></div>
       </div>
@@ -344,7 +332,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
                   nadrzędnej to informacja */
   var KOLLA_MATRIX = {
     schema: 1,
-    updated: "2026-08-10",
+    updated: "2026-08-11",
 
     /* Opis klucza żyje tu raz, nie przy każdym wydaniu.
        notable: klucz dotyczy każdego wdrożenia i narzędzie wspomina o nim zawsze.
@@ -356,26 +344,26 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     keys: {
       om_enable_rabbitmq_stream_fanout: {
         notable: true, sev: "warn",
-        label: "kolejki strumieniowe dla fanoutów RabbitMQ",
-        why: "Przy wartości domyślnej <code>true</code> liderzy wszystkich strumieni potrafią " +
-             "wylądować na jednym brokerze. Przy trzech węzłach control warto zweryfikować " +
-             "rozłożenie liderów po wdrożeniu."
+        label: "RabbitMQ stream fanout queues",
+        why: "With the default of <code>true</code>, every stream leader can end up on one " +
+             "broker. On three control nodes it is worth checking how the leaders are " +
+             "distributed once the deployment is up."
       },
       om_rabbitmq_qos_prefetch_count: {
         notable: true, sev: "info",
-        label: "prefetch QoS dla RabbitMQ",
-        why: "Od 2026.1 domyślnie 50 zamiast wartości nieograniczonej — zmiana wpływa " +
-             "na rozkład obciążenia między workerami."
+        label: "RabbitMQ QoS prefetch",
+        why: "From 2026.1 the default is 50 rather than unlimited, which changes how work " +
+             "spreads across the workers."
       },
       enable_ironic_inspector: {
         notable: false,
         label: "Ironic Inspector",
-        why: "Projekt wycofany; od 2025.1 domyślnie wyłączony i przewidziany do usunięcia."
+        why: "The project is retired; disabled by default from 2025.1 and slated for removal."
       },
       enable_ironic_neutron_agent: {
         notable: false,
-        label: "agent Neutron dla Ironic",
-        why: "Od 2025.1 domyślnie wyłączony."
+        label: "Neutron agent for Ironic",
+        why: "Disabled by default from 2025.1."
       }
     },
 
@@ -401,25 +389,25 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         deprecationsCatalogued: true,
         deprecated: [
           { kind: "group", name: "kolla-toolbox", replacedBy: "kolla_toolbox", sev: "error",
-            note: "Grupa i rola przemianowane — myślnik zastąpiony podkreśleniem. Stara nazwa nie zostanie rozpoznana." },
+            note: "Group and role renamed, hyphen to underscore. The old name is not recognised." },
           { kind: "service", name: "zun", replacedBy: null, sev: "warn",
-            note: "Usunięte w 2026.1 (niedziałające)." },
+            note: "Removed in 2026.1; it had stopped working." },
           { kind: "service", name: "kuryr", replacedBy: null, sev: "warn",
-            note: "Usunięte razem z Zun, który był jedynym konsumentem." },
+            note: "Removed along with Zun, its only consumer." },
           { kind: "service", name: "influxdb", replacedBy: null, sev: "warn",
-            note: "Usunięte — InfluxDB v1 osiągnęło EOL, migracji do v2 nie zaplanowano." },
+            note: "Removed: InfluxDB v1 reached end of life and no migration to v2 was planned." },
           { kind: "service", name: "telegraf", replacedBy: null, sev: "warn",
-            note: "Usunięte po wcześniejszej deprecjacji." },
+            note: "Removed after an earlier deprecation." },
           { kind: "service", name: "venus", replacedBy: null, sev: "warn",
-            note: "Usunięte z powodu braku aktywności projektu." },
+            note: "Removed because the project became inactive." },
           { kind: "group", name: "cinder-volume", replacedBy: null, sev: "info",
-            note: "Domyślna grupa nadrzędna zmieniona ze <code>storage</code> na <code>cinder</code>." },
+            note: "Default parent group changed from <code>storage</code> to <code>cinder</code>." },
           { kind: "group", name: "cinder-backup", replacedBy: null, sev: "info",
-            note: "Domyślna grupa nadrzędna zmieniona ze <code>storage</code> na <code>cinder</code>." },
+            note: "Default parent group changed from <code>storage</code> to <code>cinder</code>." },
           { kind: "key", name: "distro_python_version", replacedBy: null, sev: "warn",
-            note: "Usunięte." },
+            note: "Removed." },
           { kind: "key", name: "lightbits_JWT", replacedBy: "lightbits_jwt", sev: "error",
-            note: "Przemianowane — zmieniona wielkość liter." }
+            note: "Renamed; the letter case changed." }
         ]
       },
       {
@@ -436,26 +424,26 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         deprecated: [
           /* "ironic-inspector: Service support dropped upstream." */
           { kind: "service", name: "ironic-inspector", replacedBy: null, sev: "warn",
-            note: "Usługa wycofana w górę strumienia i usunięta z Kolli." },
+            note: "Retired upstream and removed from Kolla." },
           /* "Variables renamed: ironic_inspector_kernel_cmdline_extras ->
              ironic_kernel_cmdline_extras" */
           { kind: "key", name: "ironic_inspector_kernel_cmdline_extras",
             replacedBy: "ironic_kernel_cmdline_extras", sev: "error",
-            note: "Przemianowane przy wycofaniu ironic-inspector." },
+            note: "Renamed when ironic-inspector was retired." },
           /* "ironic_inspector_pxe_filter -> ironic_pxe_filter" */
           { kind: "key", name: "ironic_inspector_pxe_filter",
             replacedBy: "ironic_pxe_filter", sev: "error",
-            note: "Przemianowane przy wycofaniu ironic-inspector." },
+            note: "Renamed when ironic-inspector was retired." },
           /* "bifrost option: bifrost_enable_ironic_inspector deleted." */
           { kind: "key", name: "bifrost_enable_ironic_inspector", replacedBy: null, sev: "warn",
-            note: "Usunięte — klucz nie ma już żadnego efektu." },
+            note: "Removed; the key no longer has any effect." },
           /* "neutron_legacy_iptables: Dropped entirely." */
           { kind: "key", name: "neutron_legacy_iptables", replacedBy: null, sev: "warn",
-            note: "Usunięte." },
+            note: "Removed." },
           /* "Redis to Valkey migration: Set enable_redis: \"no\" and
              enable_valkey: \"yes\" before upgrade." */
           { kind: "key", name: "enable_redis", replacedBy: "enable_valkey", sev: "error",
-            note: "Migracja Redis → Valkey. Przełączenie musi nastąpić PRZED aktualizacją." }
+            note: "Redis to Valkey migration. The switch must happen BEFORE the upgrade." }
         ]
       },
       {
@@ -473,29 +461,29 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         deprecationsCatalogued: true,
         deprecated: [
           { kind: "key", name: "om_enable_rabbitmq_high_availability", replacedBy: null, sev: "error",
-            note: "Usunięte — kolejki quorum są od tego wydania obowiązkowe." },
+            note: "Removed; quorum queues are mandatory from this release." },
           { kind: "key", name: "letsencrypt_cert_server", replacedBy: "letsencrypt_external_cert_server", sev: "error",
-            note: "Przemianowane." },
+            note: "Renamed." },
           { kind: "key", name: "openstack_previous_release_name", replacedBy: "ironic_pin_release_version", sev: "error",
-            note: "Przemianowane." },
-          { kind: "key", name: "ceph_cinder_keyring", replacedBy: null, sev: "warn", note: "Usunięte." },
-          { kind: "key", name: "ceph_cinder_backup_keyring", replacedBy: null, sev: "warn", note: "Usunięte." },
-          { kind: "key", name: "ceph_glance_keyring", replacedBy: null, sev: "warn", note: "Usunięte." },
-          { kind: "key", name: "ceph_gnocchi_keyring", replacedBy: null, sev: "warn", note: "Usunięte." },
-          { kind: "key", name: "ceph_manila_keyring", replacedBy: null, sev: "warn", note: "Usunięte." },
-          { kind: "key", name: "ceph_nova_keyring", replacedBy: null, sev: "warn", note: "Usunięte." },
+            note: "Renamed." },
+          { kind: "key", name: "ceph_cinder_keyring", replacedBy: null, sev: "warn", note: "Removed." },
+          { kind: "key", name: "ceph_cinder_backup_keyring", replacedBy: null, sev: "warn", note: "Removed." },
+          { kind: "key", name: "ceph_glance_keyring", replacedBy: null, sev: "warn", note: "Removed." },
+          { kind: "key", name: "ceph_gnocchi_keyring", replacedBy: null, sev: "warn", note: "Removed." },
+          { kind: "key", name: "ceph_manila_keyring", replacedBy: null, sev: "warn", note: "Removed." },
+          { kind: "key", name: "ceph_nova_keyring", replacedBy: null, sev: "warn", note: "Removed." },
           { kind: "service", name: "swift", replacedBy: null, sev: "warn",
-            note: "Wsparcie dla wdrożenia Swift usunięte w 2025.1." },
+            note: "Support for deploying Swift was removed in 2025.1." },
           /* KV-12b: zmiana typu kolejek między wdrożeniami psuje istniejące kolejki
              (PRECONDITION_FAILED - inequivalent arg). Nie da się tego naprawić edycją
              pliku — wymaga kroku operacyjnego na brokerze. */
           { kind: "procedure", name: "om_enable_rabbitmq_quorum_queues", replacedBy: null,
             sev: "warn",
-            note: "Od 2025.1 kolejki quorum są obowiązkowe. Jeśli wdrożenie startowało " +
-                  "z kolejkami klasycznymi, sama zmiana wartości nie wystarczy: usługi " +
-                  "spróbują zadeklarować istniejące kolejki z innym typem i dostaną " +
-                  "PRECONDITION_FAILED, a kontenery wejdą w pętlę restartów przy " +
-                  "wdrożeniu raportującym sukces." }
+            note: "Quorum queues are mandatory from 2025.1. If the deployment started out with " +
+                  "classic queues, changing the value is not enough on its own: services " +
+                  "try to redeclare existing queues with a different type, get " +
+                  "PRECONDITION_FAILED, and the containers enter restart loops while the " +
+                  "deployment reports success." }
         ]
       },
       {
@@ -514,12 +502,12 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
              default configuration." */
           { kind: "key", name: "prometheus_blackbox_exporter_endpoints",
             replacedBy: "prometheus_blackbox_exporter_endpoints_custom", sev: "error",
-            note: "Własne punkty pomiarowe trzeba przenieść do klucza _custom, inaczej " +
-                  "nadpiszą konfigurację domyślną." },
+            note: "Custom endpoints must move to the _custom key, otherwise they override the " +
+                  "default configuration." },
           /* "Support for deploying prometheus-msteams has been dropped as the project
              is no longer maintained." */
           { kind: "service", name: "prometheus-msteams", replacedBy: null, sev: "warn",
-            note: "Projekt nieutrzymywany — wdrażanie usunięte." }
+            note: "The project is unmaintained; deployment support was removed." }
         ]
       },
       {
@@ -536,33 +524,33 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         deprecated: [
           /* "Services removed: Freezer, Murano, Sahara, Senlin, Solum, Vitrage" */
           { kind: "service", name: "freezer", replacedBy: null, sev: "warn",
-            note: "Usunięte w 2024.1." },
+            note: "Removed in 2024.1." },
           { kind: "service", name: "murano", replacedBy: null, sev: "warn",
-            note: "Usunięte w 2024.1." },
+            note: "Removed in 2024.1." },
           { kind: "service", name: "sahara", replacedBy: null, sev: "warn",
-            note: "Usunięte w 2024.1." },
+            note: "Removed in 2024.1." },
           { kind: "service", name: "senlin", replacedBy: null, sev: "warn",
-            note: "Usunięte w 2024.1." },
+            note: "Removed in 2024.1." },
           { kind: "service", name: "solum", replacedBy: null, sev: "warn",
-            note: "Usunięte w 2024.1." },
+            note: "Removed in 2024.1." },
           { kind: "service", name: "vitrage", replacedBy: null, sev: "warn",
-            note: "Usunięte w 2024.1." },
+            note: "Removed in 2024.1." },
           /* "...and outward RabbitMQ (only used for Murano)" */
           { kind: "service", name: "outward-rabbitmq", replacedBy: null, sev: "warn",
-            note: "Usunięte razem z Murano, który był jedynym konsumentem." },
+            note: "Removed along with Murano, its only consumer." },
           /* "Support for failing execution early ... by setting
              kolla_ansible_setup_any_errors_fatal to true has been removed." (18.3.0) */
           { kind: "key", name: "kolla_ansible_setup_any_errors_fatal", replacedBy: null,
             sev: "warn",
-            note: "Usunięte. Odpowiednik: maksymalny procent awarii ustawiony na 0." },
+            note: "Removed. The equivalent is a maximum failure percentage of 0." },
           /* "MariaDB backup now uses the same image as the running MariaDB server."
              — mariabackup_image, mariabackup_tag, mariabackup_image_full (18.1.0) */
           { kind: "key", name: "mariabackup_image", replacedBy: null, sev: "warn",
-            note: "Usunięte — kopia zapasowa używa obrazu działającego serwera MariaDB." },
+            note: "Removed; backups use the image of the running MariaDB server." },
           { kind: "key", name: "mariabackup_tag", replacedBy: null, sev: "warn",
-            note: "Usunięte — kopia zapasowa używa obrazu działającego serwera MariaDB." },
+            note: "Removed; backups use the image of the running MariaDB server." },
           { kind: "key", name: "mariabackup_image_full", replacedBy: null, sev: "warn",
-            note: "Usunięte — kopia zapasowa używa obrazu działającego serwera MariaDB." }
+            note: "Removed; backups use the image of the running MariaDB server." }
         ]
       },
 
@@ -571,11 +559,11 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
          której nikt już nie testuje. */
       { id: "2023.2", name: "Bobcat",   kolla: "17.x", status: "eol", released: "2023-10-04", expected: null, endsOn: "2025-04-30",
         baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecationsCatalogued: false, deprecated: [] },
-      { id: "2023.1", name: "Antelope", kolla: "16.x", status: "eol", released: "2023-03-22", expected: null, endsOn: null,
+      { id: "2023.1", name: "Antelope", kolla: "16.x", status: "unmaintained", released: "2023-03-22", expected: null, endsOn: null,
         baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecationsCatalogued: false, deprecated: [] },
-      { id: "zed",    name: "Zed",      kolla: "15.x", status: "eol", released: "2022-10-05", expected: null, endsOn: null,
+      { id: "zed",    name: "Zed",      kolla: "15.x", status: "unmaintained", released: "2022-10-05", expected: null, endsOn: null,
         baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecationsCatalogued: false, deprecated: [] },
-      { id: "yoga",   name: "Yoga",     kolla: "14.x", status: "eol", released: "2022-03-30", expected: null, endsOn: null,
+      { id: "yoga",   name: "Yoga",     kolla: "14.x", status: "unmaintained", released: "2022-03-30", expected: null, endsOn: null,
         baseDistros: null, unpublished: [], hostOs: [], defaults: {}, deprecationsCatalogued: false, deprecated: [] }
     ]
   };
@@ -681,7 +669,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       var docSeen = false;
 
       function fail(line, msg, hint) {
-        findings.push({ sev: "error", code: "NIEOBSLUGIWANE", line: line, msg: msg, hint: hint || null });
+        findings.push({ sev: "error", code: "UNSUPPORTED", line: line, msg: msg, hint: hint || null });
       }
 
       /* Tabulatory sprawdzamy przed pętlą główną: linie wewnątrz bloku podrzędnego
@@ -739,7 +727,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
         if (Object.prototype.hasOwnProperty.call(keys, key)) {
           findings.push({
-            sev: "warn", code: "KLUCZ-POWTORZONY", line: lineNo,
+            sev: "warn", code: "KEY-REPEATED", line: lineNo,
             msg: "Klucz <code>" + key + "</code> występuje ponownie w linii " + lineNo + ".",
             hint: "Ansible weźmie ostatnie wystąpienie; wcześniejsze są martwe."
           });
@@ -942,7 +930,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         if (dep[key]) {
           var d = dep[key];
           out.push({
-            sev: d.sev || "warn", code: "KLUCZ-WYCOFANY", key: key, line: e.line,
+            sev: d.sev || "warn", code: "KEY-DEPRECATED", key: key, line: e.line,
             msg: "<code>" + key + "</code> " + (d.replacedBy
               ? "został przemianowany na <code>" + d.replacedBy + "</code>"
               : "nie jest już obsługiwany") +
@@ -953,9 +941,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         }
         if (known && !known[key]) {
           out.push({
-            sev: "info", code: "KLUCZ-NIEZNANY", key: key, line: e.line,
-            msg: "<code>" + key + "</code> nie jest polem formularza.",
-            hint: "Klucz zostanie zachowany w pliku bez zmian — generator go nie interpretuje."
+            sev: "info", code: "KEY-UNKNOWN", key: key, line: e.line,
+            msg: "<code>" + key + "</code> is not a form field.",
+            hint: "The key is kept in the file unchanged — the generator does not interpret it."
           });
         }
       });
@@ -1005,13 +993,14 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
   }
 
   /* == KOLLA-I18N BEGIN — generowane z i18n.js, nie edytuj w miejscu == */
-  /* Słownik interfejsu. Angielski jest domyślny i zawsze kompletny; polski jest
-     przełącznikiem. Nie wykrywamy języka przeglądarki — przewidywalność jest tu
-     warta więcej niż domyślanie się, a zrzuty ekranu wychodzą powtarzalne.
+  /* Teksty interfejsu. Narzędzia są wyłącznie angielskie — druga wersja językowa
+     kosztowała przy każdej nowej regule, a polskojęzycznych użytkowników
+     Kolla-Ansible jest znikomo mało.
 
-     Klucze liczebników trzymają formy rozdzielone pionową kreską:
-     angielski dwie (jeden|reszta), polski trzy (jeden|dwa-cztery|reszta).
+     Słownik zostaje mimo jednego języka, bo jest jedynym miejscem, w którym widać
+     wszystkie komunikaty narzędzia naraz, i to on umożliwia asercję kompletności.
 
+     Klucze liczebników trzymają dwie formy rozdzielone pionową kreską: jeden|reszta.
      Wstawki: {nazwa} w treści, podstawiane przez drugi argument t(). */
   var I18N = (function () {
     /* Teksty, które nie mają własnego miejsca w danych: elementy interfejsu
@@ -1021,121 +1010,87 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
        opisuje, i wprowadzenie osierocenia, przed którym strażnik ma bronić. */
     var DICT = {
 
-      /* --- przełącznik języka, wspólny dla trzech plików --- */
-      "lang.label":            { en: "Language", pl: "Język" },
-      "lang.en":               { en: "English", pl: "angielski" },
-      "lang.pl":               { en: "Polish", pl: "polski" },
 
       /* --- nawigacja, wspólna --- */
-      "nav.start":             { en: "start", pl: "start" },
-      "nav.generator":         { en: "globals.yml", pl: "globals.yml" },
-      "nav.validator":         { en: "inventory validator", pl: "walidator inventory" },
-      "nav.tools":             { en: "Tools", pl: "Narzędzia" },
-      "nav.skip":              { en: "Skip to content", pl: "Przejdź do treści" },
-      "brand.sub":             { en: "OpenStack tooling", pl: "OpenStack tooling" },
+      "nav.start":             "start",
+      "nav.generator":         "globals.yml",
+      "nav.validator":         "inventory validator",
+      "nav.tools":             "Tools",
+      "nav.skip":              "Skip to content",
+      "brand.sub":             "OpenStack tooling",
 
       /* --- hub --- */
-      "hub.title":             { en: "Rackpathlabs — Kolla-Ansible tools",
-                                 pl: "Rackpathlabs — narzędzia Kolla-Ansible" },
-      "hub.desc":              { en: "Two Kolla-Ansible tools: a globals.yml generator and an inventory validator. They run in your browser, offline, and upload nothing.",
-                                 pl: "Dwa narzędzia do Kolla-Ansible: generator globals.yml i walidator inventory. Działają w przeglądarce, offline, bez wysyłania plików." },
-      "hub.h1":                { en: "Two tools for Kolla-Ansible",
-                                 pl: "Dwa narzędzia do Kolla-Ansible" },
-      "hub.lede":              { en: "One writes <code>globals.yml</code> and keeps it free of configuration that passes a deployment and breaks weeks later. The other reads a <em>multinode</em> inventory and looks for what reading it will not show you: quorum, role collocation, group names retired in your release.",
-                                 pl: "Jedno pisze <code>globals.yml</code> i pilnuje, żeby nie zawierał konfiguracji, która przechodzi wdrożenie, a psuje się tygodnie później. Drugie czyta inventory <em>multinode</em> i szuka w nim rzeczy, których nie widać przy przeglądaniu: kworum, kolokacji ról, nazw grup wycofanych w Twoim wydaniu." },
-      "hub.forWhom":           { en: "For people who deploy and run OpenStack with Kolla — from a single-node lab to a multinode installation with HA.",
-                                 pl: "Dla osób, które wdrażają i utrzymują OpenStacka Kollą — od laboratorium na jednym węźle po instalację wielowęzłową z HA." },
-      "hub.gen.h":             { en: "globals.yml generator", pl: "Generator globals.yml" },
-      "hub.gen.p":             { en: "Fill in a form, get a finished file with comments explaining every decision.",
-                                 pl: "Wypełniasz formularz, dostajesz gotowy plik z komentarzami wyjaśniającymi każdą decyzję." },
-      "hub.gen.li1":           { en: "release against base image", pl: "zgodność wydania z obrazem bazowym" },
-      "hub.gen.li2":           { en: "interfaces: collisions and shared base devices",
-                                 pl: "interfejsy: kolizje, wspólne urządzenia bazowe" },
-      "hub.gen.li3":           { en: "TLS, endpoint names, service dependencies",
-                                 pl: "TLS, nazwy punktów końcowych, zależności usług" },
-      "hub.gen.li4":           { en: "import an existing file — it patches your original instead of rewriting it",
-                                 pl: "import istniejącego pliku — poprawia oryginał zamiast pisać go od nowa" },
-      "hub.gen.go":            { en: "Open the generator &rarr;", pl: "Otwórz generator &rarr;" },
-      "hub.val.h":             { en: "Inventory validator", pl: "Walidator inventory" },
-      "hub.val.p":             { en: "Paste an inventory, get a list of problems with line numbers and what each one will cause.",
-                                 pl: "Wklejasz inventory, dostajesz listę problemów z numerem linii i opisem, czym grożą." },
-      "hub.val.li1":           { en: "quorum and group sizes, role collocation",
-                                 pl: "kworum i liczebność grup, kolokacja ról" },
-      "hub.val.li2":           { en: "duplicate hosts and addresses, syntax, group cycles",
-                                 pl: "duplikaty hostów i adresów, składnia, cykle grup" },
-      "hub.val.li3":           { en: "<strong>combined mode</strong> — add <code>globals.yml</code> and check what only both files together can show",
-                                 pl: "<strong>tryb łączony</strong> — dołóż <code>globals.yml</code> i sprawdź rzeczy widoczne dopiero z obu plików naraz" },
-      "hub.val.li4":           { en: "<strong>upgrade mode</strong> — pick a target release and see what in your files changes on the way",
-                                 pl: "<strong>tryb aktualizacji</strong> — wybierz wydanie docelowe i zobacz, co w Twoich plikach zmieni się po drodze" },
-      "hub.val.go":            { en: "Open the validator &rarr;", pl: "Otwórz walidator &rarr;" },
-      "hub.limits.h":          { en: "Before you click — two boundaries", pl: "Zanim klikniesz — dwie granice" },
-      "hub.limits.offline":    { en: "<strong>Everything happens in your browser.</strong> Files are never uploaded or stored, the tools make no network requests at all, and each one is a single HTML file — download it and use it offline, from <code>file://</code>.",
-                                 pl: "<strong>Wszystko dzieje się w Twojej przeglądarce.</strong> Pliki nie są nigdzie wysyłane ani zapisywane, narzędzia nie wykonują żadnych żądań sieciowych, a każde z nich to jeden plik HTML — możesz go pobrać i używać offline, z <code>file://</code>." },
-      "hub.limits.scope":      { en: "<strong>The tools do not check everything</strong>, and they say so outright. Some failures do not follow from the contents of these files: deployment history, switch configuration and database state cannot be read out of YAML. <a href=\"SCOPE.md\">SCOPE.md</a> lists what is deliberately left out, where an answer is an inference rather than a fact, and what an empty result means. The document is in English.",
-                                 pl: "<strong>Narzędzia nie sprawdzają wszystkiego</strong>, i mówią o tym wprost. Część awarii nie wynika z treści tych plików: historii wdrożenia, konfiguracji przełącznika czy stanu bazy nie da się odczytać z YAML-a. <a href=\"SCOPE.md\">SCOPE.md</a> wymienia, czego świadomie nie sprawdzamy, gdzie odpowiedzi są wnioskowaniem, a nie faktem, i co znaczy pusta lista wyników. Dokument jest po angielsku." },
+      "hub.title":             "Rackpathlabs — Kolla-Ansible tools",
+      "hub.desc":              "Two Kolla-Ansible tools: a globals.yml generator and an inventory validator. They run in your browser, offline, and upload nothing.",
+      "hub.h1":                "Two tools for Kolla-Ansible",
+      "hub.lede":              "One writes <code>globals.yml</code> and keeps it free of configuration that passes a deployment and breaks weeks later. The other reads a <em>multinode</em> inventory and looks for what reading it will not show you: quorum, role collocation, group names retired in your release.",
+      "hub.forWhom":           "For people who deploy and run OpenStack with Kolla — from a single-node lab to a multinode installation with HA.",
+      "hub.gen.h":             "globals.yml generator",
+      "hub.gen.p":             "Fill in a form, get a finished file with comments explaining every decision.",
+      "hub.gen.li1":           "release against base image",
+      "hub.gen.li2":           "interfaces: collisions and shared base devices",
+      "hub.gen.li3":           "TLS, endpoint names, service dependencies",
+      "hub.gen.li4":           "import an existing file — it patches your original instead of rewriting it",
+      "hub.gen.go":            "Open the generator &rarr;",
+      "hub.val.h":             "Inventory validator",
+      "hub.val.p":             "Paste an inventory, get a list of problems with line numbers and what each one will cause.",
+      "hub.val.li1":           "quorum and group sizes, role collocation",
+      "hub.val.li2":           "duplicate hosts and addresses, syntax, group cycles",
+      "hub.val.li3":           "<strong>combined mode</strong> — add <code>globals.yml</code> and check what only both files together can show",
+      "hub.val.li4":           "<strong>upgrade mode</strong> — pick a target release and see what in your files changes on the way",
+      "hub.val.go":            "Open the validator &rarr;",
+      "hub.limits.h":          "Before you click — two boundaries",
+      "hub.limits.offline":    "<strong>Everything happens in your browser.</strong> Files are never uploaded or stored, the tools make no network requests at all, and each one is a single HTML file — download it and use it offline, from <code>file://</code>.",
+      "hub.limits.scope":      "<strong>The tools do not check everything</strong>, and they say so outright. Some failures do not follow from the contents of these files: deployment history, switch configuration and database state cannot be read out of YAML. <a href=\"SCOPE.md\">SCOPE.md</a> lists what is deliberately left out, where an answer is an inference rather than a fact, and what an empty result means. The document is in English.",
 
       /* --- walidator: szkielet interfejsu --- */
-/* --- walidator: aktualność wyniku --- */
-      "v.stale.bar":           { en: "The input has changed since this result was produced.",
-                                 pl: "Wejście zmieniło się od czasu, gdy powstał ten wynik." },
-      "v.stale.run":           { en: "Analyse now", pl: "Przelicz teraz" },
-      "v.btn.run":             { en: "Analyse", pl: "Przelicz" },
-      "v.btn.run.title":       { en: "Run the analysis against the current contents of the fields",
-                                 pl: "Uruchom analizę na bieżącej treści pól" },
+      /* --- walidator: aktualność wyniku --- */
+      "v.stale.bar":           "The input has changed since this result was produced.",
+      "v.stale.run":           "Analyse now",
+      "v.btn.run":             "Analyse",
+      "v.btn.run.title":       "Run the analysis against the current contents of the fields",
 
-      "v.title":               { en: "Rackpathlabs — multinode inventory validator (Kolla-Ansible)",
-                                 pl: "Rackpathlabs — walidator inventory multinode (Kolla-Ansible)" },
-      "v.desc":                { en: "Validator for a Kolla-Ansible multinode inventory: groups, duplicates, empty groups. Runs offline, with no external dependencies.",
-                                 pl: "Walidator pliku inventory multinode dla Kolla-Ansible: grupy, duplikaty, puste grupy. Działa offline, bez zależności zewnętrznych." },
-      "v.h1":                  { en: "<em>Multinode</em> inventory validator for Kolla-Ansible",
-                                 pl: "Walidator inventory <em>multinode</em> dla Kolla-Ansible" },
-      "v.lede":                { en: "Reads an INI inventory and checks it: the presence and membership of the <code>control</code>, <code>network</code>, <code>compute</code>, <code>storage</code> and <code>monitoring</code> groups, duplicate hosts, empty groups, contradictory variables and syntax errors. Optionally takes a <code>globals.yml</code> and adds the rules that need both files at once. Everything is analysed in your browser — the file is never uploaded or stored. Scope and limits are described in <a href=\"https://github.com/Rackpathlabs/kolla-tools/blob/main/SCOPE.md\">SCOPE.md</a>.",
-                                 pl: "Sprawdza plik inventory w formacie INI: obecność i obsadę grup <code>control</code>, <code>network</code>, <code>compute</code>, <code>storage</code>, <code>monitoring</code>, duplikaty hostów, puste grupy, sprzeczne zmienne i błędy składni. Opcjonalnie przyjmuje <code>globals.yml</code> i dokłada reguły wymagające obu plików naraz. Analiza działa wyłącznie w przeglądarce — plik nie jest nigdzie wysyłany ani zapisywany. Zakres i granice opisuje <a href=\"https://github.com/Rackpathlabs/kolla-tools/blob/main/SCOPE.md\">SCOPE.md</a>." },
-      "v.btn.file":            { en: "Load file…", pl: "Wczytaj plik…" },
-      "v.btn.sampleOk":        { en: "Valid example", pl: "Przykład poprawny" },
-      "v.btn.sampleBad":       { en: "Example with errors", pl: "Przykład z błędami" },
-      "v.btn.clear":           { en: "Clear", pl: "Wyczyść" },
-      "v.btn.report":          { en: "Copy report", pl: "Kopiuj raport" },
-      "v.editor.label":        { en: "Inventory file contents", pl: "Zawartość pliku inventory" },
-      "v.editor.placeholder":  { en: "[control]\nctrl01 ansible_host=10.0.0.11\n\n[network]\n…\n\nPaste the contents of your multinode file, or drag it here.",
-                                 pl: "[control]\nctrl01 ansible_host=10.0.0.11\n\n[network]\n…\n\nWklej zawartość pliku multinode albo przeciągnij go tutaj." },
-      "v.release.label":       { en: "release", pl: "wydanie" },
-      "v.release.title":       { en: "The release the group names are checked against",
-                                 pl: "Wydanie, względem którego sprawdzane są nazwy grup" },
-      "v.releaseTo.label":     { en: "&rarr; target", pl: "&rarr; docelowe" },
-      "v.releaseTo.title":     { en: "Optional: the release you plan to move to",
-                                 pl: "Opcjonalnie: wydanie, na które planujesz przejść" },
-      "v.releaseTo.none":      { en: "— no upgrade planned —", pl: "— bez planu aktualizacji —" },
-      "v.topology":            { en: "Topology", pl: "Topologia" },
-      "v.topology.group":      { en: "Group", pl: "Grupa" },
-      "v.topology.hosts":      { en: "Hosts", pl: "Hosty" },
-      "v.topology.count":      { en: "Count", pl: "Liczba" },
-      "v.topology.required":   { en: "required", pl: "wymagana" },
-      "v.topology.missing":    { en: "section absent from the file", pl: "brak sekcji w pliku" },
-      "v.topology.subgroups":  { en: "subgroups: {list}", pl: "podgrupy: {list}" },
-      "v.result":              { en: "Validation result", pl: "Wynik walidacji" },
-      "v.empty":               { en: "No data — paste an inventory file.", pl: "Brak danych — wklej plik inventory." },
-      "v.start":               { en: "Paste an inventory file to begin.", pl: "Wklej plik inventory, aby rozpocząć." },
-      "v.globals.h":           { en: "globals.yml", pl: "globals.yml" },
-      "v.globals.none":        { en: "not loaded", pl: "nie wczytano" },
-      "v.globals.loaded":      { en: "loaded", pl: "wczytano" },
-      "v.globals.label":       { en: "Contents of globals.yml — optional", pl: "Zawartość pliku globals.yml — opcjonalna" },
-      "v.globals.placeholder": { en: "Optional. Paste or drag a globals.yml to enable the rules that need both files at once.",
-                                 pl: "Opcjonalnie. Wklej albo przeciągnij globals.yml, żeby włączyć reguły wymagające obu plików naraz." },
-      "v.ack.nobmc.h":         { en: "Lab without BMC — Masakari for testing only",
-                                 pl: "Laboratorium bez BMC — Masakari wyłącznie testowo" },
-      "v.ack.nobmc.p":         { en: "Acknowledging this lowers the fencing finding to informational. It does not silence it: an environment <em>named</em> \"dev\" is not an exemption, because the configuration gets copied to production.",
-                                 pl: "Potwierdzenie obniża wpis o fencingu do informacji. Nie wycisza go: środowisko <em>nazwane</em> „dev” nie jest zwolnieniem, bo konfiguracja bywa kopiowana na produkcję." },
-      "v.scope.note":          { en: "<strong>This file is used here only for the rules that need both files at once</strong> — VIP collisions, Cinder clustering and Masakari fencing. The validator <strong>does not check</strong> the <code>globals.yml</code> itself: interfaces, TLS, service dependencies and release compatibility are linted by the <a href=\"generator.html\">globals.yml generator</a>. An empty list below does not mean the file is correct — it means there is no conflict with this inventory.",
-                                 pl: "<strong>Ten plik służy tu wyłącznie regułom wymagającym obu plików naraz</strong> — kolizji VIP-a, klastrowania Cindera i fencingu Masakari. Walidator <strong>nie sprawdza samego</strong> <code>globals.yml</code>: interfejsy, TLS, zależności usług i zgodność z wydaniem lintuje <a href=\"generator.html\">generator globals.yml</a>. Brak wpisów poniżej nie znaczy, że plik jest poprawny — znaczy, że nie ma konfliktu z tym inventory." },
-      "v.footer":              { en: "Rackpathlabs — OpenStack tooling. A single HTML file, no external dependencies, works offline.",
-                                 pl: "Rackpathlabs — narzędzia OpenStack. Pojedynczy plik HTML, bez zależności zewnętrznych, działa offline." },
+      "v.title":               "Rackpathlabs — multinode inventory validator (Kolla-Ansible)",
+      "v.desc":                "Validator for a Kolla-Ansible multinode inventory: groups, duplicates, empty groups. Runs offline, with no external dependencies.",
+      "v.h1":                  "<em>Multinode</em> inventory validator for Kolla-Ansible",
+      "v.lede":                "Reads an INI inventory and checks it: the presence and membership of the <code>control</code>, <code>network</code>, <code>compute</code>, <code>storage</code> and <code>monitoring</code> groups, duplicate hosts, empty groups, contradictory variables and syntax errors. Optionally takes a <code>globals.yml</code> and adds the rules that need both files at once. Everything is analysed in your browser — the file is never uploaded or stored. Scope and limits are described in <a href=\"https://github.com/Rackpathlabs/kolla-tools/blob/main/SCOPE.md\">SCOPE.md</a>.",
+      "v.btn.file":            "Load file…",
+      "v.btn.sampleOk":        "Valid example",
+      "v.btn.sampleBad":       "Example with errors",
+      "v.btn.clear":           "Clear",
+      "v.btn.report":          "Copy report",
+      "v.editor.label":        "Inventory file contents",
+      "v.editor.placeholder":  "[control]\nctrl01 ansible_host=10.0.0.11\n\n[network]\n…\n\nPaste the contents of your multinode file, or drag it here.",
+      "v.release.label":       "release",
+      "v.release.title":       "The release the group names are checked against",
+      "v.releaseTo.label":     "&rarr; target",
+      "v.releaseTo.title":     "Optional: the release you plan to move to",
+      "v.releaseTo.none":      "— no upgrade planned —",
+      "v.topology":            "Topology",
+      "v.topology.group":      "Group",
+      "v.topology.hosts":      "Hosts",
+      "v.topology.count":      "Count",
+      "v.topology.required":   "required",
+      "v.topology.missing":    "section absent from the file",
+      "v.topology.subgroups":  "subgroups: {list}",
+      "v.result":              "Validation result",
+      "v.empty":               "No data — paste an inventory file.",
+      "v.start":               "Paste an inventory file to begin.",
+      "v.globals.h":           "globals.yml",
+      "v.globals.none":        "not loaded",
+      "v.globals.loaded":      "loaded",
+      "v.globals.label":       "Contents of globals.yml — optional",
+      "v.globals.placeholder": "Optional. Paste or drag a globals.yml to enable the rules that need both files at once.",
+      "v.ack.nobmc.h":         "Lab without BMC — Masakari for testing only",
+      "v.ack.nobmc.p":         "Acknowledging this lowers the fencing finding to informational. It does not silence it: an environment <em>named</em> \"dev\" is not an exemption, because the configuration gets copied to production.",
+      "v.scope.note":          "<strong>This file is used here only for the rules that need both files at once</strong> — VIP collisions, Cinder clustering and Masakari fencing. The validator <strong>does not check</strong> the <code>globals.yml</code> itself: interfaces, TLS, service dependencies and release compatibility are linted by the <a href=\"generator.html\">globals.yml generator</a>. An empty list below does not mean the file is correct — it means there is no conflict with this inventory.",
+      "v.footer":              "Rackpathlabs — OpenStack tooling. A single HTML file, no external dependencies, works offline.",
 
       /* --- liczebniki: en dwie formy, pl trzy --- */
-      "n.node":                { en: "node|nodes", pl: "węzeł|węzły|węzłów" },
-      "n.host":                { en: "host|hosts", pl: "host|hosty|hostów" },
-      "n.error":               { en: "error|errors", pl: "błąd|błędy|błędów" },
-      "n.warning":             { en: "warning|warnings", pl: "uwaga|uwagi|uwag" },
+      "n.node":                "node|nodes",
+      "n.host":                "host|hosts",
+      "n.error":               "error|errors",
+      "n.warning":             "warning|warnings",
 /* --- walidator: raport tekstowy --- */
 /* --- walidator: kworum (KV-02) --- */
 /* --- walidator: wbudowane przykłady (jedna linia komentarza, patrz kod) --- */
@@ -1146,190 +1101,110 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
          wraz z sekcjami "Not a bug when", bo to one odróżniają regułę od alarmu --- */
 /* --- walidator: reguły wydania i tryb aktualizacji --- */
 /* --- walidator: status wydania --- */
-      "v.rs.development":      { en: "a development branch — the release has not shipped as stable yet",
-                                 pl: "gałąź rozwojowa — wydanie nie ukazało się jeszcze jako stabilne" },
-      "v.rs.unmaintained":     { en: "unmaintained — no fixes are produced for it, security ones included",
-                                 pl: "wydanie bez utrzymania — poprawki, w tym bezpieczeństwa, nie powstają" },
-      "v.rs.eol":              { en: "the release has reached end of life", pl: "wydanie osiągnęło koniec życia" },
-      "v.src.path":            { en: "path", pl: "ścieżka" },
-      "v.src.both":            { en: "both files", pl: "oba pliki" },
-      "v.rel.planned":         { en: "planned release", pl: "planowane wydanie" },
-      "v.rel.since":           { en: "since", pl: "od" },
+      "v.rs.development":      "a development branch — the release has not shipped as stable yet",
+      "v.rs.unmaintained":     "unmaintained — no fixes are produced for it, security ones included",
+      "v.rs.eol":              "the release has reached end of life",
+      "v.src.path":            "path",
+      "v.src.both":            "both files",
+      "v.rel.planned":         "planned release",
+      "v.rel.since":           "since",
 
-      "v.r.renamed":           { en: "was renamed to <code>{to}</code> in release <code>{rel}</code>.",
-                                 pl: "została w wydaniu <code>{rel}</code> przemianowana na <code>{to}</code>." },
-      "v.r.removed":           { en: "is no longer supported in release <code>{rel}</code>.",
-                                 pl: "nie jest już obsługiwana w wydaniu <code>{rel}</code>." },
-      "v.r.group":             { en: "Group <code>[{group}]</code> ", pl: "Grupa <code>[{group}]</code> " },
+      "v.r.renamed":           "was renamed to <code>{to}</code> in release <code>{rel}</code>.",
+      "v.r.removed":           "is no longer supported in release <code>{rel}</code>.",
+      "v.r.group":             "Group <code>[{group}]</code> ",
 
-      "v.q.ovnSpof.msg":       { en: "Group <code>[{group}]</code> has one host against {count} control nodes.",
-                                 pl: "Grupa <code>[{group}]</code> ma jeden host przy {count} sterujących." },
-      "v.q.ovnSpof.hint":      { en: "Allowed, but {label} becomes a single point of failure for the network control plane.",
-                                 pl: "Dopuszczalne, ale {label} staje się pojedynczym punktem awarii płaszczyzny sterowania sieci." },
-      "v.q.ceph.msg":          { en: "Group <code>[ceph-mon]</code> has {count} — Ceph monitors need an odd number, no fewer than {min}.",
-                                 pl: "Grupa <code>[ceph-mon]</code> ma {count} — monitory Ceph wymagają nieparzystej liczby, nie mniejszej niż {min}." },
+      "v.q.ovnSpof.msg":       "Group <code>[{group}]</code> has one host against {count} control nodes.",
+      "v.q.ovnSpof.hint":      "Allowed, but {label} becomes a single point of failure for the network control plane.",
+      "v.q.ceph.msg":          "Group <code>[ceph-mon]</code> has {count} — Ceph monitors need an odd number, no fewer than {min}.",
 
-      "v.u.todo.renameKey":    { en: "Rename the key in globals.yml before upgrading — the old one will not be recognised.",
-                                 pl: "Zmień nazwę klucza w globals.yml przed aktualizacją — stara nie zostanie rozpoznana." },
-      "v.u.todo.renameGroup":  { en: "Rename the section in the inventory before upgrading — the old name will not be recognised.",
-                                 pl: "Zmień nazwę sekcji w inventory przed aktualizacją — stara nie zostanie rozpoznana." },
-      "v.u.gap.hint":          { en: "Changes made in {which} are not shown here — not because there were none, but because they have not been reviewed against the release notes. An empty list would look exactly like no changes, so the gap is stated outright. Read the release notes for those releases yourself.",
-                                 pl: "Zmiany wprowadzone w {which} nie są tu pokazane — nie dlatego, że ich nie było, tylko dlatego, że nie zostały przejrzane w release notes. Pusta lista wyglądałaby identycznie jak brak zmian, więc mówimy o luce wprost. Przejrzyj release notes tych wydań ręcznie." },
-      "v.u.gap.which1":        { en: "that release", pl: "tym wydaniu" },
-      "v.u.gap.whichN":        { en: "those releases", pl: "tych wydaniach" },
+      "v.u.todo.renameKey":    "Rename the key in globals.yml before upgrading — the old one will not be recognised.",
+      "v.u.todo.renameGroup":  "Rename the section in the inventory before upgrading — the old name will not be recognised.",
+      "v.u.gap.hint":          "Changes made in {which} are not shown here — not because there were none, but because they have not been reviewed against the release notes. An empty list would look exactly like no changes, so the gap is stated outright. Read the release notes for those releases yourself.",
+      "v.u.gap.which1":        "that release",
+      "v.u.gap.whichN":        "those releases",
 
-      "v.c.ctlcmp.msg":        { en: "{n} also serves as both a control node and a compute node: {hosts}.",
-                                 pl: "{n} jednocześnie rolę sterującą i obliczeniową: {hosts}." },
-      "v.c.ctlcmp.escalated":  { en: "The <code>globals.yml</code> shows HA tooling, so the escalation condition is met and this is an error rather than a trade-off. ",
-                                 pl: "W <code>globals.yml</code> widać narzędzia HA, więc warunek eskalacji jest spełniony i to jest błąd, nie kompromis. " },
-      "v.c.ctlcmp.hint":       { en: "Without Masakari this is a valid hyperconverged layout — plan a CPU and memory reserve for the control services. With <code>enable_masakari</code> the same configuration is an error that risks data corruption: either Pacemaker Remote cannot start on a host that is already a full Corosync member, or — with <code>restrict_to_remotes = false</code> — hostmonitor treats a control node as an evacuation candidate, and a maintenance reboot makes Masakari evacuate VMs from the host running MariaDB and RabbitMQ, through an API that is currently down. Cascade.",
-                                 pl: "Bez Masakari to poprawny układ hiperkonwergentny — zaplanuj rezerwę procesora i pamięci na usługi sterowania. Z <code>enable_masakari</code> ta sama konfiguracja jest błędem grożącym uszkodzeniem danych: albo Pacemaker Remote nie wystartuje na hoście będącym już pełnym członkiem Corosync, albo — przy <code>restrict_to_remotes = false</code> — hostmonitor uzna węzeł sterujący za kandydata do ewakuacji i restart serwisowy każe Masakari ewakuować maszyny z węzła, na którym stoją MariaDB i RabbitMQ, przez API, które właśnie leży. Kaskada." },
-      "v.c.ctlcmp.needGlobals": { en: " Settling it needs the <code>globals.yml</code> — load it in the panel alongside and the tool can make the call.",
-                                  pl: " Rozstrzygnięcie wymaga <code>globals.yml</code> — wczytaj go w panelu obok, żeby narzędzie mogło je podjąć." },
+      "v.c.ctlcmp.msg":        "{n} also serves as both a control node and a compute node: {hosts}.",
+      "v.c.ctlcmp.escalated":  "The <code>globals.yml</code> shows HA tooling, so the escalation condition is met and this is an error rather than a trade-off. ",
+      "v.c.ctlcmp.hint":       "Without Masakari this is a valid hyperconverged layout — plan a CPU and memory reserve for the control services. With <code>enable_masakari</code> the same configuration is an error that risks data corruption: either Pacemaker Remote cannot start on a host that is already a full Corosync member, or — with <code>restrict_to_remotes = false</code> — hostmonitor treats a control node as an evacuation candidate, and a maintenance reboot makes Masakari evacuate VMs from the host running MariaDB and RabbitMQ, through an API that is currently down. Cascade.",
+      "v.c.ctlcmp.needGlobals": " Settling it needs the <code>globals.yml</code> — load it in the panel alongside and the tool can make the call.",
 
-      "v.c.net.same.msg":      { en: "The membership of <code>[network]</code> is identical to <code>[control]</code>.",
-                                 pl: "Obsada <code>[network]</code> jest identyczna z <code>[control]</code>." },
-      "v.c.net.same.hint":     { en: "Under OVN the hosts in <code>[network]</code> get <code>enable-chassis-as-gw</code> and become gateway chassis. The default <code>[network:children] = control</code> pattern therefore pushes all north-south traffic — SNAT and non-DVR floating IPs — through the controllers. A three-VM lab never shows it; at around fifty instances <code>ovn-controller</code> competes for CPU with MariaDB and RabbitMQ, and on gateway failover BFD flaps and takes Corosync with it. Setting <code>neutron_ovn_distributed_fip: \"yes\"</code> softens the floating-IP part, but SNAT still goes through the gateway chassis. Collocation with <code>[compute]</code> is a valid pattern — the alarm is specifically about inheriting from <code>[control]</code>.",
-                                 pl: "Pod OVN hosty z <code>[network]</code> dostają <code>enable-chassis-as-gw</code> i stają się bramami. Domyślny wzorzec <code>[network:children] = control</code> przepycha więc cały ruch północ-południe — SNAT i pływające adresy bez DVR — przez kontrolery. Trzymaszynowe laboratorium tego nie pokaże; przy około pięćdziesięciu instancjach <code>ovn-controller</code> zaczyna walczyć o procesor z MariaDB i RabbitMQ, a przy przełączeniu bramy migocze BFD i pociąga za sobą Corosync. Klucz <code>neutron_ovn_distributed_fip: \"yes\"</code> łagodzi część z pływającymi adresami — SNAT nadal idzie przez bramy. Kolokacja z <code>[compute]</code> jest poprawnym wzorcem; alarm dotyczy wyłącznie dziedziczenia z <code>[control]</code>." },
-      "v.c.net.partial.msg":   { en: "Some network nodes are also control nodes: {hosts}.",
-                                 pl: "Część węzłów sieciowych to zarazem węzły sterujące: {hosts}." },
-      "v.c.net.partial.hint":  { en: "The dataplane lands on the control plane — OVN gateways share CPU with MariaDB and RabbitMQ. The effect only shows under load.",
-                                 pl: "Warstwa danych ląduje na płaszczyźnie sterowania — bramy OVN dzielą procesor z MariaDB i RabbitMQ. Skutki widać dopiero przy obciążeniu." },
-      "v.c.gw.msg":            { en: "Group <code>[network]</code> has {count} against {computeCount} compute nodes.",
-                                 pl: "Grupa <code>[network]</code> ma {count} przy {computeCount} obliczeniowych." },
-      "v.c.gw.hint":           { en: "The OVN gateway has nowhere to fail over to — losing that host takes north-south traffic for the whole cloud with it. Redundancy starts at {min} network nodes.",
-                                 pl: "Brama OVN nie ma gdzie się przełączyć — utrata tego hosta zabiera ruch północ-południe całej chmury. Redundancja zaczyna się od {min} węzłów sieciowych." },
-      "v.c.storage.msg":       { en: "{n} combines the compute and storage roles: {hosts}.",
-                                 pl: "{n} rolę obliczeniową i magazynową: {hosts}." },
-      "v.c.storage.hint":      { en: "A hyperconverged layout. Volume services compete for memory and CPU with the virtual machines — a node under memory pressure degrades storage for the whole cloud, not only for itself. Plan a resource reserve.",
-                                 pl: "Układ hiperkonwergentny. Usługi wolumenów konkurują o pamięć i procesor z maszynami wirtualnymi — węzeł pod presją pamięci degraduje magazyn dla całej chmury, nie tylko dla siebie. Zaplanuj rezerwę zasobów." },
-      "v.c.n.hostServes":      { en: "One host|{n} hosts", pl: "Host pełni|Hosty pełnią|Hostów pełni" },
-      "v.c.n.hostCombines":    { en: "One host|{n} hosts", pl: "Host łączy|Hosty łączą|Hostów łączy" },
-      "n.computeNode":         { en: "compute node|compute nodes", pl: "węźle|węzłach|węzłach" },
+      "v.c.net.same.msg":      "The membership of <code>[network]</code> is identical to <code>[control]</code>.",
+      "v.c.net.same.hint":     "Under OVN the hosts in <code>[network]</code> get <code>enable-chassis-as-gw</code> and become gateway chassis. The default <code>[network:children] = control</code> pattern therefore pushes all north-south traffic — SNAT and non-DVR floating IPs — through the controllers. A three-VM lab never shows it; at around fifty instances <code>ovn-controller</code> competes for CPU with MariaDB and RabbitMQ, and on gateway failover BFD flaps and takes Corosync with it. Setting <code>neutron_ovn_distributed_fip: \"yes\"</code> softens the floating-IP part, but SNAT still goes through the gateway chassis. Collocation with <code>[compute]</code> is a valid pattern — the alarm is specifically about inheriting from <code>[control]</code>.",
+      "v.c.net.partial.msg":   "Some network nodes are also control nodes: {hosts}.",
+      "v.c.net.partial.hint":  "The dataplane lands on the control plane — OVN gateways share CPU with MariaDB and RabbitMQ. The effect only shows under load.",
+      "v.c.gw.msg":            "Group <code>[network]</code> has {count} against {computeCount} compute nodes.",
+      "v.c.gw.hint":           "The OVN gateway has nowhere to fail over to — losing that host takes north-south traffic for the whole cloud with it. Redundancy starts at {min} network nodes.",
+      "v.c.storage.msg":       "{n} combines the compute and storage roles: {hosts}.",
+      "v.c.storage.hint":      "A hyperconverged layout. Volume services compete for memory and CPU with the virtual machines — a node under memory pressure degrades storage for the whole cloud, not only for itself. Plan a resource reserve.",
+      "v.c.n.hostServes":      "One host|{n} hosts",
+      "v.c.n.hostCombines":    "One host|{n} hosts",
+      "n.computeNode":         "compute node|compute nodes",
 
-      "v.x.kv01.msg":          { en: "<code>enable_masakari</code> and <code>enable_hacluster</code> are on, and the inventory carries no management controller field at all (<code>ipmi_*</code>, <code>bmc_*</code>, <code>drac_*</code>, <code>ilo_*</code>, <code>redfish_*</code>) — fencing has nothing to be built from.",
-                                 pl: "<code>enable_masakari</code> i <code>enable_hacluster</code> są włączone, a inventory nie zawiera ani jednego pola kontrolera zarządzania (<code>ipmi_*</code>, <code>bmc_*</code>, <code>drac_*</code>, <code>ilo_*</code>, <code>redfish_*</code>) — fencing nie ma z czego powstać." },
-      "v.x.kv01.hint":         { en: "Network isolation of a compute node — not a real host failure — looks the same to hostmonitor: it reports the host down, Masakari evacuates, Nova rebuilds the VM elsewhere, and the original QEMU is still alive holding an open RBD descriptor. Two instances write to the same Ceph volume and the guest filesystem is corrupted. Without fencing there is no way to force-release the lock. Full confidence cannot come from these two files: <code>masakari-monitors.conf</code> (<code>disable_ipmi_check</code>, true by default) and the hacluster overrides live outside them.",
-                                 pl: "Izolacja sieciowa węzła obliczeniowego — a nie prawdziwa awaria hosta — wygląda dla hostmonitora tak samo: zgłasza host jako niedostępny, Masakari ewakuuje, Nova odtwarza maszynę gdzie indziej, a pierwotny QEMU wciąż żyje i trzyma otwarty deskryptor RBD. Dwie instancje zapisują ten sam wolumen Ceph i system plików gościa zostaje uszkodzony. Bez fencingu nie ma jak wymusić zwolnienia blokady. Pełnej pewności nie da się uzyskać z tych dwóch plików: <code>masakari-monitors.conf</code> (<code>disable_ipmi_check</code>, domyślnie true) i nadpisania hacluster leżą poza nimi." },
+      "v.x.kv01.msg":          "<code>enable_masakari</code> and <code>enable_hacluster</code> are on, and the inventory carries no management controller field at all (<code>ipmi_*</code>, <code>bmc_*</code>, <code>drac_*</code>, <code>ilo_*</code>, <code>redfish_*</code>) — fencing has nothing to be built from.",
+      "v.x.kv01.hint":         "Network isolation of a compute node — not a real host failure — looks the same to hostmonitor: it reports the host down, Masakari evacuates, Nova rebuilds the VM elsewhere, and the original QEMU is still alive holding an open RBD descriptor. Two instances write to the same Ceph volume and the guest filesystem is corrupted. Without fencing there is no way to force-release the lock. Full confidence cannot come from these two files: <code>masakari-monitors.conf</code> (<code>disable_ipmi_check</code>, true by default) and the hacluster overrides live outside them.",
 
-      "v.x.kv07.msg":          { en: "Group <code>[storage]</code> has {count}, and <code>globals.yml</code> does not set <code>cinder_cluster_name</code>.",
-                                 pl: "Grupa <code>[storage]</code> ma {count}, a <code>globals.yml</code> nie ustawia <code>cinder_cluster_name</code>." },
-      "v.x.kv07.hint":         { en: "This is not high availability; it is as many independent backends as there are hosts, sharing one pool. Without clustering every volume gets <code>host = &lt;node&gt;@ceph#ceph</code> in the database. Everything works, because Ceph is shared and attach goes through Nova — until that node is lost. Then <code>delete</code>, <code>extend</code>, <code>retype</code> and <code>snapshot</code> on its volumes hang in <code>deleting</code> or <code>error</code> forever, because no other cinder-volume picks them up. The fix is a manual <code>cinder-manage volume update_host</code> against a production database.",
-                                 pl: "To nie jest wysoka dostępność, tylko tyle niezależnych backendów, ile hostów, dzielących jedną pulę. Bez klastrowania każdy wolumen dostaje w bazie <code>host = &lt;węzeł&gt;@ceph#ceph</code>. Działa, bo Ceph jest współdzielony, a podłączenie idzie przez Novę — dopóki ten węzeł żyje. Po jego utracie operacje <code>delete</code>, <code>extend</code>, <code>retype</code> i <code>snapshot</code> na jego wolumenach wiszą w <code>deleting</code> albo <code>error</code> na zawsze, bo żaden inny cinder-volume ich nie przejmie. Naprawa to ręczny <code>cinder-manage volume update_host</code> na produkcyjnej bazie." },
+      "v.x.kv07.msg":          "Group <code>[storage]</code> has {count}, and <code>globals.yml</code> does not set <code>cinder_cluster_name</code>.",
+      "v.x.kv07.hint":         "This is not high availability; it is as many independent backends as there are hosts, sharing one pool. Without clustering every volume gets <code>host = &lt;node&gt;@ceph#ceph</code> in the database. Everything works, because Ceph is shared and attach goes through Nova — until that node is lost. Then <code>delete</code>, <code>extend</code>, <code>retype</code> and <code>snapshot</code> on its volumes hang in <code>deleting</code> or <code>error</code> forever, because no other cinder-volume picks them up. The fix is a manual <code>cinder-manage volume update_host</code> against a production database.",
 
-      "v.x.kv09.collision.msg": { en: "<code>{key}</code> is set to <code>{vip}</code>, which is already the address of host {hosts}.",
-                                  pl: "<code>{key}</code> ma wartość <code>{vip}</code>, która jest już adresem hosta {hosts}." },
-      "v.x.kv09.collision.hint": { en: "The deployment will pass — keepalived raises the address without asking anyone. What follows is a duplicate IP, ARP flapping and random API timeouts visible only from parts of the network.",
-                                   pl: "Wdrożenie przejdzie — keepalived podnosi adres nie pytając nikogo o zgodę. Potem: zduplikowany adres IP, migotanie ARP i losowe przekroczenia czasu w API, widoczne tylko z części sieci." },
-      "v.x.kv09.subnet.msg":   { en: "<code>{key}</code> (<code>{vip}</code>) lies outside <code>{prefix}.0/{mask}</code>, the subnet inferred from the host addresses.",
-                                 pl: "<code>{key}</code> (<code>{vip}</code>) leży poza podsiecią <code>{prefix}.0/{mask}</code> wywnioskowaną z adresów hostów." },
-      "v.x.kv09.subnet.hint":  { en: "Assumption: every <code>ansible_host</code> address sits in one subnet with a <code>/{mask}</code> mask. Inventories rarely carry masks, so this is an inference rather than a reading — under a different network layout this finding is a false alarm, and you should ignore it. If it is not: HAProxy binds, keepalived raises the address, but return routing fails outside the local segment — \"works from the control node, not from a workstation\".",
-                                 pl: "Założenie: wszystkie adresy <code>ansible_host</code> mieszczą się w jednej podsieci o masce <code>/{mask}</code>. Inventory rzadko niesie maski, więc to jest wnioskowanie, a nie odczyt — przy innym podziale sieci ten wpis jest fałszywym alarmem i należy go zignorować. Jeśli nie jest: HAProxy się zwiąże, keepalived podniesie adres, ale ruch powrotny nie znajdzie drogi spoza segmentu — „działa z węzła sterującego, nie działa ze stacji”." },
+      "v.x.kv09.collision.msg": "<code>{key}</code> is set to <code>{vip}</code>, which is already the address of host {hosts}.",
+      "v.x.kv09.collision.hint": "The deployment will pass — keepalived raises the address without asking anyone. What follows is a duplicate IP, ARP flapping and random API timeouts visible only from parts of the network.",
+      "v.x.kv09.subnet.msg":   "<code>{key}</code> (<code>{vip}</code>) lies outside <code>{prefix}.0/{mask}</code>, the subnet inferred from the host addresses.",
+      "v.x.kv09.subnet.hint":  "Assumption: every <code>ansible_host</code> address sits in one subnet with a <code>/{mask}</code> mask. Inventories rarely carry masks, so this is an inference rather than a reading — under a different network layout this finding is a false alarm, and you should ignore it. If it is not: HAProxy binds, keepalived raises the address, but return routing fails outside the local segment — \"works from the control node, not from a workstation\".",
 
-      "v.sample.ok":           { en: "Multinode inventory: 3 control, 2 network, 4 compute nodes",
-                                 pl: "Inventory multinode: 3 wezly sterujace, 2 sieciowe, 4 obliczeniowe" },
-      "v.sample.bad":          { en: "Inventory with typical mistakes - to see what the validator does",
-                                 pl: "Inventory z typowymi bledami - do sprawdzenia dzialania walidatora" },
+      "v.sample.ok":           "Multinode inventory: 3 control, 2 network, 4 compute nodes",
+      "v.sample.bad":          "Inventory with typical mistakes - to see what the validator does",
 
-      "v.q.aio.msg":           { en: "All-in-one inventory: the only host in <code>[control]</code> is also a compute node.",
-                                 pl: "Inventory all-in-one: jedyny host w <code>[control]</code> pełni równocześnie rolę obliczeniową." },
-      "v.q.aio.hint":          { en: "A lab layout — the absence of high availability is a choice here, not a fault. A production deployment needs at least {min} control nodes.",
-                                 pl: "Układ laboratoryjny — brak wysokiej dostępności jest tu wyborem, nie usterką. Do wdrożenia produkcyjnego potrzebne są co najmniej {min} węzły sterujące." },
-      "v.q.single.msg":        { en: "Group <code>[{group}]</code> has one host — {label} has neither quorum nor redundancy.",
-                                 pl: "Grupa <code>[{group}]</code> ma jeden host — {label} nie ma kworum ani redundancji." },
-      "v.q.needOdd":           { en: "An odd number of hosts is required, no fewer than {min}.",
-                                 pl: "Wymagana nieparzysta liczba hostów, nie mniejsza niż {min}." },
-      "v.q.count.msg":         { en: "Group <code>[{group}]</code> has {count} — {reason} for quorum ({label}).",
-                                 pl: "Grupa <code>[{group}]</code> ma {count} — {reason} dla kworum ({label})." },
-      "v.q.even":              { en: "an even number", pl: "liczba parzysta" },
-      "v.q.tooFew":            { en: "too few", pl: "za mało" },
+      "v.q.aio.msg":           "All-in-one inventory: the only host in <code>[control]</code> is also a compute node.",
+      "v.q.aio.hint":          "A lab layout — the absence of high availability is a choice here, not a fault. A production deployment needs at least {min} control nodes.",
+      "v.q.single.msg":        "Group <code>[{group}]</code> has one host — {label} has neither quorum nor redundancy.",
+      "v.q.needOdd":           "An odd number of hosts is required, no fewer than {min}.",
+      "v.q.count.msg":         "Group <code>[{group}]</code> has {count} — {reason} for quorum ({label}).",
+      "v.q.even":              "an even number",
+      "v.q.tooFew":            "too few",
 
-      "v.rep.title":           { en: "Rackpathlabs — multinode inventory validation report",
-                                 pl: "Rackpathlabs — raport walidacji inventory multinode" },
-      "v.rep.hosts":           { en: "Hosts: {hosts}   Groups: {groups}",
-                                 pl: "Hosty: {hosts}   Grupy: {groups}" },
-      "v.rep.path":            { en: "Upgrade path: {from} -> {to}",
-                                 pl: "Ścieżka aktualizacji: {from} -> {to}" },
-      "v.rep.globalsYes":      { en: "globals.yml: loaded — the rules needing both files are active",
-                                 pl: "globals.yml: wczytany — działają też reguły wymagające obu plików" },
-      "v.rep.globalsNo":       { en: "globals.yml: not loaded — inventory rules only",
-                                 pl: "globals.yml: nie wczytano — wyłącznie reguły inventory" },
-      "v.rep.release":         { en: "Release: {id} {name}{kolla}", pl: "Wydanie: {id} {name}{kolla}" },
-      "v.rep.result":          { en: "Result: {errors}, {warnings}, {info} info",
-                                 pl: "Wynik: {errors}, {warnings}, {info} info" },
-      "v.rep.clean":           { en: "No problems found.", pl: "Nie wykryto problemów." },
-      "v.rep.topology":        { en: "Topology:", pl: "Topologia:" },
-      "v.rep.absent":          { en: "group not present", pl: "grupa nie występuje" },
-      "v.rep.refLine":         { en: "line {line}", pl: "linia {line}" },
-      "v.rep.refMissing":      { en: "key absent", pl: "klucza brak" },
-      "v.rep.both":            { en: "both", pl: "oba" },
-      "v.sev.error":           { en: "ERROR", pl: "BŁĄD " },
-      "v.sev.warn":            { en: "WARN ", pl: "UWAGA" },
-      "v.sev.info":            { en: "INFO ", pl: "INFO " },
+      "v.rep.title":           "Rackpathlabs — multinode inventory validation report",
+      "v.rep.hosts":           "Hosts: {hosts}   Groups: {groups}",
+      "v.rep.path":            "Upgrade path: {from} -> {to}",
+      "v.rep.globalsYes":      "globals.yml: loaded — the rules needing both files are active",
+      "v.rep.globalsNo":       "globals.yml: not loaded — inventory rules only",
+      "v.rep.release":         "Release: {id} {name}{kolla}",
+      "v.rep.result":          "Result: {errors}, {warnings}, {info} info",
+      "v.rep.clean":           "No problems found.",
+      "v.rep.topology":        "Topology:",
+      "v.rep.absent":          "group not present",
+      "v.rep.refLine":         "line {line}",
+      "v.rep.refMissing":      "key absent",
+      "v.rep.both":            "both",
+      "v.sev.error":           "ERROR",
+      "v.sev.warn":            "WARN ",
+      "v.sev.info":            "INFO ",
 
-      "v.verdict.errors":      { en: "The inventory contains errors that block deployment.",
-                                 pl: "Inventory zawiera błędy blokujące wdrożenie." },
-      "v.verdict.warnings":    { en: "Syntax is valid — there are warnings to review.",
-                                 pl: "Składnia poprawna — są uwagi do przeglądu." },
-      "v.verdict.clean":       { en: "No objections within what this tool checks.",
-                                 pl: "Brak zastrzeżeń w zakresie sprawdzanym przez to narzędzie." },
+      "v.verdict.errors":      "The inventory contains errors that block deployment.",
+      "v.verdict.warnings":    "Syntax is valid — there are warnings to review.",
+      "v.verdict.clean":       "No objections within what this tool checks.",
 
-      "hub.footer":            { en: "Rackpathlabs — OpenStack tooling. Code and issues: <a href=\"https://github.com/Rackpathlabs/kolla-tools\">github.com/Rackpathlabs/kolla-tools</a>. MIT licence.",
-                                 pl: "Rackpathlabs — narzędzia OpenStack. Kod i zgłoszenia: <a href=\"https://github.com/Rackpathlabs/kolla-tools\">github.com/Rackpathlabs/kolla-tools</a>. Licencja MIT." }
+      "hub.footer":            "Rackpathlabs — OpenStack tooling. Code and issues: <a href=\"https://github.com/Rackpathlabs/kolla-tools\">github.com/Rackpathlabs/kolla-tools</a>. MIT licence."
     };
 
-    var lang = "en";
-
-    function setLang(value) { lang = (value === "pl") ? "pl" : "en"; }
-    function getLang() { return lang; }
-
     function t(key, vars) {
-      var entry = DICT[key];
-      /* Brakującego klucza nie ukrywamy pustym napisem — ma być widoczny.
-         Strażnik kompletności w CI i tak nie przepuści takiego stanu do main. */
-      if (!entry) return "[[" + key + "]]";
-      var s = entry[lang];
-      if (s === undefined || s === null) s = entry.en;
+      var s = DICT[key];
+      /* Brakującego klucza nie ukrywamy pustym napisem — ma być widoczny. */
+      if (s === undefined) return "[[" + key + "]]";
       if (!vars) return s;
       return String(s).replace(/\{(\w+)\}/g, function (whole, name) {
         return Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : whole;
       });
     }
 
-    /* Forma liczebnika dla bieżącego języka. */
     function plural(key, n) {
       var forms = String(t(key)).split("|");
-      var i;
-      if (lang === "pl") {
-        i = (n === 1) ? 0
-          : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) ? 1 : 2;
-      } else {
-        i = (n === 1) ? 0 : 1;
-      }
-      return forms[Math.min(i, forms.length - 1)];
+      return forms[Math.min(n === 1 ? 0 : 1, forms.length - 1)];
     }
 
     function count(key, n) { return n + " " + plural(key, n); }
 
-    /* Pamięć wyboru języka. Przy file:// bywa niedostępna — wtedy narzędzie
-       działa dalej po angielsku i nie zostawia śladu w konsoli. */
-    var STORE_KEY = "rackpathlabs.lang";
-
-    function load() {
-      try {
-        var v = localStorage.getItem(STORE_KEY);
-        if (v === "pl" || v === "en") setLang(v);
-      } catch (e) { /* brak pamięci to nie jest błąd, tylko mniej wygody */ }
-    }
-
-    function save() {
-      try { localStorage.setItem(STORE_KEY, lang); } catch (e) { /* jak wyżej */ }
-    }
-
     return {
       t: t, plural: plural, count: count,
-      setLang: setLang, getLang: getLang,
-      load: load, save: save,
       dict: DICT,
       keys: function () { return Object.keys(DICT); }
     };
@@ -1517,14 +1392,14 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       if (body.charAt(0) === "[") {
         var hm = /^\[([^\[\]]*)\]$/.exec(body);
         if (!hm) {
-          add("error", "SKLADNIA", "Niepoprawny nagłówek sekcji: <code>" + esc(body) + "</code>.", lineNo,
+          add("error", "SYNTAX", "Niepoprawny nagłówek sekcji: <code>" + esc(body) + "</code>.", lineNo,
               "Oczekiwany format to <code>[nazwa]</code>, <code>[nazwa:children]</code> lub <code>[nazwa:vars]</code>.");
           current = null;
           continue;
         }
         var inner = hm[1].trim();
         if (!inner) {
-          add("error", "SKLADNIA", "Pusta nazwa grupy w nagłówku sekcji.", lineNo);
+          add("error", "SYNTAX", "Pusta nazwa grupy w nagłówku sekcji.", lineNo);
           current = null;
           continue;
         }
@@ -1532,19 +1407,19 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         var gname = parts[0].trim();
         var kind = parts.length > 1 ? parts[1].trim().toLowerCase() : "hosts";
         if (parts.length > 2 || (kind !== "hosts" && kind !== "vars" && kind !== "children")) {
-          add("error", "SKLADNIA", "Nieznany typ sekcji <code>" + esc(inner) + "</code>.", lineNo,
+          add("error", "SYNTAX", "Nieznany typ sekcji <code>" + esc(inner) + "</code>.", lineNo,
               "Ansible rozpoznaje wyłącznie <code>:children</code> i <code>:vars</code>.");
           current = null;
           continue;
         }
         if (!/^[A-Za-z0-9_.-]+$/.test(gname)) {
-          add("error", "NAZWA-GRUPY", "Nazwa grupy <code>" + esc(gname) + "</code> zawiera niedozwolone znaki.", lineNo,
+          add("error", "GROUP-NAME", "Nazwa grupy <code>" + esc(gname) + "</code> zawiera niedozwolone znaki.", lineNo,
               "Dozwolone są litery, cyfry oraz <code>_ . -</code>.");
         }
         var g = group(gname);
         if (kind === "hosts") {
           if (g.declaredAt.length) {
-            add("info", "SEKCJA-POWT", "Sekcja <code>[" + esc(gname) + "]</code> występuje ponownie (pierwsza w linii " +
+            add("info", "SECTION-REPEATED", "Sekcja <code>[" + esc(gname) + "]</code> występuje ponownie (pierwsza w linii " +
                 g.declaredAt[0] + "). Ansible scali wpisy.", lineNo);
           }
           g.declaredAt.push(lineNo);
@@ -1559,8 +1434,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
       /* ---- wpis poza sekcją ---- */
       if (!current) {
-        add("error", "POZA-GRUPA", "Wpis <code>" + esc(body.split(/\s+/)[0]) + "</code> znajduje się przed jakimkolwiek nagłówkiem grupy.",
-            lineNo, "Ansible przypisze go do grupy <code>ungrouped</code>, więc żadna rola Kolla go nie obejmie.");
+        add("error", "OUTSIDE-GROUP", "Entry <code>" + esc(body.split(/\s+/)[0]) + "</code> appears before any group header.",
+            lineNo, "Ansible puts it in <code>ungrouped</code>, so no Kolla role covers it.");
         continue;
       }
 
@@ -1575,9 +1450,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           if (veq < 1) {
             if (!varsReported) {
               varsReported = true;
-              add("error", "ZMIENNA-GRUPY", "W sekcji <code>[" + esc(current.group) + ":vars]</code> wpis <code>" +
-                  esc(body) + "</code> nie jest przypisaniem zmiennej.", lineNo,
-                  "Ansible oczekuje zapisu <code>klucz=wartość</code>, bez spacji wokół znaku równości.");
+              add("error", "GROUP-VAR", "In <code>[" + esc(current.group) + ":vars]</code> the entry <code>" +
+                  esc(body) + "</code> is not a variable assignment.", lineNo,
+                  "Ansible expects <code>key=value</code>, with no spaces around the equals sign.");
             }
             continue;
           }
@@ -1589,7 +1464,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       /* ---- lista dzieci ---- */
       if (current.kind === "children") {
         if (tokens.length > 1) {
-          add("error", "DZIECI-FORMAT", "Sekcja <code>[" + esc(current.group) + ":children]</code> może zawierać wyłącznie nazwy grup, po jednej w linii.",
+          add("error", "CHILDREN-FORMAT", "Sekcja <code>[" + esc(current.group) + ":children]</code> może zawierać wyłącznie nazwy grup, po jednej w linii.",
               lineNo, "Znaleziono dodatkowe człony: <code>" + esc(tokens.slice(1).join(" ")) + "</code>.");
         }
         group(head).referencedAt.push(lineNo);
@@ -1605,9 +1480,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         if (eq < 1) {
           if (!varReported) {
             varReported = true;
-            add("error", "HOST-ZMIENNA", "Człon <code>" + esc(tokens[t]) + "</code> przy hoście <code>" + esc(head) +
-                "</code> nie jest przypisaniem zmiennej.", lineNo,
-                "Zmienne hosta zapisuje się jako <code>klucz=wartość</code>, bez spacji wokół znaku równości.");
+            add("error", "HOST-VAR", "Token <code>" + esc(tokens[t]) + "</code> on host <code>" + esc(head) +
+                "</code> is not a variable assignment.", lineNo,
+                "Host variables are written as <code>key=value</code>, with no spaces around the equals sign.");
           }
           continue;
         }
@@ -1618,9 +1493,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       if (head.indexOf("[") !== -1 || head.indexOf("]") !== -1) {
         names = expandPattern(head, MAX_RANGE);
         if (!names) {
-          add("error", "ZAKRES", "Wzorzec <code>" + esc(head) + "</code> nie jest poprawnym zakresem hostów.", lineNo,
-              "Ansible wymaga zapisu <code>nazwa[01:10]</code> lub <code>nazwa[a:f]</code>, opcjonalnie z krokiem " +
-              "(<code>[01:10:2]</code>). Oba końce muszą być tej samej klasy, a przy wiodącym zerze także tej samej długości.");
+          add("error", "RANGE", "Pattern <code>" + esc(head) + "</code> is not a valid host range.", lineNo,
+              "Ansible expects <code>name[01:10]</code> or <code>name[a:f]</code>, optionally with a step " +
+              "(<code>[01:10:2]</code>). Both ends must be of the same kind, and with a leading zero also of the same length.");
           names = [];
         }
       }
@@ -1628,8 +1503,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       if (names.length > hostBudget) {
         if (!budgetHit) {
           budgetHit = true;
-          add("error", "LIMIT-HOSTOW", "Inventory przekracza limit " + MAX_HOSTS + " hostów obsługiwany przez to narzędzie.",
-              lineNo, "Dalsze wpisy nie zostały przeanalizowane. Podziel plik albo sprawdź, czy zakresy nie są szersze niż zamierzone.");
+          add("error", "HOST-LIMIT", "The inventory exceeds the " + MAX_HOSTS + " host limit this tool handles.",
+              lineNo, "Later entries were not analysed. Split the file, or check whether the ranges are wider than intended.");
         }
         names = names.slice(0, Math.max(0, hostBudget));
       }
@@ -1688,12 +1563,12 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     if (st && st.sev) {
       var dt = st.dateField ? rel[st.dateField] : null;
       out.push({
-        sev: st.sev, code: "WYDANIE",
-        msg: "Wybrane wydanie <code>" + esc(rel.id) + "</code> (" + esc(rel.name) +
+        sev: st.sev, code: "RELEASE",
+        msg: "Selected release <code>" + esc(rel.id) + "</code> (" + esc(rel.name) +
              (rel.kolla ? ", kolla-ansible " + esc(rel.kolla) : "") + "): " + T(st.textKey) +
              (dt ? " — " + T(st.dateLabelKey) + ": <code>" + esc(dt) + "</code>" : "") + ".",
         line: null,
-        hint: "Nazwy grup sprawdzane są względem tego wydania."
+        hint: "Group names are checked against this release."
       });
     }
 
@@ -1703,7 +1578,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       if (!g) return;
       out.push({
         sev: dep.sev || "warn",
-        code: dep.replacedBy ? "GRUPA-PRZEMIANOWANA" : "GRUPA-WYCOFANA",
+        code: dep.replacedBy ? "GROUP-RENAMED" : "GROUP-RETIRED",
         msg: T("v.r.group", { group: esc(dep.name) }) + (dep.replacedBy
           ? T("v.r.renamed", { rel: esc(rel.id), to: esc(dep.replacedBy) })
           : T("v.r.removed", { rel: esc(rel.id) })),
@@ -1734,35 +1609,25 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
      dostać własną obsadę zamiast dziedziczyć z [control]. */
   var QUORUM_GROUPS = [
     { name: "control",
-      label: { en: "the control plane", pl: "płaszczyzna sterowania" },
-      why: { en: "Three independent quorum mechanisms ride on this one host list: Galera, RabbitMQ quorum queues and Corosync.",
-             pl: "Na tej samej liście hostów stoją trzy niezależne mechanizmy kworum: Galera, kolejki quorum RabbitMQ i Corosync." },
-      fail: { en: "With two nodes, losing one puts Galera into non-Primary — the database goes read-only and every write API call returns 500. With four, losing two (one rack, one switch) kills quorum even though two healthy nodes remain. It surfaces at the first real failover, or during a rolling reboot while patching.",
-              pl: "Przy dwóch węzłach utrata jednego wprowadza Galerę w stan non-Primary — baza przechodzi w tryb tylko do odczytu, a każde zapisujące wywołanie API kończy się błędem 500. Przy czterech utrata dwóch (jedna szafa, jeden przełącznik) zabija kworum, mimo że dwa sprawne węzły zostają. Ujawnia się przy pierwszym prawdziwym przełączeniu albo podczas kolejkowego restartu przy aktualizacjach." } },
+      label: "the control plane",
+      why: "Three independent quorum mechanisms ride on this one host list: Galera, RabbitMQ quorum queues and Corosync.",
+      fail: "With two nodes, losing one puts Galera into non-Primary — the database goes read-only and every write API call returns 500. With four, losing two (one rack, one switch) kills quorum even though two healthy nodes remain. It surfaces at the first real failover, or during a rolling reboot while patching." },
     { name: "mariadb",
-      label: { en: "Galera", pl: "Galera" },
-      why: { en: "The group carries its own membership instead of inheriting from <code>[control]</code>.",
-             pl: "Grupa ma własną obsadę zamiast dziedziczyć z <code>[control]</code>." },
-      fail: { en: "Losing half the nodes puts the cluster into non-Primary — the database goes read-only.",
-              pl: "Utrata połowy węzłów wprowadza klaster w stan non-Primary — baza staje się tylko do odczytu." } },
+      label: "Galera",
+      why: "The group carries its own membership instead of inheriting from <code>[control]</code>.",
+      fail: "Losing half the nodes puts the cluster into non-Primary — the database goes read-only." },
     { name: "rabbitmq",
-      label: { en: "RabbitMQ", pl: "RabbitMQ" },
-      why: { en: "The group carries its own membership instead of inheriting from <code>[control]</code>.",
-             pl: "Grupa ma własną obsadę zamiast dziedziczyć z <code>[control]</code>." },
-      fail: { en: "Quorum queues need a majority. Without one, publishing blocks and RPC calls between services time out.",
-              pl: "Kolejki quorum wymagają większości. Bez niej publikacja wiadomości blokuje się, a wywołania RPC między usługami wygasają." } },
+      label: "RabbitMQ",
+      why: "The group carries its own membership instead of inheriting from <code>[control]</code>.",
+      fail: "Quorum queues need a majority. Without one, publishing blocks and RPC calls between services time out." },
     { name: "hacluster",
-      label: { en: "Corosync/Pacemaker", pl: "Corosync/Pacemaker" },
-      why: { en: "The group carries its own membership instead of inheriting from <code>[control]</code>.",
-             pl: "Grupa ma własną obsadę zamiast dziedziczyć z <code>[control]</code>." },
-      fail: { en: "An even Corosync cluster cannot form a majority under a network partition — neither half takes over the resources.",
-              pl: "Parzysty klaster Corosync przy podziale sieci nie wyłoni większości — żadna połowa nie przejmie zasobów." } },
+      label: "Corosync/Pacemaker",
+      why: "The group carries its own membership instead of inheriting from <code>[control]</code>.",
+      fail: "An even Corosync cluster cannot form a majority under a network partition — neither half takes over the resources." },
     { name: "etcd",
-      label: { en: "etcd", pl: "etcd" },
-      why: { en: "The group carries its own membership instead of inheriting from <code>[control]</code>.",
-             pl: "Grupa ma własną obsadę zamiast dziedziczyć z <code>[control]</code>." },
-      fail: { en: "Without a majority etcd goes read-only — services that lose contact with it cannot persist state.",
-              pl: "etcd bez większości przechodzi w tryb tylko do odczytu — usługi tracące z nim łączność nie zapiszą stanu." } }
+      label: "etcd",
+      why: "The group carries its own membership instead of inheriting from <code>[control]</code>.",
+      fail: "Without a majority etcd goes read-only — services that lose contact with it cannot persist state." }
   ];
 
   /* W referencyjnym inventory [ovn-nb-db] i [ovn-sb-db] dziedziczą z [ovn-database],
@@ -1771,23 +1636,12 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
      trzy razy. */
   var OVN_DB_GROUPS = [
     { name: "ovn-database", base: true,
-      label: { en: "the OVN databases", pl: "bazy OVN" } },
+      label: "the OVN databases" },
     { name: "ovn-nb-db",
-      label: { en: "the OVN northbound database", pl: "baza northbound OVN" } },
+      label: "the OVN northbound database" },
     { name: "ovn-sb-db",
-      label: { en: "the OVN southbound database", pl: "baza southbound OVN" } }
+      label: "the OVN southbound database" }
   ];
-
-  /* Teksty żyjące w tabelach danych trzymają pary {en, pl} przy wartości, zamiast
-     chować się za kluczami słownika — dzięki temu opis nie odrywa się od rzeczy,
-     którą opisuje. L() wyciąga właściwy język; strażnik kompletności pilnuje,
-     żeby każda para miała oba. */
-  function L(value) {
-    if (value === null || value === undefined) return "";
-    if (typeof value === "string") return value;
-    var v = value[I18N.getLang()];
-    return (v === undefined || v === null) ? (value.en || "") : v;
-  }
 
   function sameSet(a, b) {
     if (!a || !b || a.length !== b.length) return false;
@@ -1823,28 +1677,28 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
       if (n === 1) {
         if (spec.name === "control" && aio) {
-          out.push({ sev: "info", code: "KWORUM-AIO",
+          out.push({ sev: "info", code: "QUORUM-AIO",
             msg: T("v.q.aio.msg"), line: line,
             hint: T("v.q.aio.hint", { min: QUORUM.minOdd }) });
         } else {
-          out.push({ sev: "error", code: "KWORUM-LICZBA",
-            msg: T("v.q.single.msg", { group: esc(spec.name), label: L(spec.label) }),
+          out.push({ sev: "error", code: "QUORUM-COUNT",
+            msg: T("v.q.single.msg", { group: esc(spec.name), label: spec.label }),
             line: line,
-            hint: L(spec.fail) + " " + T("v.q.needOdd", { min: QUORUM.minOdd }) });
+            hint: spec.fail + " " + T("v.q.needOdd", { min: QUORUM.minOdd }) });
         }
         return;
       }
 
       if (n % 2 === 0 || n < QUORUM.minOdd) {
-        out.push({ sev: "error", code: "KWORUM-LICZBA",
+        out.push({ sev: "error", code: "QUORUM-COUNT",
           msg: T("v.q.count.msg", {
             group: esc(spec.name),
             count: I18N.count("n.host", n),
             reason: T(n % 2 === 0 ? "v.q.even" : "v.q.tooFew"),
-            label: L(spec.label)
+            label: spec.label
           }),
           line: line,
-          hint: L(spec.why) + " " + L(spec.fail) });
+          hint: spec.why + " " + spec.fail });
       }
     });
 
@@ -1864,24 +1718,23 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       var line = groupLine(g);
 
       if (n % 2 === 0 || n > QUORUM.ovnMax) {
-        out.push({ sev: "error", code: "KWORUM-OVN",
-          msg: "Grupa <code>[" + esc(spec.name) + "]</code> ma " +
-               countLabel(n, "host", "hosty", "hostów") + " — klaster RAFT wymaga 1 albo " +
+        out.push({ sev: "error", code: "QUORUM-OVN",
+          msg: "Group <code>[" + esc(spec.name) + "]</code> has " +
+               countLabel(n, "host", "hosts") + " — a RAFT cluster needs 1 or " +
                QUORUM.ovnMax + ".",
           line: line,
-          hint: "Klaster dwuwęzłowy ma gorszą dostępność niż pojedynczy węzeł: wdrożenie " +
-                "przechodzi, <code>ovn-nbctl show</code> działa, ale przy utracie jednego " +
-                "z dwóch węzłów RAFT traci kworum i baza przechodzi w tryb tylko do " +
-                "odczytu. Neutron przestaje tworzyć porty i grupy zabezpieczeń, podczas " +
-                "gdy istniejąca warstwa danych działa dalej — monitoring maszyn świeci " +
-                "na zielono, a chmura jest zamrożona." });
+          hint: "A two-node cluster is less available than a single node: the deployment " +
+                "succeeds, <code>ovn-nbctl show</code> works, but losing either of the two " +
+                "nodes costs RAFT its quorum and the database goes read-only. Neutron " +
+                "stops creating ports and security groups while the existing data plane " +
+                "keeps forwarding — host monitoring stays green and the cloud is frozen." });
       } else if (n === 1 && control.length > 1) {
-        out.push({ sev: "info", code: "KWORUM-OVN",
+        out.push({ sev: "info", code: "QUORUM-OVN",
           msg: T("v.q.ovnSpof.msg", {
             group: esc(spec.name), count: I18N.count("n.node", control.length)
           }),
           line: line,
-          hint: T("v.q.ovnSpof.hint", { label: L(spec.label) }) });
+          hint: T("v.q.ovnSpof.hint", { label: spec.label }) });
       }
     });
 
@@ -1890,10 +1743,10 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     var dbRef = (nbHosts && nbHosts.length) ? nbHosts : ovnBase;
     if (northd && northd.length && dbRef && dbRef.length && !sameSet(northd, dbRef)) {
       out.push({ sev: "warn", code: "OVN-NORTHD",
-        msg: "Obsada <code>[ovn-northd]</code> różni się od obsady baz OVN.",
+        msg: "The hosts in <code>[ovn-northd]</code> differ from the OVN database hosts.",
         line: groupLine(groups["ovn-northd"]),
-        hint: "northd będzie łączyć się z bazą zdalnie. Zwykle obie grupy mają tę samą " +
-              "listę hostów." });
+        hint: "northd then connects to the database remotely. Both groups normally hold the " +
+              "same hosts." });
     }
 
     /* --- monitory Ceph --- */
@@ -1903,20 +1756,20 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     if (mon) {
       var monHosts = effective["ceph-mon"] || [];
       var monLine = groupLine(mon);
-      out.push({ sev: "info", code: "CEPH-POZA-KOLLA",
-        msg: "Grupa <code>[ceph-mon]</code> nie jest wdrażana przez Kolla-Ansible.",
+      out.push({ sev: "info", code: "CEPH-OUTSIDE-KOLLA",
+        msg: "Group <code>[ceph-mon]</code> is not deployed by Kolla-Ansible.",
         line: monLine,
-        hint: "Wdrażanie Cepha usunięto z Kolla-Ansible w wydaniu Ussuri. Klaster " +
-              "podłącza się jako zewnętrzny (<code>external-ceph</code>), a tę grupę " +
-              "obsługuje ceph-ansible albo cephadm — Kolla ją zignoruje." });
+        hint: "Ceph deployment was removed from Kolla-Ansible in the Ussuri release. The " +
+              "cluster is attached as external (<code>external-ceph</code>), and this group " +
+              "belongs to ceph-ansible or cephadm — Kolla ignores it." });
       if (monHosts.length && (monHosts.length % 2 === 0 || monHosts.length < QUORUM.minOdd)) {
-        out.push({ sev: monHosts.length === 1 ? "info" : "warn", code: "KWORUM-CEPH",
+        out.push({ sev: monHosts.length === 1 ? "info" : "warn", code: "QUORUM-CEPH",
           msg: T("v.q.ceph.msg", {
             count: I18N.count("n.host", monHosts.length), min: QUORUM.minOdd
           }),
           line: monLine,
-          hint: "Bez większości monitorów klaster wstrzymuje operacje wejścia-wyjścia. " +
-                "Przy dwóch monitorach utrata jednego zatrzymuje cały magazyn." });
+          hint: "Without a majority of monitors the cluster suspends I/O. With two " +
+                "monitors, losing one stops all storage." });
       }
     }
 
@@ -1970,7 +1823,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     if (ctlCmp.length && !aio) {
       var v4 = lintVariantB("KV-04", flags);
       out.push({
-        sev: lintSevB("KV-04", v4, null), code: "KOLOKACJA-CONTROL-COMPUTE",
+        sev: lintSevB("KV-04", v4, null), code: "COLLOCATION-CONTROL-COMPUTE",
         msg: T("v.c.ctlcmp.msg", {
           n: I18N.plural("v.c.n.hostServes", ctlCmp.length).replace("{n}", ctlCmp.length),
           hosts: hostList(ctlCmp)
@@ -1988,14 +1841,14 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
       if (sameAsControl) {
         out.push({
-          sev: "warn", code: "KOLOKACJA-NETWORK",
+          sev: "warn", code: "COLLOCATION-NETWORK",
           msg: T("v.c.net.same.msg"),
           line: groupLine(groups.network),
           hint: T("v.c.net.same.hint")
         });
       } else if (ctlNet.length) {
         out.push({
-          sev: "warn", code: "KOLOKACJA-NETWORK",
+          sev: "warn", code: "COLLOCATION-NETWORK",
           msg: T("v.c.net.partial.msg", { hosts: hostList(ctlNet) }),
           line: groupLine(groups.network),
           hint: T("v.c.net.partial.hint")
@@ -2005,7 +1858,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       if (network.length < COLLOCATION.minGateway &&
           compute.length >= COLLOCATION.computeScale) {
         out.push({
-          sev: "warn", code: "BRAMA-BEZ-HA",
+          sev: "warn", code: "GATEWAY-NO-HA",
           msg: T("v.c.gw.msg", {
             count: I18N.count("n.host", network.length),
             computeCount: I18N.count("n.computeNode", compute.length)
@@ -2020,7 +1873,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     var stgCmp = intersect(storage, compute);
     if (stgCmp.length && !aio) {
       out.push({
-        sev: "info", code: "KOLOKACJA-STORAGE",
+        sev: "info", code: "COLLOCATION-STORAGE",
         msg: T("v.c.storage.msg", {
           n: I18N.plural("v.c.n.hostCombines", stgCmp.length).replace("{n}", stgCmp.length),
           hosts: hostList(stgCmp)
@@ -2161,7 +2014,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     if (storage.length > 1 && !glob.keys.cinder_cluster_name && !lvmOnly) {
       out.push({
         sev: lintSevB("KV-07", lintVariantB("KV-07", flags), acks),
-        code: "KV-07-CINDER-KLASTER", src: "cross",
+        code: "KV-07-CINDER-CLUSTER", src: "cross",
         line: groupLine(groups.storage),
         refs: [{ src: "inventory", line: groupLine(groups.storage) },
                { src: "globals", line: null }],
@@ -2192,7 +2045,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         if (byAddr[vip]) {
           out.push({
             sev: lintSevB("KV-09", "collision", acks),
-            code: "KV-09-VIP-KOLIZJA", src: "cross", line: byAddr[vip].line,
+            code: "KV-09-VIP-COLLISION", src: "cross", line: byAddr[vip].line,
             refs: [{ src: "inventory", line: byAddr[vip].line },
                    { src: "globals", line: e.line }],
             msg: T("v.x.kv09.collision.msg", {
@@ -2211,7 +2064,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
         out.push({
           sev: lintSevB("KV-09", "subnet", acks),
-          code: "KV-09-VIP-PODSIEC", src: "cross", line: null,
+          code: "KV-09-VIP-SUBNET", src: "cross", line: null,
           refs: [{ src: "globals", line: e.line }],
           msg: T("v.x.kv09.subnet.msg", {
             key: esc(key), vip: esc(vip), prefix: esc(net.prefix), mask: net.mask
@@ -2251,11 +2104,11 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
      wycofania, a waga 'info' — zmianę okoliczności (np. innej grupy nadrzędnej)
      od usunięcia. Żadnej z tych decyzji nie ma w treści reguły. */
   function upgradeCode(dep) {
-    if (dep.kind === "procedure") return "UPGRADE-PROCEDURA";
-    var base = (dep.kind === "key") ? "UPGRADE-KLUCZ" : "UPGRADE-GRUPA";
-    if (dep.replacedBy) return base + "-PRZEMIANOWANY";
-    if (dep.sev === "info") return base + "-ZMIANA";
-    return base + "-WYCOFANY";
+    if (dep.kind === "procedure") return "UPGRADE-PROCEDURE";
+    var base = (dep.kind === "key") ? "UPGRADE-KEY" : "UPGRADE-GROUP";
+    if (dep.replacedBy) return base + "-RENAMED";
+    if (dep.sev === "info") return base + "-CHANGED";
+    return base + "-RETIRED";
   }
 
   function upgradeRules(groups, glob, fromId, toId) {
@@ -2267,12 +2120,12 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
     if (path === "downgrade") {
       out.push({
-        sev: "error", code: "UPGRADE-KIERUNEK", src: "upgrade", line: null,
-        msg: "Wydanie docelowe <code>" + esc(toId) + "</code> jest starsze niż obecne <code>" +
+        sev: "error", code: "UPGRADE-DIRECTION", src: "upgrade", line: null,
+        msg: "Target release <code>" + esc(toId) + "</code> is older than the current one <code>" +
              esc(fromId) + "</code>.",
-        hint: "Kolla-Ansible nie wspiera obniżania wersji i to narzędzie nie będzie udawać, " +
-              "że wspiera. Powrót do wcześniejszego wydania to odtworzenie środowiska " +
-              "z kopii zapasowej, nie zmiana w plikach."
+        hint: "Kolla-Ansible does not support downgrades, and this tool will not pretend it " +
+              "does. Going back to an earlier release means restoring the environment from " +
+              "a backup, not editing files."
       });
       return out;
     }
@@ -2294,29 +2147,28 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         var line = isFileKey ? glob.keys[dep.name].line : groupLine(groups[dep.name]);
         var where = isFileKey ? "globals" : "inventory";
         var subject = dep.kind === "key" || dep.kind === "procedure"
-          ? "Klucz <code>" + esc(dep.name) + "</code>"
-          : "Grupa <code>[" + esc(dep.name) + "]</code>";
+          ? "Key <code>" + esc(dep.name) + "</code>"
+          : "Group <code>[" + esc(dep.name) + "]</code>";
 
         var what, todo;
         if (dep.kind === "procedure") {
-          what = "zmienia się w wydaniu <code>" + esc(rel.id) + "</code> w sposób, którego " +
-                 "nie da się załatwić edycją pliku";
-          todo = "To wymaga kroku operacyjnego na działającym środowisku, nie poprawki w YAML-u. " +
-                 "Narzędzie nie sprawdzi, czy krok został wykonany — potrzebowałoby historii " +
-                 "wdrożenia, a nie treści pliku. Powód opisuje SCOPE.md.";
+          what = "changes in release <code>" + esc(rel.id) + "</code> in a way that editing " +
+                 "the file cannot settle";
+          todo = "This needs an operational step on the running environment, not a YAML fix. " +
+                 "The tool cannot tell whether that step was taken — it would need the " +
+                 "deployment history, not the file. SCOPE.md explains why.";
         } else if (dep.replacedBy) {
-          what = "zostaje przemianowany" + (isFileKey ? "" : "a") + " na <code>" +
-                 esc(dep.replacedBy) + "</code> w wydaniu <code>" + esc(rel.id) + "</code>";
+          what = "is renamed to <code>" +
+                 esc(dep.replacedBy) + "</code> in release <code>" + esc(rel.id) + "</code>";
           todo = T(isFileKey ? "v.u.todo.renameKey" : "v.u.todo.renameGroup");
         } else if (dep.sev === "info") {
-          what = "zmienia okoliczności w wydaniu <code>" + esc(rel.id) + "</code>";
-          todo = "Zmiana nie blokuje aktualizacji, ale warto ją odnotować.";
+          what = "changes its circumstances in release <code>" + esc(rel.id) + "</code>";
+          todo = "The change does not block the upgrade, but it is worth noting.";
         } else {
-          what = "przestaje być obsługiwan" + (isFileKey ? "y" : "a") +
-                 " w wydaniu <code>" + esc(rel.id) + "</code>";
+          what = "stops being supported in release <code>" + esc(rel.id) + "</code>";
           todo = isFileKey
-            ? "Usuń klucz albo pogódź się z tym, że nic już nie robi."
-            : "Zaplanuj przeniesienie obciążenia i usuń grupę z inventory.";
+            ? "Remove the key, or accept that it no longer does anything."
+            : "Plan where the workload moves, then drop the group from the inventory.";
         }
 
         out.push({
@@ -2330,10 +2182,10 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
     if (gaps.length) {
       out.push({
-        sev: "warn", code: "UPGRADE-LUKA", src: "upgrade", line: null,
-        msg: "Ścieżka prowadzi przez " +
-             plural(gaps.length, "wydanie", "wydania", "wydań") +
-             " bez skatalogowanych deprecacji: <code>" + gaps.map(esc).join("</code>, <code>") +
+        sev: "warn", code: "UPGRADE-GAP", src: "upgrade", line: null,
+        msg: "The path crosses " +
+             countLabel(gaps.length, "release", "releases") +
+             " with no catalogued deprecations: <code>" + gaps.map(esc).join("</code>, <code>") +
              "</code>.",
         hint: T("v.u.gap.hint", {
           which: T(gaps.length === 1 ? "v.u.gap.which1" : "v.u.gap.whichN")
@@ -2394,7 +2246,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     for (var ci = 0; ci < order.length; ci++) {
       var cyc = detectCycle(groups, order[ci], [order[ci]], cycleSeen);
       if (cyc) {
-        add("error", "CYKL-GRUP", "Cykliczna zależność grup: <code>" + cyc.cycle.map(esc).join(" &rarr; ") + "</code>.",
+        add("error", "GROUP-CYCLE", "Cykliczna zależność grup: <code>" + cyc.cycle.map(esc).join(" &rarr; ") + "</code>.",
             cyc.line, "Ansible odrzuci takie inventory przy wczytywaniu.");
         break;
       }
@@ -2405,19 +2257,19 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       var g = groups[name];
       var sev = CRITICAL[name] ? "error" : "warn";
       if (!g || (!g.declaredAt.length && !g.childrenAt.length)) {
-        add(sev, "BRAK-GRUPY", "Brak wymaganej grupy <code>[" + name + "]</code>.", null,
-            "Inventory multinode Kolla-Ansible opiera się na grupach: " +
+        add(sev, "MISSING-GROUP", "Required group <code>[" + name + "]</code> is missing.", null,
+            "A Kolla-Ansible multinode inventory is built on the groups: " +
             REQUIRED.map(function (r) { return "<code>" + r + "</code>"; }).join(", ") + ".");
         return;
       }
       if (effective[name].length === 0) {
-        add(sev, "PUSTA-GRUPA", "Grupa <code>[" + name + "]</code> jest zadeklarowana, ale nie ma żadnego hosta.",
+        add(sev, "EMPTY-GROUP", "Group <code>[" + name + "]</code> is declared but holds no host.",
             g.declaredAt[0] || g.childrenAt[0],
-            name === "compute" ? "Bez węzłów obliczeniowych nie uruchomisz żadnej instancji."
-              : name === "network" ? "Bez węzłów sieciowych nie wstaną agenty L3, DHCP ani metadata."
-              : name === "control" ? "Bez węzłów sterujących nie wdrożysz usług płaszczyzny sterowania."
-              : name === "storage" ? "Wdrożenie zadziała, ale usługi wolumenów (Cinder) nie będą miały gdzie wystartować."
-              : "Wdrożenie zadziała, ale Prometheus i Grafana nie będą miały gdzie wystartować.");
+            name === "compute" ? "With no compute nodes no instance can start."
+              : name === "network" ? "With no network nodes the L3, DHCP and metadata agents have nowhere to run."
+              : name === "control" ? "With no control nodes the control plane services cannot be deployed."
+              : name === "storage" ? "The deployment succeeds, but the volume services (Cinder) have nowhere to start."
+              : "The deployment succeeds, but Prometheus and Grafana have nowhere to start.");
       }
     });
 
@@ -2427,7 +2279,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       var g = groups[name];
       if (!g.declaredAt.length && !g.childrenAt.length && !g.varsAt.length) return;
       if (effective[name].length === 0) {
-        add("warn", "PUSTA-GRUPA", "Grupa <code>[" + esc(name) + "]</code> nie zawiera żadnego hosta.",
+        add("warn", "EMPTY-GROUP", "Group <code>[" + esc(name) + "]</code> holds no host.",
             g.declaredAt[0] || g.childrenAt[0] || g.varsAt[0],
             "Pusta grupa jest ignorowana przy wdrożeniu — usuń ją albo uzupełnij obsadę.");
       }
@@ -2439,11 +2291,11 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       var g = groups[name];
       if (g.declaredAt.length || g.childrenAt.length) return;
       if (g.referencedAt.length) {
-        add("error", "GRUPA-NIEZDEF", "Grupa <code>" + esc(name) + "</code> jest wskazana jako podgrupa, ale nigdzie nie została zdefiniowana.",
-            g.referencedAt[0], "Dodaj sekcję <code>[" + esc(name) + "]</code> albo usuń wpis z listy podgrup.");
+        add("error", "GROUP-UNDEFINED", "Group <code>" + esc(name) + "</code> is listed as a child group but defined nowhere.",
+            g.referencedAt[0], "Add a <code>[" + esc(name) + "]</code> section, or drop the entry from the children list.");
       } else if (g.varsAt.length) {
-        add("warn", "GRUPA-TYLKO-VARS", "Grupa <code>" + esc(name) + "</code> ma sekcję zmiennych, ale nie ma hostów ani podgrup.",
-            g.varsAt[0], "Zmienne nie zostaną nigdzie zastosowane.");
+        add("warn", "GROUP-VARS-ONLY", "Group <code>" + esc(name) + "</code> has a vars section but neither hosts nor child groups.",
+            g.varsAt[0], "The variables apply to nothing.");
       }
     });
 
@@ -2453,8 +2305,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       var seen = Object.create(null);
       g.hosts.forEach(function (h) {
         if (seen[h.name]) {
-          add("error", "DUPLIKAT-HOST", "Host <code>" + esc(h.name) + "</code> jest wpisany dwukrotnie w grupie <code>[" + esc(name) + "]</code>.",
-              h.line, "Pierwsze wystąpienie: linia " + seen[h.name] + ". Powielony wpis może nadpisać zmienne hosta.");
+          add("error", "DUPLICATE-HOST", "Host <code>" + esc(h.name) + "</code> is listed twice in group <code>[" + esc(name) + "]</code>.",
+              h.line, "First occurrence: line " + seen[h.name] + ". The repeated entry can override the host variables.");
         } else {
           seen[h.name] = h.line;
         }
@@ -2463,20 +2315,20 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       var seenChild = Object.create(null);
       g.children.forEach(function (c) {
         if (seenChild[c.name]) {
-          add("warn", "DUPLIKAT-PODGRUPA", "Podgrupa <code>" + esc(c.name) + "</code> jest wymieniona dwukrotnie w <code>[" + esc(name) + ":children]</code>.",
+          add("warn", "DUPLICATE-CHILD", "Podgrupa <code>" + esc(c.name) + "</code> jest wymieniona dwukrotnie w <code>[" + esc(name) + ":children]</code>.",
               c.line, "Pierwsze wystąpienie: linia " + seenChild[c.name] + ".");
         } else {
           seenChild[c.name] = c.line;
         }
         if (c.name === name) {
-          add("error", "PODGRUPA-SAMA", "Grupa <code>" + esc(name) + "</code> wskazuje samą siebie jako podgrupę.", c.line);
+          add("error", "CHILD-SELF", "Grupa <code>" + esc(name) + "</code> wskazuje samą siebie jako podgrupę.", c.line);
         }
       });
 
       var seenVar = Object.create(null);
       g.vars.forEach(function (v) {
         if (seenVar[v.key]) {
-          add("warn", "DUPLIKAT-ZMIENNEJ", "Zmienna <code>" + esc(v.key) + "</code> jest ustawiona dwukrotnie w <code>[" + esc(name) + ":vars]</code>.",
+          add("warn", "DUPLICATE-VAR", "Zmienna <code>" + esc(v.key) + "</code> jest ustawiona dwukrotnie w <code>[" + esc(name) + ":vars]</code>.",
               v.line, "Pierwsze wystąpienie: linia " + seenVar[v.key] + ". Obowiązuje wartość z ostatniego wpisu.");
         } else {
           seenVar[v.key] = v.line;
@@ -2493,9 +2345,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         Object.keys(d.vars).forEach(function (key) {
           if (!(key in values)) { values[key] = { val: d.vars[key], line: d.line }; return; }
           if (values[key].val !== d.vars[key]) {
-            add("error", "SPRZECZNA-ZMIENNA", "Host <code>" + esc(host) + "</code> ma dwie różne wartości <code>" + esc(key) +
-                "</code>: <code>" + esc(values[key].val) + "</code> (linia " + values[key].line + ") oraz <code>" + esc(d.vars[key]) + "</code>.",
-                d.line, "Ansible użyje ostatniej definicji — rozbieżność prawie zawsze oznacza błąd w pliku.");
+            add("error", "CONFLICTING-VAR", "Host <code>" + esc(host) + "</code> has two different values for <code>" + esc(key) +
+                "</code>: <code>" + esc(values[key].val) + "</code> (line " + values[key].line + ") and <code>" + esc(d.vars[key]) + "</code>.",
+                d.line, "Ansible takes the last definition — a mismatch here is almost always a mistake in the file.");
           }
         });
       });
@@ -2518,10 +2370,10 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     Object.keys(byEndpoint).forEach(function (endpoint) {
       var hosts = Object.keys(byEndpoint[endpoint]);
       if (hosts.length < 2) return;
-      add("error", "DUPLIKAT-ADRESU", "Punkt dostępu <code>" + esc(endpoint) + "</code> jest przypisany do różnych hostów: " +
+      add("error", "DUPLICATE-ENDPOINT", "Endpoint <code>" + esc(endpoint) + "</code> is assigned to different hosts: " +
           hosts.map(function (n) { return "<code>" + esc(n) + "</code>"; }).join(", ") + ".",
           byEndpoint[endpoint][hosts[1]],
-          "Kolla potraktuje je jako osobne węzły i wdroży na jedną maszynę sprzeczne konfiguracje.");
+          "Kolla treats them as separate nodes and deploys conflicting configurations onto one machine.");
     });
     Object.keys(byAddress).forEach(function (addr) {
       var hosts = Object.keys(byAddress[addr]);
@@ -2530,7 +2382,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         return e.indexOf(addr + ":") === 0 && Object.keys(byEndpoint[e]).length > 1;
       });
       if (conflicting) return;   // zgłoszone już jako błąd wyżej
-      add("info", "WSPOLNY-ADRES", "Adres <code>" + esc(addr) + "</code> obsługuje kilka hostów na różnych portach: " +
+      add("info", "SHARED-ADDRESS", "Adres <code>" + esc(addr) + "</code> obsługuje kilka hostów na różnych portach: " +
           hosts.map(function (n) { return "<code>" + esc(n) + "</code>"; }).join(", ") + ".",
           byAddress[addr][hosts[1]], "Poprawne przy NAT lub labie zagnieżdżonym — upewnij się, że taka była intencja.");
     });
@@ -2541,11 +2393,11 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
              host !== "localhost" && !/^\d{1,3}(\.\d{1,3}){3}$/.test(host) && host.indexOf(".") === -1;
     });
     if (noAddr.length) {
-      add("info", "BRAK-ADRESU", plural(noAddr.length, "Host", "Hosty", "Hostów") + " bez <code>ansible_host</code>: " +
+      add("info", "NO-ADDRESS", plural(noAddr.length, "Host", "Hosts") + " without <code>ansible_host</code>: " +
           noAddr.slice(0, 8).map(function (n) { return "<code>" + esc(n) + "</code>"; }).join(", ") +
-          (noAddr.length > 8 ? " i " + (noAddr.length - 8) + " więcej" : "") + ".",
+          (noAddr.length > 8 ? " and " + (noAddr.length - 8) + " more" : "") + ".",
           hostIndex[noAddr[0]].defs[0].line,
-          "Nazwa musi być rozwiązywalna przez DNS lub <code>/etc/hosts</code> na hoście wdrożeniowym.");
+          "The name must resolve through DNS or <code>/etc/hosts</code> on the deployment host.");
     }
 
     /* Liczebność grup obsługują quorumRules() i collocationRules(). Wcześniejsze
@@ -2566,11 +2418,11 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         });
       }
       if (best && bestD <= 2 && Math.abs(best.length - name.length) <= 2) {
-        add("warn", "LITEROWKA", "Grupa <code>" + esc(name) + "</code> przypomina standardową grupę <code>" + best + "</code>.",
-            line, "Kolla-Ansible nie rozpozna grupy o innej nazwie — sprawdź pisownię.");
+        add("warn", "TYPO", "Group <code>" + esc(name) + "</code> resembles the standard group <code>" + best + "</code>.",
+            line, "Kolla-Ansible will not recognise a group under a different name — check the spelling.");
       } else {
-        add("info", "GRUPA-WLASNA", "Grupa <code>" + esc(name) + "</code> nie występuje w referencyjnym inventory Kolla-Ansible.",
-            line, "To poprawne, o ile jest używana świadomie (np. własne role lub podział sprzętowy).");
+        add("info", "GROUP-CUSTOM", "Group <code>" + esc(name) + "</code> does not appear in the reference Kolla-Ansible inventory.",
+            line, "That is fine as long as it is used deliberately, for example for custom roles or a hardware split.");
       }
     });
 
@@ -2592,7 +2444,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     quorumRules(groups, effective, hostNames).forEach(function (f) { findings.push(f); });
 
     if (!hostNames.length && !findings.some(function (f) { return f.sev === "error"; })) {
-      add("error", "BRAK-HOSTOW", "Inventory nie zawiera żadnego hosta.", null);
+      add("error", "NO-HOSTS", "Inventory nie zawiera żadnego hosta.", null);
     }
 
     /* Plik był dotąd jeden, więc źródło findingu było niejawne. Od trybu łączonego
@@ -2623,13 +2475,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
 
-  function plural(n, one, few, many) {
-    if (n === 1) return one;
-    if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return few;
-    return many;
-  }
+  function plural(n, one, many) { return n === 1 ? one : many; }
 
-  function countLabel(n, one, few, many) { return n + " " + plural(n, one, few, many); }
+  function countLabel(n, one, many) { return n + " " + plural(n, one, many); }
 
   function renderGutter(text, marks) {
     var count = text.split(/\r?\n/).length;
@@ -2773,11 +2621,6 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     var L = [];
     L.push(T("v.rep.title"));
     L.push("===================================================");
-    /* Etykieta języka zostaje po angielsku, a wartość jest kodem ISO: to jedyny
-       wiersz, który musi zrozumieć ktoś nieznający języka reszty dokumentu.
-       "Język: polski" w polskim raporcie jest bezużyteczne dokładnie dla tej
-       osoby, dla której powstało. To metadane, nie treść. */
-    L.push("Language: " + I18N.getLang());
     L.push(T("v.rep.hosts", { hosts: res.hostCount, groups: res.order.length }));
     if (res.releaseTo) {
       L.push(T("v.rep.path", { from: res.release ? res.release.id : "?", to: res.releaseTo.id }));
@@ -2850,7 +2693,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
   function inputFingerprint() {
     return [el.src.value, el.gsrc.value, el.release.value, el.releaseTo.value,
-            el.ackNoBmc.checked ? "1" : "0", I18N.getLang()].join("\u0000");
+            el.ackNoBmc.checked ? "1" : "0"].join("\u0000");
   }
 
   function markStale() {
@@ -3140,14 +2983,11 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
      danych powstają w run() i renderach, więc po przełączeniu wystarczy je
      przeliczyć od nowa. */
   function applyI18n() {
-    document.documentElement.lang = I18N.getLang();
     document.title = T("v.title");
     var d = document.querySelector('meta[name="description"]');
     if (d) d.setAttribute("content", T("v.desc"));
     var nav = document.getElementById("nav");
     if (nav) nav.setAttribute("aria-label", T("nav.tools"));
-    var lg = document.getElementById("lang");
-    if (lg) lg.setAttribute("aria-label", T("lang.label"));
 
     var nodes = document.querySelectorAll("[data-i18n]");
     for (var i = 0; i < nodes.length; i++) nodes[i].innerHTML = T(nodes[i].getAttribute("data-i18n"));
@@ -3157,27 +2997,10 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     for (i = 0; i < nodes.length; i++) nodes[i].setAttribute("title", T(nodes[i].getAttribute("data-i18n-title")));
     nodes = document.querySelectorAll("[data-i18n-label]");
     for (i = 0; i < nodes.length; i++) nodes[i].setAttribute("aria-label", T(nodes[i].getAttribute("data-i18n-label")));
-
-    var b = document.querySelectorAll("#lang button");
-    for (i = 0; i < b.length; i++) {
-      b[i].setAttribute("aria-pressed", b[i].getAttribute("data-lang") === I18N.getLang() ? "true" : "false");
-      b[i].setAttribute("title", T(b[i].getAttribute("data-lang") === "pl" ? "lang.pl" : "lang.en"));
-    }
   }
 
-  document.getElementById("lang").addEventListener("click", function (e) {
-    var b = e.target.closest ? e.target.closest("button[data-lang]") : null;
-    if (!b) return;
-    I18N.setLang(b.getAttribute("data-lang"));
-    I18N.save();
-    applyI18n();
-    populateReleases(el.release.value, el.releaseTo.value);
-    globalsState();
-    run();
-  });
 
   /* ---- start ---- */
-  I18N.load();
   applyI18n();
   populateReleases();
   globalsState();

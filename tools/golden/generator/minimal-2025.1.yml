@@ -1,39 +1,39 @@
 ---
 # Generated with Rackpathlabs globals.yml generator
 #
-# Plik konfiguracyjny Kolla-Ansible: /etc/kolla/globals.yml
-# Docelowe wydanie: 2025.1   |   obraz bazowy: rocky
-# Epoxy, kolla-ansible 20.x, status wsparcia: maintained
+# Kolla-Ansible configuration file: /etc/kolla/globals.yml
+# Target release: 2025.1   |   base image: rocky
+# Epoxy, kolla-ansible 20.x, support status: maintained
 #
-# Zweryfikuj wartości na docelowych hostach przed uruchomieniem
-# 'kolla-ansible prechecks' oraz 'kolla-ansible deploy'.
+# Verify these values against the target hosts before running
+# 'kolla-ansible prechecks' and 'kolla-ansible deploy'.
 
 ###############################################################################
-# Obraz bazowy i wydanie
+# Base image and release
 ###############################################################################
 kolla_base_distro: "rocky"
 openstack_release: "2025.1"
 
 ###############################################################################
-# Sieć
+# Network
 #
-# network_interface           - sieć zarządzania / API, wymaga adresu IP na każdym węźle
-# neutron_external_interface  - ruch zewnętrzny, interfejs bez adresu IP i bez konfiguracji
-# kolla_internal_vip_address  - wolny adres w sieci zarządzania, nieprzypisany do hosta
+# network_interface           - management/API network, needs an IP on every node
+# neutron_external_interface  - external traffic; no IP and no configuration on it
+# kolla_internal_vip_address  - free address on the management network, not held by a host
 ###############################################################################
 network_interface: "eth0"
 neutron_external_interface: "eth1"
 kolla_internal_vip_address: "10.0.0.250"
-# migration_interface nie jest ustawione — migracja na żywo pójdzie przez
-# api_interface, tą samą drogą co RPC i pierścień Corosync.
+# migration_interface is unset, so live migration goes over api_interface,
+# sharing the path with RPC and the Corosync ring.
 
 ###############################################################################
-# Warstwa równoważenia obciążenia
+# Load balancing
 ###############################################################################
 enable_haproxy: "yes"
 
 ###############################################################################
-# Usługi OpenStack
+# OpenStack services
 ###############################################################################
 enable_cinder: "no"
 enable_heat: "no"
@@ -55,6 +55,6 @@ enable_neutron_provider_networks: "no"
 # RabbitMQ
 ###############################################################################
 om_enable_rabbitmq_stream_fanout: "yes"
-# Wartość domyślna wydania 2025.1, wypisana jawnie.
-# Przy true liderzy wszystkich strumieni potrafią wylądować na jednym
-# brokerze — po wdrożeniu zweryfikuj ich rozłożenie na węzłach.
+# Set to the 2025.1 default on purpose rather than left implicit.
+# With true, all stream leaders can end up on a single broker; check how they
+# are distributed across the nodes after deploying.
