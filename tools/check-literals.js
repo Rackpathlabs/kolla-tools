@@ -12,6 +12,20 @@
  * nie ma jak. Osiemnaście polskich toastów przeszło skan języka, bo padały ze
  * ścieżek, których nikt nie wywołał.
  *
+ * NIE JEST TO WĘŻSZA WERSJA KRYTERIUM SŁOWNIKOWEGO i nie wolno go usunąć jako
+ * zbędnego, gdy tamto stanie. Robią dwie różne rzeczy:
+ *
+ *   ten strażnik ZAPOBIEGA — działa na kodzie, więc nie ma pojęcia „scenariusz":
+ *     nie pozwala wpisać tekstu tam, gdzie nie wolno, niezależnie od języka i od
+ *     tego, czy ktokolwiek kiedykolwiek tę ścieżkę wywoła. Ciasny i pewny.
+ *
+ *   kryterium słownikowe WYKRYWA — działa na wyrenderowanej stronie: znajduje to,
+ *     co już jest na ekranie, ale wyłącznie na ścieżkach, którymi przejedzie.
+ *     Szerokie i zależne od pokrycia.
+ *
+ * Zapobieganie bez wykrywania przepuszcza to, co weszło innym ujściem; wykrywanie
+ * bez zapobiegania przepuszcza to, czego scenariusz nie dotknął.
+ *
  * Wyjątki są KATEGORIAMI STRUKTURALNYMI, nie listą napisów: napis złożony wyłącznie
  * ze znaków interpunkcyjnych, cyfr albo identyfikatora nie jest zdaniem interfejsu.
  * Lista konkretnych napisów rośnie o jeden przy każdym czerwonym przebiegu, aż
