@@ -55,7 +55,13 @@ function corpus() {
   var re = /"[\w.]+"\s*:\s*((?:"(?:[^"\\]|\\.)*"\s*\+?\s*)+)/g;
   while ((m = re.exec(s))) {
     var joined = m[1].replace(/"\s*\+\s*"/g, "").replace(/^"|"\s*$/g, "");
-    joined.replace(/<[^>]+>/g, " ").split(/\{[^}]*\}| |\|/).forEach(function (seg) {
+    /* Ciecie WYLACZNIE po wstawkach {…} i po kresce wariantow liczebnika.
+       Wczesniej w tym wyrazeniu byla takze SPACJA, wiec korpus skladal sie
+       z pojedynczych slow: 928 z 1824 segmentow mialo do czterech znakow,
+       a najczestsze to "the", "and", "a", "is". Zdanie ze slownika nie mialo
+       wtedy prawa sie dopasowac do niczego — kryterium bylo o wiele ZA OSTRE,
+       dokladnie odwrotnie, niz podejrzewalismy po skoku liczby segmentow. */
+    joined.replace(/<[^>]+>/g, " ").split(/\{[^}]*\}|\|/).forEach(function (seg) {
       seg = seg.replace(/\\"/g, '"').replace(/\s+/g, " ").trim();
       if (seg) segs.push(norm(seg));
     });
@@ -63,8 +69,14 @@ function corpus() {
   return segs;
 }
 
-/* Fragment przechodzi, jeśli występuje w segmencie jako ciąg CAŁYCH słów. */
+/* Fragment przechodzi, jesli wystepuje w segmencie jako ciag CALYCH slow —
+   a segment krotszy niz prog pokrywa WYLACZNIE przez rownosc.
+   Gwarancja konstrukcyjna zamiast pilnowania: nie trzeba wiedziec, skad biora
+   sie krotkie segmenty, zeby przestaly byc grozne. "Clear" dalej pokrywa napis
+   "Clear", ale "has" przestaje pokrywac "has 5 hosts". */
+var MIN_CONTAIN = 4;
 function wordsIn(hay, needle) {
+  if (hay.length < MIN_CONTAIN) return hay === needle;
   var i = hay.indexOf(needle);
   while (i !== -1) {
     var before = i === 0 || /[^\wąćęłńóśźż]/i.test(hay[i - 1]);
