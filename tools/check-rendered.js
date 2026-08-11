@@ -173,7 +173,11 @@ var AUDIT = [
   '      }',
   '      own = own.replace(/\\s+/g, " ").trim();',
   '      if (own.length < 2) continue;',
-  '      out.texts.push({ tag: p.tagName, cls: p.className || "", text: own });',
+  /* Czy element leży w obszarze DANYCH: podgląd wyrenderowanego pliku albo edytor
+     wejścia. To przodek rozstrzyga, nie znacznik — <span class="s"> w podglądzie to
+     dane, <span class="sev"> na liście findingów to interfejs. */
+  '      var inData = !!p.closest("#out, #src, #gsrc, .editor, .yaml");',
+  '      out.texts.push({ tag: p.tagName, cls: p.className || "", text: own, inData: inData });',
   '    }',
   '    var box = document.createElement("script");',
   '    box.type = "application/json";',
