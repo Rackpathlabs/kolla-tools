@@ -301,6 +301,12 @@ footer a{color:var(--muted)}
       "n.warning":             { en: "warning|warnings", pl: "uwaga|uwagi|uwag" },
 /* --- walidator: raport tekstowy --- */
 /* --- walidator: kworum (KV-02) --- */
+/* --- walidator: wbudowane przykłady (jedna linia komentarza, patrz kod) --- */
+      "v.sample.ok":           { en: "Multinode inventory: 3 control, 2 network, 4 compute nodes",
+                                 pl: "Inventory multinode: 3 wezly sterujace, 2 sieciowe, 4 obliczeniowe" },
+      "v.sample.bad":          { en: "Inventory with typical mistakes - to see what the validator does",
+                                 pl: "Inventory z typowymi bledami - do sprawdzenia dzialania walidatora" },
+
       "v.q.aio.msg":           { en: "All-in-one inventory: the only host in <code>[control]</code> is also a compute node.",
                                  pl: "Inventory all-in-one: jedyny host w <code>[control]</code> pełni równocześnie rolę obliczeniową." },
       "v.q.aio.hint":          { en: "A lab layout — the absence of high availability is a choice here, not a fault. A production deployment needs at least {min} control nodes.",

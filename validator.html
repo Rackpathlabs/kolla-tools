@@ -1114,6 +1114,12 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       "n.warning":             { en: "warning|warnings", pl: "uwaga|uwagi|uwag" },
 /* --- walidator: raport tekstowy --- */
 /* --- walidator: kworum (KV-02) --- */
+/* --- walidator: wbudowane przykłady (jedna linia komentarza, patrz kod) --- */
+      "v.sample.ok":           { en: "Multinode inventory: 3 control, 2 network, 4 compute nodes",
+                                 pl: "Inventory multinode: 3 wezly sterujace, 2 sieciowe, 4 obliczeniowe" },
+      "v.sample.bad":          { en: "Inventory with typical mistakes - to see what the validator does",
+                                 pl: "Inventory z typowymi bledami - do sprawdzenia dzialania walidatora" },
+
       "v.q.aio.msg":           { en: "All-in-one inventory: the only host in <code>[control]</code> is also a compute node.",
                                  pl: "Inventory all-in-one: jedyny host w <code>[control]</code> pełni równocześnie rolę obliczeniową." },
       "v.q.aio.hint":          { en: "A lab layout — the absence of high availability is a choice here, not a fault. A production deployment needs at least {min} control nodes.",
@@ -2896,8 +2902,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
   }
 
   /* ---- przykłady ---- */
-  var SAMPLE_OK = [
-    "# Inventory multinode: 3 wezly sterujace, 2 sieciowe, 4 obliczeniowe",
+  var SAMPLE_OK_BODY = [
     "",
     "[control]",
     "ctrl01 ansible_host=10.10.0.11",
@@ -2930,8 +2935,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     ""
   ].join("\n");
 
-  var SAMPLE_BAD = [
-    "# Inventory z typowymi bledami — do sprawdzenia dzialania walidatora",
+  var SAMPLE_BAD_BODY = [
     "orphan01 ansible_host=10.10.0.9",
     "",
     "[control]",
@@ -2957,11 +2961,21 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     ""
   ].join("\n");
 
+  /* Komentarz nagłówkowy przykładu jest tłumaczony, ale MUSI zostać jedną linią:
+     dłuższy tekst przesunąłby wszystko poniżej i ten sam przykład dawałby inne
+     numery linii w każdym języku — czyli dokładnie to, czego zakazuje asercja
+     równoważności. Jeśli angielski się nie mieści, skraca się polski. */
+  function sampleText(key, body) {
+    return "# " + String(T(key)).replace(/[\r\n]+/g, " ") + "\n" + body;
+  }
+  function SAMPLE_OK() { return sampleText("v.sample.ok", SAMPLE_OK_BODY); }
+  function SAMPLE_BAD() { return sampleText("v.sample.bad", SAMPLE_BAD_BODY); }
+
   document.getElementById("btn-sample-ok").addEventListener("click", function () {
-    el.src.value = SAMPLE_OK; run(); toast("Wczytano przykład poprawny.");
+    el.src.value = SAMPLE_OK(); run(); toast("Wczytano przykład poprawny.");
   });
   document.getElementById("btn-sample-bad").addEventListener("click", function () {
-    el.src.value = SAMPLE_BAD; run(); toast("Wczytano przykład z błędami.");
+    el.src.value = SAMPLE_BAD(); run(); toast("Wczytano przykład z błędami.");
   });
 
   /* Lista wydań pochodzi z macierzy, żeby jej rozszerzenie nie wymagało

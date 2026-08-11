@@ -4,7 +4,7 @@ var lib = require("../testlib");
 lib.installDom();
 var T = lib.loadTool(process.argv[2],
   ["parse", "analyse", "buildReport", "KOLLA_MATRIX", "findRelease",
-   "defaultRelease", "SAMPLE_OK", "GLOBALS", "I18N"]);
+   "defaultRelease", "SAMPLE_OK", "SAMPLE_BAD", "GLOBALS", "I18N"]);
 
 var R = lib.runner();
 var ok = R.ok;
@@ -179,7 +179,7 @@ ok("nazwy grup OVN nie są brane za literówki", !hasCode(r, "NIEZNANA-GRUPA"),
    JSON.stringify(find(r, "NIEZNANA-GRUPA").map(function (f) { return f.msg; })));
 
 /* wbudowany przykład jest reklamowany jako poprawny — musi taki zostać */
-r = T.analyse(T.parse(T.SAMPLE_OK), "2026.1");
+r = T.analyse(T.parse(T.SAMPLE_OK()), "2026.1");
 ok("wbudowany 'Przykład poprawny' -> zero błędów",
    r.findings.filter(function (f) { return f.sev === "error"; }).length === 0,
    JSON.stringify(r.findings.filter(function (f) { return f.sev === "error"; })
@@ -462,6 +462,25 @@ CASES.forEach(function (c) {
 T.I18N.setLang("en");
 ok("kody, wagi, źródła i linie identyczne w obu językach", sameShape);
 ok("treść komunikatów faktycznie się różni (rodziny przetłumaczone)", differentProse);
+
+/* Przykłady wbudowane to jedyne dane wejściowe, które sami produkujemy w dwóch
+   wariantach — więc najbardziej narażone na rozjazd. Komentarz nagłówkowy wolno
+   przetłumaczyć, ale nie wolno mu zmienić liczby linii ani niczego przesunąć. */
+console.log("wbudowane przykłady w obu językach:");
+[["SAMPLE_OK", T.SAMPLE_OK], ["SAMPLE_BAD", T.SAMPLE_BAD]].forEach(function (pair) {
+  T.I18N.setLang("en");
+  var en = pair[1](), enShape = shapeOf(en);
+  T.I18N.setLang("pl");
+  var pl = pair[1](), plShape = shapeOf(pl);
+  T.I18N.setLang("en");
+  ok(pair[0] + " — ta sama liczba linii", en.split("\n").length === pl.split("\n").length,
+     en.split("\n").length + " vs " + pl.split("\n").length);
+  ok(pair[0] + " — identyczny wynik w obu językach", enShape === plShape);
+  ok(pair[0] + " — komentarz faktycznie przetłumaczony",
+     en.split("\n")[0] !== pl.split("\n")[0]);
+  ok(pair[0] + " — struktura poniżej komentarza nietknięta",
+     en.split("\n").slice(1).join("\n") === pl.split("\n").slice(1).join("\n"));
+});
 
 console.log("raport:");
 var res = run("", "2026.1");
