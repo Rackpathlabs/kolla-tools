@@ -4,7 +4,7 @@ var lib = require("../testlib");
 lib.installDom();
 var T = lib.loadTool(process.argv[2],
   ["parse", "analyse", "buildReport", "KOLLA_MATRIX", "findRelease",
-   "defaultRelease", "SAMPLE_OK", "GLOBALS"]);
+   "defaultRelease", "SAMPLE_OK", "SAMPLE_BAD", "GLOBALS", "I18N"]);
 
 var R = lib.runner();
 var ok = R.ok;
@@ -31,14 +31,14 @@ ok("to najnowsze wspierane", T.defaultRelease() === "2026.1", T.defaultRelease()
 console.log("status wydania:");
 ok("2026.1 (wspierane) -> brak wpisu", !hasCode(run("", "2026.1"), "WYDANIE"));
 var r = run("", "2024.2");
-ok("2024.2 -> uwaga o EOL", hasCode(r, "WYDANIE") && /koniec życia/.test(find(r, "WYDANIE")[0].msg));
+ok("2024.2 -> uwaga o EOL", hasCode(r, "WYDANIE") && /end of life/.test(find(r, "WYDANIE")[0].msg));
 ok("2024.2 -> waga 'warn'", find(r, "WYDANIE")[0].sev === "warn");
-ok("2024.2 -> data wycofania z pola endsOn", /od: <code>2026-04-29<\/code>/.test(find(r, "WYDANIE")[0].msg));
+ok("2024.2 -> data wycofania z pola endsOn", /since: <code>2026-04-29<\/code>/.test(find(r, "WYDANIE")[0].msg));
 r = run("", "2024.1");
-ok("2024.1 -> uwaga o braku utrzymania", /bez utrzymania/.test(find(r, "WYDANIE")[0].msg));
+ok("2024.1 -> uwaga o braku utrzymania", /unmaintained/.test(find(r, "WYDANIE")[0].msg));
 r = run("", "2026.2");
 ok("2026.2 -> data planowanego wydania, nie końca wsparcia",
-   /planowane wydanie: <code>2026-09-30<\/code>/.test(find(r, "WYDANIE")[0].msg));
+   /planned release: <code>2026-09-30<\/code>/.test(find(r, "WYDANIE")[0].msg));
 
 console.log("grupy wycofane i przemianowane:");
 r = run("\n[zun]\ncmp01\n", "2026.1");
@@ -91,8 +91,12 @@ r = runInv(inv(["[control]", "ctl01 ansible_host=10.0.0.11", "ctl02 ansible_host
                 "[network]", "ctl01", "", "[compute]", "cmp01 ansible_host=10.0.0.21", "",
                 "[storage]", "cmp01", "", "[monitoring]", "ctl01", ""]));
 ok("2 węzły -> błąd", find(r, "KWORUM-LICZBA")[0] && find(r, "KWORUM-LICZBA")[0].sev === "error");
-ok("2 węzły -> komunikat o parzystości", /liczba parzysta/.test(find(r, "KWORUM-LICZBA")[0].msg));
+ok("2 węzły -> komunikat o parzystości (domyślnie po angielsku)",
+   /an even number/.test(find(r, "KWORUM-LICZBA")[0].msg), find(r, "KWORUM-LICZBA")[0].msg);
 ok("2 węzły -> opisany tryb awarii", /non-Primary/.test(find(r, "KWORUM-LICZBA")[0].hint));
+ok("konkret trybu awarii zachowany w tłumaczeniu",
+   /read-only/.test(find(r, "KWORUM-LICZBA")[0].hint) &&
+   /returns 500/.test(find(r, "KWORUM-LICZBA")[0].hint));
 
 r = runInv(inv(["[control]", "ctl[01:04] ansible_host=10.0.0.1[1:4]", "",
                 "[network]", "ctl01", "", "[compute]", "cmp01 ansible_host=10.0.0.21", "",
@@ -175,7 +179,7 @@ ok("nazwy grup OVN nie są brane za literówki", !hasCode(r, "NIEZNANA-GRUPA"),
    JSON.stringify(find(r, "NIEZNANA-GRUPA").map(function (f) { return f.msg; })));
 
 /* wbudowany przykład jest reklamowany jako poprawny — musi taki zostać */
-r = T.analyse(T.parse(T.SAMPLE_OK), "2026.1");
+r = T.analyse(T.parse(T.SAMPLE_OK()), "2026.1");
 ok("wbudowany 'Przykład poprawny' -> zero błędów",
    r.findings.filter(function (f) { return f.sev === "error"; }).length === 0,
    JSON.stringify(r.findings.filter(function (f) { return f.sev === "error"; })
@@ -210,7 +214,10 @@ ok("opisany tryb awarii (kaskada Masakari)",
 ok("wpis nazywa warunek eskalacji",
    /enable_masakari/.test(find(r, "KOLOKACJA-CONTROL-COMPUTE")[0].hint));
 ok("wpis mówi, że bez Masakari to poprawny wzorzec",
-   /poprawny układ hiperkonwergentny/.test(find(r, "KOLOKACJA-CONTROL-COMPUTE")[0].hint));
+   /valid hyperconverged layout/.test(find(r, "KOLOKACJA-CONTROL-COMPUTE")[0].hint));
+ok("KV-04 zachowuje konkret kaskady",
+   /restrict_to_remotes = false/.test(find(r, "KOLOKACJA-CONTROL-COMPUTE")[0].hint) &&
+   /Cascade/.test(find(r, "KOLOKACJA-CONTROL-COMPUTE")[0].hint));
 
 /* regresja: stara reguła patrzyła na bezpośrednie członkostwo i tego nie widziała */
 r = runInv(inv(["[control]", "ctl01 ansible_host=10.0.0.11", "ctl02 ansible_host=10.0.0.12", "",
@@ -238,6 +245,8 @@ ok("[network:children] = control -> uwaga", hasCode(r, "KOLOKACJA-NETWORK"));
 ok("uwaga, nie błąd", find(r, "KOLOKACJA-NETWORK")[0].sev === "warn");
 ok("nazwany kompromis (enable-chassis-as-gw)",
    /enable-chassis-as-gw/.test(find(r, "KOLOKACJA-NETWORK")[0].hint));
+ok("KV-11 niesie wyjątek z rulesetu (kolokacja z compute jest poprawna)",
+   /valid pattern/.test(find(r, "KOLOKACJA-NETWORK")[0].hint));
 ok("wskazany klucz łagodzący",
    /neutron_ovn_distributed_fip/.test(find(r, "KOLOKACJA-NETWORK")[0].hint));
 
@@ -287,7 +296,7 @@ r = runInv(inv(["[control]", "ctl01 ansible_host=10.0.0.11", "ctl02 ansible_host
 ok("[storage] na węzłach compute -> informacja",
    find(r, "KOLOKACJA-STORAGE")[0] && find(r, "KOLOKACJA-STORAGE")[0].sev === "info");
 ok("nazwany kompromis (rezerwa zasobów)",
-   /rezerw/.test(find(r, "KOLOKACJA-STORAGE")[0].hint));
+   /resource reserve/.test(find(r, "KOLOKACJA-STORAGE")[0].hint));
 r = runInv(inv(DISJOINT));
 ok("magazyn osobno -> cisza", !hasCode(r, "KOLOKACJA-STORAGE"));
 
@@ -321,6 +330,9 @@ r = withGlobals(INV3, HA);
 ok("Masakari + hacluster bez pól BMC -> błąd", find(r, "KV-01-FENCING")[0] &&
    find(r, "KV-01-FENCING")[0].sev === "error");
 ok("wpis wskazuje oba pliki jako źródło", find(r, "KV-01-FENCING")[0].src === "cross");
+ok("KV-01 zachowuje konkret trybu awarii",
+   /RBD descriptor/.test(find(r, "KV-01-FENCING")[0].hint) &&
+   /same Ceph volume/.test(find(r, "KV-01-FENCING")[0].hint));
 ok("odsyłacz do linii w globals",
    find(r, "KV-01-FENCING")[0].refs.some(function (x) { return x.src === "globals" && x.line === 2; }));
 r = withGlobals(INV3.replace("c1 ansible_host=10.80.0.11", "c1 ansible_host=10.80.0.11 ipmi_address=10.81.0.11"), HA);
@@ -337,6 +349,9 @@ console.log("KV-07 — klastrowanie Cindera:");
 r = withGlobals(INV3, '---\nenable_cinder: "yes"\ncinder_backend_ceph: "yes"\n');
 ok("dwa hosty storage bez cinder_cluster_name -> błąd",
    find(r, "KV-07-CINDER-KLASTER")[0] && find(r, "KV-07-CINDER-KLASTER")[0].sev === "error");
+ok("KV-07 zachowuje konkret naprawy",
+   /cinder-manage volume update_host/.test(find(r, "KV-07-CINDER-KLASTER")[0].hint) &&
+   /@ceph#ceph/.test(find(r, "KV-07-CINDER-KLASTER")[0].hint));
 ok("wskazuje linię grupy w inventory i brak klucza w globals",
    find(r, "KV-07-CINDER-KLASTER")[0].refs.some(function (x) { return x.src === "inventory" && x.line > 0; }) &&
    find(r, "KV-07-CINDER-KLASTER")[0].refs.some(function (x) { return x.src === "globals" && !x.line; }));
@@ -354,9 +369,18 @@ ok("wskazuje host w inventory i klucz w globals",
 r = withGlobals(INV3, '---\nkolla_internal_vip_address: "192.168.5.9"\n');
 ok("VIP poza wnioskowaną podsiecią -> uwaga, nie błąd",
    find(r, "KV-09-VIP-PODSIEC")[0] && find(r, "KV-09-VIP-PODSIEC")[0].sev === "warn");
-ok("wpis podaje założoną maskę wprost",
+/* Maska musi paść w treści — reguła bez tego zdania jest blefem. Sprawdzamy to
+   w OBU językach, bo zgubienie zastrzeżenia w tłumaczeniu byłoby cichą utratą
+   pokory, a nie usterką kosmetyczną. */
+ok("wpis podaje założoną maskę wprost (en)",
    /10\.80\.0\.0\/24/.test(find(r, "KV-09-VIP-PODSIEC")[0].msg) &&
-   /heurystyka/.test(find(r, "KV-09-VIP-PODSIEC")[0].hint));
+   /inference rather than a reading/.test(find(r, "KV-09-VIP-PODSIEC")[0].hint));
+T.I18N.setLang("pl");
+var rPl = withGlobals(INV3, '---\nkolla_internal_vip_address: "192.168.5.9"\n');
+ok("wpis podaje założoną maskę wprost (pl)",
+   /10\.80\.0\.0\/24/.test(find(rPl, "KV-09-VIP-PODSIEC")[0].msg) &&
+   /wnioskowanie, a nie odczyt/.test(find(rPl, "KV-09-VIP-PODSIEC")[0].hint));
+T.I18N.setLang("en");
 r = withGlobals(INV3, '---\nkolla_internal_vip_address: "10.80.0.250"\n');
 ok("VIP wolny w tej samej podsieci -> cisza",
    !hasCode(r, "KV-09-VIP-KOLIZJA") && !hasCode(r, "KV-09-VIP-PODSIEC"));
@@ -426,10 +450,125 @@ ok("ten sam klucz na ścieżce -> zgłoszony raz przez tryb aktualizacji",
    mentioning(r, "letsencrypt_cert_server").length === 1 &&
    hasCode(r, "UPGRADE-KLUCZ-PRZEMIANOWANY"));
 
+/* ---- niezależność wyniku od języka ---- */
+console.log("dwa języki, ten sam wynik:")
+var CASES = [
+  inv(CTL3.concat(["[mariadb]", "ctl01", "ctl02", ""])),
+  inv(["[control]", "ctl01 ansible_host=10.0.0.11", "ctl02 ansible_host=10.0.0.12", "",
+       "[network]", "ctl01", "", "[compute]", "cmp01 ansible_host=10.0.0.21", "",
+       "[storage]", "cmp01", "", "[monitoring]", "ctl01", ""]),
+  inv(CTL3.concat(["[zun]", "cmp01", ""]))
+];
+function shapeOf(text) {
+  return T.analyse(T.parse(text), "2026.1", null, {}).findings
+    .map(function (f) { return f.code + "/" + f.sev + "/" + f.src + "/" + f.line; }).join(";");
+}
+function proseOf(text) {
+  return T.analyse(T.parse(text), "2026.1", null, {}).findings
+    .map(function (f) { return f.msg + "|" + (f.hint || ""); }).join(";");
+}
+/* Kształt wyniku sprawdzamy na wszystkich przypadkach — musi być niezależny od
+   języka już teraz. Różnicę treści sprawdzamy na razie na rodzinach, które są
+   przetłumaczone; ta lista rośnie razem z etapem 2 i na jego koniec obejmie
+   wszystkie przypadki. Póki co jej zawężenie jest jawne, a nie przemilczane. */
+var TRANSLATED = [CASES[0]];
+var sameShape = true, differentProse = true;
+CASES.forEach(function (c) {
+  T.I18N.setLang("en"); var en = shapeOf(c), enP = proseOf(c);
+  T.I18N.setLang("pl"); var pl = shapeOf(c), plP = proseOf(c);
+  if (en !== pl) sameShape = false;
+  if (TRANSLATED.indexOf(c) !== -1 && enP === plP) differentProse = false;
+});
+T.I18N.setLang("en");
+ok("kody, wagi, źródła i linie identyczne w obu językach", sameShape);
+ok("treść komunikatów faktycznie się różni (rodziny przetłumaczone)", differentProse);
+
+/* Przykłady wbudowane to jedyne dane wejściowe, które sami produkujemy w dwóch
+   wariantach — więc najbardziej narażone na rozjazd. Komentarz nagłówkowy wolno
+   przetłumaczyć, ale nie wolno mu zmienić liczby linii ani niczego przesunąć. */
+console.log("wbudowane przykłady w obu językach:");
+[["SAMPLE_OK", T.SAMPLE_OK], ["SAMPLE_BAD", T.SAMPLE_BAD]].forEach(function (pair) {
+  T.I18N.setLang("en");
+  var en = pair[1](), enShape = shapeOf(en);
+  T.I18N.setLang("pl");
+  var pl = pair[1](), plShape = shapeOf(pl);
+  T.I18N.setLang("en");
+  ok(pair[0] + " — ta sama liczba linii", en.split("\n").length === pl.split("\n").length,
+     en.split("\n").length + " vs " + pl.split("\n").length);
+  ok(pair[0] + " — identyczny wynik w obu językach", enShape === plShape);
+  ok(pair[0] + " — komentarz faktycznie przetłumaczony",
+     en.split("\n")[0] !== pl.split("\n")[0]);
+  ok(pair[0] + " — struktura poniżej komentarza nietknięta",
+     en.split("\n").slice(1).join("\n") === pl.split("\n").slice(1).join("\n"));
+});
+
+/* ---- teksty niosące pokorę i zastrzeżenia ----
+   Te zdania istnieją po to, żeby narzędzie nie twierdziło więcej, niż udowadnia.
+   Zgubienie któregokolwiek w tłumaczeniu nie byłoby usterką kosmetyczną, tylko
+   cichą utratą uczciwości — dlatego każde jest przypięte w OBU językach. */
+console.log("pokora i zastrzeżenia w obu językach:");
+
+function bothLangs(fn) {
+  var out = {};
+  ["en", "pl"].forEach(function (l) { T.I18N.setLang(l); out[l] = fn(); });
+  T.I18N.setLang("en");
+  return out;
+}
+
+/* Werdykt przy zerze findingów nie ma prawa twierdzić poprawności — powstał
+   właśnie po to, żeby jej NIE twierdzić. */
+var clean = bothLangs(function () { return T.I18N.t("v.verdict.clean"); });
+ok("werdykt czysty ogranicza się do zakresu narzędzia (en)",
+   /within what this tool checks/.test(clean.en), clean.en);
+ok("werdykt czysty ogranicza się do zakresu narzędzia (pl)",
+   /w zakresie sprawdzanym przez to narzędzie/.test(clean.pl), clean.pl);
+ok("werdykt czysty nie twierdzi poprawności w żadnym języku",
+   !/\bcorrect\b|\bvalid\b/i.test(clean.en) && !/poprawn/i.test(clean.pl));
+
+/* Notka o zakresie w trybie łączonym — najważniejszy tekst w interfejsie. */
+var note = bothLangs(function () { return T.I18N.t("v.scope.note"); });
+ok("notka o zakresie: pusta lista nie znaczy poprawności (en)",
+   /does not mean the file is correct/.test(note.en));
+ok("notka o zakresie: pusta lista nie znaczy poprawności (pl)",
+   /nie znaczy, że plik jest poprawny/.test(note.pl));
+ok("notka o zakresie mówi, czyją robotą jest lint globals (obie wersje)",
+   /generator/i.test(note.en) && /generator/i.test(note.pl));
+
+var gap = bothLangs(function () {
+  var r = T.analyse(T.parse(inv(["[control]", "c1 ansible_host=10.9.0.11", "c2 ansible_host=10.9.0.12",
+    "c3 ansible_host=10.9.0.13", "", "[network]", "n1 ansible_host=10.9.0.21", "n2 ansible_host=10.9.0.22", "",
+    "[compute]", "k1 ansible_host=10.9.0.31", "k2 ansible_host=10.9.0.32", "",
+    "[storage]", "s1 ansible_host=10.9.0.41", "", "[monitoring]", "m1 ansible_host=10.9.0.51", "",
+    "[murano]", "c1", ""])), "2023.1", null, {}, "2024.1");
+  return find(r, "UPGRADE-LUKA")[0];
+});
+ok("UPGRADE-LUKA mówi, że luka to brak przeglądu, nie brak zmian (en)",
+   /not because there were none/.test(gap.en.hint) && /would look exactly like no changes/.test(gap.en.hint));
+ok("UPGRADE-LUKA zachowuje to samo zastrzeżenie (pl)",
+   /nie dlatego, że ich nie było/.test(gap.pl.hint) && /wyglądałaby identycznie jak brak zmian/.test(gap.pl.hint));
+
+var ack = bothLangs(function () {
+  return find(withGlobals(INV3, '---\nenable_masakari: "yes"\nenable_hacluster: "yes"\n',
+                          { ack_nobmc: true }), "KV-01-FENCING")[0];
+});
+ok("potwierdzenie obniża wagę, a nie wycisza wpis (obie wersje)",
+   ack.en.sev === "info" && ack.pl.sev === "info" &&
+   ack.en.msg.length > 0 && ack.pl.msg.length > 0);
+
 console.log("raport:");
 var res = run("", "2026.1");
 var rep = T.buildReport(res, { e: 0, w: 0, i: 0 });
-ok("zawiera wiersz z wydaniem", /Wydanie: 2026\.1 Gazpacho \(kolla-ansible 22\.x\)/.test(rep),
+ok("zawiera wiersz z wydaniem", /Release: 2026\.1 Gazpacho \(kolla-ansible 22\.x\)/.test(rep),
    rep.split("\n").slice(0, 6).join(" | "));
+/* Etykieta języka zostaje po angielsku w obu wersjach — to metadane dla kogoś,
+   kto nie zna języka reszty dokumentu. Wartość jest kodem ISO. */
+ok("raport niesie język, w którym powstał", /^Language: en$/m.test(rep));
+T.I18N.setLang("pl");
+var repPl = T.buildReport(res, { e: 0, w: 0, i: 0 });
+ok("po polsku etykieta nadal angielska, wartość to kod", /^Language: pl$/m.test(repPl));
+ok("reszta nagłówka tłumaczy się normalnie", /Wydanie: 2026\.1 Gazpacho/.test(repPl));
+ok("kody reguł nie zależą od języka",
+   T.analyse(T.parse(INV3), "2026.1", null, {}).findings.map(function (f) { return f.code; }).join(",") ===
+   (T.I18N.setLang("en"), T.analyse(T.parse(INV3), "2026.1", null, {}).findings.map(function (f) { return f.code; }).join(",")));
 
 R.finish();

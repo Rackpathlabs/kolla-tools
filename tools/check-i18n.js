@@ -70,5 +70,36 @@ if (orphans.length) {
   console.log("OK   żaden klucz nie jest sierotą");
 }
 
+/* --- pary {en, pl} w tabelach danych ---
+   Teksty żyjące przy danych (tabele reguł, macierz wydań) nie mają kluczy
+   słownika — i to jest świadoma decyzja, żeby opis nie odrywał się od rzeczy,
+   którą opisuje. Ale kompletność musi obowiązywać je tak samo: wpis z samym
+   "en" ma wywalić build dokładnie jak brakujący klucz słownika. */
+["generator.html", "validator.html", "matrix.js", "globals-parser.js"].forEach(function (file) {
+  var full = path.join(root, file);
+  if (!fs.existsSync(full)) return;
+  var text = fs.readFileSync(full, "utf8");
+  /* Blok słownika sprawdzamy osobno wyżej — tu interesują nas pary przy danych. */
+  var body = text.replace(/== KOLLA-I18N BEGIN[\s\S]*?== KOLLA-I18N END ==\s*\*\//, " ");
+
+  var re = /\ben:\s*"/g, m, lone = [];
+  while ((m = re.exec(body)) !== null) {
+    /* Para jest zapisywana jako { en: "…", pl: "…" }, więc "pl:" musi wystąpić
+       przed kolejnym "en:". Okno zamiast liczenia nawiasów, bo wartości zawierają
+       wstawki {nazwa} i licznik nawiasów by się na nich wykładał. */
+    var rest = body.slice(m.index + 1);
+    var nextEn = rest.search(/\ben:\s*"/);
+    var window = nextEn === -1 ? rest : rest.slice(0, nextEn);
+    if (!/\bpl:\s*"/.test(window)) {
+      lone.push(file + ":" + (body.slice(0, m.index).split("\n").length));
+    }
+  }
+  if (lone.length) {
+    fail("pary {en, pl} bez polskiej połowy (" + lone.length + "): " + lone.slice(0, 8).join(", "));
+  } else {
+    console.log("OK   " + file + " — pary przy danych kompletne");
+  }
+});
+
 console.log(rc === 0 ? "Słownik spójny." : "Słownik wymaga uwagi.");
 process.exit(rc);
