@@ -59,4 +59,22 @@ var bait = run("check-binary.sh", ["tools/fixtures/utf8-bait.js"]);
 R.ok("legalne znaki wielobajtowe NIE są naruszeniem", bait.code === 0,
      bait.out.split("\n").slice(-2).join(" | "));
 
+/* ---- check-dictionary: pokrycie i przynęty w obie strony ----
+   Fixtura raportu o ZNANYM pokryciu. Pięć pozycji ma przejść, dwie nie — i to nie
+   jest liczba dobrana do wyniku, tylko rozpisana z definicji kategorii:
+     "5 hosts"      przynęta   napis ze słownika z liczbą z przodu
+     "12"           przynęta   liczby i interpunkcja
+     "Clear"        przynęta   krótki segment pokrywa przez RÓWNOŚĆ
+     "yes" (inData) przynęta   treść podglądu pliku
+     "rocky"        przynęta   wartość konfiguracji w <option>
+     "5 błędów"     naruszenie normalizacja nie ma prawa tego przepuścić
+     "has 5 hosts"  naruszenie krótki segment nie pokrywa przez zawieranie */
+var dict = run("check-dictionary.js", ["tools/fixtures/report-known.json"]);
+R.ok("fixtura o znanym pokryciu -> DOKŁADNIE dwa braki",
+     /BEZ POKRYCIA: 2 /.test(dict.out), dict.out.split("\n")[1]);
+R.ok("napis ze słownika z liczbą z przodu NIE jest brakiem",
+     !/"5 hosts"/.test(dict.out));
+R.ok("krótki segment nie pokrywa przez zawieranie", /has 5 hosts/.test(dict.out));
+R.ok("normalizacja nie przepuszcza polskiego z liczbą", /5 błędów/.test(dict.out));
+
 R.finish();

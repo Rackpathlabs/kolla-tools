@@ -17,7 +17,9 @@ Przynęty, obecne i planowane:
   literały        poprawne wywołanie T() obok złych literałów                  ZROBIONE
   binarne         legalne znaki wielobajtowe (polskie diakrytyki w komentarzu) ZROBIONE
   klucz słownika  klucz istniejący, użyty w nietypowym miejscu                 DO ZROBIENIA
-  kryterium       napis ze słownika z liczbą z przodu ("5 hosts")              DO ZROBIENIA
+  kryterium       napis ze słownika z liczbą z przodu ("5 hosts")              ZROBIONE
+                  + cztery dalsze przynęty w report-known.json: liczba, krótki
+                    segment przez równość, treść podglądu, wartość <option>
   pusty scenariusz  scenariusz legalnie nieruszający korpusu, ze zwolnieniem   DO ZROBIENIA
 
 Dwie ostatnie zamieniają dzisiejszy problem w przypadek testowy: „5 hosts" przestaje

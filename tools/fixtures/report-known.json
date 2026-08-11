@@ -1,0 +1,44 @@
+[
+ {
+  "tag": "SPAN",
+  "cls": "chip",
+  "text": "5 hosts",
+  "inData": false
+ },
+ {
+  "tag": "DIV",
+  "cls": "gutter",
+  "text": "12",
+  "inData": false
+ },
+ {
+  "tag": "BUTTON",
+  "cls": "",
+  "text": "Clear",
+  "inData": false
+ },
+ {
+  "tag": "SPAN",
+  "cls": "s",
+  "text": "\"yes\"",
+  "inData": true
+ },
+ {
+  "tag": "OPTION",
+  "cls": "",
+  "text": "rocky",
+  "inData": false
+ },
+ {
+  "tag": "SPAN",
+  "cls": "x",
+  "text": "5 błędów",
+  "inData": false
+ },
+ {
+  "tag": "P",
+  "cls": "",
+  "text": "has 5 hosts",
+  "inData": false
+ }
+]
