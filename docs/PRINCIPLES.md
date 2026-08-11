@@ -71,6 +71,16 @@ included the file preview, so it measured something wider than its own message.
 The control is one question per mechanism, and it costs a single look: what does its NAME
 cover, and what does its CODE cover. That question would have caught all four.
 
+It cuts both ways, which the first four cases hid. A scope can also promise less than it
+delivers, and that costs the same while looking like caution: the data category, defined as
+"the content of the file preview and the input editor", missed the host and group names
+rendered into the topology table — the same user data, processed, outside those two
+containers. Seventeen strings appeared on the backlog that were never work at all. A list
+of containers or CSS classes ages every time a new view is added; a criterion of ORIGIN
+does not. A string is data if it occurs verbatim in what was fed into the input fields,
+which covers every place user content reaches the screen, including the ones that do not
+exist yet.
+
 ### Where a check has to stand, and how wide
 
 **A check nobody has seen fail is not a check.** Every guard here has been broken on
