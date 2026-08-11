@@ -2248,7 +2248,10 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
   function yn(flag) { return flag ? '"yes"' : '"no"'; }
 
-  var REJECTED = '""    # BŁĄD: wartość odrzucona, patrz Kontrola konfiguracji';
+  /* Ten napis trafia do CUDZEGO pliku i zostaje tam na lata. Nie odsyła do
+     interfejsu, bo czytelnik nigdy go nie zobaczy — mówi wprost, co jest nie tak
+     z plikiem, który właśnie czyta. */
+  var REJECTED = '""    # INVALID: value rejected, this file is not ready to deploy';
 
   /* Pole z błędem walidacji nie trafia do wyniku nawet w podglądzie — podgląd jest
      artefaktem, da się go zaznaczyć i skopiować ręcznie z pominięciem przycisków. */
@@ -2269,31 +2272,31 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     L.push(HEADER);
     if (c) {
       L.push("#");
-      L.push("# Plik konfiguracyjny Kolla-Ansible: /etc/kolla/globals.yml");
-      L.push("# Docelowe wydanie: " + fc(s, bad, "release") + "   |   obraz bazowy: " + fc(s, bad, "distro"));
+      L.push("# Kolla-Ansible configuration file: /etc/kolla/globals.yml");
+      L.push("# Target release: " + fc(s, bad, "release") + "   |   base image: " + fc(s, bad, "distro"));
       var relC = bad.release ? null : findRelease(s.release);
       if (relC) {
         L.push("# " + cmt(relC.name) + (relC.kolla ? ", kolla-ansible " + cmt(relC.kolla) : "") +
-               ", status wsparcia: " + cmt(relC.status));
+               ", support status: " + cmt(relC.status));
       }
       L.push("#");
-      L.push("# Zweryfikuj wartości na docelowych hostach przed uruchomieniem");
-      L.push("# 'kolla-ansible prechecks' oraz 'kolla-ansible deploy'.");
+      L.push("# Verify these values against the target hosts before running");
+      L.push("# 'kolla-ansible prechecks' and 'kolla-ansible deploy'.");
     }
     L.push("");
 
-    if (c) { L.push(rule); L.push("# Obraz bazowy i wydanie"); L.push(rule); }
+    if (c) { L.push(rule); L.push("# Base image and release"); L.push(rule); }
     L.push("kolla_base_distro: " + fv(s, bad, "distro"));
     L.push("openstack_release: " + fv(s, bad, "release"));
     L.push("");
 
     if (c) {
       L.push(rule);
-      L.push("# Sieć");
+      L.push("# Network");
       L.push("#");
-      L.push("# network_interface           - sieć zarządzania / API, wymaga adresu IP na każdym węźle");
-      L.push("# neutron_external_interface  - ruch zewnętrzny, interfejs bez adresu IP i bez konfiguracji");
-      L.push("# kolla_internal_vip_address  - wolny adres w sieci zarządzania, nieprzypisany do hosta");
+      L.push("# network_interface           - management/API network, needs an IP on every node");
+      L.push("# neutron_external_interface  - external traffic; no IP and no configuration on it");
+      L.push("# kolla_internal_vip_address  - free address on the management network, not held by a host");
       L.push(rule);
     }
     L.push("network_interface: " + fv(s, bad, "net_if"));
@@ -2307,36 +2310,36 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     if (s.stg_if) L.push("storage_interface: " + fv(s, bad, "stg_if"));
     if (s.mig_if) L.push("migration_interface: " + fv(s, bad, "mig_if"));
     if (c && !s.mig_if) {
-      L.push("# migration_interface nie jest ustawione — migracja na żywo pójdzie przez");
-      L.push("# api_interface, tą samą drogą co RPC i pierścień Corosync.");
+      L.push("# migration_interface is unset, so live migration goes over api_interface,");
+      L.push("# sharing the path with RPC and the Corosync ring.");
     }
     if (s.ext_vip) L.push("kolla_external_vip_address: " + fv(s, bad, "ext_vip"));
     if (s.ext_vip_if) L.push("kolla_external_vip_interface: " + fv(s, bad, "ext_vip_if"));
     L.push("");
 
     if (s.int_fqdn || s.ext_fqdn || s.t_tls_int || s.t_letsencrypt) {
-      if (c) { L.push(rule); L.push("# Nazwy punktów końcowych i TLS"); L.push(rule); }
+      if (c) { L.push(rule); L.push("# Endpoint names and TLS"); L.push(rule); }
       if (s.int_fqdn) L.push("kolla_internal_fqdn: " + fv(s, bad, "int_fqdn"));
       if (s.ext_fqdn) L.push("kolla_external_fqdn: " + fv(s, bad, "ext_fqdn"));
       L.push("kolla_enable_tls_internal: " + yn(s.t_tls_int));
       if (s.t_tls_int) L.push("kolla_copy_ca_into_containers: " + yn(s.t_copy_ca));
       L.push("kolla_enable_letsencrypt: " + yn(s.t_letsencrypt));
       if (c && s.t_tls_int && !s.t_copy_ca && !s.t_letsencrypt) {
-        L.push("# UWAGA: bez kolla_copy_ca_into_containers kontenery nie zaufają własnemu CA.");
+        L.push("# NOTE: without kolla_copy_ca_into_containers the containers will not trust a private CA.");
       }
       L.push("");
     }
 
-    if (c) { L.push(rule); L.push("# Warstwa równoważenia obciążenia"); L.push(rule); }
+    if (c) { L.push(rule); L.push("# Load balancing"); L.push(rule); }
     L.push("enable_haproxy: " + yn(s.t_haproxy));
     if (c && !s.t_haproxy) {
-      L.push("# UWAGA: wyłączenie HAProxy wyłącza również keepalived, a więc adres wirtualny.");
-      L.push("#        kolla_internal_vip_address musi być adresem przypisanym do jedynego");
-      L.push("#        węzła sterującego. Punkty końcowe API pozostają bez redundancji.");
+      L.push("# NOTE: disabling HAProxy also disables keepalived, and with it the virtual address.");
+      L.push("#        kolla_internal_vip_address must then be a real address on the single");
+      L.push("#        control node. The API endpoints have no redundancy.");
     }
     L.push("");
 
-    if (c) { L.push(rule); L.push("# Usługi OpenStack"); L.push(rule); }
+    if (c) { L.push(rule); L.push("# OpenStack services"); L.push(rule); }
     L.push("enable_cinder: " + yn(s.t_cinder));
     if (s.t_cinder) {
       if (s.storage === "lvm") {
@@ -2351,8 +2354,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     if (s.storage === "ceph") {
       L.push('glance_backend_ceph: "yes"');
       if (c) {
-        L.push("# Kolla-Ansible nie wdraża Cepha. Klaster musi istnieć, a ceph.conf");
-        L.push("# oraz keyringi trafiają do katalogu konfiguracji przed wdrożeniem.");
+        L.push("# Kolla-Ansible does not deploy Ceph. The cluster must already exist, and");
+        L.push("# ceph.conf plus the keyrings go into the config directory before deploying.");
       }
     }
     L.push("enable_heat: " + yn(s.t_heat));
@@ -2364,9 +2367,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     L.push("enable_hacluster: " + yn(s.t_hacluster));
     L.push("enable_masakari: " + yn(s.t_masakari));
     if (c && s.t_masakari) {
-      L.push("# Masakari bez działającego STONITH nie jest wysoką dostępnością. Izolacja");
-      L.push("# sieciowa węzła wygląda jak jego awaria: instancja zostaje odtworzona,");
-      L.push("# podczas gdy pierwotna wciąż trzyma otwarty deskryptor RBD.");
+      L.push("# Masakari without working STONITH is not high availability. Network isolation");
+      L.push("# of a node looks like its failure: the instance is rebuilt elsewhere while the");
+      L.push("# original still holds an open RBD descriptor.");
     }
     L.push("");
 
@@ -2374,10 +2377,10 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     L.push("neutron_plugin_agent: " + q(s.ml2));
     L.push("enable_neutron_provider_networks: " + yn(s.t_provider));
     if (c && s.t_provider) {
-      L.push("# Sieci provider mapują się bezpośrednio na sieć fizyczną podpiętą do");
-      L.push("# neutron_external_interface (" + fc(s, bad, "ext_if") + "). Ruch wychodzi przez mostek");
-      L.push("# neutron_bridge_name — domyślnie br-ex. Port przełącznika musi być");
-      L.push("# skonfigurowany zgodnie z typem sieci (dostępowy dla flat, trunk 802.1Q dla VLAN).");
+      L.push("# Provider networks map straight onto the physical network attached to");
+      L.push("# neutron_external_interface (" + fc(s, bad, "ext_if") + "). Traffic leaves through the");
+      L.push("# neutron_bridge_name bridge, br-ex by default. The switch port must match");
+      L.push("# the network type: access for flat, 802.1Q trunk for VLAN.");
     }
     L.push("");
 
@@ -2389,9 +2392,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         L.push("octavia_amp_network_provider_physical_network: " + fv(s, bad, "physnet"));
       }
       if (c) {
-        L.push("# octavia_network_interface musi istnieć na KAŻDYM hoście z grupy");
-        L.push("# octavia-health-manager. Brak na jednym z trzech daje load balancery,");
-        L.push("# które tworzą się losowo — zależnie od tego, który HM dostał puls.");
+        L.push("# octavia_network_interface must exist on EVERY host in the");
+        L.push("# octavia-health-manager group. Missing on one host out of three gives load");
+        L.push("# balancers that come up at random, depending on which HM received the heartbeat.");
       }
       L.push("");
     }
@@ -2405,23 +2408,23 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       L.push("om_enable_rabbitmq_stream_fanout: " +
              yn(relFanout.defaults.om_enable_rabbitmq_stream_fanout));
       if (c) {
-        L.push("# Wartość domyślna wydania " + cmt(relFanout.id) + ", wypisana jawnie.");
-        L.push("# Przy true liderzy wszystkich strumieni potrafią wylądować na jednym");
-        L.push("# brokerze — po wdrożeniu zweryfikuj ich rozłożenie na węzłach.");
+        L.push("# Set to the " + cmt(relFanout.id) + " default on purpose rather than left implicit.");
+        L.push("# With true, all stream leaders can end up on a single broker; check how they");
+        L.push("# are distributed across the nodes after deploying.");
       }
       L.push("");
     }
 
     if (c && (s.ack_link || s.ack_migration)) {
       L.push(rule);
-      L.push("# Decyzje potwierdzone świadomie");
+      L.push("# Accepted risks, recorded deliberately");
       if (s.ack_link) {
-        L.push("# - wspólne łącze dla ruchu magazynu i API: potwierdzony zapas pasma");
-        L.push("#   i kolejkowanie po stronie przełącznika");
+        L.push("# - storage and API traffic share a link: headroom was measured and the");
+        L.push("#   switch applies queueing");
       }
       if (s.ack_migration) {
-        L.push("# - migracja na wydzielonej sieci ustawionej poza Kollą przez");
-        L.push("#   live_migration_inbound_addr w nadpisaniu nova-compute");
+        L.push("# - migration runs on a dedicated network configured outside Kolla, via");
+        L.push("#   live_migration_inbound_addr in a nova-compute override");
       }
       L.push(rule);
     }
