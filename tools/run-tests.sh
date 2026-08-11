@@ -72,7 +72,10 @@ echo "== walidator =="
 
 echo
 echo "== kompletność: wyłącznie angielski =="
-"$NODE" tools/check-english.js .val.test.tmp.js validator.html || rc=1
+extract_script index.html .idx.test.tmp.js
+"$NODE" tools/check-english.js .val.test.tmp.js validator.html validator || rc=1
+"$NODE" tools/check-english.js .gen.test.tmp.js generator.html generator || rc=1
+"$NODE" tools/check-english.js .idx.test.tmp.js index.html hub || rc=1
 
 echo
 echo "== golden: generator =="

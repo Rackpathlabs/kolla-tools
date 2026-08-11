@@ -52,41 +52,84 @@ function excused(text) {
 }
 
 lib.installDom();
-var T = lib.loadTool(process.argv[2],
-  ["parse", "analyse", "buildReport", "SAMPLE_BAD", "GLOBALS", "I18N"]);
 
-/* --- ścieżka renderująca maksimum tekstu ---
-   przykład z błędami + globals.yml włączający reguły dwuplikowe + tryb upgrade
-   prowadzący przez wydanie bez skatalogowanych deprecacji. */
-var inv = T.SAMPLE_BAD() +
-  "\n[murano]\nctrl01\n\n[ceph-mon]\nctrl01\nctrl02\n\n[ovn-database]\nctrl01\nctrl02\n";
-var globals = '---\nenable_masakari: "yes"\nenable_hacluster: "yes"\n' +
-  'kolla_internal_vip_address: "10.10.0.11"\nletsencrypt_cert_server: "https://example.invalid"\n' +
-  'om_enable_rabbitmq_quorum_queues: "yes"\nenable_redis: "yes"\n';
-
-var res = T.analyse(T.parse(inv), "2023.1", T.GLOBALS.parse(globals), {}, "2026.1");
-
+/* Profil mówi, KTÓRE narzędzie sprawdzamy i jaką ścieżką je przepędzić.
+   Każde ma własną drogę renderującą maksimum tekstu; wspólne jest to, że
+   zbieramy wynik, a nie źródła. */
+var mode = process.argv[4] || "validator";
+var scriptPath = process.argv[2];
+var htmlPath = process.argv[3];
 var segments = [];
-res.findings.forEach(function (f) {
-  segments.push({ where: "finding " + f.code + " (msg)", text: f.msg });
-  if (f.hint) segments.push({ where: "finding " + f.code + " (hint)", text: f.hint });
-});
 
-T.buildReport(res, { e: 1, w: 1, i: 1 }).split("\n").forEach(function (line, i) {
-  if (line.trim()) segments.push({ where: "report line " + (i + 1), text: line });
-});
+function addSeg(where, text) {
+  if (text === undefined || text === null) return;
+  if (String(text).trim().length < 3) return;
+  segments.push({ where: where, text: String(text) });
+}
 
-Object.keys(T.I18N.dict).forEach(function (key) {
-  segments.push({ where: "dictionary key " + key, text: String(T.I18N.dict[key]) });
-});
+if (mode === "validator") {
+  var T = lib.loadTool(scriptPath,
+    ["parse", "analyse", "buildReport", "SAMPLE_BAD", "GLOBALS", "I18N"]);
 
-/* Treść znaczników — to, co widać przed jakąkolwiek analizą. */
-var html = fs.readFileSync(process.argv[3] || path.join(root, "validator.html"), "utf8");
+  /* przykład z błędami + globals włączający reguły dwuplikowe + ścieżka przez
+     wydanie bez skatalogowanych deprecacji */
+  var inv = T.SAMPLE_BAD() +
+    "\n[murano]\nctrl01\n\n[ceph-mon]\nctrl01\nctrl02\n\n[ovn-database]\nctrl01\nctrl02\n";
+  var globals = '---\nenable_masakari: "yes"\nenable_hacluster: "yes"\n' +
+    'kolla_internal_vip_address: "10.10.0.11"\nletsencrypt_cert_server: "https://example.invalid"\n' +
+    'om_enable_rabbitmq_quorum_queues: "yes"\nenable_redis: "yes"\n';
+
+  var res = T.analyse(T.parse(inv), "2023.1", T.GLOBALS.parse(globals), {}, "2026.1");
+  res.findings.forEach(function (f) {
+    addSeg("finding " + f.code + " (msg)", f.msg);
+    addSeg("finding " + f.code + " (hint)", f.hint);
+  });
+  T.buildReport(res, { e: 1, w: 1, i: 1 }).split("\n").forEach(function (line, i) {
+    addSeg("report line " + (i + 1), line);
+  });
+  Object.keys(T.I18N.dict).forEach(function (k) { addSeg("dictionary key " + k, T.I18N.dict[k]); });
+
+} else if (mode === "generator") {
+  var G = lib.loadTool(scriptPath,
+    ["validate", "badFields", "buildYaml", "DEFAULTS", "GLOBALS", "I18N"]);
+
+  /* konfiguracja zapalająca możliwie wiele reguł naraz */
+  var st = {};
+  Object.keys(G.DEFAULTS).forEach(function (k) { st[k] = G.DEFAULTS[k]; });
+  st.vip = "10.0.0.250"; st.net_if = "bond0.10"; st.api_if = "bond0.10";
+  st.stg_if = "bond0.20"; st.ext_if = "bond0"; st.br_name = "br-ex,br-ex2";
+  st.t_hacluster = true; st.t_masakari = true; st.t_octavia = true;
+  st.t_cinder = true; st.t_grafana = true; st.t_tls_int = true;
+  st.amp_net = "vlan"; st.physnet = "physnet9"; st.release = "2024.2";
+  st.int_fqdn = "cloud.example.net"; st.ext_fqdn = "cloud.example.net";
+
+  var diag = G.validate(st, null);
+  diag.forEach(function (d, i) { addSeg("diagnostic " + (i + 1) + " (" + d.level + ")", d.msg); });
+
+  var built = G.buildYaml(st, G.badFields(diag));
+  built.text.split("\n").forEach(function (line, i) {
+    if (line.indexOf("#") !== -1) addSeg("emitted globals.yml line " + (i + 1), line);
+  });
+
+  /* import: komunikaty przeglądu kluczy */
+  var doc = G.GLOBALS.parse('---\nkolla_base_distro: "rocky"\nnieznany_klucz: 1\n' +
+                            'om_enable_rabbitmq_high_availability: "yes"\n');
+  doc.findings.forEach(function (f) { addSeg("parser finding " + f.code, f.msg + " " + (f.hint || "")); });
+  G.GLOBALS.review(doc, null, {}).forEach(function (f) {
+    addSeg("import review " + f.code, f.msg + " " + (f.hint || ""));
+  });
+  Object.keys(G.I18N.dict).forEach(function (k) { addSeg("dictionary key " + k, G.I18N.dict[k]); });
+
+} else {
+  var H = lib.loadTool(scriptPath, ["I18N"]);
+  Object.keys(H.I18N.dict).forEach(function (k) { addSeg("dictionary key " + k, H.I18N.dict[k]); });
+}
+
+/* Treść znaczników — to, co widać przed jakąkolwiek interakcją. */
+var html = fs.readFileSync(htmlPath, "utf8");
 var body = html.slice(html.indexOf("<body"), html.indexOf("</body>"));
 body = body.replace(/<script[\s\S]*?<\/script>/g, " ").replace(/<!--[\s\S]*?-->/g, " ");
-body.replace(/<[^>]+>/g, "\n").split("\n").forEach(function (line, i) {
-  if (line.trim().length > 2) segments.push({ where: "markup", text: line.trim() });
-});
+body.replace(/<[^>]+>/g, "\n").split("\n").forEach(function (line) { addSeg("markup", line.trim()); });
 
 var hits = [], excusedCount = 0;
 segments.forEach(function (seg) {
@@ -96,15 +139,15 @@ segments.forEach(function (seg) {
   hits.push(seg);
 });
 
-console.log("sprawdzono fragmentów widocznego tekstu: " + segments.length +
+console.log("[" + mode + "] sprawdzono fragmentów widocznego tekstu: " + segments.length +
             (excusedCount ? "  (wyjątków: " + excusedCount + ")" : ""));
 
 if (!hits.length) {
-  console.log("OK   cały widoczny tekst jest po angielsku");
+  console.log("OK   [" + mode + "] cały widoczny tekst jest po angielsku");
   process.exit(0);
 }
 
-console.log("FAIL polski tekst w " + hits.length + " miejscach:");
+console.log("FAIL [" + mode + "] polski tekst w " + hits.length + " miejscach:");
 var seen = Object.create(null);
 hits.forEach(function (h) {
   var key = h.where + "|" + h.text.slice(0, 40);
