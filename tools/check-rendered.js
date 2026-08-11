@@ -27,6 +27,7 @@ var path = require("path");
 var cp = require("child_process");
 
 var root = path.join(__dirname, "..");
+var AUDIT_OUT = (process.argv[2] === "--texts") ? process.argv[3] : null;
 var FILES = ["validator.html", "generator.html", "index.html"];
 
 /* Kolejność prób: jawne wskazanie, potem typowe ścieżki Linuksa (CI), potem
@@ -70,15 +71,21 @@ var AUDIT = [
   '        });',
   '      }',
   '    }',
-  '    var walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);',
-  '    var n;',
-  '    while ((n = walk.nextNode())) {',
-  '      var t = (n.nodeValue || "").replace(/\\s+/g, " ").trim();',
-  '      if (t.length < 2) continue;',
-  '      var p = n.parentElement;',
-  '      if (!p || p.tagName === "SCRIPT" || p.tagName === "STYLE") continue;',
+  /* Jednostką jest TEKST ELEMENTU, nie pojedynczy węzeł: wpis słownika rozpada się
+     w DOM na ułamki ("Group ", "[", "]", " has "), które osobno nie znaczą nic,
+     a sklejone wracają do postaci porównywalnej ze słownikiem. */
+  '    var els = document.body.querySelectorAll("*");',
+  '    for (var k = 0; k < els.length; k++) {',
+  '      var p = els[k];',
+  '      if (p.tagName === "SCRIPT" || p.tagName === "STYLE") continue;',
   '      if (p.offsetParent === null && getComputedStyle(p).position !== "fixed") continue;',
-  '      out.texts.push({ tag: p.tagName, cls: p.className || "", text: t });',
+  '      var own = "";',
+  '      for (var c = 0; c < p.childNodes.length; c++) {',
+  '        if (p.childNodes[c].nodeType === 3) own += p.childNodes[c].nodeValue;',
+  '      }',
+  '      own = own.replace(/\\s+/g, " ").trim();',
+  '      if (own.length < 2) continue;',
+  '      out.texts.push({ tag: p.tagName, cls: p.className || "", text: own });',
   '    }',
   '    var box = document.createElement("script");',
   '    box.type = "application/json";',
@@ -157,6 +164,15 @@ FILES.forEach(function (file) {
     console.log("FAIL " + file + ": " + e.message);
     bad = 1;
     return;
+  }
+
+  /* Ścieżka argumentem, nie zmienną środowiskową: proces Windows uruchomiony
+     z WSL nie dziedziczy zmiennych bez WSLENV, więc raport cicho by nie powstał —
+     a pusty raport wygląda dokładnie jak "wszystko pokryte". */
+  if (AUDIT_OUT) {
+    var acc = [];
+    try { acc = JSON.parse(fs.readFileSync(AUDIT_OUT, "utf8")); } catch (e) { acc = []; }
+    fs.writeFileSync(AUDIT_OUT, JSON.stringify(acc.concat(res.texts)));
   }
 
   if (res.visibleHidden.length) {
