@@ -117,33 +117,14 @@ measured numbers did not move — not because the narrowing held, but because th
 renders no findings, so no table exists and not one heading reached the audit. Reporting
 unchanged numbers as agreement would have been the staleness probe again: a correct answer
 to a different question. The only defence is to know what ought to be in view and check
-that it was, which no amount of deliberate breakage can substitute for.
+that it was.
 
-**The tooling is part of the system, not something beside it.** Production code here has
-golden files, guards and three hundred assertions. The tooling had none of that, and it is
-the tooling that failed: a progress counter three times over, a probe that read an
-attribute instead of the screen, a set of exception categories that excused the very text
-they were built to find, and two NUL bytes that sat in a guard's own source while the one
-check written for NUL bytes did not look at the directory it lived in. Six failures, none
-of them in the product.
-
-Being part of the system means the same rules apply, including the one about proving a
-check can fail. Until now that proof was an ACT: break something by hand on the day the
-guard is written, watch it turn red, put it back. It worked every time and it is not a
-control — it does not repeat when the guard changes and it catches no regression. So the
-guards now run against fixtures of known characteristic and the assertion is on the COUNT,
-not the colour. "Red" says only that the guard is alive; "exactly three" is what would
-have caught a counter tallying the Polish halves of pairs, a counter losing concatenated
-strings, and a counter with its quote pairing shifted — three of the six tooling failures
-that nothing caught.
-
-The pattern is always the same. A scope looks reasonable — artefacts and shared sources —
-and nobody questions it, exactly as nobody questioned a category that excused "the content
-of <code> and <span>". So the question has to be asked of every guard in turn, and asked
-about what it actually covers rather than what it was meant to cover: is the tooling in
-scope, and if not, is that a decision or an oversight? For some the answer is a clean no —
-a content-security policy has nothing to say about a CI script. For others it is a hole
-that has been open since the guard was written.
+The same shape catches things that look dead. An exception category was deleted for
+excusing nothing, then restored a day later, and both decisions rested on a counter that
+was really measuring which test ran first: the category matches 612 strings and never
+excused zero of anything. It was SHADOWED, not dead. Before removing something for being
+unused, check that it is reachable — otherwise the removal is an answer to a question
+about the measuring loop rather than about the thing.
 
 **An assertion answers a question someone asked; a golden file answers questions nobody
 asked.** Targeted assertions cover the cases their author thought of, which is exactly
