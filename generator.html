@@ -217,7 +217,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       </svg>
       <span>Rackpathlabs<small>OpenStack tooling</small></span>
     </div>
-    <nav aria-label="Narzędzia">
+    <nav aria-label="Tools">
       <a href="index.html">start</a>
       <a href="generator.html" aria-current="page">globals.yml</a>
       <a href="validator.html">inventory validator</a>
@@ -250,7 +250,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
             aria-label="Contents of the globals.yml file to import"
             placeholder="---&#10;kolla_base_distro: &quot;rocky&quot;&#10;…"></textarea>
           <div class="btn-row" style="margin-top:10px">
-            <button type="button" class="small" id="btn-import">Wczytaj z pola</button>
+            <button type="button" class="small" id="btn-import">Load from the field</button>
             <button type="button" class="small ghost" id="btn-import-file">Load a file…</button>
             <button type="button" class="small ghost" id="btn-import-clear" disabled>Discard the import</button>
             <input type="file" id="import_file" accept=".yml,.yaml,.txt,text/plain" class="sr" aria-hidden="true" tabindex="-1">
@@ -356,7 +356,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
           <div class="field">
             <label for="ext_fqdn">kolla_external_fqdn</label>
-            <input type="text" id="ext_fqdn" spellcheck="false" placeholder="domyślnie adres VIP"
+            <input type="text" id="ext_fqdn" spellcheck="false" placeholder="VIP address by default"
                    aria-describedby="h-ext_fqdn" maxlength="64">
             <p class="hint" id="h-ext_fqdn" data-i18n="g.hint.extFqdn"></p>
           </div>
@@ -520,10 +520,10 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           <span class="fname">/etc/kolla/globals.yml</span>
           <span class="mode" id="out-mode" hidden>original + edits</span>
           <span class="sp"></span>
-          <button type="button" id="btn-copy" aria-describedby="status-txt">Kopiuj</button>
-          <button type="button" class="primary" id="btn-download" aria-describedby="status-txt">Pobierz globals.yml</button>
+          <button type="button" id="btn-copy" aria-describedby="status-txt">Copy</button>
+          <button type="button" class="primary" id="btn-download" aria-describedby="status-txt">Download globals.yml</button>
         </div>
-        <pre class="yaml" id="out" tabindex="0" aria-label="Podgląd wygenerowanego pliku globals.yml"></pre>
+        <pre class="yaml" id="out" tabindex="0" aria-label="Preview of the generated globals.yml"></pre>
       </div>
 
       <div class="panel" style="margin-top:18px">
@@ -2178,7 +2178,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         if (rel.hostOs && rel.hostOs.length) {
           d.push({
             level: "info", field: null,
-            msg: "Systemy hosta wspierane w wydaniu <code>" + esc(rel.id) + "</code>: " +
+            msg: "Host systems supported in release <code>" + esc(rel.id) + "</code>: " +
                  rel.hostOs.map(esc).join(", ") + "."
           });
         }
@@ -2801,7 +2801,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     Object.keys(KNOWN_NO_FIELD).forEach(function (k) { known[k] = 1; });
     GLOBALS.review(parsed, findRelease(clean.release), known).forEach(function (f) {
       found.push({ level: f.sev, field: null,
-                   msg: "linia " + f.line + ": " + f.msg + (f.hint ? " " + f.hint : "") });
+                   msg: "line " + f.line + ": " + f.msg + (f.hint ? " " + f.hint : "") });
     });
 
     importedDoc = parsed;
@@ -2986,8 +2986,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     }).join("");
 
     var statusTag = {
-      development: "w rozwoju", maintained: "wspierane",
-      unmaintained: "bez utrzymania", eol: "EOL"
+      development: "in development", maintained: "supported",
+      unmaintained: "unmaintained", eol: "EOL"
     };
     document.getElementById("releases").innerHTML =
       KOLLA_MATRIX.releases.map(function (r) {
