@@ -208,6 +208,22 @@ var AUDIT = [
   '      });',
   '      out.texts.push({ tag: p.tagName, cls: p.className || "", text: own, inData: inData, fromInput: fromInput });',
   '    }',
+  /* Tekst, ktory nie jest wezlem tekstowym, a dociera do uzytkownika: placeholder
+     widac w pustym polu, a aria-label i title sa CZYTANE NA GLOS — dla czesci
+     uzytkownikow to caly interfejs. Kolektor chodzil po wezlach tekstowych, wiec
+     nie widzial ich wcale: ta sama klasa co osiemnascie toastow, tylko druga droga. */
+  '    var ATTRS = ["placeholder", "title", "aria-label", "aria-description", "alt"];',
+  '    var withAttr = document.body.querySelectorAll("[" + ATTRS.join("],[") + "]");',
+  '    for (var q = 0; q < withAttr.length; q++) {',
+  '      var w = withAttr[q];',
+  '      if (w.offsetParent === null && getComputedStyle(w).position !== "fixed") continue;',
+  '      for (var r = 0; r < ATTRS.length; r++) {',
+  '        var v = w.getAttribute(ATTRS[r]);',
+  '        if (!v || v.trim().length < 2) continue;',
+  '        out.texts.push({ tag: ATTRS[r].toUpperCase(), cls: w.id || w.className || "",',
+  '                         text: v.replace(/\\s+/g, " ").trim(), inData: false, fromInput: false });',
+  '      }',
+  '    }',
   '    var box = document.createElement("script");',
   '    box.type = "application/json";',
   '    box.id = "__audit_out";',
