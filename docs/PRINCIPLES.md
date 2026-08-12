@@ -73,6 +73,13 @@ representation, turned on oneself: a belief about the state of the repository is
 representation, the file is the thing, and beliefs go stale faster than code when the code
 changes every turn.
 
+**A prediction that both hypotheses satisfy is not a control.** Emptying an element and
+pointing it at a dictionary key moves the counter by exactly what moving its text into the
+dictionary would, so a category migrated against a predicted number confirmed a model that
+cannot tell the two apart (#67). A prediction about migrated text therefore binds the number
+to the screen — how many occurrences leave the meter, and which strings must still be
+visible afterwards; the number alone is a control over the counter, never over the product.
+
 **The name of a mechanism is a claim about its scope**, and it is held to the same
 standard as any other claim here: it may promise neither more nor less than the code does.
 Four failures in one week shared this single shape, and each looked like an isolated
