@@ -52,6 +52,10 @@ echo "== słownik interfejsu =="
 "$NODE" tools/check-i18n.js || rc=1
 
 echo
+echo "== słownik: klucz produkuje tekst na ekranie =="
+"$NODE" tools/check-i18n-apply.js || rc=1
+
+echo
 echo "== spójność bloków współdzielonych =="
 bash tools/check-blocks.sh || rc=1
 

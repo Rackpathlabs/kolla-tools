@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>fixtura: applier kompletny</title></head>
+<body>
+<!-- ZERO naruszeń. Applier obsługuje wszystkie cztery formy, więc każdy klucz
+     dociera na ekran. Fixtura czysta jest połową pary: bez niej "czerwone"
+     mówiłoby tylko, że kontrola żyje, a nie że umie odróżnić. -->
+<h2 data-i18n="k.head"></h2>
+<p data-i18n="k.body"></p>
+<input data-i18n-ph="k.ph">
+<button data-i18n-title="k.title"></button>
+<span data-i18n-label="k.label"></span>
+
+<!-- PRZYNĘTA 1: wartość "0" JEST tekstem. Licznik pytający o fałszywość
+     (if (!text)) uzna ją za brak i zgłosi naruszenie, którego nie ma. -->
+<span data-i18n="k.zero"></span>
+
+<!-- PRZYNĘTA 2: atrybut wygląda na formę i18n i nią nie jest. Kategoria to
+     CZTERY WYMIENIONE formy, nie "cokolwiek zaczynające się od data-i18n" —
+     inaczej kontrola rosłaby o naruszenie przy każdym nowym atrybucie. -->
+<span data-i18n-note="to nie jest ujście tekstu">stała treść</span>
+
+<!-- PRZYNĘTA 3: jeden element, DWA podstawienia, oba poprawne. Liczba elementów
+     i liczba podstawień rozjeżdżają się tu o jeden i tak ma zostać — komunikat
+     podaje obie jako osobne wielkości, a nie jedną jako mianownik drugiej. -->
+<label data-i18n="k.head" data-i18n-title="k.title"></label>
+<script>
+(function () {
+  var DICT = {
+    "k.head": "Heading", "k.body": "Body text", "k.ph": "Placeholder",
+    "k.title": "Title", "k.label": "Label", "k.zero": "0"
+  };
+  function T(k) { return DICT[k] === undefined ? "[[" + k + "]]" : DICT[k]; }
+
+  var nodes = document.querySelectorAll("[data-i18n]");
+  for (var i = 0; i < nodes.length; i++) nodes[i].innerHTML = T(nodes[i].getAttribute("data-i18n"));
+  nodes = document.querySelectorAll("[data-i18n-ph]");
+  for (i = 0; i < nodes.length; i++) nodes[i].setAttribute("placeholder", T(nodes[i].getAttribute("data-i18n-ph")));
+  nodes = document.querySelectorAll("[data-i18n-title]");
+  for (i = 0; i < nodes.length; i++) nodes[i].setAttribute("title", T(nodes[i].getAttribute("data-i18n-title")));
+  nodes = document.querySelectorAll("[data-i18n-label]");
+  for (i = 0; i < nodes.length; i++) nodes[i].setAttribute("aria-label", T(nodes[i].getAttribute("data-i18n-label")));
+})();
+</script>
+</body>
+</html>

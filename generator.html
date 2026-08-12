@@ -310,21 +310,21 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
           <div class="field">
             <label for="api_if">api_interface</label>
-            <input type="text" id="api_if" spellcheck="false" placeholder="dziedziczy network_interface"
+            <input type="text" id="api_if" spellcheck="false" placeholder="inherits network_interface"
                    aria-describedby="h-api_if" maxlength="15">
             <p class="hint" id="h-api_if" data-i18n="g.hint.apiIf"></p>
           </div>
 
           <div class="field">
             <label for="stg_if">storage_interface</label>
-            <input type="text" id="stg_if" spellcheck="false" placeholder="dziedziczy network_interface"
+            <input type="text" id="stg_if" spellcheck="false" placeholder="inherits network_interface"
                    aria-describedby="h-stg_if" maxlength="15">
             <p class="hint" id="h-stg_if" data-i18n="g.hint.stgIf"></p>
           </div>
 
           <div class="field">
             <label for="mig_if">migration_interface</label>
-            <input type="text" id="mig_if" spellcheck="false" placeholder="dziedziczy api_interface"
+            <input type="text" id="mig_if" spellcheck="false" placeholder="inherits api_interface"
                    aria-describedby="h-mig_if" maxlength="15">
             <p class="hint" id="h-mig_if" data-i18n="g.hint.migIf"></p>
           </div>
@@ -338,7 +338,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
           <div class="field">
             <label for="ext_vip_if">kolla_external_vip_interface</label>
-            <input type="text" id="ext_vip_if" spellcheck="false" placeholder="dziedziczy network_interface"
+            <input type="text" id="ext_vip_if" spellcheck="false" placeholder="inherits network_interface"
                    aria-describedby="h-ext_vip_if" maxlength="15">
             <p class="hint" id="h-ext_vip_if" data-i18n="g.hint.extVipIf"></p>
           </div>
@@ -393,8 +393,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           <div class="field">
             <label for="storage" data-i18n="g.field.storage"></label>
             <select id="storage" aria-describedby="h-storage">
-              <option value="none">brak</option>
-              <option value="lvm">LVM (lokalny)</option>
+              <option value="none">none</option>
+              <option value="lvm">LVM (local)</option>
               <option value="nfs">NFS</option>
               <option value="ceph">Ceph (external)</option>
             </select>
@@ -671,7 +671,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       "g.hint.extIf":              "External traffic interface. No IP address, no configuration — Neutron takes it over entirely. Several comma-separated interfaces mean several physical networks.",
       "g.hint.brName":             "OVS bridges, one per external interface. The counts must match.",
       "g.hint.apiIf":              "API traffic and the Corosync ring. Empty inherits <code>network_interface</code>.",
-      "g.hint.stgIf":              "Ruch magazynu (Ceph). Puste = dziedziczy <code>network_interface</code>.",
+      "g.hint.stgIf":              "Storage traffic (Ceph). Empty inherits <code>network_interface</code>.",
       "g.hint.migIf":              "Live migration. Empty inherits <code>api_interface</code>.",
       "g.hint.extVip":             "Address of the public endpoints. Empty means the same as internal.",
       "g.hint.extVipIf":           "Interface that carries the external VIP.",
@@ -687,18 +687,18 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       "g.toggle.d02":              "Copies a private CA into the container trust store.",
       "g.toggle.d03":              "Let's Encrypt certificates — the images' system trust store suffices.",
       "g.toggle.d04":              "HAProxy + keepalived — required for the VIP and HA API endpoints.",
-      "g.toggle.d05":              "Wolumeny blokowe. Wymaga wybranego backendu magazynu.",
-      "g.toggle.d06":              "Orkiestracja szablonami.",
-      "g.toggle.d07":              "Panel webowy.",
+      "g.toggle.d05":              "Block volumes. Needs a selected storage backend.",
+      "g.toggle.d06":              "Template orchestration.",
+      "g.toggle.d07":              "Web dashboard.",
       "g.toggle.d08":              "Secret store. Octavia needs it for the amphora certificates.",
       "g.toggle.d09":              "Load balancing (amphorae). Needs Barbican and a management network.",
       "g.toggle.d10":              "Metrics collection. Needs hosts in the <em>monitoring</em> group.",
       "g.toggle.d11":              "Metric dashboards. Without Prometheus there is nothing to draw.",
       "g.toggle.d12":              "Corosync and Pacemaker. The Corosync ring runs over <code>api_interface</code>.",
-      "g.toggle.d13":              "Automatyczna ewakuacja maszyn po awarii hosta.",
+      "g.toggle.d13":              "Automatic evacuation of VMs after a host failure.",
       "g.toggle.d14":              "Provider networks (flat/VLAN) mapped straight onto the physical network.",
       "g.toggle.d15":              "Measured bandwidth headroom and switch-side queueing for storage and migration traffic.",
-      "g.toggle.d16":              "Wydzielony VLAN migracji ustawiony przez <code>live_migration_inbound_addr</code> w nadpisaniu nova-compute.",
+      "g.toggle.d16":              "A dedicated migration VLAN configured through <code>live_migration_inbound_addr</code> in a nova-compute override.",
       "g.toggle.d17":              "Section headers and deployment notes that follow from the chosen configuration.",
 
       /* --- generator: nagłówki sekcji ---
@@ -2998,7 +2998,30 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       '<option value="master" label="development branch"></option>';
   }
 
+  /* Podstawienie tekstu ze słownika pod atrybuty data-i18n*.
+     Generator dostał 50 takich atrybutów w #59 i nie dostał tego, co je czyta —
+     przez cztery godziny na opublikowanym serwisie formularz nie miał ani jednego
+     nagłówka sekcji, podpowiedzi pod polem, opisu przełącznika ani metki pola
+     wymaganego. Trzecia kopia tej funkcji, świadomie: validator.html i index.html
+     mają własne, a wciągnięcie ich w blok współdzielony wymaga rozstrzygnięcia,
+     skąd blok bierze klucz tytułu i opisu strony — i ruszyłoby dwa pliki, które
+     działają, w trakcie naprawy regresji. Refaktor ma osobne zgłoszenie.
+
+     Czterech pętli nie da się zredukować do jednej: innerHTML i trzy atrybuty to
+     cztery różne miejsca docelowe. Kolejność bez znaczenia, każda niezależna. */
+  function applyI18n() {
+    var nodes = document.querySelectorAll("[data-i18n]");
+    for (var i = 0; i < nodes.length; i++) nodes[i].innerHTML = T(nodes[i].getAttribute("data-i18n"));
+    nodes = document.querySelectorAll("[data-i18n-ph]");
+    for (i = 0; i < nodes.length; i++) nodes[i].setAttribute("placeholder", T(nodes[i].getAttribute("data-i18n-ph")));
+    nodes = document.querySelectorAll("[data-i18n-title]");
+    for (i = 0; i < nodes.length; i++) nodes[i].setAttribute("title", T(nodes[i].getAttribute("data-i18n-title")));
+    nodes = document.querySelectorAll("[data-i18n-label]");
+    for (i = 0; i < nodes.length; i++) nodes[i].setAttribute("aria-label", T(nodes[i].getAttribute("data-i18n-label")));
+  }
+
   /* ------------------------------------------------------------------ */
+  applyI18n();
   populateFromMatrix();
   applyState(load() || DEFAULTS);
   refresh();

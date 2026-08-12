@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>fixtura: applier niepełny, dwa braki</title></head>
+<body>
+<!-- DOKŁADNIE TRZY naruszenia w OŚMIU podstawieniach na SIEDMIU elementach —
+     trzy różne liczby, celowo, bo dwie z nich stoją po przeciwnych stronach
+     ułamka w komunikacie i muszą dać się rozróżnić.
+
+     Rozpisane Z DEFINICJI KATEGORII, nie z listy tego, co akurat świeci na
+     czerwono. Kategoria brzmi: atrybut data-i18n* niosący klucz do ujścia, które
+     po wykonaniu kodu strony pozostaje puste. Sposoby, na jakie to zachodzi:
+
+       1. applier nie obsługuje danej FORMY  -> data-i18n-title (poniżej)
+       2. applier nie obsługuje danej FORMY  -> data-i18n-ph    (poniżej)
+       3. jw., ale na elemencie niosącym DWIE formy, z których druga działa —
+          element wygląda na wypełniony i jest nim w połowie
+
+     Trzeci sposób — brak appliera w ogóle — to przypadek generator.html z #59
+     i jest szczególnym przypadkiem pierwszego, gdzie form nieobsłużonych jest
+     cztery z czterech. Nie dostaje osobnej fixtury, bo nie jest osobną regułą.
+
+     Klucz spoza słownika NIE należy do tej kategorii: t() zwraca widoczne
+     "[[klucz]]", czyli tekst niepusty. Tego pilnuje check-i18n.js i tam ma
+     zostać — dwie kontrole, dwa pytania. -->
+<h2 data-i18n="k.head"></h2>
+<p data-i18n="k.body"></p>
+
+<!-- NARUSZENIE 1: forma nieobsługiwana przez applier, title zostaje pusty -->
+<button data-i18n-title="k.title"></button>
+
+<!-- NARUSZENIE 2: forma nieobsługiwana przez applier, placeholder zostaje pusty -->
+<input data-i18n-ph="k.ph">
+
+<!-- NARUSZENIE 3, i zarazem jedyne miejsce, w którym widać, że LICZNIK I MIANOWNIK
+     komunikatu mierzą to samo. Ten element niesie DWIE formy: treść zostaje
+     wypełniona, title nie. Bez niego elementów i podstawień jest tyle samo
+     i pomyłka jednostek pozostaje niewidoczna — pierwsza wersja tego strażnika
+     liczyła braki w podstawieniach, a całość w elementach, i na fixturze bez tego
+     wiersza wychodziło zgodnie. W validator.html nie wychodzi: 30 elementów niesie
+     33 atrybuty. -->
+<label data-i18n="k.body" data-i18n-title="k.title"></label>
+
+<!-- PRZYNĘTA 1: wartość "0" JEST tekstem. Licznik pytający o fałszywość
+     doliczyłby trzecie naruszenie, którego nie ma. -->
+<span data-i18n="k.zero"></span>
+
+<!-- PRZYNĘTA 2: atrybut wygląda na formę i18n i nią nie jest. -->
+<span data-i18n-note="to nie jest ujście tekstu">stała treść</span>
+
+<!-- PRZYNĘTA 3: klucz spoza słownika. Dostaje widoczne "[[k.missing]]", więc
+     jest WYPEŁNIONY i do tej kategorii nie należy — mimo że jest błędem.
+     Gdyby ta kontrola go liczyła, dublowałaby check-i18n.js i obie mówiłyby
+     o jednym błędzie dwa razy, każda swoim językiem. -->
+<span data-i18n="k.missing"></span>
+<script>
+(function () {
+  var DICT = { "k.head": "Heading", "k.body": "Body text", "k.zero": "0",
+               "k.title": "Title", "k.ph": "Placeholder" };
+  function T(k) { return DICT[k] === undefined ? "[[" + k + "]]" : DICT[k]; }
+
+  /* Applier NIEPEŁNY — obsługuje wyłącznie treść elementu. Klucze form -ph
+     i -title istnieją w słowniku i mimo to nie docierają na ekran: to jest
+     ta połowa awarii, której nie widać, patrząc na słownik. */
+  var nodes = document.querySelectorAll("[data-i18n]");
+  for (var i = 0; i < nodes.length; i++) nodes[i].innerHTML = T(nodes[i].getAttribute("data-i18n"));
+})();
+</script>
+</body>
+</html>
