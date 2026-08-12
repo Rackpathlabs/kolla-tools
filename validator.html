@@ -2638,7 +2638,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
   function renderFindings(list) {
     el.findings.innerHTML = list.map(function (f) {
-      var label = f.sev === "error" ? "błąd" : (f.sev === "warn" ? "uwaga" : "info");
+      /* Klucze jawne, nie sklejane — patrz ten sam wzorzec w generatorze. */
+      var label = f.sev === "error" ? T("sev.error")
+                : f.sev === "warn" ? T("sev.warn") : T("sev.info");
       var meta = "<span>" + f.code + "</span>";
       var srcLabel = { globals: "globals", cross: T("v.src.both"), upgrade: T("v.src.path") }[f.src] || "inventory";
       meta += '<span class="src ' + (f.src === "inventory" ? "" : f.src) + '">' + srcLabel + "</span>";
