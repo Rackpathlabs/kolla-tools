@@ -1,5 +1,12 @@
 #!/usr/bin/env node
-/* Tekst interfejsu nie ma prawa być literałem w kodzie.
+/* Tekst interfejsu nie ma prawa być literałem w CZTERECH UJŚCIACH: textContent,
+ * innerHTML, toast() i setAttribute dla atrybutów widocznych.
+ *
+ * Nazwa i komunikat mówiły wcześniej "literały w kodzie" i to było TWIERDZENIE
+ * NIEPRAWDZIWE: strażnik świecił na zielono, gdy w kodzie leżało sto czterdzieści
+ * dziewięć polskich literałów przekazywanych jako argumenty add(), push({msg:…})
+ * i konkatenacji budujących komentarze do emitowanego pliku. Zielony strażnik, który
+ * kłamie o swoim zakresie, jest gorszy od braku strażnika — brak nikogo nie uspokaja.
  *
  * Ten strażnik powstał PRZED migracją, którą ma prowadzić, i jest czerwony od
  * pierwszego commitu. To nie jest szczegół procesu. Trzy mierniki w tym repozytorium
@@ -83,11 +90,12 @@ FILES.forEach(function (file) {
 
 console.log("ujść tekstu przejrzanych: " + scanned);
 if (!hits.length) {
-  console.log("OK   żaden tekst interfejsu nie jest literałem w kodzie");
+  console.log("OK   żaden literał w textContent, innerHTML, toast() ani setAttribute");
   process.exit(0);
 }
 
-console.log("FAIL tekst interfejsu wpisany w kod, " + hits.length + " razy:");
+console.log("FAIL literał w ujściu tekstu (textContent/innerHTML/toast/setAttribute), " +
+            hits.length + " razy:");
 hits.forEach(function (h) {
   console.log("  " + h.file + ":" + h.line + "  (" + h.what + ")");
   console.log("      \"" + h.text + "\"");

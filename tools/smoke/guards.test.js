@@ -33,11 +33,11 @@ R.ok("czysta fixtura -> zielone", clean.code === 0, "kod " + clean.code);
 var one = run("check-literals.js", ["tools/fixtures/one-literal.js"]);
 R.ok("jeden literał -> czerwone", one.code === 1, "kod " + one.code);
 R.ok("jeden literał -> DOKŁADNIE jedno trafienie",
-     /wpisany w kod, 1 razy/.test(one.out), one.out.split("\n")[1]);
+     /ujściu tekstu[^,]*, 1 razy/.test(one.out), one.out.split("\n")[1]);
 
 var three = run("check-literals.js", ["tools/fixtures/three-literals.js"]);
 R.ok("trzy literały -> DOKŁADNIE trzy trafienia",
-     /wpisany w kod, 3 razy/.test(three.out), three.out.split("\n")[1]);
+     /ujściu tekstu[^,]*, 3 razy/.test(three.out), three.out.split("\n")[1]);
 /* T(...) obok literałów nie ma prawa się doliczyć — inaczej strażnik liczyłby
    wywołania, a nie naruszenia. */
 R.ok("wywołania T() nie są liczone jako naruszenia",

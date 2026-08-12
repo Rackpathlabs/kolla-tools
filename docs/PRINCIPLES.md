@@ -45,6 +45,13 @@ This is the same decision as taking table headings out of the cell exception, an
 one it is a structural improvement the guard merely happened to find: the key can now be
 copied without its tail, and a screen reader stops reading the two as one phrase.
 
+**"Zero here" does not mean zero.** The sample rule applies to negative results too, and
+we broke it two turns after writing it down. A review of all 214 dictionary entries found
+no Polish and the conclusion drawn was that no Polish remained — but the dictionary is one
+place text lives. There were 149 Polish literals in code, passed as arguments to finding
+constructors, which no guard scans. An absence of findings speaks only about the mechanism
+that looked, never about the phenomenon.
+
 **A property checked on a sample is a property of the sample.** Two of five exception
 categories were measured to have no overlap at all, and that zero was read as "the split is
 clean" — a statement about the set. Measured across all five, 721 strings matched more than
