@@ -2549,9 +2549,12 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         "---",
         HEADER,
         "#",
-        "# Generowanie zatrzymane. Konfiguracja zawiera treść, która zostałaby",
-        "# wykonana przez Ansible jako szablon albo rozbiłaby strukturę pliku.",
-        "# Popraw pola oznaczone jako błędne w panelu Kontrola konfiguracji."
+        /* Komentarz mówi o PLIKU i o tym, co się z nim stanie, nie o interfejsie,
+           z którego powstał: czyta go ktoś, kto otwiera to repozytorium za rok
+           i nie ma przed sobą naszego formularza. */
+        "# This file was not generated. The configuration contains content that",
+        "# Ansible would execute as a template, or that would break the file structure.",
+        "# The rejected values are listed above; correct them and export again."
       ].join("\n");
     }
 
