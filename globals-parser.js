@@ -23,7 +23,7 @@
        - znacznik początku dokumentu ---
        - komentarze pełnoliniowe i końcówkowe (# po białym znaku)
        - klucze na wcięciu zerowym: klucz: wartość
-       - skalary: gołe, "w cudzysłowie", 'w apostrofach', puste (= null)
+       - skalary: gołe, "in quotes", 'w apostrofach', puste (= null)
        - listy blokowe (- element) oraz przepływowe ([a, b])
        - mapping zagnieżdżony o jednym poziomie (octavia_amp_network i podobne)
 
@@ -121,8 +121,8 @@
       for (var t = 0; t < lines.length; t++) {
         if (/^\s*$/.test(lines[t])) continue;
         if (/\t/.test((lines[t].match(/^\s*/) || [""])[0])) {
-          fail(t + 1, "Wcięcie tabulatorem w linii " + (t + 1) + ".",
-               "YAML nie dopuszcza tabulatorów we wcięciu — zamień je na spacje.");
+          fail(t + 1, "Tab indentation on line " + (t + 1) + ".",
+               "YAML does not allow tabs in indentation; replace them with spaces.");
         }
       }
 
@@ -141,7 +141,7 @@
         if (trimmed === "---") {
           if (docSeen) {
             fail(lineNo, "Drugi dokument YAML w linii " + lineNo + ".",
-                 "globals.yml jest pojedynczym dokumentem; wiele dokumentów nie jest obsługiwane.");
+                 "globals.yml is a single document; multiple documents are not supported.");
           }
           docSeen = true;
           continue;
@@ -150,17 +150,17 @@
 
         if (/^\s/.test(body)) {
           /* linia wcięta bez klucza nadrzędnego — nadrzędny konsumuje swoje linie sam */
-          fail(lineNo, "Nieoczekiwane wcięcie w linii " + lineNo + ".",
-               "Linia wcięta nie należy do żadnego klucza zadeklarowanego wyżej.");
+          fail(lineNo, "Unexpected indentation on line " + lineNo + ".",
+               "The indented line belongs to no key declared above it.");
           continue;
         }
 
         var m = KEY_RE.exec(body);
         if (!m) {
-          fail(lineNo, "Nieobsługiwana konstrukcja w linii " + lineNo + ": <code>" +
+          fail(lineNo, "Unsupported construct on line " + lineNo + ": <code>" +
                        trimmed.slice(0, 60) + "</code>.",
-               "Obsługiwane są wyłącznie wpisy postaci <code>klucz: wartość</code> " +
-               "na wcięciu zerowym, listy i mapping o jednym poziomie zagnieżdżenia.");
+               "Only entries of the form <code>key: value</code> are supported " +
+               "at zero indentation, plus lists and one level of mapping.");
           continue;
         }
 
@@ -181,13 +181,13 @@
           if (/^[|>]/.test(restTrim)) {
             fail(lineNo, "Skalar blokowy (<code>" + restTrim.charAt(0) + "</code>) w linii " +
                          lineNo + " przy kluczu <code>" + key + "</code>.",
-                 "Wartości wielolinijkowe nie są obsługiwane.");
+                 "Multi-line values are not supported.");
             i = endOfIndentedBlock(lines, i + 1);
             continue;
           }
           if (/^[&*!]/.test(restTrim)) {
             fail(lineNo, "Kotwica, alias lub tag w linii " + lineNo + " przy kluczu <code>" +
-                         key + "</code>.", "Konstrukcje referencyjne YAML nie są obsługiwane.");
+                         key + "</code>.", "YAML reference constructs are not supported.");
             i = endOfIndentedBlock(lines, i + 1);
             continue;
           }
@@ -197,8 +197,8 @@
             entry.kind = "list";
             entry.value = parseFlowList(restTrim);
           } else if (restTrim.charAt(0) === "{") {
-            fail(lineNo, "Mapping przepływowy w linii " + lineNo + " przy kluczu <code>" +
-                         key + "</code>.", "Obsługiwany jest wyłącznie mapping blokowy.");
+            fail(lineNo, "Flow mapping on line " + lineNo + " przy kluczu <code>" +
+                         key + "</code>.", "Only block mappings are supported.");
             i = endOfIndentedBlock(lines, i + 1);
             continue;
           } else {
@@ -237,9 +237,9 @@
           var curIndent = (cur.match(/^\s*/) || [""])[0].length;
           if (curIndent < childIndent) break;
           if (curIndent > childIndent) {
-            fail(k + 1, "Zagnieżdżenie głębsze niż jeden poziom w linii " + (k + 1) +
+            fail(k + 1, "Nesting deeper than one level on line " + (k + 1) +
                         " przy kluczu <code>" + key + "</code>.",
-                 "Obsługiwany jest mapping o jednym poziomie zagnieżdżenia.");
+                 "Only one level of nesting is supported.");
             broken = true;
             while (k + 1 < lines.length &&
                    /^\s*\S/.test(lines[k + 1]) &&
@@ -253,28 +253,28 @@
           if (isList) {
             var li = LIST_ITEM_RE.exec(cb);
             if (!li) {
-              fail(k + 1, "Nieobsługiwana konstrukcja w linii " + (k + 1) + " wewnątrz listy <code>" +
-                          key + "</code>.", "Elementy listy zapisuje się jako <code>- wartość</code>.");
+              fail(k + 1, "Unsupported construct on line " + (k + 1) + " inside the list <code>" +
+                          key + "</code>.", "List items are written as <code>- value</code>.");
               broken = true; last = k + 1; continue;
             }
             if (/:\s/.test(li[2]) || /:$/.test(li[2].trim())) {
-              fail(k + 1, "Sekwencja mappingów w linii " + (k + 1) + " przy kluczu <code>" +
-                          key + "</code>.", "Lista obiektów nie jest obsługiwana.");
+              fail(k + 1, "Sequence of mappings on line " + (k + 1) + " przy kluczu <code>" +
+                          key + "</code>.", "A list of objects is not supported.");
               broken = true; last = k + 1; continue;
             }
             value.push(unquote(li[2]));
           } else {
             var mi = INDENTED_KEY_RE.exec(cb);
             if (!mi) {
-              fail(k + 1, "Nieobsługiwana konstrukcja w linii " + (k + 1) + " wewnątrz <code>" +
+              fail(k + 1, "Unsupported construct on line " + (k + 1) + " inside <code>" +
                           key + "</code>.",
-                   "Wewnątrz mappingu obsługiwane są wyłącznie wpisy <code>klucz: wartość</code>.");
+                   "Inside a mapping only <code>key: value</code> entries are supported.");
               broken = true; last = k + 1; continue;
             }
             if (mi[3].trim() === "") {
-              fail(k + 1, "Zagnieżdżenie głębsze niż jeden poziom w linii " + (k + 1) +
+              fail(k + 1, "Nesting deeper than one level on line " + (k + 1) +
                           " przy kluczu <code>" + key + "</code>.",
-                   "Obsługiwany jest mapping o jednym poziomie zagnieżdżenia.");
+                   "Only one level of nesting is supported.");
               broken = true; last = k + 1; continue;
             }
             value[mi[2]] = unquote(mi[3]);
@@ -375,8 +375,8 @@
           out.push({
             sev: d.sev || "warn", code: "KEY-DEPRECATED", key: key, line: e.line,
             msg: "<code>" + key + "</code> " + (d.replacedBy
-              ? "został przemianowany na <code>" + d.replacedBy + "</code>"
-              : "nie jest już obsługiwany") +
+              ? "was renamed to <code>" + d.replacedBy + "</code>"
+              : "is no longer supported") +
               (rel ? " w wydaniu <code>" + rel.id + "</code>" : "") + ".",
             hint: d.note || null
           });
