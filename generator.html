@@ -638,6 +638,13 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
          Rejestr: małą literą, bo to metka, nie krzyk. Wielkie litery należą do CSS. */
       "g.field.required":      "required",
 
+      /* --- generator: werdykt o pliku ---
+         Rejestr: zdanie o PLIKU, nie o narzędziu. "This file is not ready to
+         deploy", nie "The generator found errors". */
+      "g.verdict.blocked":     "This file is not ready to deploy: {errors}{warnings}. Export is blocked.",
+      "g.verdict.warn":        "This file is ready. {warnings} to check before deploying.",
+      "g.verdict.clean":       "Nothing to flag within what the generator checks. The file is ready to download.",
+
       /* --- generator: proza reguł KV ---
          Brzmienie z RULESET-KV.tmp, nie z tłumaczenia polskiego kodu. Rejestr:
          opis skutku, czas teraźniejszy, konkret zamiast oceny. */
@@ -2601,13 +2608,18 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     statusBox.classList.toggle("has-err", errors > 0);
     statusBox.classList.toggle("has-warn", errors === 0 && warns > 0);
 
+    /* Werdykt mówi o PLIKU, nie o narzędziu: czytelnik patrzy na swoją konfigurację,
+       nie na nasz program. Ta sama zasada, która zamieniła "# BŁĄD: patrz Kontrola
+       konfiguracji" na "# INVALID: value rejected, this file is not ready to deploy". */
     if (errors) {
-      statusTxt.textContent = "Konfiguracja niekompletna — " + plural(errors, "błąd", "błędy", "błędów") +
-        (warns ? ", " + plural(warns, "uwaga", "uwagi", "uwag") : "") + ". Eksport zablokowany.";
+      statusTxt.textContent = T("g.verdict.blocked", {
+        errors: I18N.count("n.error", errors),
+        warnings: warns ? ", " + I18N.count("n.warning", warns) : ""
+      });
     } else if (warns) {
-      statusTxt.textContent = "Plik gotowy — " + plural(warns, "uwaga", "uwagi", "uwag") + " do sprawdzenia przed wdrożeniem.";
+      statusTxt.textContent = T("g.verdict.warn", { warnings: I18N.count("n.warning", warns) });
     } else {
-      statusTxt.textContent = "Brak zastrzeżeń w zakresie sprawdzanym przez generator. Plik gotowy do pobrania.";
+      statusTxt.textContent = T("g.verdict.clean");
     }
 
     hasErrors = errors > 0;

@@ -103,6 +103,13 @@
          Rejestr: małą literą, bo to metka, nie krzyk. Wielkie litery należą do CSS. */
       "g.field.required":      "required",
 
+      /* --- generator: werdykt o pliku ---
+         Rejestr: zdanie o PLIKU, nie o narzędziu. "This file is not ready to
+         deploy", nie "The generator found errors". */
+      "g.verdict.blocked":     "This file is not ready to deploy: {errors}{warnings}. Export is blocked.",
+      "g.verdict.warn":        "This file is ready. {warnings} to check before deploying.",
+      "g.verdict.clean":       "Nothing to flag within what the generator checks. The file is ready to download.",
+
       /* --- generator: proza reguł KV ---
          Brzmienie z RULESET-KV.tmp, nie z tłumaczenia polskiego kodu. Rejestr:
          opis skutku, czas teraźniejszy, konkret zamiast oceny. */
