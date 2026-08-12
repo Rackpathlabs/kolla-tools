@@ -2,13 +2,18 @@
 <html lang="en">
 <head><meta charset="utf-8"><title>fixtura: applier niepełny, dwa braki</title></head>
 <body>
-<!-- DOKŁADNIE DWA naruszenia, rozpisane Z DEFINICJI KATEGORII, nie z listy tego,
-     co akurat świeci na czerwono. Kategoria brzmi: atrybut data-i18n* niosący
-     klucz do ujścia, które po wykonaniu kodu strony pozostaje puste. Sposoby, na
-     jakie to zachodzi, są dwa i oba są tu obecne:
+<!-- DOKŁADNIE TRZY naruszenia w OŚMIU podstawieniach na SIEDMIU elementach —
+     trzy różne liczby, celowo, bo dwie z nich stoją po przeciwnych stronach
+     ułamka w komunikacie i muszą dać się rozróżnić.
+
+     Rozpisane Z DEFINICJI KATEGORII, nie z listy tego, co akurat świeci na
+     czerwono. Kategoria brzmi: atrybut data-i18n* niosący klucz do ujścia, które
+     po wykonaniu kodu strony pozostaje puste. Sposoby, na jakie to zachodzi:
 
        1. applier nie obsługuje danej FORMY  -> data-i18n-title (poniżej)
        2. applier nie obsługuje danej FORMY  -> data-i18n-ph    (poniżej)
+       3. jw., ale na elemencie niosącym DWIE formy, z których druga działa —
+          element wygląda na wypełniony i jest nim w połowie
 
      Trzeci sposób — brak appliera w ogóle — to przypadek generator.html z #59
      i jest szczególnym przypadkiem pierwszego, gdzie form nieobsłużonych jest
@@ -25,6 +30,15 @@
 
 <!-- NARUSZENIE 2: forma nieobsługiwana przez applier, placeholder zostaje pusty -->
 <input data-i18n-ph="k.ph">
+
+<!-- NARUSZENIE 3, i zarazem jedyne miejsce, w którym widać, że LICZNIK I MIANOWNIK
+     komunikatu mierzą to samo. Ten element niesie DWIE formy: treść zostaje
+     wypełniona, title nie. Bez niego elementów i podstawień jest tyle samo
+     i pomyłka jednostek pozostaje niewidoczna — pierwsza wersja tego strażnika
+     liczyła braki w podstawieniach, a całość w elementach, i na fixturze bez tego
+     wiersza wychodziło zgodnie. W validator.html nie wychodzi: 30 elementów niesie
+     33 atrybuty. -->
+<label data-i18n="k.body" data-i18n-title="k.title"></label>
 
 <!-- PRZYNĘTA 1: wartość "0" JEST tekstem. Licznik pytający o fałszywość
      doliczyłby trzecie naruszenie, którego nie ma. -->

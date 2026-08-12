@@ -177,11 +177,19 @@ FILES.forEach(function (file) {
     return;
   }
 
-  var bad = [];
+  /* JEDNOSTKĄ JEST PODSTAWIENIE, nie element — po obu stronach ułamka.
+     Pierwsza wersja liczyła braki w podstawieniach, a całość w elementach:
+     "2 z 6" na fixturze i na generatorze wychodziło zgodnie, bo tam każdy element
+     niesie dokładnie jeden atrybut. W validator.html nie wychodzi — 30 elementów
+     niesie 33 atrybuty, bo trzy mają data-i18n obok data-i18n-title — więc braki
+     na takim elemencie dałyby "3 z 2 elementów". Liczba elementów zostaje, ale
+     jako osobna wielkość obok, nie jako mianownik cudzego licznika. */
+  var bad = [], subs = 0;
   els.forEach(function (e) {
     FORMS.forEach(function (f) {
       if (!Object.prototype.hasOwnProperty.call(e._a, f.attr)) return;
       totalChecked++;
+      subs++;
       var got = f.attr === "data-i18n" ? e.innerHTML
               : f.attr === "data-i18n-ph" ? e.getAttribute("placeholder")
               : f.attr === "data-i18n-title" ? e.getAttribute("title")
@@ -196,7 +204,7 @@ FILES.forEach(function (file) {
 
   if (bad.length) {
     console.log("FAIL " + file + ": klucz bez tekstu na ekranie, " + bad.length +
-                " z " + els.length + " elementów:");
+                " z " + subs + " podstawień (na " + els.length + " elementach):");
     bad.slice(0, 12).forEach(function (b) {
       console.log("  " + file + ":" + b.line + "  <" + b.tag + " " + b.attr +
                   '="' + b.key + '">  -> ' + b.sink + " pozostaje pusty");
@@ -204,8 +212,8 @@ FILES.forEach(function (file) {
     if (bad.length > 12) console.log("  ... i " + (bad.length - 12) + " dalszych");
     rc = 1;
   } else {
-    console.log("OK   " + file + ": " + els.length +
-                " elementów z kluczem, każdy dostał niepusty tekst");
+    console.log("OK   " + file + ": " + subs + " podstawień (na " + els.length +
+                " elementach), każde dało niepusty tekst");
   }
 });
 
