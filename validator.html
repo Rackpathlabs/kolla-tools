@@ -2647,15 +2647,15 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       /* Kliknięcie prowadzi tylko do inventory — tylko ten edytor ma margines z liniami.
          Odsyłacz do globals jest etykietą, żeby nie obiecywać skoku, którego nie ma. */
       if (f.line && f.src !== "globals") {
-        meta += '<button type="button" class="f-line" data-line="' + f.line + '">inventory: linia ' + f.line + "</button>";
+        meta += '<button type="button" class="f-line" data-line="' + f.line + '">inventory: line ' + f.line + "</button>";
       }
       (f.refs || []).forEach(function (r) {
         if (r.src === "inventory") {
           if (r.line && r.line !== f.line) {
-            meta += '<button type="button" class="f-line" data-line="' + r.line + '">inventory: linia ' + r.line + "</button>";
+            meta += '<button type="button" class="f-line" data-line="' + r.line + '">inventory: line ' + r.line + "</button>";
           }
         } else {
-          meta += "<span>globals: " + (r.line ? "linia " + r.line : "klucza brak") + "</span>";
+          meta += "<span>globals: " + (r.line ? "line " + r.line : "no key") + "</span>";
         }
       });
       return '<li><span class="sev ' + f.sev + '">' + label + "</span>" +
@@ -2679,9 +2679,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     var rows = listed.map(function (name) {
       var g = res.groups[name];
       var hosts = res.effective[name] || [];
-      var tag = REQUIRED.indexOf(name) !== -1 ? '<span class="tag req">wymagana</span>'
-              : IMPLICIT[name] ? '<span class="tag impl">niejawna</span>'
-              : KNOWN.indexOf(name) === -1 ? '<span class="tag cust">własna</span>' : "";
+      var tag = REQUIRED.indexOf(name) !== -1 ? '<span class="tag req">required</span>'
+              : IMPLICIT[name] ? '<span class="tag impl">implicit</span>'
+              : KNOWN.indexOf(name) === -1 ? '<span class="tag cust">custom</span>' : "";
       var kids = g.children.length
         ? '<div class="hostlist">' + esc(T("v.topology.subgroups", { list: g.children.map(function (c) { return c.name; }).join(", ") })) + "</div>"
         : "";
@@ -3046,8 +3046,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
      dotykania znaczników HTML. */
   function populateReleases(keepFrom, keepTo) {
     var statusTag = {
-      development: "w rozwoju", maintained: "wspierane",
-      unmaintained: "bez utrzymania", eol: "EOL"
+      development: "in development", maintained: "supported",
+      unmaintained: "unmaintained", eol: "EOL"
     };
     var opts = KOLLA_MATRIX.releases.map(function (r) {
       return '<option value="' + esc(r.id) + '">' + esc(r.id) + " · " + esc(r.name) +
