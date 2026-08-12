@@ -264,7 +264,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
             <label for="distro">kolla_base_distro <span class="req" data-i18n="g.field.required"></span></label>
             <!-- opcje pochodzą z macierzy wydań (KOLLA_MATRIX), nie z tego znacznika -->
             <select id="distro" aria-required="true" aria-describedby="h-distro"></select>
-            <p class="hint" id="h-distro">Base distribution of the container images. Must match the images in the registry.</p>
+            <p class="hint" id="h-distro" data-i18n="g.hint.distro"></p>
           </div>
 
           <div class="field">
@@ -273,7 +273,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
                    aria-required="true" aria-describedby="h-release" maxlength="32">
             <!-- pozycje pochodzą z macierzy wydań (KOLLA_MATRIX), nie z tego znacznika -->
             <datalist id="releases"></datalist>
-            <p class="hint" id="h-release">Image tag, for example <code>2025.1</code>. Should match the kolla-ansible version.</p>
+            <p class="hint" id="h-release" data-i18n="g.hint.release"></p>
           </div>
         </fieldset>
 
@@ -284,63 +284,63 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
             <label for="vip">kolla_internal_vip_address <span class="req" data-i18n="g.field.required"></span></label>
             <input type="text" id="vip" spellcheck="false" placeholder="10.0.0.250"
                    aria-required="true" aria-describedby="h-vip" maxlength="15">
-            <p class="hint" id="h-vip">A free IPv4 address on the management network — not held by any host.</p>
+            <p class="hint" id="h-vip" data-i18n="g.hint.vip"></p>
           </div>
 
           <div class="field">
             <label for="net_if">network_interface <span class="req" data-i18n="g.field.required"></span></label>
             <input type="text" id="net_if" spellcheck="false" placeholder="eth0"
                    aria-required="true" aria-describedby="h-net_if" maxlength="15">
-            <p class="hint" id="h-net_if">Management/API network interface. Needs an IP address on every node.</p>
+            <p class="hint" id="h-net_if" data-i18n="g.hint.netIf"></p>
           </div>
 
           <div class="field">
             <label for="ext_if">neutron_external_interface <span class="req" data-i18n="g.field.required"></span></label>
             <input type="text" id="ext_if" spellcheck="false" placeholder="eth1"
                    aria-required="true" aria-describedby="h-ext_if" maxlength="64">
-            <p class="hint" id="h-ext_if">External traffic interface. No IP address, no configuration — Neutron takes it over entirely. Several comma-separated interfaces mean several physical networks.</p>
+            <p class="hint" id="h-ext_if" data-i18n="g.hint.extIf"></p>
           </div>
 
           <div class="field">
             <label for="br_name">neutron_bridge_name</label>
             <input type="text" id="br_name" spellcheck="false" placeholder="br-ex"
                    aria-describedby="h-br_name" maxlength="64">
-            <p class="hint" id="h-br_name">OVS bridges, one per external interface. The counts must match.</p>
+            <p class="hint" id="h-br_name" data-i18n="g.hint.brName"></p>
           </div>
 
           <div class="field">
             <label for="api_if">api_interface</label>
             <input type="text" id="api_if" spellcheck="false" placeholder="dziedziczy network_interface"
                    aria-describedby="h-api_if" maxlength="15">
-            <p class="hint" id="h-api_if">API traffic and the Corosync ring. Empty inherits <code>network_interface</code>.</p>
+            <p class="hint" id="h-api_if" data-i18n="g.hint.apiIf"></p>
           </div>
 
           <div class="field">
             <label for="stg_if">storage_interface</label>
             <input type="text" id="stg_if" spellcheck="false" placeholder="dziedziczy network_interface"
                    aria-describedby="h-stg_if" maxlength="15">
-            <p class="hint" id="h-stg_if">Ruch magazynu (Ceph). Puste = dziedziczy <code>network_interface</code>.</p>
+            <p class="hint" id="h-stg_if" data-i18n="g.hint.stgIf"></p>
           </div>
 
           <div class="field">
             <label for="mig_if">migration_interface</label>
             <input type="text" id="mig_if" spellcheck="false" placeholder="dziedziczy api_interface"
                    aria-describedby="h-mig_if" maxlength="15">
-            <p class="hint" id="h-mig_if">Live migration. Empty inherits <code>api_interface</code>.</p>
+            <p class="hint" id="h-mig_if" data-i18n="g.hint.migIf"></p>
           </div>
 
           <div class="field">
             <label for="ext_vip">kolla_external_vip_address</label>
             <input type="text" id="ext_vip" spellcheck="false" placeholder="same as internal"
                    aria-describedby="h-ext_vip" maxlength="15">
-            <p class="hint" id="h-ext_vip">Address of the public endpoints. Empty means the same as internal.</p>
+            <p class="hint" id="h-ext_vip" data-i18n="g.hint.extVip"></p>
           </div>
 
           <div class="field">
             <label for="ext_vip_if">kolla_external_vip_interface</label>
             <input type="text" id="ext_vip_if" spellcheck="false" placeholder="dziedziczy network_interface"
                    aria-describedby="h-ext_vip_if" maxlength="15">
-            <p class="hint" id="h-ext_vip_if">Interface that carries the external VIP.</p>
+            <p class="hint" id="h-ext_vip_if" data-i18n="g.hint.extVipIf"></p>
           </div>
         </fieldset>
 
@@ -351,30 +351,30 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
             <label for="int_fqdn">kolla_internal_fqdn</label>
             <input type="text" id="int_fqdn" spellcheck="false" placeholder="VIP address by default"
                    aria-describedby="h-int_fqdn" maxlength="64">
-            <p class="hint" id="h-int_fqdn">Name of the internal endpoints in the service catalogue.</p>
+            <p class="hint" id="h-int_fqdn" data-i18n="g.hint.intFqdn"></p>
           </div>
 
           <div class="field">
             <label for="ext_fqdn">kolla_external_fqdn</label>
             <input type="text" id="ext_fqdn" spellcheck="false" placeholder="domyślnie adres VIP"
                    aria-describedby="h-ext_fqdn" maxlength="64">
-            <p class="hint" id="h-ext_fqdn">Name of the public endpoints. Must differ from the internal one.</p>
+            <p class="hint" id="h-ext_fqdn" data-i18n="g.hint.extFqdn"></p>
           </div>
 
           <label class="toggle" for="t_tls_int">
             <input type="checkbox" id="t_tls_int">
             <span class="t-txt"><span class="t-name">kolla_enable_tls_internal</span>
-              <span class="t-desc">TLS on internal traffic between services.</span></span>
+              <span class="t-desc" data-i18n="g.toggle.d01"></span></span>
           </label>
           <label class="toggle" for="t_copy_ca">
             <input type="checkbox" id="t_copy_ca">
             <span class="t-txt"><span class="t-name">kolla_copy_ca_into_containers</span>
-              <span class="t-desc">Copies a private CA into the container trust store.</span></span>
+              <span class="t-desc" data-i18n="g.toggle.d02"></span></span>
           </label>
           <label class="toggle" for="t_letsencrypt">
             <input type="checkbox" id="t_letsencrypt">
             <span class="t-txt"><span class="t-name">kolla_enable_letsencrypt</span>
-              <span class="t-desc">Let's Encrypt certificates — the images' system trust store suffices.</span></span>
+              <span class="t-desc" data-i18n="g.toggle.d03"></span></span>
           </label>
         </fieldset>
 
@@ -398,63 +398,63 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
               <option value="nfs">NFS</option>
               <option value="ceph">Ceph (external)</option>
             </select>
-            <p class="hint" id="h-storage">Source of volumes and images. Kolla does not deploy Ceph — the cluster must already exist.</p>
+            <p class="hint" id="h-storage" data-i18n="g.hint.storage"></p>
           </div>
 
           <label class="toggle" for="t_haproxy">
             <input type="checkbox" id="t_haproxy" checked>
             <span class="t-txt"><span class="t-name">enable_haproxy</span>
-              <span class="t-desc">HAProxy + keepalived — required for the VIP and HA API endpoints.</span></span>
+              <span class="t-desc" data-i18n="g.toggle.d04"></span></span>
           </label>
           <label class="toggle" for="t_cinder">
             <input type="checkbox" id="t_cinder">
             <span class="t-txt"><span class="t-name">enable_cinder</span>
-              <span class="t-desc">Wolumeny blokowe. Wymaga wybranego backendu magazynu.</span></span>
+              <span class="t-desc" data-i18n="g.toggle.d05"></span></span>
           </label>
           <label class="toggle" for="t_heat">
             <input type="checkbox" id="t_heat">
             <span class="t-txt"><span class="t-name">enable_heat</span>
-              <span class="t-desc">Orkiestracja szablonami.</span></span>
+              <span class="t-desc" data-i18n="g.toggle.d06"></span></span>
           </label>
           <label class="toggle" for="t_horizon">
             <input type="checkbox" id="t_horizon">
             <span class="t-txt"><span class="t-name">enable_horizon</span>
-              <span class="t-desc">Panel webowy.</span></span>
+              <span class="t-desc" data-i18n="g.toggle.d07"></span></span>
           </label>
           <label class="toggle" for="t_barbican">
             <input type="checkbox" id="t_barbican">
             <span class="t-txt"><span class="t-name">enable_barbican</span>
-              <span class="t-desc">Secret store. Octavia needs it for the amphora certificates.</span></span>
+              <span class="t-desc" data-i18n="g.toggle.d08"></span></span>
           </label>
           <label class="toggle" for="t_octavia">
             <input type="checkbox" id="t_octavia">
             <span class="t-txt"><span class="t-name">enable_octavia</span>
-              <span class="t-desc">Load balancing (amphorae). Needs Barbican and a management network.</span></span>
+              <span class="t-desc" data-i18n="g.toggle.d09"></span></span>
           </label>
           <label class="toggle" for="t_prometheus">
             <input type="checkbox" id="t_prometheus">
             <span class="t-txt"><span class="t-name">enable_prometheus</span>
-              <span class="t-desc">Metrics collection. Needs hosts in the <em>monitoring</em> group.</span></span>
+              <span class="t-desc" data-i18n="g.toggle.d10"></span></span>
           </label>
           <label class="toggle" for="t_grafana">
             <input type="checkbox" id="t_grafana">
             <span class="t-txt"><span class="t-name">enable_grafana</span>
-              <span class="t-desc">Metric dashboards. Without Prometheus there is nothing to draw.</span></span>
+              <span class="t-desc" data-i18n="g.toggle.d11"></span></span>
           </label>
           <label class="toggle" for="t_hacluster">
             <input type="checkbox" id="t_hacluster">
             <span class="t-txt"><span class="t-name">enable_hacluster</span>
-              <span class="t-desc">Corosync and Pacemaker. The Corosync ring runs over <code>api_interface</code>.</span></span>
+              <span class="t-desc" data-i18n="g.toggle.d12"></span></span>
           </label>
           <label class="toggle" for="t_masakari">
             <input type="checkbox" id="t_masakari">
             <span class="t-txt"><span class="t-name">enable_masakari</span>
-              <span class="t-desc">Automatyczna ewakuacja maszyn po awarii hosta.</span></span>
+              <span class="t-desc" data-i18n="g.toggle.d13"></span></span>
           </label>
           <label class="toggle" for="t_provider">
             <input type="checkbox" id="t_provider">
             <span class="t-txt"><span class="t-name">enable_neutron_provider_networks</span>
-              <span class="t-desc">Provider networks (flat/VLAN) mapped straight onto the physical network.</span></span>
+              <span class="t-desc" data-i18n="g.toggle.d14"></span></span>
           </label>
         </fieldset>
 
@@ -468,14 +468,14 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
               <option value="flat">flat</option>
               <option value="vlan">vlan</option>
             </select>
-            <p class="hint" id="h-amp_net">Amphora management network. <code>vlan</code> and <code>flat</code> need a provider network.</p>
+            <p class="hint" id="h-amp_net" data-i18n="g.hint.ampNet"></p>
           </div>
 
           <div class="field">
             <label for="physnet">provider_physical_network</label>
             <input type="text" id="physnet" spellcheck="false" placeholder="physnet1"
                    aria-describedby="h-physnet" maxlength="32">
-            <p class="hint" id="h-physnet">Physical network name. Must follow from the external interface list.</p>
+            <p class="hint" id="h-physnet" data-i18n="g.hint.physnet"></p>
           </div>
         </fieldset>
 
@@ -489,12 +489,12 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           <label class="toggle" for="ack_link">
             <input type="checkbox" id="ack_link">
             <span class="t-txt"><span class="t-name">the shared link has headroom and QoS</span>
-              <span class="t-desc">Measured bandwidth headroom and switch-side queueing for storage and migration traffic.</span></span>
+              <span class="t-desc" data-i18n="g.toggle.d15"></span></span>
           </label>
           <label class="toggle" for="ack_migration">
             <input type="checkbox" id="ack_migration">
             <span class="t-txt"><span class="t-name">migration has its own network outside Kolla</span>
-              <span class="t-desc">Wydzielony VLAN migracji ustawiony przez <code>live_migration_inbound_addr</code> w nadpisaniu nova-compute.</span></span>
+              <span class="t-desc" data-i18n="g.toggle.d16"></span></span>
           </label>
         </fieldset>
 
@@ -503,7 +503,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           <label class="toggle" for="t_comments">
             <input type="checkbox" id="t_comments" checked>
             <span class="t-txt"><span class="t-name">Explanatory comments</span>
-              <span class="t-desc">Section headers and deployment notes that follow from the chosen configuration.</span></span>
+              <span class="t-desc" data-i18n="g.toggle.d17"></span></span>
           </label>
           <div class="btn-row" style="margin-top:14px">
             <button type="button" class="ghost" id="btn-reset">Restore defaults</button>
@@ -637,6 +637,46 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       /* --- generator: metka pola obowiązkowego ---
          Rejestr: małą literą, bo to metka, nie krzyk. Wielkie litery należą do CSS. */
       "g.field.required":      "required",
+
+      /* --- generator: teksty pomocnicze pod polami ---
+         Rejestr: jedno zdanie oznajmujące z kropką, mówiące CO ma być w polu
+         albo czego dotyczy — nie jak go użyć. */
+      "g.hint.distro":             "Base distribution of the container images. Must match the images in the registry.",
+      "g.hint.release":            "Image tag, for example <code>2025.1</code>. Should match the kolla-ansible version.",
+      "g.hint.vip":                "A free IPv4 address on the management network — not held by any host.",
+      "g.hint.netIf":              "Management/API network interface. Needs an IP address on every node.",
+      "g.hint.extIf":              "External traffic interface. No IP address, no configuration — Neutron takes it over entirely. Several comma-separated interfaces mean several physical networks.",
+      "g.hint.brName":             "OVS bridges, one per external interface. The counts must match.",
+      "g.hint.apiIf":              "API traffic and the Corosync ring. Empty inherits <code>network_interface</code>.",
+      "g.hint.stgIf":              "Ruch magazynu (Ceph). Puste = dziedziczy <code>network_interface</code>.",
+      "g.hint.migIf":              "Live migration. Empty inherits <code>api_interface</code>.",
+      "g.hint.extVip":             "Address of the public endpoints. Empty means the same as internal.",
+      "g.hint.extVipIf":           "Interface that carries the external VIP.",
+      "g.hint.intFqdn":            "Name of the internal endpoints in the service catalogue.",
+      "g.hint.extFqdn":            "Name of the public endpoints. Must differ from the internal one.",
+      "g.hint.storage":            "Source of volumes and images. Kolla does not deploy Ceph — the cluster must already exist.",
+      "g.hint.ampNet":             "Amphora management network. <code>vlan</code> and <code>flat</code> need a provider network.",
+      "g.hint.physnet":            "Physical network name. Must follow from the external interface list.",
+
+      /* --- generator: opisy przełączników ---
+         Rejestr jak wyżej; opis mówi, co przełącznik włącza i czego wymaga. */
+      "g.toggle.d01":              "TLS on internal traffic between services.",
+      "g.toggle.d02":              "Copies a private CA into the container trust store.",
+      "g.toggle.d03":              "Let's Encrypt certificates — the images' system trust store suffices.",
+      "g.toggle.d04":              "HAProxy + keepalived — required for the VIP and HA API endpoints.",
+      "g.toggle.d05":              "Wolumeny blokowe. Wymaga wybranego backendu magazynu.",
+      "g.toggle.d06":              "Orkiestracja szablonami.",
+      "g.toggle.d07":              "Panel webowy.",
+      "g.toggle.d08":              "Secret store. Octavia needs it for the amphora certificates.",
+      "g.toggle.d09":              "Load balancing (amphorae). Needs Barbican and a management network.",
+      "g.toggle.d10":              "Metrics collection. Needs hosts in the <em>monitoring</em> group.",
+      "g.toggle.d11":              "Metric dashboards. Without Prometheus there is nothing to draw.",
+      "g.toggle.d12":              "Corosync and Pacemaker. The Corosync ring runs over <code>api_interface</code>.",
+      "g.toggle.d13":              "Automatyczna ewakuacja maszyn po awarii hosta.",
+      "g.toggle.d14":              "Provider networks (flat/VLAN) mapped straight onto the physical network.",
+      "g.toggle.d15":              "Measured bandwidth headroom and switch-side queueing for storage and migration traffic.",
+      "g.toggle.d16":              "Wydzielony VLAN migracji ustawiony przez <code>live_migration_inbound_addr</code> w nadpisaniu nova-compute.",
+      "g.toggle.d17":              "Section headers and deployment notes that follow from the chosen configuration.",
 
       /* --- generator: nagłówki sekcji ---
          Rejestr: fraza rzeczownikowa, bez rodzajnika, bez kropki. Wielkie litery

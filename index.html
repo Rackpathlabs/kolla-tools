@@ -261,6 +261,46 @@ footer a{color:var(--muted)}
          Rejestr: małą literą, bo to metka, nie krzyk. Wielkie litery należą do CSS. */
       "g.field.required":      "required",
 
+      /* --- generator: teksty pomocnicze pod polami ---
+         Rejestr: jedno zdanie oznajmujące z kropką, mówiące CO ma być w polu
+         albo czego dotyczy — nie jak go użyć. */
+      "g.hint.distro":             "Base distribution of the container images. Must match the images in the registry.",
+      "g.hint.release":            "Image tag, for example <code>2025.1</code>. Should match the kolla-ansible version.",
+      "g.hint.vip":                "A free IPv4 address on the management network — not held by any host.",
+      "g.hint.netIf":              "Management/API network interface. Needs an IP address on every node.",
+      "g.hint.extIf":              "External traffic interface. No IP address, no configuration — Neutron takes it over entirely. Several comma-separated interfaces mean several physical networks.",
+      "g.hint.brName":             "OVS bridges, one per external interface. The counts must match.",
+      "g.hint.apiIf":              "API traffic and the Corosync ring. Empty inherits <code>network_interface</code>.",
+      "g.hint.stgIf":              "Ruch magazynu (Ceph). Puste = dziedziczy <code>network_interface</code>.",
+      "g.hint.migIf":              "Live migration. Empty inherits <code>api_interface</code>.",
+      "g.hint.extVip":             "Address of the public endpoints. Empty means the same as internal.",
+      "g.hint.extVipIf":           "Interface that carries the external VIP.",
+      "g.hint.intFqdn":            "Name of the internal endpoints in the service catalogue.",
+      "g.hint.extFqdn":            "Name of the public endpoints. Must differ from the internal one.",
+      "g.hint.storage":            "Source of volumes and images. Kolla does not deploy Ceph — the cluster must already exist.",
+      "g.hint.ampNet":             "Amphora management network. <code>vlan</code> and <code>flat</code> need a provider network.",
+      "g.hint.physnet":            "Physical network name. Must follow from the external interface list.",
+
+      /* --- generator: opisy przełączników ---
+         Rejestr jak wyżej; opis mówi, co przełącznik włącza i czego wymaga. */
+      "g.toggle.d01":              "TLS on internal traffic between services.",
+      "g.toggle.d02":              "Copies a private CA into the container trust store.",
+      "g.toggle.d03":              "Let's Encrypt certificates — the images' system trust store suffices.",
+      "g.toggle.d04":              "HAProxy + keepalived — required for the VIP and HA API endpoints.",
+      "g.toggle.d05":              "Wolumeny blokowe. Wymaga wybranego backendu magazynu.",
+      "g.toggle.d06":              "Orkiestracja szablonami.",
+      "g.toggle.d07":              "Panel webowy.",
+      "g.toggle.d08":              "Secret store. Octavia needs it for the amphora certificates.",
+      "g.toggle.d09":              "Load balancing (amphorae). Needs Barbican and a management network.",
+      "g.toggle.d10":              "Metrics collection. Needs hosts in the <em>monitoring</em> group.",
+      "g.toggle.d11":              "Metric dashboards. Without Prometheus there is nothing to draw.",
+      "g.toggle.d12":              "Corosync and Pacemaker. The Corosync ring runs over <code>api_interface</code>.",
+      "g.toggle.d13":              "Automatyczna ewakuacja maszyn po awarii hosta.",
+      "g.toggle.d14":              "Provider networks (flat/VLAN) mapped straight onto the physical network.",
+      "g.toggle.d15":              "Measured bandwidth headroom and switch-side queueing for storage and migration traffic.",
+      "g.toggle.d16":              "Wydzielony VLAN migracji ustawiony przez <code>live_migration_inbound_addr</code> w nadpisaniu nova-compute.",
+      "g.toggle.d17":              "Section headers and deployment notes that follow from the chosen configuration.",
+
       /* --- generator: nagłówki sekcji ---
          Rejestr: fraza rzeczownikowa, bez rodzajnika, bez kropki. Wielkie litery
          należą do CSS, nie do treści. */
