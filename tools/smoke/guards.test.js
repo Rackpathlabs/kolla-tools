@@ -98,4 +98,15 @@ R.ok("fixtura z jedną literówką -> DOKŁADNIE jedno odwołanie spoza słownik
 R.ok("istniejący klucz, inny atrybut, T() w kodzie i T() ze spacjami NIE są naruszeniem",
      !/v\.btn\.run,|t\.file\.read|t\.copied/.test(keys.out));
 
+/* ---- przynęta: kontrprzykład reguły kształtu ----
+   "Narzędzia" to aria-label: jednowyrazowy, więc reguła kształtu dla placeholderów
+   zwolniłaby go i polski napis czytany na głos nigdy by się nie przetłumaczył.
+   Nie dotyczy go, bo aria-* opisuje interfejs z definicji standardu. Ten test upadnie,
+   gdyby ktoś kiedyś połączył obie kategorie z powrotem — kontrprzykład w teście,
+   nie w komentarzu. */
+var attrs = run("check-dictionary.js", ["tools/fixtures/report-attrs.json"]);
+R.ok("jednowyrazowy placeholder konfiguracji -> zwolniony", !/"br-ex"/.test(attrs.out));
+R.ok("jednowyrazowy aria-label -> NIE zwolniony", /Narzędzia/.test(attrs.out), attrs.out.split("\n")[3]);
+R.ok("podpowiedź w placeholderze -> NIE zwolniona", /domyślnie adres VIP/.test(attrs.out));
+
 R.finish();

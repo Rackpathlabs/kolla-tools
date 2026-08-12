@@ -143,6 +143,24 @@ var CATEGORIES = [
   { why: "liczby i interpunkcja: napis bez ani jednej litery",
     test: function (f) { return !/[A-Za-z\u0104-\u017c]/.test(f.text); } },
 
+  /* PODZIAL PO FUNKCJI ATRYBUTU, nie po wygladzie tresci.
+     aria-label, aria-description, title i alt z definicji standardu OPISUJA interfejs
+     dla technologii asystujacych — nigdy nie niosą przykladowych wartosci, bo nie po to
+     istnieja. Sa wiec zawsze interfejsem i NIE MA ich w zadnej kategorii zwalniajacej.
+     Placeholder jest jedynym atrybutem ambiwalentnym: bywa podpowiedzia ("domyslnie
+     adres VIP") i bywa przykladem wartosci (br-ex). Tylko tu potrzebna jest regula
+     ksztaltu, i tylko tu jej ryzyko obowiazuje.
+
+     Kontrprzyklad, ktory to ustawil: aria-label "Narzedzia" jest jednowyrazowy, wiec
+     regula ksztaltu klasyfikowala go jako przyklad i zwolnilaby polski napis czytany
+     na glos. Znikl jako problem nie przez obejscie, tylko dlatego, ze regula dla
+     placeholderow nie ma prawa go dotyczyc. Przyneta pilnujaca tego siedzi w
+     tools/smoke/guards.test.js i upadnie, gdyby ktos polaczyl te kategorie z powrotem. */
+  { why: "przyklad wartosci w placeholderze: pojedynczy token konfiguracji",
+    test: function (f) {
+      return f.tag === "PLACEHOLDER" && /^[a-z][a-z0-9.:-]*$/.test(f.text);
+    } },
+
   { why: "wartość konfiguracji: treść <option> i wartości kontrolek",
     test: function (f) { return f.tag === "OPTION"; } },
 
