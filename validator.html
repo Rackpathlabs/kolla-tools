@@ -589,7 +589,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
        - znacznik początku dokumentu ---
        - komentarze pełnoliniowe i końcówkowe (# po białym znaku)
        - klucze na wcięciu zerowym: klucz: wartość
-       - skalary: gołe, "w cudzysłowie", 'w apostrofach', puste (= null)
+       - skalary: gołe, "in quotes", 'w apostrofach', puste (= null)
        - listy blokowe (- element) oraz przepływowe ([a, b])
        - mapping zagnieżdżony o jednym poziomie (octavia_amp_network i podobne)
 
@@ -687,8 +687,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       for (var t = 0; t < lines.length; t++) {
         if (/^\s*$/.test(lines[t])) continue;
         if (/\t/.test((lines[t].match(/^\s*/) || [""])[0])) {
-          fail(t + 1, "Wcięcie tabulatorem w linii " + (t + 1) + ".",
-               "YAML nie dopuszcza tabulatorów we wcięciu — zamień je na spacje.");
+          fail(t + 1, "Tab indentation on line " + (t + 1) + ".",
+               "YAML does not allow tabs in indentation; replace them with spaces.");
         }
       }
 
@@ -707,7 +707,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         if (trimmed === "---") {
           if (docSeen) {
             fail(lineNo, "Drugi dokument YAML w linii " + lineNo + ".",
-                 "globals.yml jest pojedynczym dokumentem; wiele dokumentów nie jest obsługiwane.");
+                 "globals.yml is a single document; multiple documents are not supported.");
           }
           docSeen = true;
           continue;
@@ -716,17 +716,17 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
         if (/^\s/.test(body)) {
           /* linia wcięta bez klucza nadrzędnego — nadrzędny konsumuje swoje linie sam */
-          fail(lineNo, "Nieoczekiwane wcięcie w linii " + lineNo + ".",
-               "Linia wcięta nie należy do żadnego klucza zadeklarowanego wyżej.");
+          fail(lineNo, "Unexpected indentation on line " + lineNo + ".",
+               "The indented line belongs to no key declared above it.");
           continue;
         }
 
         var m = KEY_RE.exec(body);
         if (!m) {
-          fail(lineNo, "Nieobsługiwana konstrukcja w linii " + lineNo + ": <code>" +
+          fail(lineNo, "Unsupported construct on line " + lineNo + ": <code>" +
                        trimmed.slice(0, 60) + "</code>.",
-               "Obsługiwane są wyłącznie wpisy postaci <code>klucz: wartość</code> " +
-               "na wcięciu zerowym, listy i mapping o jednym poziomie zagnieżdżenia.");
+               "Only entries of the form <code>key: value</code> are supported " +
+               "at zero indentation, plus lists and one level of mapping.");
           continue;
         }
 
@@ -737,8 +737,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         if (Object.prototype.hasOwnProperty.call(keys, key)) {
           findings.push({
             sev: "warn", code: "KEY-REPEATED", line: lineNo,
-            msg: "Klucz <code>" + key + "</code> występuje ponownie w linii " + lineNo + ".",
-            hint: "Ansible weźmie ostatnie wystąpienie; wcześniejsze są martwe."
+            msg: "Key <code>" + key + "</code> appears again on line " + lineNo + ".",
+            hint: "Ansible takes the last occurrence; the earlier ones are dead."
           });
         }
 
@@ -747,13 +747,13 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           if (/^[|>]/.test(restTrim)) {
             fail(lineNo, "Skalar blokowy (<code>" + restTrim.charAt(0) + "</code>) w linii " +
                          lineNo + " przy kluczu <code>" + key + "</code>.",
-                 "Wartości wielolinijkowe nie są obsługiwane.");
+                 "Multi-line values are not supported.");
             i = endOfIndentedBlock(lines, i + 1);
             continue;
           }
           if (/^[&*!]/.test(restTrim)) {
             fail(lineNo, "Kotwica, alias lub tag w linii " + lineNo + " przy kluczu <code>" +
-                         key + "</code>.", "Konstrukcje referencyjne YAML nie są obsługiwane.");
+                         key + "</code>.", "YAML reference constructs are not supported.");
             i = endOfIndentedBlock(lines, i + 1);
             continue;
           }
@@ -763,8 +763,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
             entry.kind = "list";
             entry.value = parseFlowList(restTrim);
           } else if (restTrim.charAt(0) === "{") {
-            fail(lineNo, "Mapping przepływowy w linii " + lineNo + " przy kluczu <code>" +
-                         key + "</code>.", "Obsługiwany jest wyłącznie mapping blokowy.");
+            fail(lineNo, "Flow mapping on line " + lineNo + " przy kluczu <code>" +
+                         key + "</code>.", "Only block mappings are supported.");
             i = endOfIndentedBlock(lines, i + 1);
             continue;
           } else {
@@ -803,9 +803,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           var curIndent = (cur.match(/^\s*/) || [""])[0].length;
           if (curIndent < childIndent) break;
           if (curIndent > childIndent) {
-            fail(k + 1, "Zagnieżdżenie głębsze niż jeden poziom w linii " + (k + 1) +
+            fail(k + 1, "Nesting deeper than one level on line " + (k + 1) +
                         " przy kluczu <code>" + key + "</code>.",
-                 "Obsługiwany jest mapping o jednym poziomie zagnieżdżenia.");
+                 "Only one level of nesting is supported.");
             broken = true;
             while (k + 1 < lines.length &&
                    /^\s*\S/.test(lines[k + 1]) &&
@@ -819,28 +819,28 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           if (isList) {
             var li = LIST_ITEM_RE.exec(cb);
             if (!li) {
-              fail(k + 1, "Nieobsługiwana konstrukcja w linii " + (k + 1) + " wewnątrz listy <code>" +
-                          key + "</code>.", "Elementy listy zapisuje się jako <code>- wartość</code>.");
+              fail(k + 1, "Unsupported construct on line " + (k + 1) + " inside the list <code>" +
+                          key + "</code>.", "List items are written as <code>- value</code>.");
               broken = true; last = k + 1; continue;
             }
             if (/:\s/.test(li[2]) || /:$/.test(li[2].trim())) {
-              fail(k + 1, "Sekwencja mappingów w linii " + (k + 1) + " przy kluczu <code>" +
-                          key + "</code>.", "Lista obiektów nie jest obsługiwana.");
+              fail(k + 1, "Sequence of mappings on line " + (k + 1) + " przy kluczu <code>" +
+                          key + "</code>.", "A list of objects is not supported.");
               broken = true; last = k + 1; continue;
             }
             value.push(unquote(li[2]));
           } else {
             var mi = INDENTED_KEY_RE.exec(cb);
             if (!mi) {
-              fail(k + 1, "Nieobsługiwana konstrukcja w linii " + (k + 1) + " wewnątrz <code>" +
+              fail(k + 1, "Unsupported construct on line " + (k + 1) + " inside <code>" +
                           key + "</code>.",
-                   "Wewnątrz mappingu obsługiwane są wyłącznie wpisy <code>klucz: wartość</code>.");
+                   "Inside a mapping only <code>key: value</code> entries are supported.");
               broken = true; last = k + 1; continue;
             }
             if (mi[3].trim() === "") {
-              fail(k + 1, "Zagnieżdżenie głębsze niż jeden poziom w linii " + (k + 1) +
+              fail(k + 1, "Nesting deeper than one level on line " + (k + 1) +
                           " przy kluczu <code>" + key + "</code>.",
-                   "Obsługiwany jest mapping o jednym poziomie zagnieżdżenia.");
+                   "Only one level of nesting is supported.");
               broken = true; last = k + 1; continue;
             }
             value[mi[2]] = unquote(mi[3]);
@@ -941,8 +941,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           out.push({
             sev: d.sev || "warn", code: "KEY-DEPRECATED", key: key, line: e.line,
             msg: "<code>" + key + "</code> " + (d.replacedBy
-              ? "został przemianowany na <code>" + d.replacedBy + "</code>"
-              : "nie jest już obsługiwany") +
+              ? "was renamed to <code>" + d.replacedBy + "</code>"
+              : "is no longer supported") +
               (rel ? " w wydaniu <code>" + rel.id + "</code>" : "") + ".",
             hint: d.note || null
           });
@@ -1077,6 +1077,94 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       "t.import.empty":         "The import field is empty.",
       "t.import.dropped":       "Import dropped — the file is built from the form again.",
       "t.export.blocked":       "Export blocked — the configuration contains errors.",
+
+      /* --- generator: etykiety pól, które nie są samą nazwą klucza ---
+         Rejestr: nazwa klucza zostaje nazwą klucza. Gdy etykieta niesie coś poza
+         nią, dopisek jest ROZDZIELANY strukturalnie, a nie tłumaczony razem
+         z identyfikatorem ani zwalniany rozszerzonym wyjątkiem. */
+      "g.field.storage":       "storage backend",
+      "g.field.ampNetType":    "type",
+
+      /* --- generator: metka pola obowiązkowego ---
+         Rejestr: małą literą, bo to metka, nie krzyk. Wielkie litery należą do CSS. */
+      "g.field.required":      "required",
+
+      /* --- etykiety wag, wspólne dla obu narzędzi ---
+         Małą literą: to metka przy findingu, nie krzyk. Wielkość liter należy do CSS. */
+      "sev.error":             "error",
+      "sev.warn":              "warning",
+      "sev.info":              "info",
+
+      /* --- generator: werdykt o pliku ---
+         Rejestr: zdanie o PLIKU, nie o narzędziu. "This file is not ready to
+         deploy", nie "The generator found errors". */
+      "g.verdict.blocked":     "This file is not ready to deploy: {errors}{warnings}. Export is blocked.",
+      "g.verdict.warn":        "This file is ready. {warnings} to check before deploying.",
+      "g.verdict.clean":       "Nothing to flag within what the generator checks. The file is ready to download.",
+
+      /* --- generator: proza reguł KV ---
+         Brzmienie z RULESET-KV.tmp, nie z tłumaczenia polskiego kodu. Rejestr:
+         opis skutku, czas teraźniejszy, konkret zamiast oceny. */
+      "g.rule.kv05.why":           "Corosync takes its ring from <code>api_interface</code>. A Ceph backfill, an OSD-replace rebalance or a single 64 GB migration can saturate the link; Corosync loses its token (3000 ms by default), Pacemaker declares the node lost, and Masakari starts evacuating a healthy host under load. The classic &ldquo;everything worked for three weeks and then the cloud killed its own compute node&rdquo;.",
+      "g.rule.kv05.ackNote":       "Acknowledged: measured bandwidth headroom and switch-side queueing. The bond alone settles nothing — LACP hashes per flow, and one migration stream can own an entire member link.",
+      "g.rule.kv06.why":           "A host-failure evacuation is a burst of migrations at exactly the moment the control plane is busiest. Migration traffic starves RPC, <code>nova-compute</code> on healthy hosts misses heartbeats (<code>service_down_time</code>, 60 s by default), Nova marks them down, and Masakari sees more hosts to evacuate. Avalanche: one host failure takes down the cluster.",
+      "g.rule.kv06.ackNote":       "Acknowledged: a dedicated migration network configured outside Kolla through <code>live_migration_inbound_addr</code> in a nova-compute override.",
+      "g.rule.kv10.why":           "Kolla plugs the interface into an OVS bridge and strips its addressing. On a direct match you lose the host mid-deploy, at the <code>neutron : Bootstrap</code> task. On a shared base device the VLAN subinterface theoretically survives its parent joining OVS, but that depends on initialisation order at boot — the deployment passes and the host does not come back after a reboot.",
+      "g.rule.kv13.why":           "The deployment passes and so does <code>loadbalancer create</code>. The amphora boots and goes ACTIVE in Nova — while the load balancer hangs in <code>PENDING_CREATE</code> and dies to <code>ERROR</code> after about 25 minutes: the health manager never receives its UDP 5555 heartbeats.",
+
+      /* --- generator: teksty pomocnicze pod polami ---
+         Rejestr: jedno zdanie oznajmujące z kropką, mówiące CO ma być w polu
+         albo czego dotyczy — nie jak go użyć. */
+      "g.hint.distro":             "Base distribution of the container images. Must match the images in the registry.",
+      "g.hint.release":            "Image tag, for example <code>2025.1</code>. Should match the kolla-ansible version.",
+      "g.hint.vip":                "A free IPv4 address on the management network — not held by any host.",
+      "g.hint.netIf":              "Management/API network interface. Needs an IP address on every node.",
+      "g.hint.extIf":              "External traffic interface. No IP address, no configuration — Neutron takes it over entirely. Several comma-separated interfaces mean several physical networks.",
+      "g.hint.brName":             "OVS bridges, one per external interface. The counts must match.",
+      "g.hint.apiIf":              "API traffic and the Corosync ring. Empty inherits <code>network_interface</code>.",
+      "g.hint.stgIf":              "Ruch magazynu (Ceph). Puste = dziedziczy <code>network_interface</code>.",
+      "g.hint.migIf":              "Live migration. Empty inherits <code>api_interface</code>.",
+      "g.hint.extVip":             "Address of the public endpoints. Empty means the same as internal.",
+      "g.hint.extVipIf":           "Interface that carries the external VIP.",
+      "g.hint.intFqdn":            "Name of the internal endpoints in the service catalogue.",
+      "g.hint.extFqdn":            "Name of the public endpoints. Must differ from the internal one.",
+      "g.hint.storage":            "Source of volumes and images. Kolla does not deploy Ceph — the cluster must already exist.",
+      "g.hint.ampNet":             "Amphora management network. <code>vlan</code> and <code>flat</code> need a provider network.",
+      "g.hint.physnet":            "Physical network name. Must follow from the external interface list.",
+
+      /* --- generator: opisy przełączników ---
+         Rejestr jak wyżej; opis mówi, co przełącznik włącza i czego wymaga. */
+      "g.toggle.d01":              "TLS on internal traffic between services.",
+      "g.toggle.d02":              "Copies a private CA into the container trust store.",
+      "g.toggle.d03":              "Let's Encrypt certificates — the images' system trust store suffices.",
+      "g.toggle.d04":              "HAProxy + keepalived — required for the VIP and HA API endpoints.",
+      "g.toggle.d05":              "Wolumeny blokowe. Wymaga wybranego backendu magazynu.",
+      "g.toggle.d06":              "Orkiestracja szablonami.",
+      "g.toggle.d07":              "Panel webowy.",
+      "g.toggle.d08":              "Secret store. Octavia needs it for the amphora certificates.",
+      "g.toggle.d09":              "Load balancing (amphorae). Needs Barbican and a management network.",
+      "g.toggle.d10":              "Metrics collection. Needs hosts in the <em>monitoring</em> group.",
+      "g.toggle.d11":              "Metric dashboards. Without Prometheus there is nothing to draw.",
+      "g.toggle.d12":              "Corosync and Pacemaker. The Corosync ring runs over <code>api_interface</code>.",
+      "g.toggle.d13":              "Automatyczna ewakuacja maszyn po awarii hosta.",
+      "g.toggle.d14":              "Provider networks (flat/VLAN) mapped straight onto the physical network.",
+      "g.toggle.d15":              "Measured bandwidth headroom and switch-side queueing for storage and migration traffic.",
+      "g.toggle.d16":              "Wydzielony VLAN migracji ustawiony przez <code>live_migration_inbound_addr</code> w nadpisaniu nova-compute.",
+      "g.toggle.d17":              "Section headers and deployment notes that follow from the chosen configuration.",
+
+      /* --- generator: nagłówki sekcji ---
+         Rejestr: fraza rzeczownikowa, bez rodzajnika, bez kropki. Wielkie litery
+         należą do CSS, nie do treści. */
+      "g.h.params":              "Deployment parameters",
+      "g.h.import":              "Import an existing file",
+      "g.h.baseImage":           "Base image",
+      "g.h.network":             "Networking",
+      "g.h.names":               "Names and TLS",
+      "g.h.services":            "Services",
+      "g.h.octavia":             "Octavia",
+      "g.h.decisions":           "Deliberate decisions",
+      "g.h.output":              "Output",
+      "g.h.lint":                "Configuration check",
 
       /* --- walidator: szkielet interfejsu --- */
       /* --- walidator: aktualność wyniku --- */
@@ -1427,14 +1515,14 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       if (body.charAt(0) === "[") {
         var hm = /^\[([^\[\]]*)\]$/.exec(body);
         if (!hm) {
-          add("error", "SYNTAX", "Niepoprawny nagłówek sekcji: <code>" + esc(body) + "</code>.", lineNo,
+          add("error", "SYNTAX", "Malformed section header: <code>" + esc(body) + "</code>.", lineNo,
               "Oczekiwany format to <code>[nazwa]</code>, <code>[nazwa:children]</code> lub <code>[nazwa:vars]</code>.");
           current = null;
           continue;
         }
         var inner = hm[1].trim();
         if (!inner) {
-          add("error", "SYNTAX", "Pusta nazwa grupy w nagłówku sekcji.", lineNo);
+          add("error", "SYNTAX", "The section header has an empty group name.", lineNo);
           current = null;
           continue;
         }
@@ -1443,19 +1531,19 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         var kind = parts.length > 1 ? parts[1].trim().toLowerCase() : "hosts";
         if (parts.length > 2 || (kind !== "hosts" && kind !== "vars" && kind !== "children")) {
           add("error", "SYNTAX", "Nieznany typ sekcji <code>" + esc(inner) + "</code>.", lineNo,
-              "Ansible rozpoznaje wyłącznie <code>:children</code> i <code>:vars</code>.");
+              "Ansible recognises only <code>:children</code> and <code>:vars</code>.");
           current = null;
           continue;
         }
         if (!/^[A-Za-z0-9_.-]+$/.test(gname)) {
           add("error", "GROUP-NAME", "Nazwa grupy <code>" + esc(gname) + "</code> zawiera niedozwolone znaki.", lineNo,
-              "Dozwolone są litery, cyfry oraz <code>_ . -</code>.");
+              "Letters, digits and <code>_ . -</code> are allowed.");
         }
         var g = group(gname);
         if (kind === "hosts") {
           if (g.declaredAt.length) {
-            add("info", "SECTION-REPEATED", "Sekcja <code>[" + esc(gname) + "]</code> występuje ponownie (pierwsza w linii " +
-                g.declaredAt[0] + "). Ansible scali wpisy.", lineNo);
+            add("info", "SECTION-REPEATED", "Section <code>[" + esc(gname) + "]</code> appears again (first on line " +
+                g.declaredAt[0] + "). Ansible merges the entries.", lineNo);
           }
           g.declaredAt.push(lineNo);
         } else if (kind === "vars") {
@@ -1499,8 +1587,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       /* ---- lista dzieci ---- */
       if (current.kind === "children") {
         if (tokens.length > 1) {
-          add("error", "CHILDREN-FORMAT", "Sekcja <code>[" + esc(current.group) + ":children]</code> może zawierać wyłącznie nazwy grup, po jednej w linii.",
-              lineNo, "Znaleziono dodatkowe człony: <code>" + esc(tokens.slice(1).join(" ")) + "</code>.");
+          add("error", "CHILDREN-FORMAT", "Sekcja <code>[" + esc(current.group) + ":children]</code> may contain only group names, one per line.",
+              lineNo, "Extra parts found: <code>" + esc(tokens.slice(1).join(" ")) + "</code>.");
         }
         group(head).referencedAt.push(lineNo);
         groups[current.group].children.push({ name: head, line: lineNo });
@@ -1958,7 +2046,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     return s === "yes" || s === "true" || s === "on" || s === "1";
   }
 
-  /* Klucz nieobecny znaczy "wartość domyślna Kolli", a ta dla haproxy i keepalived
+  /* Klucz nieobecny znaczy "the Kolla default", a ta dla haproxy i keepalived
      jest włączona. Zwolnienie z KV-09 wymaga jawnego wyłączenia, nie milczenia. */
   function explicitlyOff(glob, key) {
     var e = glob && glob.keys[key];
@@ -2281,7 +2369,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     for (var ci = 0; ci < order.length; ci++) {
       var cyc = detectCycle(groups, order[ci], [order[ci]], cycleSeen);
       if (cyc) {
-        add("error", "GROUP-CYCLE", "Cykliczna zależność grup: <code>" + cyc.cycle.map(esc).join(" &rarr; ") + "</code>.",
+        add("error", "GROUP-CYCLE", "Circular group dependency: <code>" + cyc.cycle.map(esc).join(" &rarr; ") + "</code>.",
             cyc.line, "Ansible odrzuci takie inventory przy wczytywaniu.");
         break;
       }
@@ -2316,7 +2404,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       if (effective[name].length === 0) {
         add("warn", "EMPTY-GROUP", "Group <code>[" + esc(name) + "]</code> holds no host.",
             g.declaredAt[0] || g.childrenAt[0] || g.varsAt[0],
-            "Pusta grupa jest ignorowana przy wdrożeniu — usuń ją albo uzupełnij obsadę.");
+            "An empty group is ignored at deploy time; drop it or give it hosts.");
       }
     });
 
@@ -2351,12 +2439,12 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       g.children.forEach(function (c) {
         if (seenChild[c.name]) {
           add("warn", "DUPLICATE-CHILD", "Podgrupa <code>" + esc(c.name) + "</code> jest wymieniona dwukrotnie w <code>[" + esc(name) + ":children]</code>.",
-              c.line, "Pierwsze wystąpienie: linia " + seenChild[c.name] + ".");
+              c.line, "First occurrence: line " + seenChild[c.name] + ".");
         } else {
           seenChild[c.name] = c.line;
         }
         if (c.name === name) {
-          add("error", "CHILD-SELF", "Grupa <code>" + esc(name) + "</code> wskazuje samą siebie jako podgrupę.", c.line);
+          add("error", "CHILD-SELF", "Grupa <code>" + esc(name) + "</code> lists itself as a child group.", c.line);
         }
       });
 
@@ -2364,7 +2452,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       g.vars.forEach(function (v) {
         if (seenVar[v.key]) {
           add("warn", "DUPLICATE-VAR", "Zmienna <code>" + esc(v.key) + "</code> jest ustawiona dwukrotnie w <code>[" + esc(name) + ":vars]</code>.",
-              v.line, "Pierwsze wystąpienie: linia " + seenVar[v.key] + ". Obowiązuje wartość z ostatniego wpisu.");
+              v.line, "First occurrence: line " + seenVar[v.key] + ". The last entry wins.");
         } else {
           seenVar[v.key] = v.line;
         }
@@ -2417,9 +2505,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         return e.indexOf(addr + ":") === 0 && Object.keys(byEndpoint[e]).length > 1;
       });
       if (conflicting) return;   // zgłoszone już jako błąd wyżej
-      add("info", "SHARED-ADDRESS", "Adres <code>" + esc(addr) + "</code> obsługuje kilka hostów na różnych portach: " +
+      add("info", "SHARED-ADDRESS", "Adres <code>" + esc(addr) + "</code> serves several hosts on different ports: " +
           hosts.map(function (n) { return "<code>" + esc(n) + "</code>"; }).join(", ") + ".",
-          byAddress[addr][hosts[1]], "Poprawne przy NAT lub labie zagnieżdżonym — upewnij się, że taka była intencja.");
+          byAddress[addr][hosts[1]], "Correct behind NAT or in a nested lab; make sure that was the intention.");
     });
 
     /* --- hosty bez ansible_host --- */
@@ -2479,7 +2567,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     quorumRules(groups, effective, hostNames).forEach(function (f) { findings.push(f); });
 
     if (!hostNames.length && !findings.some(function (f) { return f.sev === "error"; })) {
-      add("error", "NO-HOSTS", "Inventory nie zawiera żadnego hosta.", null);
+      add("error", "NO-HOSTS", "The inventory contains no host.", null);
     }
 
     /* Plik był dotąd jeden, więc źródło findingu było niejawne. Od trybu łączonego
@@ -2550,7 +2638,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
   function renderFindings(list) {
     el.findings.innerHTML = list.map(function (f) {
-      var label = f.sev === "error" ? "błąd" : (f.sev === "warn" ? "uwaga" : "info");
+      /* Klucze jawne, nie sklejane — patrz ten sam wzorzec w generatorze. */
+      var label = f.sev === "error" ? T("sev.error")
+                : f.sev === "warn" ? T("sev.warn") : T("sev.info");
       var meta = "<span>" + f.code + "</span>";
       var srcLabel = { globals: "globals", cross: T("v.src.both"), upgrade: T("v.src.path") }[f.src] || "inventory";
       meta += '<span class="src ' + (f.src === "inventory" ? "" : f.src) + '">' + srcLabel + "</span>";

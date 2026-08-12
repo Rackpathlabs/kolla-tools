@@ -24,14 +24,43 @@ else
               "What these tools deliberately do not check" \
               "Where certainty ends" \
               'What "no findings" means' \
-              "The upgrade path mode" \
-              "Design principles"; do
+              "The upgrade path mode"; do
     if grep -qF "$want" SCOPE.md; then
       echo "OK   sekcja: $want"
     else
       echo "FAIL SCOPE.md: brak sekcji \"$want\""; rc=1
     fi
   done
+fi
+
+# Zasady projektowe wyprowadzone do osobnego dokumentu: SCOPE.md jest dla inżyniera
+# oceniającego, czy zaufać wynikowi, PRINCIPLES.md dla kogoś, kto zmienia ten kod.
+# Strażnik musi objąć OBA — rozdzielenie, po którym połowa treści przestaje być
+# czymkolwiek chroniona, jest gorsze niż jeden długi dokument.
+if [ ! -f docs/PRINCIPLES.md ]; then
+  echo "FAIL docs/PRINCIPLES.md: brak pliku"; rc=1
+else
+  n=$(wc -c < docs/PRINCIPLES.md)
+  if [ "$n" -lt 3000 ]; then
+    echo "FAIL docs/PRINCIPLES.md: $n bajtów — zasady wyglądają na wypatroszone (próg 3000)"; rc=1
+  else
+    echo "OK   docs/PRINCIPLES.md ($n B)"
+  fi
+  for want in "What the tools may not claim" \
+              "Where a check has to stand"; do
+    if grep -qF "$want" docs/PRINCIPLES.md; then
+      echo "OK   zasady: $want"
+    else
+      echo "FAIL docs/PRINCIPLES.md: brak rodziny \"$want\""; rc=1
+    fi
+  done
+  # Odesłanie w obie strony: dokument bez drogi powrotnej gubi czytelnika, który
+  # trafił do niego z linku i szuka zakresu produktu.
+  if grep -q "SCOPE.md" docs/PRINCIPLES.md; then
+    echo "OK   PRINCIPLES.md odsyła do SCOPE.md"
+  else
+    echo "FAIL docs/PRINCIPLES.md: brak odnośnika do SCOPE.md"; rc=1
+  fi
 fi
 
 # README należy do issue #1 (Igor). Dopóki nie istnieje, sprawdzenie odnośnika jest
@@ -41,6 +70,11 @@ if [ -f README.md ]; then
     echo "OK   README.md odsyła do SCOPE.md"
   else
     echo "FAIL README.md: brak odnośnika do SCOPE.md"; rc=1
+  fi
+  if grep -q "PRINCIPLES.md" README.md; then
+    echo "OK   README.md odsyła do PRINCIPLES.md"
+  else
+    echo "FAIL README.md: brak odnośnika do PRINCIPLES.md"; rc=1
   fi
 else
   echo "--   README.md jeszcze nie istnieje (issue #1) — sprawdzenie odnośnika pominięte"

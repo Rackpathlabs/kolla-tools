@@ -1,0 +1,23 @@
+[
+ {
+  "tag": "PLACEHOLDER",
+  "cls": "ext_if",
+  "text": "br-ex",
+  "inData": false,
+  "fromInput": false
+ },
+ {
+  "tag": "ARIA-LABEL",
+  "cls": "nav",
+  "text": "Narzędzia",
+  "inData": false,
+  "fromInput": false
+ },
+ {
+  "tag": "PLACEHOLDER",
+  "cls": "vip",
+  "text": "domyślnie adres VIP",
+  "inData": false,
+  "fromInput": false
+ }
+]

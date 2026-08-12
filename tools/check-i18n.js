@@ -43,6 +43,37 @@ while ((m = entryRe.exec(src)) !== null) {
 if (!keys.length) { fail("nie znalazłem ani jednego wpisu słownika"); }
 else { console.log("OK   " + keys.length + " kluczy"); }
 
+/* --- kierunek odwrotny: odwołanie do klucza, którego w słowniku NIE MA ---
+   Przy przenoszeniu dziewięćdziesięciu siedmiu elementów na data-i18n najczęstszym
+   błędem jest literówka w nazwie klucza. t() zwraca wtedy widoczne "[[klucz]]",
+   więc dziura nie jest pusta — ale kryterium słownikowe zobaczyłoby ją jako zwykłą
+   zaległość, nieodróżnialną od tekstu jeszcze nieprzeniesionego. Tutaj czyta się
+   jak to, czym jest: literówka z nazwą pliku i klucza.
+
+   Strażnik stoi PRZED migracją, tak jak trzy pozostałe: wiadomo z góry, że będzie
+   dziewięćdziesiąt siedem okazji, żeby ten błąd popełnić. */
+var USE_RE = /data-i18n(?:-title|-label)?="([\w.]+)"|\bT\(\s*"([\w.]+)"|\bt\(\s*"([\w.]+)"/g;
+var known = Object.create(null);
+keys.forEach(function (k) { known[k] = true; });
+
+/* Lista konsumentów podmienialna argumentami — żeby strażnika dało się uruchomić
+   na fixturze o znanej charakterystyce, zamiast dowodzić jego upadku ręcznie raz. */
+var USERS = process.argv.length > 2
+  ? process.argv.slice(2)
+  : ["generator.html", "validator.html", "index.html", "i18n.js"];
+USERS.forEach(function (f) {
+  var text = fs.readFileSync(path.join(root, f), "utf8"), u, missing = [];
+  USE_RE.lastIndex = 0;
+  while ((u = USE_RE.exec(text)) !== null) {
+    var key = u[1] || u[2] || u[3];
+    if (!known[key]) missing.push(key);
+  }
+  if (missing.length) {
+    var uniq = missing.filter(function (v, i) { return missing.indexOf(v) === i; });
+    fail(f + ": odwołanie do klucza spoza słownika (" + uniq.length + "): " + uniq.join(", "));
+  }
+});
+
 /* --- sieroty --- */
 var consumers = ["generator.html", "validator.html", "index.html"].map(function (f) {
   return fs.readFileSync(path.join(root, f), "utf8");

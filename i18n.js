@@ -92,6 +92,94 @@
       "t.import.dropped":       "Import dropped — the file is built from the form again.",
       "t.export.blocked":       "Export blocked — the configuration contains errors.",
 
+      /* --- generator: etykiety pól, które nie są samą nazwą klucza ---
+         Rejestr: nazwa klucza zostaje nazwą klucza. Gdy etykieta niesie coś poza
+         nią, dopisek jest ROZDZIELANY strukturalnie, a nie tłumaczony razem
+         z identyfikatorem ani zwalniany rozszerzonym wyjątkiem. */
+      "g.field.storage":       "storage backend",
+      "g.field.ampNetType":    "type",
+
+      /* --- generator: metka pola obowiązkowego ---
+         Rejestr: małą literą, bo to metka, nie krzyk. Wielkie litery należą do CSS. */
+      "g.field.required":      "required",
+
+      /* --- etykiety wag, wspólne dla obu narzędzi ---
+         Małą literą: to metka przy findingu, nie krzyk. Wielkość liter należy do CSS. */
+      "sev.error":             "error",
+      "sev.warn":              "warning",
+      "sev.info":              "info",
+
+      /* --- generator: werdykt o pliku ---
+         Rejestr: zdanie o PLIKU, nie o narzędziu. "This file is not ready to
+         deploy", nie "The generator found errors". */
+      "g.verdict.blocked":     "This file is not ready to deploy: {errors}{warnings}. Export is blocked.",
+      "g.verdict.warn":        "This file is ready. {warnings} to check before deploying.",
+      "g.verdict.clean":       "Nothing to flag within what the generator checks. The file is ready to download.",
+
+      /* --- generator: proza reguł KV ---
+         Brzmienie z RULESET-KV.tmp, nie z tłumaczenia polskiego kodu. Rejestr:
+         opis skutku, czas teraźniejszy, konkret zamiast oceny. */
+      "g.rule.kv05.why":           "Corosync takes its ring from <code>api_interface</code>. A Ceph backfill, an OSD-replace rebalance or a single 64 GB migration can saturate the link; Corosync loses its token (3000 ms by default), Pacemaker declares the node lost, and Masakari starts evacuating a healthy host under load. The classic &ldquo;everything worked for three weeks and then the cloud killed its own compute node&rdquo;.",
+      "g.rule.kv05.ackNote":       "Acknowledged: measured bandwidth headroom and switch-side queueing. The bond alone settles nothing — LACP hashes per flow, and one migration stream can own an entire member link.",
+      "g.rule.kv06.why":           "A host-failure evacuation is a burst of migrations at exactly the moment the control plane is busiest. Migration traffic starves RPC, <code>nova-compute</code> on healthy hosts misses heartbeats (<code>service_down_time</code>, 60 s by default), Nova marks them down, and Masakari sees more hosts to evacuate. Avalanche: one host failure takes down the cluster.",
+      "g.rule.kv06.ackNote":       "Acknowledged: a dedicated migration network configured outside Kolla through <code>live_migration_inbound_addr</code> in a nova-compute override.",
+      "g.rule.kv10.why":           "Kolla plugs the interface into an OVS bridge and strips its addressing. On a direct match you lose the host mid-deploy, at the <code>neutron : Bootstrap</code> task. On a shared base device the VLAN subinterface theoretically survives its parent joining OVS, but that depends on initialisation order at boot — the deployment passes and the host does not come back after a reboot.",
+      "g.rule.kv13.why":           "The deployment passes and so does <code>loadbalancer create</code>. The amphora boots and goes ACTIVE in Nova — while the load balancer hangs in <code>PENDING_CREATE</code> and dies to <code>ERROR</code> after about 25 minutes: the health manager never receives its UDP 5555 heartbeats.",
+
+      /* --- generator: teksty pomocnicze pod polami ---
+         Rejestr: jedno zdanie oznajmujące z kropką, mówiące CO ma być w polu
+         albo czego dotyczy — nie jak go użyć. */
+      "g.hint.distro":             "Base distribution of the container images. Must match the images in the registry.",
+      "g.hint.release":            "Image tag, for example <code>2025.1</code>. Should match the kolla-ansible version.",
+      "g.hint.vip":                "A free IPv4 address on the management network — not held by any host.",
+      "g.hint.netIf":              "Management/API network interface. Needs an IP address on every node.",
+      "g.hint.extIf":              "External traffic interface. No IP address, no configuration — Neutron takes it over entirely. Several comma-separated interfaces mean several physical networks.",
+      "g.hint.brName":             "OVS bridges, one per external interface. The counts must match.",
+      "g.hint.apiIf":              "API traffic and the Corosync ring. Empty inherits <code>network_interface</code>.",
+      "g.hint.stgIf":              "Ruch magazynu (Ceph). Puste = dziedziczy <code>network_interface</code>.",
+      "g.hint.migIf":              "Live migration. Empty inherits <code>api_interface</code>.",
+      "g.hint.extVip":             "Address of the public endpoints. Empty means the same as internal.",
+      "g.hint.extVipIf":           "Interface that carries the external VIP.",
+      "g.hint.intFqdn":            "Name of the internal endpoints in the service catalogue.",
+      "g.hint.extFqdn":            "Name of the public endpoints. Must differ from the internal one.",
+      "g.hint.storage":            "Source of volumes and images. Kolla does not deploy Ceph — the cluster must already exist.",
+      "g.hint.ampNet":             "Amphora management network. <code>vlan</code> and <code>flat</code> need a provider network.",
+      "g.hint.physnet":            "Physical network name. Must follow from the external interface list.",
+
+      /* --- generator: opisy przełączników ---
+         Rejestr jak wyżej; opis mówi, co przełącznik włącza i czego wymaga. */
+      "g.toggle.d01":              "TLS on internal traffic between services.",
+      "g.toggle.d02":              "Copies a private CA into the container trust store.",
+      "g.toggle.d03":              "Let's Encrypt certificates — the images' system trust store suffices.",
+      "g.toggle.d04":              "HAProxy + keepalived — required for the VIP and HA API endpoints.",
+      "g.toggle.d05":              "Wolumeny blokowe. Wymaga wybranego backendu magazynu.",
+      "g.toggle.d06":              "Orkiestracja szablonami.",
+      "g.toggle.d07":              "Panel webowy.",
+      "g.toggle.d08":              "Secret store. Octavia needs it for the amphora certificates.",
+      "g.toggle.d09":              "Load balancing (amphorae). Needs Barbican and a management network.",
+      "g.toggle.d10":              "Metrics collection. Needs hosts in the <em>monitoring</em> group.",
+      "g.toggle.d11":              "Metric dashboards. Without Prometheus there is nothing to draw.",
+      "g.toggle.d12":              "Corosync and Pacemaker. The Corosync ring runs over <code>api_interface</code>.",
+      "g.toggle.d13":              "Automatyczna ewakuacja maszyn po awarii hosta.",
+      "g.toggle.d14":              "Provider networks (flat/VLAN) mapped straight onto the physical network.",
+      "g.toggle.d15":              "Measured bandwidth headroom and switch-side queueing for storage and migration traffic.",
+      "g.toggle.d16":              "Wydzielony VLAN migracji ustawiony przez <code>live_migration_inbound_addr</code> w nadpisaniu nova-compute.",
+      "g.toggle.d17":              "Section headers and deployment notes that follow from the chosen configuration.",
+
+      /* --- generator: nagłówki sekcji ---
+         Rejestr: fraza rzeczownikowa, bez rodzajnika, bez kropki. Wielkie litery
+         należą do CSS, nie do treści. */
+      "g.h.params":              "Deployment parameters",
+      "g.h.import":              "Import an existing file",
+      "g.h.baseImage":           "Base image",
+      "g.h.network":             "Networking",
+      "g.h.names":               "Names and TLS",
+      "g.h.services":            "Services",
+      "g.h.octavia":             "Octavia",
+      "g.h.decisions":           "Deliberate decisions",
+      "g.h.output":              "Output",
+      "g.h.lint":                "Configuration check",
+
       /* --- walidator: szkielet interfejsu --- */
       /* --- walidator: aktualność wyniku --- */
       "v.stale.bar":           "The input has changed since this result was produced.",
