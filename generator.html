@@ -2998,7 +2998,30 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       '<option value="master" label="development branch"></option>';
   }
 
+  /* Podstawienie tekstu ze słownika pod atrybuty data-i18n*.
+     Generator dostał 50 takich atrybutów w #59 i nie dostał tego, co je czyta —
+     przez cztery godziny na opublikowanym serwisie formularz nie miał ani jednego
+     nagłówka sekcji, podpowiedzi pod polem, opisu przełącznika ani metki pola
+     wymaganego. Trzecia kopia tej funkcji, świadomie: validator.html i index.html
+     mają własne, a wciągnięcie ich w blok współdzielony wymaga rozstrzygnięcia,
+     skąd blok bierze klucz tytułu i opisu strony — i ruszyłoby dwa pliki, które
+     działają, w trakcie naprawy regresji. Refaktor ma osobne zgłoszenie.
+
+     Czterech pętli nie da się zredukować do jednej: innerHTML i trzy atrybuty to
+     cztery różne miejsca docelowe. Kolejność bez znaczenia, każda niezależna. */
+  function applyI18n() {
+    var nodes = document.querySelectorAll("[data-i18n]");
+    for (var i = 0; i < nodes.length; i++) nodes[i].innerHTML = T(nodes[i].getAttribute("data-i18n"));
+    nodes = document.querySelectorAll("[data-i18n-ph]");
+    for (i = 0; i < nodes.length; i++) nodes[i].setAttribute("placeholder", T(nodes[i].getAttribute("data-i18n-ph")));
+    nodes = document.querySelectorAll("[data-i18n-title]");
+    for (i = 0; i < nodes.length; i++) nodes[i].setAttribute("title", T(nodes[i].getAttribute("data-i18n-title")));
+    nodes = document.querySelectorAll("[data-i18n-label]");
+    for (i = 0; i < nodes.length; i++) nodes[i].setAttribute("aria-label", T(nodes[i].getAttribute("data-i18n-label")));
+  }
+
   /* ------------------------------------------------------------------ */
+  applyI18n();
   populateFromMatrix();
   applyState(load() || DEFAULTS);
   refresh();

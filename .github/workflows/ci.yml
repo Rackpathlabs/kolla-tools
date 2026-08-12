@@ -44,6 +44,12 @@ jobs:
       - name: Słownik interfejsu (sieroty, puste wpisy)
         run: node tools/check-i18n.js
 
+      # Osobno od powyższego, bo pyta o co innego: tamten sprawdza, czy klucz
+      # ISTNIEJE i jest używany, ten — czy produkuje tekst NA EKRANIE. #59 przeszedł
+      # tamten na zielono z pięćdziesięcioma pustymi elementami w generatorze.
+      - name: Słownik — klucz produkuje tekst na ekranie
+        run: node tools/check-i18n-apply.js
+
       - name: Spójność bloków współdzielonych
         run: bash tools/check-blocks.sh
 

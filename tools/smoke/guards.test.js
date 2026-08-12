@@ -98,6 +98,30 @@ R.ok("fixtura z jedną literówką -> DOKŁADNIE jedno odwołanie spoza słownik
 R.ok("istniejący klucz, inny atrybut, T() w kodzie i T() ze spacjami NIE są naruszeniem",
      !/v\.btn\.run,|t\.file\.read|t\.copied/.test(keys.out));
 
+/* ---- check-i18n-apply: klucz produkuje tekst, czy tylko istnieje ----
+   Fixtura o ZNANEJ charakterystyce, rozpisana z definicji kategorii: atrybut
+   data-i18n* niosący klucz do ujścia, które po wykonaniu kodu strony zostaje
+   puste. Dwa naruszenia, trzy przynęty — a przynęty są tu tym, co odróżnia
+   kontrolę skutku od kontroli obecności atrybutu. */
+var applyClean = run("check-i18n-apply.js", ["tools/fixtures/i18n-apply-clean.html"]);
+R.ok("applier kompletny -> zielone", applyClean.code === 0, applyClean.out.split("\n")[0]);
+
+var applyBad = run("check-i18n-apply.js", ["tools/fixtures/i18n-apply-two-blank.html"]);
+R.ok("applier niepełny -> czerwone", applyBad.code === 1, "kod " + applyBad.code);
+R.ok("applier niepełny -> DOKŁADNIE dwa braki",
+     /klucz bez tekstu na ekranie, 2 z 6/.test(applyBad.out), applyBad.out.split("\n")[0]);
+/* Nazwa formy, nie tylko liczba: licznik trafiający w dwójkę przypadkiem, na
+   innych dwóch elementach, przeszedłby asercję na samej liczbie. */
+R.ok("i nazywa OBIE nieobsłużone formy",
+     /data-i18n-title="k\.title"/.test(applyBad.out) && /data-i18n-ph="k\.ph"/.test(applyBad.out));
+
+/* PRZYNĘTY. Każda jest osobną awarią licznika, nie ozdobą fixtury. */
+R.ok('wartość "0" jest tekstem, nie brakiem', !/k\.zero/.test(applyBad.out));
+R.ok("atrybut spoza czterech form nie jest ujściem", !/data-i18n-note/.test(applyBad.out));
+/* Klucz spoza słownika daje widoczne "[[klucz]]" — jest błędem, ale NIE tym.
+   Gdyby ta kontrola go liczyła, mówiłaby o cudzym błędzie cudzym językiem. */
+R.ok("klucz spoza słownika należy do check-i18n.js, nie tutaj", !/k\.missing/.test(applyBad.out));
+
 /* ---- przynęta: kontrprzykład reguły kształtu ----
    "Narzędzia" to aria-label: jednowyrazowy, więc reguła kształtu dla placeholderów
    zwolniłaby go i polski napis czytany na głos nigdy by się nie przetłumaczył.
