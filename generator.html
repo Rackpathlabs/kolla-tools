@@ -638,6 +638,12 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
          Rejestr: małą literą, bo to metka, nie krzyk. Wielkie litery należą do CSS. */
       "g.field.required":      "required",
 
+      /* --- etykiety wag, wspólne dla obu narzędzi ---
+         Małą literą: to metka przy findingu, nie krzyk. Wielkość liter należy do CSS. */
+      "sev.error":             "error",
+      "sev.warn":              "warning",
+      "sev.info":              "info",
+
       /* --- generator: werdykt o pliku ---
          Rejestr: zdanie o PLIKU, nie o narzędziu. "This file is not ready to
          deploy", nie "The generator found errors". */
@@ -1926,7 +1932,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     }
     if (name.length > 15) {
       d.push({ level: "error", field: label, msg: tag + ": <code>" + esc(name) + "</code> ma " + name.length +
-              " znaków — w Linuksie nazwa interfejsu może mieć maksymalnie 15." });
+              " characters; on Linux an interface name may be at most 15." });
       return;
     }
     if (parseIPv4(name)) {
@@ -1935,11 +1941,11 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     }
     if (!IFACE_RE.test(name)) {
       d.push({ level: "error", field: label, msg: tag + ": <code>" + esc(name) +
-              "</code> zawiera niedozwolone znaki. Dopuszczalne są litery, cyfry oraz <code>. _ -</code>." });
+              "</code> contains characters that are not allowed. Letters, digits and <code>. _ -</code> are." });
       return;
     }
     if (name === "lo") {
-      d.push({ level: "error", field: label, msg: tag + ": interfejs pętli zwrotnej nie nadaje się do wdrożenia wielowęzłowego." });
+      d.push({ level: "error", field: label, msg: tag + ": a loopback interface is no use for a multinode deployment." });
     }
   }
 
@@ -2106,12 +2112,12 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     if (DISTROS.indexOf(s.distro) === -1) {
       d.push({
         level: "error", field: "distro",
-        msg: "<code>kolla_base_distro</code>: wybierz jedną z obsługiwanych dystrybucji (" + DISTROS.join(", ") + ")."
+        msg: "<code>kolla_base_distro</code>: pick one of the supported distributions (" + DISTROS.join(", ") + ")."
       });
     } else if (rel && rel.baseDistros && rel.baseDistros.indexOf(s.distro) === -1) {
       d.push({
         level: "error", field: "distro",
-        msg: "<code>" + esc(s.distro) + "</code> nie jest obsługiwanym obrazem bazowym w wydaniu <code>" +
+        msg: "<code>" + esc(s.distro) + "</code> is not a supported base image in release <code>" +
              esc(rel.id) + "</code>. Dopuszczalne: " +
              rel.baseDistros.map(function (x) { return "<code>" + esc(x) + "</code>"; }).join(", ") + "."
       });
@@ -2131,12 +2137,12 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       d.push({
         level: "error", field: "release",
         msg: "<code>openstack_release</code>: <code>" + esc(s.release) +
-             "</code> zawiera niedozwolone znaki. Tag obrazu może zawierać litery, cyfry oraz <code>. _ - /</code>."
+             "</code> contains characters that are not allowed. An image tag may hold letters, digits and <code>. _ - /</code>."
       });
     } else {
       var base = s.release.replace(/^stable\//, "");
       if (base === "master") {
-        d.push({ level: "warn", field: "release", msg: "Gałąź <code>master</code> to obrazy rozwojowe — nie do środowiska produkcyjnego." });
+        d.push({ level: "warn", field: "release", msg: "The <code>master</code> branch means development images, not production ones." });
       } else if (NAMED_RELEASES.indexOf(base.toLowerCase()) !== -1) {
         d.push({
           level: "info", field: "release",
@@ -2145,8 +2151,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       } else if (!/^\d{4}\.\d$/.test(base)) {
         d.push({
           level: "warn", field: "release",
-          msg: "<code>openstack_release</code>: nietypowa wartość <code>" + esc(s.release) +
-               "</code>. Kolla używa formatu <code>RRRR.N</code> (np. 2025.1), nazwy wydania albo <code>master</code>."
+          msg: "<code>openstack_release</code>: unusual value <code>" + esc(s.release) +
+               "</code>. Kolla uses the <code>YYYY.N</code> form (2025.1), a release name, or <code>master</code>."
         });
       }
 
@@ -2217,7 +2223,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         d.push({
           level: "error", field: "vip",
           msg: "<code>kolla_internal_vip_address</code>: adres <code>" + esc(s.vip) +
-               "</code> należy do puli zarezerwowanej (loopback, multicast lub 0.0.0.0/8)."
+               "</code> is in a reserved range (loopback, multicast or 0.0.0.0/8)."
         });
       } else if (ip[0] === 169 && ip[1] === 254) {
         d.push({ level: "error", field: "vip", msg: "<code>kolla_internal_vip_address</code>: adres link-local (169.254.0.0/16) nie może pełnić roli VIP." });
@@ -2226,7 +2232,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           d.push({
             level: "warn", field: "vip",
             msg: "<code>kolla_internal_vip_address</code>: ostatni oktet <code>" + ip[3] +
-                 "</code> w sieci /24 to adres sieci lub rozgłoszeniowy. Sprawdź maskę podsieci."
+                 "</code> is the network or broadcast address of a /24. Check the subnet mask."
           });
         }
         var isDoc = (ip[0] === 192 && ip[1] === 0 && ip[2] === 2) ||
@@ -2237,17 +2243,17 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         if (isDoc) {
           d.push({
             level: "warn", field: "vip",
-            msg: "Adres <code>" + esc(s.vip) + "</code> pochodzi z puli dokumentacyjnej (RFC 5737) — najczęściej oznacza wartość skopiowaną z przykładu i niepodmienioną."
+            msg: "Adres <code>" + esc(s.vip) + "</code> is from the documentation range (RFC 5737), which usually means a value copied from an example and never replaced."
           });
         } else if (isCgnat) {
           d.push({
             level: "warn", field: "vip",
-            msg: "Adres <code>" + esc(s.vip) + "</code> należy do puli CGNAT (100.64.0.0/10). Bywa zajęta przez infrastrukturę operatora — upewnij się, że sieć zarządzania jest wyłącznie Twoja."
+            msg: "Adres <code>" + esc(s.vip) + "</code> is in the CGNAT range (100.64.0.0/10), which carrier infrastructure also uses. Make sure the management network is yours alone."
           });
         } else if (!isPriv) {
           d.push({
             level: "info", field: "vip",
-            msg: "VIP spoza puli prywatnej (RFC 1918). Sieć wewnętrzna API nie powinna być osiągalna publicznie."
+            msg: "The VIP is outside the private ranges (RFC 1918). The internal API network should not be publicly reachable."
           });
         }
       }
@@ -2283,7 +2289,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     if (!s.t_haproxy) {
       d.push({
         level: "warn", field: null,
-        msg: "Przy wyłączonym <code>enable_haproxy</code> adres <code>kolla_internal_vip_address</code> musi być istniejącym adresem pojedynczego węzła sterującego — nie adresem wirtualnym."
+        msg: "With <code>enable_haproxy</code> off, <code>kolla_internal_vip_address</code> must be a real address on the single control node, not a virtual one."
       });
     }
     if (s.t_prometheus) {
@@ -2295,24 +2301,24 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     if (s.storage === "ceph") {
       d.push({
         level: "info", field: null,
-        msg: "Kolla-Ansible nie wdraża Cepha — klaster musi już istnieć, a pliki " +
-             "<code>ceph.conf</code> i keyringi trafiają do katalogu konfiguracji przed wdrożeniem."
+        msg: "Kolla-Ansible does not deploy Ceph. The cluster must already exist, and " +
+             "<code>ceph.conf</code> and the keyrings go into the config directory before deploying."
       });
     }
     if (s.t_provider && extList.length) {
       d.push({
         level: "info", field: null,
-        msg: "Sieci provider mapują się na " + (extList.length === 1
-              ? "jedną sieć fizyczną (<code>physnet1</code>)"
+        msg: "Provider networks map onto " + (extList.length === 1
+              ? "one physical network (<code>physnet1</code>)"
               : extList.length + " sieci fizyczne (<code>" + physnets(s).join("</code>, <code>") + "</code>)") +
-             ". Port przełącznika musi być skonfigurowany zgodnie z typem sieci."
+             ". The switch port must be configured to match the network type."
       });
     }
 
     if (!storageOk) {
       d.push({
         level: "info", field: null,
-        msg: "Przeglądarka blokuje pamięć lokalną w tym trybie — ustawienia nie zostaną zapamiętane po odświeżeniu strony."
+        msg: "The browser blocks local storage in this mode, so settings will not survive a reload."
       });
     }
 
@@ -2604,7 +2610,10 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         var fid = fieldToId(x.field);
         if (fid && el[fid]) (describedBy[fid] || (describedBy[fid] = [])).push(domId);
       }
-      var label = x.level === "error" ? "błąd" : (x.level === "warn" ? "uwaga" : "info");
+      /* Klucze jawne, nie sklejane: strażnik i18n czyta je statycznie, a klucz
+         zbudowany w locie jest dla niego napisem "sev." i niczym więcej. */
+      var label = x.level === "error" ? T("sev.error")
+                : x.level === "warn" ? T("sev.warn") : T("sev.info");
       return '<li id="' + domId + '"><span class="sev ' + x.level + '">' + label + "</span><span>" + x.msg + "</span></li>";
     }).join("");
 
@@ -2628,7 +2637,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     hasErrors = errors > 0;
     btnDownload.disabled = hasErrors;
     btnCopy.disabled = hasErrors;
-    var blockedTitle = hasErrors ? "Usuń błędy konfiguracji, aby wyeksportować plik" : "";
+    var blockedTitle = hasErrors ? "Fix the configuration errors to export the file" : "";
     btnDownload.title = blockedTitle;
     btnCopy.title = blockedTitle;
 
@@ -2781,9 +2790,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       if (String(raw[id]) === String(clean[id])) return;
       found.push({
         level: "warn", field: id,
-        msg: "Wartość <code>" + esc(String(raw[id])) + "</code> z pliku nie przeszła kontroli " +
-             "formatu pola <code>" + id + "</code> — użyto <code>" + esc(String(clean[id])) +
-             "</code>. Oryginalny wpis w pliku zostaje nietknięty do czasu zmiany w formularzu."
+        msg: "The value <code>" + esc(String(raw[id])) + "</code> from the file failed the " +
+             "formatu pola <code>" + id + "</code> — <code>" + esc(String(clean[id])) +
+             "</code>. The original entry stays untouched until the form changes it."
       });
     });
 
@@ -2818,14 +2827,14 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         if (!/\{\{|\}\}|\{%|%\}|[\r\u0085\u2028\u2029]/.test(String(over[k]))) return;
         delete over[k];
         d.unshift({ level: "error", field: null,
-          msg: "Wartość dla <code>" + esc(k) + "</code> zawiera treść wykonywalną przez " +
-               "Ansible — podmiana została wstrzymana." });
+          msg: "The value for <code>" + esc(k) + "</code> holds content executable by " +
+               "Ansible; the substitution was withheld." });
       });
       var res = GLOBALS.emit(importedDoc, over);
       built = { text: res.text.replace(/\n$/, ""), tripped: false };
       if (res.skipped.length) {
         d.push({ level: "info", field: null,
-          msg: "Klucze o wartości innej niż skalar zostają bez zmian: <code>" +
+          msg: "Keys whose value is not a scalar are left unchanged: <code>" +
                res.skipped.map(esc).join("</code>, <code>") + "</code>." });
       }
     } else {
@@ -2834,7 +2843,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     if (built.tripped) {
       d.unshift({
         level: "error", field: null,
-        msg: "Serializer zatrzymał generowanie pliku: wynik zawierał treść wykonywalną przez Ansible lub znak rozbijający strukturę YAML."
+        msg: "The serialiser stopped generating the file: the result held content executable by Ansible, or a character that breaks the YAML structure."
       });
     }
 
@@ -2986,7 +2995,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
                     " · " + (statusTag[r.status] || r.status);
         return '<option value="' + esc(r.id) + '" label="' + esc(label) + '"></option>';
       }).join("") +
-      '<option value="master" label="gałąź rozwojowa"></option>';
+      '<option value="master" label="development branch"></option>';
   }
 
   /* ------------------------------------------------------------------ */

@@ -103,6 +103,12 @@
          Rejestr: małą literą, bo to metka, nie krzyk. Wielkie litery należą do CSS. */
       "g.field.required":      "required",
 
+      /* --- etykiety wag, wspólne dla obu narzędzi ---
+         Małą literą: to metka przy findingu, nie krzyk. Wielkość liter należy do CSS. */
+      "sev.error":             "error",
+      "sev.warn":              "warning",
+      "sev.info":              "info",
+
       /* --- generator: werdykt o pliku ---
          Rejestr: zdanie o PLIKU, nie o narzędziu. "This file is not ready to
          deploy", nie "The generator found errors". */
