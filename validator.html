@@ -1509,14 +1509,14 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       if (body.charAt(0) === "[") {
         var hm = /^\[([^\[\]]*)\]$/.exec(body);
         if (!hm) {
-          add("error", "SYNTAX", "Niepoprawny nagłówek sekcji: <code>" + esc(body) + "</code>.", lineNo,
+          add("error", "SYNTAX", "Malformed section header: <code>" + esc(body) + "</code>.", lineNo,
               "Oczekiwany format to <code>[nazwa]</code>, <code>[nazwa:children]</code> lub <code>[nazwa:vars]</code>.");
           current = null;
           continue;
         }
         var inner = hm[1].trim();
         if (!inner) {
-          add("error", "SYNTAX", "Pusta nazwa grupy w nagłówku sekcji.", lineNo);
+          add("error", "SYNTAX", "The section header has an empty group name.", lineNo);
           current = null;
           continue;
         }
@@ -1525,13 +1525,13 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         var kind = parts.length > 1 ? parts[1].trim().toLowerCase() : "hosts";
         if (parts.length > 2 || (kind !== "hosts" && kind !== "vars" && kind !== "children")) {
           add("error", "SYNTAX", "Nieznany typ sekcji <code>" + esc(inner) + "</code>.", lineNo,
-              "Ansible rozpoznaje wyłącznie <code>:children</code> i <code>:vars</code>.");
+              "Ansible recognises only <code>:children</code> and <code>:vars</code>.");
           current = null;
           continue;
         }
         if (!/^[A-Za-z0-9_.-]+$/.test(gname)) {
           add("error", "GROUP-NAME", "Nazwa grupy <code>" + esc(gname) + "</code> zawiera niedozwolone znaki.", lineNo,
-              "Dozwolone są litery, cyfry oraz <code>_ . -</code>.");
+              "Letters, digits and <code>_ . -</code> are allowed.");
         }
         var g = group(gname);
         if (kind === "hosts") {
@@ -1581,8 +1581,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       /* ---- lista dzieci ---- */
       if (current.kind === "children") {
         if (tokens.length > 1) {
-          add("error", "CHILDREN-FORMAT", "Sekcja <code>[" + esc(current.group) + ":children]</code> może zawierać wyłącznie nazwy grup, po jednej w linii.",
-              lineNo, "Znaleziono dodatkowe człony: <code>" + esc(tokens.slice(1).join(" ")) + "</code>.");
+          add("error", "CHILDREN-FORMAT", "Sekcja <code>[" + esc(current.group) + ":children]</code> may contain only group names, one per line.",
+              lineNo, "Extra parts found: <code>" + esc(tokens.slice(1).join(" ")) + "</code>.");
         }
         group(head).referencedAt.push(lineNo);
         groups[current.group].children.push({ name: head, line: lineNo });
@@ -2040,7 +2040,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     return s === "yes" || s === "true" || s === "on" || s === "1";
   }
 
-  /* Klucz nieobecny znaczy "wartość domyślna Kolli", a ta dla haproxy i keepalived
+  /* Klucz nieobecny znaczy "the Kolla default", a ta dla haproxy i keepalived
      jest włączona. Zwolnienie z KV-09 wymaga jawnego wyłączenia, nie milczenia. */
   function explicitlyOff(glob, key) {
     var e = glob && glob.keys[key];
@@ -2363,7 +2363,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     for (var ci = 0; ci < order.length; ci++) {
       var cyc = detectCycle(groups, order[ci], [order[ci]], cycleSeen);
       if (cyc) {
-        add("error", "GROUP-CYCLE", "Cykliczna zależność grup: <code>" + cyc.cycle.map(esc).join(" &rarr; ") + "</code>.",
+        add("error", "GROUP-CYCLE", "Circular group dependency: <code>" + cyc.cycle.map(esc).join(" &rarr; ") + "</code>.",
             cyc.line, "Ansible odrzuci takie inventory przy wczytywaniu.");
         break;
       }
@@ -2398,7 +2398,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       if (effective[name].length === 0) {
         add("warn", "EMPTY-GROUP", "Group <code>[" + esc(name) + "]</code> holds no host.",
             g.declaredAt[0] || g.childrenAt[0] || g.varsAt[0],
-            "Pusta grupa jest ignorowana przy wdrożeniu — usuń ją albo uzupełnij obsadę.");
+            "An empty group is ignored at deploy time; drop it or give it hosts.");
       }
     });
 
@@ -2433,12 +2433,12 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       g.children.forEach(function (c) {
         if (seenChild[c.name]) {
           add("warn", "DUPLICATE-CHILD", "Podgrupa <code>" + esc(c.name) + "</code> jest wymieniona dwukrotnie w <code>[" + esc(name) + ":children]</code>.",
-              c.line, "Pierwsze wystąpienie: linia " + seenChild[c.name] + ".");
+              c.line, "First occurrence: line " + seenChild[c.name] + ".");
         } else {
           seenChild[c.name] = c.line;
         }
         if (c.name === name) {
-          add("error", "CHILD-SELF", "Grupa <code>" + esc(name) + "</code> wskazuje samą siebie jako podgrupę.", c.line);
+          add("error", "CHILD-SELF", "Grupa <code>" + esc(name) + "</code> lists itself as a child group.", c.line);
         }
       });
 
@@ -2446,7 +2446,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       g.vars.forEach(function (v) {
         if (seenVar[v.key]) {
           add("warn", "DUPLICATE-VAR", "Zmienna <code>" + esc(v.key) + "</code> jest ustawiona dwukrotnie w <code>[" + esc(name) + ":vars]</code>.",
-              v.line, "Pierwsze wystąpienie: linia " + seenVar[v.key] + ". Obowiązuje wartość z ostatniego wpisu.");
+              v.line, "First occurrence: line " + seenVar[v.key] + ". The last entry wins.");
         } else {
           seenVar[v.key] = v.line;
         }
@@ -2499,9 +2499,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         return e.indexOf(addr + ":") === 0 && Object.keys(byEndpoint[e]).length > 1;
       });
       if (conflicting) return;   // zgłoszone już jako błąd wyżej
-      add("info", "SHARED-ADDRESS", "Adres <code>" + esc(addr) + "</code> obsługuje kilka hostów na różnych portach: " +
+      add("info", "SHARED-ADDRESS", "Adres <code>" + esc(addr) + "</code> serves several hosts on different ports: " +
           hosts.map(function (n) { return "<code>" + esc(n) + "</code>"; }).join(", ") + ".",
-          byAddress[addr][hosts[1]], "Poprawne przy NAT lub labie zagnieżdżonym — upewnij się, że taka była intencja.");
+          byAddress[addr][hosts[1]], "Correct behind NAT or in a nested lab; make sure that was the intention.");
     });
 
     /* --- hosty bez ansible_host --- */
@@ -2561,7 +2561,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     quorumRules(groups, effective, hostNames).forEach(function (f) { findings.push(f); });
 
     if (!hostNames.length && !findings.some(function (f) { return f.sev === "error"; })) {
-      add("error", "NO-HOSTS", "Inventory nie zawiera żadnego hosta.", null);
+      add("error", "NO-HOSTS", "The inventory contains no host.", null);
     }
 
     /* Plik był dotąd jeden, więc źródło findingu było niejawne. Od trybu łączonego
