@@ -215,16 +215,16 @@ report.forEach(function (f) {
   miss.push(f);
 });
 
-/* PRÓG, nie cel. Stan na 2026-08-12: 473 wystąpienia angielskiego tekstu nadal
+/* PRÓG, nie cel. Stan na 2026-08-12: 444 wystąpienia angielskiego tekstu nadal
    budowanego w kodzie zamiast pobieranego z klucza. Nie ma być osiągnięte zero —
    ma nie wzrosnąć: KAŻDY NOWY tekst musi iść przez słownik, bo inaczej liczba
-   rośnie i build pada. Istniejące 473 są długiem opisanym liczbą, nie ukrytym,
+   rośnie i build pada. Istniejące 444 są długiem opisanym liczbą, nie ukrytym,
    i mają własne zgłoszenie (#58).
 
    Czerwony strażnik na stałe zostaje zignorowany w tydzień i przestaje cokolwiek
    znaczyć — tracimy go wtedy także dla przyszłości. Próg chroni dokładnie to, co
    ma sens chronić dziś. */
-var BASELINE = 473;
+var BASELINE = 444;
 
 console.log("segmentów w słowniku: " + SEGS.length +
             "   pustych odfiltrowanych: " + EMPTY_SEGMENTS);
