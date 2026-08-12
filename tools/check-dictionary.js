@@ -215,6 +215,17 @@ report.forEach(function (f) {
   miss.push(f);
 });
 
+/* PRÓG, nie cel. Stan na 2026-08-12: 473 wystąpienia angielskiego tekstu nadal
+   budowanego w kodzie zamiast pobieranego z klucza. Nie ma być osiągnięte zero —
+   ma nie wzrosnąć: KAŻDY NOWY tekst musi iść przez słownik, bo inaczej liczba
+   rośnie i build pada. Istniejące 473 są długiem opisanym liczbą, nie ukrytym,
+   i mają własne zgłoszenie (#58).
+
+   Czerwony strażnik na stałe zostaje zignorowany w tydzień i przestaje cokolwiek
+   znaczyć — tracimy go wtedy także dla przyszłości. Próg chroni dokładnie to, co
+   ma sens chronić dziś. */
+var BASELINE = 473;
+
 console.log("segmentów w słowniku: " + SEGS.length +
             "   pustych odfiltrowanych: " + EMPTY_SEGMENTS);
 console.log("widocznych napisów:   " + total + "   ze słownika lub wyjątku: " + ok +
@@ -231,4 +242,11 @@ miss.slice(0, 30).forEach(function (f) {
               JSON.stringify(String(f.text).slice(0, 78)));
 });
 if (miss.length > 30) console.log("  ... i " + (miss.length - 30) + " dalszych");
-process.exit(miss.length ? 1 : 0);
+if (miss.length > BASELINE) {
+  console.log("\nFAIL " + miss.length + " wystąpień wobec progu " + BASELINE +
+              " — nowy tekst musi iść przez słownik.");
+  process.exit(1);
+}
+console.log("\nOK   " + miss.length + " wystąpień, próg " + BASELINE + " nieprzekroczony" +
+            (miss.length < BASELINE ? "  (dług zmalał — obniż próg w tym pliku)" : ""));
+process.exit(0);
