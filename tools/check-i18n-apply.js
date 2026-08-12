@@ -4,8 +4,8 @@
  * Powód istnienia: generator.html dostał w #59 pięćdziesiąt atrybutów data-i18n
  * i nie dostał kodu, który je czyta. Elementy renderowały się PUSTE — formularz
  * bez nagłówków sekcji, bez podpowiedzi, bez opisów przełączników, bez metek pola
- * wymaganego — przez cztery godziny na opublikowanym serwisie. Nie zauważył tego
- * żaden z czterech strażników i każdy z innego powodu:
+ * wymaganego — przez trzynaście godzin i czterdzieści pięć minut na opublikowanym
+ * serwisie. Nie zauważył tego żaden z czterech strażników i każdy z innego powodu:
  *
  *   check-i18n.js       pyta, czy NAZWA KLUCZA występuje w plikach. Występuje —
  *                       w atrybucie. Pytanie o reprezentację, nie o skutek:
