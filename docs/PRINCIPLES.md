@@ -45,6 +45,15 @@ This is the same decision as taking table headings out of the cell exception, an
 one it is a structural improvement the guard merely happened to find: the key can now be
 copied without its tail, and a screen reader stops reading the two as one phrase.
 
+**A property checked on a sample is a property of the sample.** Two of five exception
+categories were measured to have no overlap at all, and that zero was read as "the split is
+clean" — a statement about the set. Measured across all five, 721 strings matched more than
+one category, and the per-category figures reported for weeks were an artefact of which
+test ran first: the numbers category was said to excuse 22 strings and actually matches 612.
+The same caution applies to disjointness, to coverage, and to every sentence beginning
+"the categories are". Where the property is cheap to check on the whole, checking a pair
+proves nothing about the rest.
+
 **A prediction is a control only when the only unknown in it is the thing it is meant to
 control.** A category was migrated against a prediction of forty; the result was
 thirty-five, and thirty-five is exactly five positions times seven scenarios. The model was

@@ -158,9 +158,18 @@ var CATEGORIES = [
      który je uruchomi, nie zapobiegawczo. */
 ];
 
+/* Zwraca WSZYSTKIE pasujące kategorie, nie pierwszą.
+   Zwolnienie jest alternatywą, a alternatywa jest przemienna — więc kolejność nigdy
+   nie wpływała na WYNIK, tylko na ATRYBUCJĘ w raporcie: 721 napisów pasowało do
+   więcej niż jednej kategorii, a licznik przypisywał je tej, która trafiła pierwsza.
+   Statystyka "ta kategoria zwalnia 1003" znaczyła "tyle napisów do niej dotarło".
+   Sprawdzone przed zmianą: żadna kategoria nie WYKLUCZA, wszystkie tylko zwalniają —
+   gdyby któraś działała odwrotnie, przemienność by nie trzymała i kolejność byłaby
+   definicją do zapisania, a nie artefaktem pętli do usunięcia. */
 function excused(f) {
-  for (var i = 0; i < CATEGORIES.length; i++) if (CATEGORIES[i].test(f)) return CATEGORIES[i];
-  return null;
+  var hit = [];
+  for (var i = 0; i < CATEGORIES.length; i++) if (CATEGORIES[i].test(f)) hit.push(CATEGORIES[i]);
+  return hit;
 }
 
 /* ---- pomiar ---------------------------------------------------------------- */
@@ -168,13 +177,18 @@ var report = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
 var SEGS = corpus();
 var SHORT = 4;
 
-var total = 0, ok = 0, byCategory = {}, miss = [], missShort = 0;
+var total = 0, ok = 0, overlap = 0, byCategory = {}, miss = [], missShort = 0;
 report.forEach(function (f) {
   var t = String(f.text).replace(/\s+/g, " ").trim();
   if (!t) return;
   total++;
-  var cat = excused({ tag: f.tag, text: t, inData: f.inData, fromInput: f.fromInput });
-  if (cat) { byCategory[cat.why] = (byCategory[cat.why] || 0) + 1; ok++; return; }
+  var cats = excused({ tag: f.tag, text: t, inData: f.inData, fromInput: f.fromInput });
+  if (cats.length) {
+    cats.forEach(function (c) { byCategory[c.why] = (byCategory[c.why] || 0) + 1; });
+    if (cats.length > 1) overlap++;
+    ok++;
+    return;
+  }
   var low = norm(t);
   for (var i = 0; i < SEGS.length; i++) {
     if (wordsIn(SEGS[i], low)) { ok++; return; }
@@ -188,6 +202,8 @@ console.log("segmentów w słowniku: " + SEGS.length +
 console.log("widocznych napisów:   " + total + "   ze słownika lub wyjątku: " + ok +
             "   BEZ POKRYCIA: " + miss.length +
             "   (w tym krótsze niż " + SHORT + " znaki: " + missShort + ")");
+console.log("napisów pasujących do WIĘCEJ NIŻ JEDNEJ kategorii: " + overlap +
+            "   (sumy poniżej nakładają się i nie zsumują się do liczby zwolnionych)");
 Object.keys(byCategory).forEach(function (k) {
   console.log("  wyjątek: " + byCategory[k] + "  " + k);
 });
