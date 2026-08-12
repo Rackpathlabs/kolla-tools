@@ -171,8 +171,8 @@
         if (Object.prototype.hasOwnProperty.call(keys, key)) {
           findings.push({
             sev: "warn", code: "KEY-REPEATED", line: lineNo,
-            msg: "Klucz <code>" + key + "</code> występuje ponownie w linii " + lineNo + ".",
-            hint: "Ansible weźmie ostatnie wystąpienie; wcześniejsze są martwe."
+            msg: "Key <code>" + key + "</code> appears again on line " + lineNo + ".",
+            hint: "Ansible takes the last occurrence; the earlier ones are dead."
           });
         }
 

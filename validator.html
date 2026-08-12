@@ -737,8 +737,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         if (Object.prototype.hasOwnProperty.call(keys, key)) {
           findings.push({
             sev: "warn", code: "KEY-REPEATED", line: lineNo,
-            msg: "Klucz <code>" + key + "</code> występuje ponownie w linii " + lineNo + ".",
-            hint: "Ansible weźmie ostatnie wystąpienie; wcześniejsze są martwe."
+            msg: "Key <code>" + key + "</code> appears again on line " + lineNo + ".",
+            hint: "Ansible takes the last occurrence; the earlier ones are dead."
           });
         }
 
@@ -1536,8 +1536,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         var g = group(gname);
         if (kind === "hosts") {
           if (g.declaredAt.length) {
-            add("info", "SECTION-REPEATED", "Sekcja <code>[" + esc(gname) + "]</code> występuje ponownie (pierwsza w linii " +
-                g.declaredAt[0] + "). Ansible scali wpisy.", lineNo);
+            add("info", "SECTION-REPEATED", "Section <code>[" + esc(gname) + "]</code> appears again (first on line " +
+                g.declaredAt[0] + "). Ansible merges the entries.", lineNo);
           }
           g.declaredAt.push(lineNo);
         } else if (kind === "vars") {
