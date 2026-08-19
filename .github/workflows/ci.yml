@@ -50,6 +50,12 @@ jobs:
       - name: Słownik — klucz produkuje tekst na ekranie
         run: node tools/check-i18n-apply.js
 
+      # RÓWNOŚĆ, nie pokrycie. Jedyna kontrola tekstu w tym repozytorium, która NIE
+      # zależy od pokrycia scenariuszami: porównuje dwa napisy leżące obok siebie
+      # w plikach. Powstała czerwona przed migracją z ADR-002 (108 pustych elementów).
+      - name: Markup kontra słownik
+        run: node tools/check-markup-dict.js
+
       # ZAPOBIEGA, w odróżnieniu od dwóch powyższych, które WYKRYWAJĄ: działa na kodzie,
       # więc nie ma pojęcia „scenariusz" i nie zależy od pokrycia. Powód rozdzielenia
       # jest w nagłówku pliku. Do 2026-08-19 nie wykonywał się w żadnym buildzie (#72).

@@ -138,6 +138,38 @@ R.ok("i zero do przeczytania", /DO PRZECZYTANIA: 0$/m.test(engOk.out), engOk.out
 R.ok("licznik słów domyka się na obu fixturach",
      !/licznik się nie domyka/.test(engBad.out + engOk.out));
 
+/* ---- markup kontra słownik (ADR-002, opcja B) ----
+   Jedyna kontrola tekstu w tym repozytorium, która NIE zależy od pokrycia: porównuje
+   dwa napisy leżące obok siebie w plikach. Powstała czerwona przed migracją — 108
+   pustych elementów — więc dowód, że umie upaść, jest tu utrwalony fixturą, a nie
+   wspomnieniem z dnia, w którym powstawała. */
+var mdClean = run("check-markup-dict.js", ["tools/fixtures/markup-dict-clean.html"]);
+R.ok("markup zgodny ze słownikiem -> zielone", mdClean.code === 0, mdClean.out.split("\n")[0]);
+
+var mdBad = run("check-markup-dict.js", ["tools/fixtures/markup-dict-drift.html"]);
+R.ok("rozjazd albo pusty -> czerwone", mdBad.code === 1, "kod " + mdBad.code);
+/* DWIE KATEGORIE, NIE JEDNA. Pusty widać na ekranie bez JS; rozjazdu nie widać nigdzie,
+   dopóki ktoś nie porówna. Licznik zliczający je razem nie umiałby powiedzieć, która
+   awaria zaszła — a to jest cała informacja, jaką ten strażnik ma do przekazania. */
+R.ok("i liczy je OSOBNO: dokładnie jeden rozjazd i dokładnie jeden pusty",
+     /PUSTYCH: 1   ROZJAZDÓW: 1/.test(mdBad.out), mdBad.out.split("\n")[0]);
+R.ok("rozjazd pokazuje OBIE strony, nie samą liczbę",
+     /słownik: "Deployment parameters"/.test(mdBad.out) && /markup:  "Deploy parameters"/.test(mdBad.out));
+/* Kierunek naprawy jest rozstrzygnięciem, nie preferencją — ma stać w komunikacie,
+   żeby przy pierwszym czerwonym CI nie było dyskusji (ADR-002, punkt 4). */
+R.ok("i nazywa kierunek naprawy: źródłem prawdy jest słownik",
+     /ŹRÓDŁEM PRAWDY JEST SŁOWNIK/.test(mdBad.out));
+
+/* PRZYNĘTY. Każda jest osobną awarią strażnika. */
+R.ok("zawinięty i wcięty tekst NIE jest rozjazdem (normalizacja białych znaków)",
+     !/g\.field\.required/.test(mdClean.out));
+R.ok("zagnieżdżony znacznik tej samej nazwy nie ucina ani nie połyka treści",
+     /równych: 5/.test(mdClean.out), mdClean.out.split("\n")[0]);
+R.ok("forma atrybutowa jest objęta tak samo jak treść elementu",
+     !/v\.btn\.run/.test(mdClean.out));
+R.ok("klucz spoza słownika należy do check-i18n.js, nie tutaj",
+     !/nie\.ma\.takiego/.test(mdClean.out));
+
 /* ---- check-i18n: klucz spoza słownika, z przynętami ---- */
 var keys = run("check-i18n.js", ["tools/fixtures/keys-one-typo.html"]);
 R.ok("fixtura z jedną literówką -> DOKŁADNIE jedno odwołanie spoza słownika",

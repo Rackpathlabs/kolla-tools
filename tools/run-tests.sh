@@ -56,6 +56,10 @@ echo "== słownik: klucz produkuje tekst na ekranie =="
 "$NODE" tools/check-i18n-apply.js || rc=1
 
 echo
+echo "== markup kontra słownik (ADR-002, opcja B) =="
+"$NODE" tools/check-markup-dict.js || rc=1
+
+echo
 echo "== literały w ujściach tekstu =="
 "$NODE" tools/check-literals.js || rc=1
 
