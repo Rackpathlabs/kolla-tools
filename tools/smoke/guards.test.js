@@ -91,6 +91,53 @@ R.ok("bez zwolnienia — scenariusz przełącznika upada",
      /pojedynczy przełącznik[\s\S]*nie zmienił NICZEGO/.test(noEx.out) && noEx.code !== 0,
      "kod " + noEx.code);
 
+/* ---- check-english: trzynaście pozycji, na których raportował zero ----
+   Fixtura NIE jest wymyślona: to te same napisy, które skan ręczny znalazł przed
+   93a75b6, przepisane stamtąd. W drzewie produktu ich już nie ma, więc ta para
+   plików jest jedynym miejscem, w którym para liczb 13/0 zostaje sprawdzalna.
+
+   Liczy się LICZBA, nie kolor: 28 różnych polskich słów w 13 pozycjach. Sam kolor
+   przeszedłby licznikowi, który zapala się na wszystkim — a taki licznik jest
+   dokładnie tym, czym była lista słów funkcyjnych widziana od drugiej strony. */
+var engBad = run("check-english.js", ["--fixture", "tools/fixtures/english-thirteen.html"]);
+R.ok("trzynaście pozycji -> czerwone", engBad.code === 1, "kod " + engBad.code);
+R.ok("i DOKŁADNIE 28 różnych polskich słów",
+     /DO PRZECZYTANIA: 28$/m.test(engBad.out), engBad.out.split("\n")[0]);
+
+/* OBIE DROGI UCIECZKI z osobna. Jedna liczba nie odróżnia strażnika, który naprawił
+   kryterium, od takiego, który naprawił zakres — a #63 opisuje dwie niezależne wady
+   i naprawa jednej z nich zostawiłaby drugą całą. */
+R.ok("droga ZAKRESU: polski w atrybucie (stara wersja usuwała go ze znacznikiem)",
+     /^dziedziczy$/m.test(engBad.out));
+R.ok("droga KRYTERIUM: polski bez diakrytyku i bez słowa funkcyjnego",
+     /^webowy$/m.test(engBad.out) && /^brak$/m.test(engBad.out) && /^lokalny$/m.test(engBad.out));
+/* Jednoliterowe polskie słowo. Odsianie krótkich tokenów jako szumu wycięłoby
+   "w", "i" i "z" — czyli polszczyznę o dokładnie tej charakterystyce, dla której
+   ten strażnik jest przepisywany. Kontrprzykład w teście, nie w komentarzu. */
+R.ok("jednoliterowe polskie słowo NIE jest odsiane jako szum", /^w$/m.test(engBad.out));
+
+/* PRZYNĘTY — każda jest osobną awarią strażnika, nie ozdobą fixtury. */
+R.ok("ten sam napis po angielsku w tym samym ujściu NIE jest naruszeniem",
+     !/^inherits$/m.test(engBad.out));
+R.ok("atrybut sterujący data-i18n-title NIE jest widocznym tekstem",
+     !/^releaseto$/m.test(engBad.out));
+R.ok("nazwa encji HTML NIE jest słowem interfejsu",
+     !/^rarr$/m.test(engBad.out) && !/^ldquo$/m.test(engBad.out));
+R.ok("nazwa wstawki NIE jest słowem interfejsu", !/^computecount$/m.test(engBad.out));
+R.ok("nazwa znacznika w wpisie słownika NIE jest słowem interfejsu",
+     !/^code$/m.test(engBad.out));
+R.ok("identyfikator rozcięty na granicy liter daje angielskie słowa",
+     !/^octavia$/m.test(engBad.out) && !/^network$/m.test(engBad.out));
+
+var engOk = run("check-english.js", ["--fixture", "tools/fixtures/english-clean.html"]);
+R.ok("te same kształty po angielsku -> zielone", engOk.code === 0, engOk.out.split("\n")[0]);
+R.ok("i zero do przeczytania", /DO PRZECZYTANIA: 0$/m.test(engOk.out), engOk.out.split("\n")[0]);
+
+/* Licznik MUSI się domykać: przyjęte + z danych + do przeczytania = różne słowa.
+   Licznik, który się nie domyka, mierzy co innego, niż mówi jego nazwa. */
+R.ok("licznik słów domyka się na obu fixturach",
+     !/licznik się nie domyka/.test(engBad.out + engOk.out));
+
 /* ---- check-i18n: klucz spoza słownika, z przynętami ---- */
 var keys = run("check-i18n.js", ["tools/fixtures/keys-one-typo.html"]);
 R.ok("fixtura z jedną literówką -> DOKŁADNIE jedno odwołanie spoza słownika",

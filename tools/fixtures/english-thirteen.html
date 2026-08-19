@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>fixtura: trzynascie pozycji z #63</title></head>
+<body>
+<!-- TRZYNASCIE POZYCJI, ktore stary check-english.js raportowal jako ZERO.
+     Nie sa wymyslone: to dokladnie te napisy, ktore skan reczny znalazl przed
+     commitem 93a75b6, przepisane stad, a nie z dzisiejszego drzewa. Para liczb
+     13/0 jest miara luki i ta fixtura jest jej jedynym trwalym zapisem — w drzewie
+     produktu tych napisow juz nie ma, wiec bez niej regresu nie da sie zlapac.
+
+     Uciekaly DWIEMA NIEZALEZNYMI DROGAMI i fixtura niesie obie:
+       KRYTERIUM — zaden z 13 nie ma diakrytyku ani slowa z listy funkcyjnej;
+       ZAKRES    — 4 z nich to atrybuty, usuwane razem ze znacznikiem.
+
+     PRZYNETY sa rozpisane Z DEFINICJI KATEGORII, nie z listy brakow: kazda jest
+     osobna awaria strażnika, nie ozdoba. Strażnik za czuly szkodzi tak samo jak
+     za luzny — produkuje szum, az ktos go oslabi. -->
+
+<!-- POZYCJE 1-4: atrybuty. Stara wersja robila body.replace(/<[^>]+>/g,"\n"),
+     czyli nie zbierala ich W OGOLE. Czwarty jest czytany na glos przez czytnik
+     ekranu, wiec jego niewidocznosc dla straznika kosztowala najwiecej. -->
+<input type="text" id="api_if" placeholder="dziedziczy network_interface">
+<input type="text" id="stg_if" placeholder="dziedziczy network_interface">
+<input type="text" id="mig_if" placeholder="dziedziczy api_interface">
+<input type="text" id="ext_vip_if" aria-label="dziedziczy network_interface">
+
+<!-- POZYCJE 5-6: tresc <option>. Ta droga byla w zakresie i uciekla samym
+     kryterium: "brak" i "lokalny" nie maja diakrytyku i nie ma ich w PL_WORDS. -->
+<select id="storage">
+  <option value="none">brak</option>
+  <option value="lvm">LVM (lokalny)</option>
+</select>
+
+<!-- POZYCJA 13: werdykt orzeczony przed sprawdzeniem. Swiadomie zostawiona po
+     polsku w 93a75b6, bo wierne tlumaczenie jest twierdzeniem zakazanym przez
+     SCOPE.md; naprawiona osobno w #64. Tutaj zostaje jako pozycja jezykowa. -->
+<span id="status-txt">Konfiguracja poprawna.</span>
+
+<!-- PRZYNETA 1: ten sam napis PO ANGIELSKU, w tym samym ujsciu co pozycje 1-4.
+     Bez niej "czerwone" mowiloby tylko, ze straznik zyje, a nie ze umie odroznic. -->
+<input type="text" id="ok_if" placeholder="inherits network_interface">
+
+<!-- PRZYNETA 2: atrybut STERUJACY, nie widoczny. Pierwsza wersja zbierala go,
+     bo pisala \btitle= — a granica slowa stoi takze po mysliniku, wiec
+     data-i18n-title wpadal razem z title i produkowal "releaseto" jako slowo
+     interfejsu do przeczytania. Szosty przypadek nazwy szerszej niz zakres. -->
+<select id="release_to" data-i18n-title="v.releaseTo.title"></select>
+
+<!-- PRZYNETA 3: encje HTML. Uzytkownik widzi strzalke i cudzyslow, nie slowa
+     "rarr" i "ldquo". Przyjecie ich do slownika akceptacji zapisaloby wade
+     pomiaru jako fakt o produkcie. -->
+<p>&rarr; target &ldquo;example&rdquo;</p>
+
+<!-- PRZYNETA 4: identyfikator. Rozciety na granicy liter daje dwa angielskie
+     slowa, wiec nie jest naruszeniem — a bez tego rozciecia kazdy klucz Kolli
+     byl by "slowem obcym" i lista do przeczytania utonelaby w szumie. -->
+<p>Set <code>octavia_amp_network</code> to the physical network.</p>
+
+<script>
+(function () {
+  var I18N = {
+    dict: {
+      /* POZYCJE 7-12: wpisy slownika. Wszystkie szesc bez diakrytyku i bez slowa
+         z PL_WORDS — to jest pierwsza z dwoch drog ucieczki, opisana w #63. */
+      "g.hint.stgIf": "Ruch magazynu (Ceph). Puste = dziedziczy <code>network_interface</code>.",
+      "g.toggle.d05": "Wolumeny blokowe. Wymaga wybranego backendu magazynu.",
+      "g.toggle.d06": "Orkiestracja szablonami.",
+      "g.toggle.d07": "Panel webowy.",
+      "g.toggle.d13": "Automatyczna ewakuacja maszyn po awarii hosta.",
+      "g.toggle.d16": "Wydzielony VLAN migracji ustawiony przez <code>live_migration_inbound_addr</code> w nadpisaniu nova-compute.",
+
+      /* PRZYNETA 5: wstawka {…}. Nazwa wstawki nie jest slowem — na ekranie stoi
+         w tym miejscu liczba. "{computeCount}" dalo "computecount". */
+      "n.compute": "{computeCount} compute nodes",
+
+      /* PRZYNETA 6: wpis poprawny, z znacznikiem w srodku. Nazwa znacznika nie
+         jest slowem, ktore ktokolwiek czyta. */
+      "g.hint.ok": "Storage traffic (Ceph). Empty inherits <code>network_interface</code>."
+    }
+  };
+  globalThis.__probe = I18N;
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>fixtura: te same ksztalty, wylacznie angielski</title></head>
+<body>
+<!-- DRUGA POLOWA PARY. Te same ujscia i te same ksztalty co w english-thirteen.html,
+     tylko po angielsku. Bez niej "czerwone" na tamtej mowiloby wylacznie, ze straznik
+     zyje — a nie, ze umie odroznic jeden jezyk od drugiego. Czysta fixtura jest tym,
+     co odroznia kontrole od licznika zapalajacego sie na wszystkim. -->
+<input type="text" id="api_if" placeholder="inherits network_interface">
+<input type="text" id="stg_if" placeholder="inherits network_interface">
+<input type="text" id="mig_if" placeholder="inherits api_interface">
+<input type="text" id="ext_vip_if" aria-label="inherits network_interface">
+
+<select id="storage">
+  <option value="none">none</option>
+  <option value="lvm">LVM (local)</option>
+</select>
+
+<span id="status-txt">Not checked yet.</span>
+
+<select id="release_to" data-i18n-title="v.releaseTo.title"></select>
+<p>&rarr; target &ldquo;example&rdquo;</p>
+<p>Set <code>octavia_amp_network</code> to the physical network.</p>
+
+<script>
+(function () {
+  var I18N = {
+    dict: {
+      "g.hint.stgIf": "Storage traffic (Ceph). Empty inherits <code>network_interface</code>.",
+      "g.toggle.d05": "Block volumes. Needs a selected storage backend.",
+      "g.toggle.d06": "Template orchestration.",
+      "g.toggle.d07": "Web dashboard.",
+      "g.toggle.d13": "Automatic evacuation of VMs after a host failure.",
+      "g.toggle.d16": "A dedicated migration VLAN configured through <code>live_migration_inbound_addr</code> in a nova-compute override.",
+      "n.compute": "{computeCount} compute nodes",
+      "g.hint.ok": "Storage traffic (Ceph). Empty inherits <code>network_interface</code>."
+    }
+  };
+  globalThis.__probe = I18N;
+})();
+</script>
+</body>
+</html>
