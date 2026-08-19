@@ -1,0 +1,35 @@
+{
+  "release": "2026.1",
+  "upgradeTo": null,
+  "globals": false,
+  "findings": [
+    {
+      "code": "EMPTY-GROUP",
+      "sev": "error",
+      "src": "inventory",
+      "line": 16,
+      "refs": []
+    },
+    {
+      "code": "COLLOCATION-NETWORK",
+      "sev": "warn",
+      "src": "inventory",
+      "line": 11,
+      "refs": []
+    },
+    {
+      "code": "MISSING-GROUP",
+      "sev": "warn",
+      "src": "inventory",
+      "line": null,
+      "refs": []
+    },
+    {
+      "code": "MISSING-GROUP",
+      "sev": "warn",
+      "src": "inventory",
+      "line": null,
+      "refs": []
+    }
+  ]
+}

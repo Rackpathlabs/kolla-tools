@@ -69,6 +69,20 @@ var DEPRECATED_INV = [
   "[zun]", "ctrl01", ""
 ].join("\\n");
 
+/* Inventory z hostem stojącym WYŁĄCZNIE we własnej grupie — jedyny układ, w którym
+   zapala się HOST-NO-KOLLA-GROUP. Własne inventory z tego samego powodu, co przy
+   trybie aktualizacji: na wbudowanym przykładzie reguła nie ma prawa paść, więc
+   scenariusz nie mógłby ani przejść, ani nie przejść. */
+var ORPHAN_INV = [
+  "[control]", "ctrl01 ansible_host=10.10.0.11", "ctrl02 ansible_host=10.10.0.12",
+  "ctrl03 ansible_host=10.10.0.13", "",
+  "[network]", "ctrl01", "ctrl02", "ctrl03", "",
+  "[compute]", "cmp01 ansible_host=10.10.0.21", "",
+  "[storage]", "cmp01", "",
+  "[monitoring]", "ctrl01", "",
+  "[moja_grupa]", "x1 ansible_host=10.10.0.90", ""
+].join("\\n");
+
 var FILES = [
   { file: "validator.html", name: "stan początkowy", steps: "" },
   { file: "validator.html", name: "przykład z błędami",
@@ -80,6 +94,13 @@ var FILES = [
            'document.getElementById("release").value = "2024.1";' +
            'document.getElementById("release_to").value = "2026.1";' +
            'document.getElementById("release").dispatchEvent(new Event("change"));' },
+  /* Reguła z #10 nie pada w żadnym z pozostałych scenariuszy, więc jej tekst byłby
+     poza zasięgiem check-english.js, check-dictionary.js i migawki z #67 — czyli
+     finding nieosiągalny w rozumieniu #56, tyle że wprowadzony świadomie razem
+     z regułą. Scenariusz wchodzi RAZEM z nią, a nie „kiedyś potem". */
+  { file: "validator.html", name: "host poza zasięgiem Kolli",
+    steps: 'document.getElementById("src").value = "' + ORPHAN_INV + '";' +
+           'document.getElementById("btn-run").click();' },
   { file: "validator.html", name: "reguły dwuplikowe (globals + inventory)",
     steps: 'document.getElementById("btn-sample-bad").click();' +
            'var g = document.getElementById("gsrc");' +

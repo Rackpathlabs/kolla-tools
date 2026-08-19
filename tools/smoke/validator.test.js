@@ -500,6 +500,83 @@ ok("pole globals przyjmuje upuszczenie pliku", document.getElementById("gsrc").l
    wypełnione, a na ekranie zostaje wynik sprzed uśpienia karty. */
 ok("okno nasłuchuje pageshow — powrót karty z bfcache", window.listensTo("pageshow"));
 
+/* ---- kryterium czwarte #10: każdy finding wskazuje linię i nazywa skutek ----
+   Kontrakt DWUKIERUNKOWY, tak jak przy identyfikatorach generatora: brak linii jest
+   dopuszczalny wyłącznie z zapisanym powodem, a powód nie ma prawa się zestarzeć.
+
+   Mierzone nad WSZYSTKIMI wzorcami golden, nie nad jednym inventory — asercja
+   napisana z jednego przebiegu opisuje ten przebieg, nie narzędzie. */
+console.log("linia i skutek w każdym findingu:");
+
+var fsx = require("fs"), pathx = require("path");
+var gdir = pathx.join(__dirname, "..", "golden", "validator");
+
+/* Kody, które NIE MOGĄ wskazać linii, każdy z powodem strukturalnym. Nie jest to
+   lista wyjątków do rozrastania: każdy wpis mówi, czego w pliku nie ma. */
+var NO_LINE = {
+  "MISSING-GROUP":   "grupy nie ma w pliku — nie da się wskazać linii czegoś, czego nikt nie napisał",
+  "RELEASE":         "dotyczy wybranego wydania, a nie miejsca w inventory",
+  "KV-01-FENCING":   "wynika z pary plików, nie z jednego wiersza",
+  "KV-09-VIP-SUBNET":"inferencja z adresów wielu hostów, bez jednego wiersza źródłowego"
+};
+
+var seenNoLine = {}, missingLine = [], missingHint = [], counted = 0;
+fsx.readdirSync(gdir).filter(function (f) { return f.slice(-4) === ".ini"; }).forEach(function (f) {
+  var text = fsx.readFileSync(pathx.join(gdir, f), "utf8");
+  var mrel = /^#\s*golden-release:\s*(\S+)\s*$/m.exec(text);
+  if (!mrel) return;
+  var gp = pathx.join(gdir, f.slice(0, -4) + ".globals.yml");
+  var glob = fsx.existsSync(gp) ? T.GLOBALS.parse(fsx.readFileSync(gp, "utf8")) : null;
+  T.analyse(T.parse(text), mrel[1], glob, {}, null).findings.forEach(function (x) {
+    counted++;
+    if (!x.hint) missingHint.push(x.code);
+    if (x.line === null || x.line === undefined) {
+      seenNoLine[x.code] = 1;
+      if (!NO_LINE[x.code]) missingLine.push(x.code + " (" + f + ")");
+    }
+  });
+});
+
+ok("każdy finding nazywa SKUTEK (hint), " + counted + " sprawdzonych",
+   missingHint.length === 0, missingHint.join(","));
+ok("każdy finding bez linii ma zapisany powód",
+   missingLine.length === 0, missingLine.join(","));
+ok("i żaden powód nie jest nieaktualny — kod, który już wskazuje linię, wypada z listy",
+   Object.keys(NO_LINE).every(function (c) { return seenNoLine[c]; }),
+   Object.keys(NO_LINE).filter(function (c) { return !seenNoLine[c]; }).join(","));
+
+/* ---- reguła grup Kolla (#10): podmiotem jest HOST, nie grupa ---- */
+console.log("hosty poza zasięgiem Kolli:");
+var MULTI = ["[control]", "ctrl01 ansible_host=10.0.0.11", "ctrl02 ansible_host=10.0.0.12",
+             "ctrl03 ansible_host=10.0.0.13", "", "[network]", "ctrl01", "ctrl02", "ctrl03", "",
+             "[compute]", "cmp01 ansible_host=10.0.0.21", "", "[storage]", "cmp01", "",
+             "[monitoring]", "ctrl01", ""].join("\n");
+function orphans(extra) {
+  return T.analyse(T.parse(MULTI + extra), "2026.1", null, {}, null).findings
+          .filter(function (x) { return x.code === "HOST-NO-KOLLA-GROUP"; });
+}
+var only = orphans("\n[moja_grupa]\nx1 ansible_host=10.0.0.90\n");
+ok("host WYŁĄCZNIE we własnej grupie -> dokładnie jeden wpis", only.length === 1, "" + only.length);
+ok("waga to warning, nie info", only.length === 1 && only[0].sev === "warn", only[0] && only[0].sev);
+ok("podmiotem jest HOST i jego nazwa stoi w komunikacie",
+   only.length === 1 && /x1/.test(only[0].msg), only[0] && only[0].msg);
+ok("linia wskazuje DEFINICJĘ HOSTA, nie deklarację grupy",
+   only.length === 1 && only[0].line === MULTI.split("\n").length + 2,
+   only[0] && ("line " + only[0].line));
+ok("i nazywa skutek", only.length === 1 && /No service will be deployed/.test(only[0].hint));
+
+/* PRZYNĘTA — istota problemu z #10: reguła zapalała się tak samo, gdy host stał
+   we własnej grupie ORAZ w [compute]. Pierwszy przypadek jest nieszkodliwy. */
+ok("host we własnej grupie ORAZ w grupie Kolli -> BEZ wpisu",
+   orphans("\n[moja_grupa]\ncmp01\n").length === 0);
+/* PRZYNĘTA druga: zasięg idzie przez :children, nie przez przynależność wprost. */
+ok("host w podgrupie wciągniętej przez :children -> BEZ wpisu",
+   orphans("\n[ceph-osd]\nosd1 ansible_host=10.0.0.91\n\n[storage:children]\nceph-osd\n").length === 0);
+/* GROUP-CUSTOM zostaje: dwa pytania o dwóch różnych podmiotach. */
+ok("wpis o GRUPIE zostaje obok wpisu o HOŚCIE",
+   T.analyse(T.parse(MULTI + "\n[moja_grupa]\nx1 ansible_host=10.0.0.90\n"), "2026.1", null, {}, null)
+    .findings.some(function (x) { return x.code === "GROUP-CUSTOM"; }));
+
 console.log("raport:");
 var res = run("", "2026.1");
 var rep = T.buildReport(res, { e: 0, w: 0, i: 0 });

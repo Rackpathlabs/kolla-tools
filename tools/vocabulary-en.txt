@@ -32,6 +32,7 @@
 # do zbioru zaakceptowanego zapisuje wade pomiaru jako fakt o produkcie.
 #
 # Zbior otwarty 2026-08-19 na main @ 9a45b4e: 1007 pozycji, zero polskich.
+# +3 przy #10 (beyond, implicit, selects — przeczytane i przyjete): 1009 pozycji.
 
 a
 about
@@ -120,6 +121,7 @@ being
 belongs
 below
 between
+beyond
 bfd
 binds
 block
@@ -461,6 +463,7 @@ ignores
 ilo
 image
 images
+implicit
 import
 in
 inbound
@@ -833,6 +836,7 @@ sees
 segment
 select
 selected
+selects
 separate
 separated
 serves
