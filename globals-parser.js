@@ -140,7 +140,7 @@
 
         if (trimmed === "---") {
           if (docSeen) {
-            fail(lineNo, "Drugi dokument YAML w linii " + lineNo + ".",
+            fail(lineNo, "A second YAML document on line " + lineNo + ".",
                  "globals.yml is a single document; multiple documents are not supported.");
           }
           docSeen = true;
@@ -179,14 +179,14 @@
         /* --- wartość w tej samej linii --- */
         if (restTrim !== "") {
           if (/^[|>]/.test(restTrim)) {
-            fail(lineNo, "Skalar blokowy (<code>" + restTrim.charAt(0) + "</code>) w linii " +
-                         lineNo + " przy kluczu <code>" + key + "</code>.",
+            fail(lineNo, "A block scalar (<code>" + restTrim.charAt(0) + "</code>) on line " +
+                         lineNo + " at key <code>" + key + "</code>.",
                  "Multi-line values are not supported.");
             i = endOfIndentedBlock(lines, i + 1);
             continue;
           }
           if (/^[&*!]/.test(restTrim)) {
-            fail(lineNo, "Kotwica, alias lub tag w linii " + lineNo + " przy kluczu <code>" +
+            fail(lineNo, "An anchor, alias or tag on line " + lineNo + " at key <code>" +
                          key + "</code>.", "YAML reference constructs are not supported.");
             i = endOfIndentedBlock(lines, i + 1);
             continue;
@@ -197,7 +197,7 @@
             entry.kind = "list";
             entry.value = parseFlowList(restTrim);
           } else if (restTrim.charAt(0) === "{") {
-            fail(lineNo, "Flow mapping on line " + lineNo + " przy kluczu <code>" +
+            fail(lineNo, "Flow mapping on line " + lineNo + " at key <code>" +
                          key + "</code>.", "Only block mappings are supported.");
             i = endOfIndentedBlock(lines, i + 1);
             continue;
@@ -238,7 +238,7 @@
           if (curIndent < childIndent) break;
           if (curIndent > childIndent) {
             fail(k + 1, "Nesting deeper than one level on line " + (k + 1) +
-                        " przy kluczu <code>" + key + "</code>.",
+                        " at key <code>" + key + "</code>.",
                  "Only one level of nesting is supported.");
             broken = true;
             while (k + 1 < lines.length &&
@@ -258,7 +258,7 @@
               broken = true; last = k + 1; continue;
             }
             if (/:\s/.test(li[2]) || /:$/.test(li[2].trim())) {
-              fail(k + 1, "Sequence of mappings on line " + (k + 1) + " przy kluczu <code>" +
+              fail(k + 1, "Sequence of mappings on line " + (k + 1) + " at key <code>" +
                           key + "</code>.", "A list of objects is not supported.");
               broken = true; last = k + 1; continue;
             }
@@ -273,7 +273,7 @@
             }
             if (mi[3].trim() === "") {
               fail(k + 1, "Nesting deeper than one level on line " + (k + 1) +
-                          " przy kluczu <code>" + key + "</code>.",
+                          " at key <code>" + key + "</code>.",
                    "Only one level of nesting is supported.");
               broken = true; last = k + 1; continue;
             }
@@ -350,7 +350,7 @@
       if (added.length) {
         var tail = [];
         if (text.length && text.charAt(text.length - 1) !== "\n") tail.push("");
-        tail.push("# Klucze dodane przy eksporcie z generatora");
+        tail.push("# Keys added on export from the generator");
         added.forEach(function (k) { tail.push(k + ": " + quote(overrides[k])); });
         text += tail.join("\n") + "\n";
       }
@@ -377,7 +377,7 @@
             msg: "<code>" + key + "</code> " + (d.replacedBy
               ? "was renamed to <code>" + d.replacedBy + "</code>"
               : "is no longer supported") +
-              (rel ? " w wydaniu <code>" + rel.id + "</code>" : "") + ".",
+              (rel ? " in release <code>" + rel.id + "</code>" : "") + ".",
             hint: d.note || null
           });
           return;
