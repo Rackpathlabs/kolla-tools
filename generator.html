@@ -530,7 +530,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         <h2 data-i18n="g.h.lint"></h2>
         <div class="body">
           <div class="status" id="status" role="status" aria-live="polite">
-            <span class="dot"></span><span id="status-txt">Konfiguracja poprawna.</span>
+            <span class="dot"></span><span id="status-txt" data-i18n="g.verdict.pending"></span>
           </div>
           <ul class="diag" id="diag"></ul>
         </div>
@@ -647,6 +647,12 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       /* --- generator: werdykt o pliku ---
          Rejestr: zdanie o PLIKU, nie o narzędziu. "This file is not ready to
          deploy", nie "The generator found errors". */
+      /* Stan PRZED sprawdzeniem. Nie jest werdyktem i nie ma prawa nim być: z JS-em
+         widać go przez moment przed pierwszym renderem, bez JS-u widać go zawsze,
+         a bez JS-u nic nie zostało sprawdzone. Poprzednik ("Konfiguracja poprawna."
+         wpisana w markup) orzekał w tym miejscu, że plik jest poprawny — przy pustym
+         VIP-ie, czyli akurat wtedy, gdy audyt renderuje tam błąd. #64 */
+      "g.verdict.pending":     "Not checked yet.",
       "g.verdict.blocked":     "This file is not ready to deploy: {errors}{warnings}. Export is blocked.",
       "g.verdict.warn":        "This file is ready. {warnings} to check before deploying.",
       "g.verdict.clean":       "Nothing to flag within what the generator checks. The file is ready to download.",
