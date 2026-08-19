@@ -1303,7 +1303,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
         if (trimmed === "---") {
           if (docSeen) {
-            fail(lineNo, "Drugi dokument YAML w linii " + lineNo + ".",
+            fail(lineNo, "A second YAML document on line " + lineNo + ".",
                  "globals.yml is a single document; multiple documents are not supported.");
           }
           docSeen = true;
@@ -1342,14 +1342,14 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         /* --- wartość w tej samej linii --- */
         if (restTrim !== "") {
           if (/^[|>]/.test(restTrim)) {
-            fail(lineNo, "Skalar blokowy (<code>" + restTrim.charAt(0) + "</code>) w linii " +
-                         lineNo + " przy kluczu <code>" + key + "</code>.",
+            fail(lineNo, "A block scalar (<code>" + restTrim.charAt(0) + "</code>) on line " +
+                         lineNo + " at key <code>" + key + "</code>.",
                  "Multi-line values are not supported.");
             i = endOfIndentedBlock(lines, i + 1);
             continue;
           }
           if (/^[&*!]/.test(restTrim)) {
-            fail(lineNo, "Kotwica, alias lub tag w linii " + lineNo + " przy kluczu <code>" +
+            fail(lineNo, "An anchor, alias or tag on line " + lineNo + " at key <code>" +
                          key + "</code>.", "YAML reference constructs are not supported.");
             i = endOfIndentedBlock(lines, i + 1);
             continue;
@@ -1360,7 +1360,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
             entry.kind = "list";
             entry.value = parseFlowList(restTrim);
           } else if (restTrim.charAt(0) === "{") {
-            fail(lineNo, "Flow mapping on line " + lineNo + " przy kluczu <code>" +
+            fail(lineNo, "Flow mapping on line " + lineNo + " at key <code>" +
                          key + "</code>.", "Only block mappings are supported.");
             i = endOfIndentedBlock(lines, i + 1);
             continue;
@@ -1401,7 +1401,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           if (curIndent < childIndent) break;
           if (curIndent > childIndent) {
             fail(k + 1, "Nesting deeper than one level on line " + (k + 1) +
-                        " przy kluczu <code>" + key + "</code>.",
+                        " at key <code>" + key + "</code>.",
                  "Only one level of nesting is supported.");
             broken = true;
             while (k + 1 < lines.length &&
@@ -1421,7 +1421,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
               broken = true; last = k + 1; continue;
             }
             if (/:\s/.test(li[2]) || /:$/.test(li[2].trim())) {
-              fail(k + 1, "Sequence of mappings on line " + (k + 1) + " przy kluczu <code>" +
+              fail(k + 1, "Sequence of mappings on line " + (k + 1) + " at key <code>" +
                           key + "</code>.", "A list of objects is not supported.");
               broken = true; last = k + 1; continue;
             }
@@ -1436,7 +1436,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
             }
             if (mi[3].trim() === "") {
               fail(k + 1, "Nesting deeper than one level on line " + (k + 1) +
-                          " przy kluczu <code>" + key + "</code>.",
+                          " at key <code>" + key + "</code>.",
                    "Only one level of nesting is supported.");
               broken = true; last = k + 1; continue;
             }
@@ -1513,7 +1513,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       if (added.length) {
         var tail = [];
         if (text.length && text.charAt(text.length - 1) !== "\n") tail.push("");
-        tail.push("# Klucze dodane przy eksporcie z generatora");
+        tail.push("# Keys added on export from the generator");
         added.forEach(function (k) { tail.push(k + ": " + quote(overrides[k])); });
         text += tail.join("\n") + "\n";
       }
@@ -1540,7 +1540,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
             msg: "<code>" + key + "</code> " + (d.replacedBy
               ? "was renamed to <code>" + d.replacedBy + "</code>"
               : "is no longer supported") +
-              (rel ? " w wydaniu <code>" + rel.id + "</code>" : "") + ".",
+              (rel ? " in release <code>" + rel.id + "</code>" : "") + ".",
             hint: d.note || null
           });
           return;
@@ -2031,12 +2031,12 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       return;
     }
     if (name.length > 15) {
-      d.push({ id: "IFACE-NAME-TOO-LONG", level: "error", field: label, msg: tag + ": <code>" + esc(name) + "</code> ma " + name.length +
-              " characters; on Linux an interface name may be at most 15." });
+      d.push({ id: "IFACE-NAME-TOO-LONG", level: "error", field: label, msg: tag + ": <code>" + esc(name) + "</code> is " + name.length +
+              " characters long; on Linux an interface name may be at most 15." });
       return;
     }
     if (parseIPv4(name)) {
-      d.push({ id: "IFACE-IS-IP", level: "error", field: label, msg: tag + ": <code>" + esc(name) + "</code> to adres IP, a oczekiwana jest nazwa interfejsu." });
+      d.push({ id: "IFACE-IS-IP", level: "error", field: label, msg: tag + ": <code>" + esc(name) + "</code> is an IP address; an interface name is expected." });
       return;
     }
     if (!IFACE_RE.test(name)) {
@@ -2223,7 +2223,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       d.push({ id: "DISTRO-NOT-IN-RELEASE",
         level: "error", field: "distro",
         msg: "<code>" + esc(s.distro) + "</code> is not a supported base image in release <code>" +
-             esc(rel.id) + "</code>. Dopuszczalne: " +
+             esc(rel.id) + "</code>. Allowed: " +
              rel.baseDistros.map(function (x) { return "<code>" + esc(x) + "</code>"; }).join(", ") + "."
       });
     } else if (rel && (rel.unpublished || []).indexOf(s.distro) !== -1) {
@@ -2251,7 +2251,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       } else if (NAMED_RELEASES.indexOf(base.toLowerCase()) !== -1) {
         d.push({ id: "RELEASE-LEGACY-NAME",
           level: "info", field: "release",
-          msg: "<code>" + esc(base) + "</code> to wydanie sprzed schematu <code>RRRR.N</code>."
+          msg: "<code>" + esc(base) + "</code> is a release from before the <code>YYYY.N</code> scheme."
         });
       } else if (!/^\d{4}\.\d$/.test(base)) {
         d.push({ id: "RELEASE-UNUSUAL-FORM",
@@ -2323,20 +2323,20 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     } else {
       var ip = parseIPv4(s.vip);
       if (!ip) {
-        d.push({ id: "VIP-NOT-IPV4", level: "error", field: "vip", msg: "<code>kolla_internal_vip_address</code>: <code>" + esc(s.vip) + "</code> nie jest poprawnym adresem IPv4." });
+        d.push({ id: "VIP-NOT-IPV4", level: "error", field: "vip", msg: "<code>kolla_internal_vip_address</code>: <code>" + esc(s.vip) + "</code> is not a valid IPv4 address." });
       } else if (ip[0] === 0 || ip[0] === 127 || ip[0] >= 224) {
         d.push({ id: "VIP-RESERVED-RANGE",
           level: "error", field: "vip",
-          msg: "<code>kolla_internal_vip_address</code>: adres <code>" + esc(s.vip) +
+          msg: "<code>kolla_internal_vip_address</code>: the address <code>" + esc(s.vip) +
                "</code> is in a reserved range (loopback, multicast or 0.0.0.0/8)."
         });
       } else if (ip[0] === 169 && ip[1] === 254) {
-        d.push({ id: "VIP-LINK-LOCAL", level: "error", field: "vip", msg: "<code>kolla_internal_vip_address</code>: adres link-local (169.254.0.0/16) nie może pełnić roli VIP." });
+        d.push({ id: "VIP-LINK-LOCAL", level: "error", field: "vip", msg: "<code>kolla_internal_vip_address</code>: a link-local address (169.254.0.0/16) cannot serve as a VIP." });
       } else {
         if (ip[3] === 0 || ip[3] === 255) {
           d.push({ id: "VIP-NETWORK-BROADCAST",
             level: "warn", field: "vip",
-            msg: "<code>kolla_internal_vip_address</code>: ostatni oktet <code>" + ip[3] +
+            msg: "<code>kolla_internal_vip_address</code>: the last octet <code>" + ip[3] +
                  "</code> is the network or broadcast address of a /24. Check the subnet mask."
           });
         }
@@ -2348,12 +2348,12 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         if (isDoc) {
           d.push({ id: "VIP-DOC-RANGE",
             level: "warn", field: "vip",
-            msg: "Adres <code>" + esc(s.vip) + "</code> is from the documentation range (RFC 5737), which usually means a value copied from an example and never replaced."
+            msg: "The address <code>" + esc(s.vip) + "</code> is from the documentation range (RFC 5737), which usually means a value copied from an example and never replaced."
           });
         } else if (isCgnat) {
           d.push({ id: "VIP-CGNAT",
             level: "warn", field: "vip",
-            msg: "Adres <code>" + esc(s.vip) + "</code> is in the CGNAT range (100.64.0.0/10), which carrier infrastructure also uses. Make sure the management network is yours alone."
+            msg: "The address <code>" + esc(s.vip) + "</code> is in the CGNAT range (100.64.0.0/10), which carrier infrastructure also uses. Make sure the management network is yours alone."
           });
         } else if (!isPriv) {
           d.push({ id: "VIP-NOT-PRIVATE",
@@ -2400,7 +2400,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     if (s.t_prometheus) {
       d.push({ id: "PROMETHEUS-MONITORING-GROUP",
         level: "info", field: null,
-        msg: "Prometheus wymaga co najmniej jednego hosta w grupie <code>monitoring</code> w inventory."
+        msg: "Prometheus needs at least one host in the <code>monitoring</code> group in the inventory."
       });
     }
     if (s.storage === "ceph") {
@@ -2415,7 +2415,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         level: "info", field: null,
         msg: "Provider networks map onto " + (extList.length === 1
               ? "one physical network (<code>physnet1</code>)"
-              : extList.length + " sieci fizyczne (<code>" + physnets(s).join("</code>, <code>") + "</code>)") +
+              : extList.length + " physical networks (<code>" + physnets(s).join("</code>, <code>") + "</code>)") +
              ". The switch port must be configured to match the network type."
       });
     }
@@ -2896,7 +2896,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       found.push({ id: "IMPORT-VALUE-SANITISED",
         level: "warn", field: id,
         msg: "The value <code>" + esc(String(raw[id])) + "</code> from the file failed the " +
-             "formatu pola <code>" + id + "</code> — <code>" + esc(String(clean[id])) +
+             "format of field <code>" + id + "</code> — <code>" + esc(String(clean[id])) +
              "</code>. The original entry stays untouched until the form changes it."
       });
     });

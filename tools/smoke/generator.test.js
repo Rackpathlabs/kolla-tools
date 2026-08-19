@@ -247,7 +247,7 @@ var em = P.emit(P.parse(src), { klucz: "nowa" });
 ok("podmiana zachowuje komentarz końcowy", /klucz: "nowa"   # koniec linii/.test(em.text), em.text);
 ok("podmiana nie rusza pozostałych linii", /^---\n# komentarz\n/.test(em.text));
 ok("klucz spoza pliku trafia na koniec z adnotacją",
-   /# Klucze dodane przy eksporcie/.test(P.emit(P.parse(src), { nowy: "x" }).text));
+   /# Keys added on export from the generator/.test(P.emit(P.parse(src), { nowy: "x" }).text));
 ok("klucz niebędący skalarem jest pomijany, nie psuty",
    P.emit(P.parse("---\nlista:\n  - a\n"), { lista: "x" }).skipped.join(",") === "lista");
 
