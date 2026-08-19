@@ -178,6 +178,66 @@ R.ok("atrybut spoza czterech form nie jest ujściem", !/data-i18n-note/.test(app
    Gdyby ta kontrola go liczyła, mówiłaby o cudzym błędzie cudzym językiem. */
 R.ok("klucz spoza słownika należy do check-i18n.js, nie tutaj", !/k\.missing/.test(applyBad.out));
 
+/* ---- migawka widocznego tekstu: kontrola ORAZ jej odmowa ----
+   Strażnik z #67 ma własny tryb awarii nazwany przy narodzinach: umiera w dniu,
+   w którym ktoś odruchowo puści --update na czerwonym diffie, i robi to po cichu.
+   Dlatego testowana jest nie tylko kontrola, ale i ODMOWA — bo to ona jest tym,
+   co odróżnia migawkę od migawki na jedną iterację. */
+var SNAP = "tools/fixtures/snapshot";
+function snap(report, extra) {
+  return run("golden/snapshot.golden.js",
+             ["tools/fixtures/snapshot-report-" + report + ".json", "--dir", SNAP].concat(extra || []));
+}
+
+var snapSame = snap("same");
+R.ok("migawka zgodna -> zielone", snapSame.code === 0, "kod " + snapSame.code);
+
+var snapRm = snap("removed");
+R.ok("z migawki UBYWA napis -> czerwone", snapRm.code === 1, "kod " + snapRm.code);
+R.ok("i diff wypisuje CO ubyło, nie samą liczbę",
+     /- SPAN "required"/.test(snapRm.out), snapRm.out.split("\n")[0]);
+
+var snapAdd = snap("added");
+R.ok("do migawki DOCHODZI napis -> też czerwone (zmiana jest zmianą)",
+     snapAdd.code === 1 && /\+1 \/ -0/.test(snapAdd.out), snapAdd.out.split("\n")[0]);
+
+/* PRZYNĘTA: podgląd emitowanego pliku to WYTWÓR NARZĘDZIA, nie interfejs.
+   Gdyby wchodził do migawki, przełączenie usługi ruszałoby ją przy nieruszonym
+   interfejsie — i migawka zaczęłaby produkować fałszywe czerwone, aż ktoś by ją
+   osłabił. Ta sama jednostka co odcisk w check-rendered.js, ten sam powód. */
+var snapData = snap("data");
+R.ok("treść podglądu pliku (inData) NIE wchodzi do migawki", snapData.code === 0,
+     snapData.out.split("\n")[0]);
+
+/* ODMOWA. Najważniejsza asercja tej grupy: --update na ubytku ma NIE zadziałać
+   i ma NIE ruszyć pliku. Sam komunikat nie wystarcza — strażnik, który wypisuje
+   odmowę i mimo to zapisuje, wygląda identycznie w logu. */
+var before = require("fs").readFileSync(path.join(root, SNAP, "demo--scenariusz.txt"), "utf8");
+var snapRefuse = snap("removed", ["--update"]);
+var after = require("fs").readFileSync(path.join(root, SNAP, "demo--scenariusz.txt"), "utf8");
+R.ok("--update na UBYTKU odmawia", snapRefuse.code === 1 && /ODMOWA --update/.test(snapRefuse.out),
+     "kod " + snapRefuse.code);
+R.ok("i wypisuje pozycję po pozycji, co miało zniknąć",
+     /- SPAN "required"/.test(snapRefuse.out));
+R.ok("i NIE nadpisuje migawki mimo odmowy", before === after);
+R.ok("i nazywa flagę, która jest osobną decyzją", /--accept-removals/.test(snapRefuse.out));
+
+/* PRZYROST jest zwykłą pracą i --update ma go przyjąć bez ceregieli — inaczej
+   odmowa stałaby się szumem i ktoś dopisałby --accept-removals do runnera. */
+var snapAddUpd = snap("added", ["--update"]);
+R.ok("--update na PRZYROŚCIE przechodzi bez odmowy",
+     snapAddUpd.code === 0 && !/ODMOWA/.test(snapAddUpd.out), "kod " + snapAddUpd.code);
+/* przywracamy fixturę, bo powyższy przebieg ją zapisał */
+require("fs").writeFileSync(path.join(root, SNAP, "demo--scenariusz.txt"), before);
+
+var snapUntagged = snap("untagged");
+R.ok("raport sprzed #67 (bez nazwy scenariusza) -> czerwone, nie cicha migawka undefined",
+     snapUntagged.code === 1 && /bez nazwy scenariusza/.test(snapUntagged.out), "kod " + snapUntagged.code);
+
+var snapOrphan = snap("orphan");
+R.ok("scenariusz zniknął z raportu -> czerwone (ubytek największy z możliwych)",
+     snapOrphan.code === 1 && /scenariusza w raporcie NIE MA/.test(snapOrphan.out), "kod " + snapOrphan.code);
+
 /* ---- przynęta: kontrprzykład reguły kształtu ----
    "Narzędzia" to aria-label: jednowyrazowy, więc reguła kształtu dla placeholderów
    zwolniłaby go i polski napis czytany na głos nigdy by się nie przetłumaczył.

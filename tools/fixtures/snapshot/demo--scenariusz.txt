@@ -1,0 +1,3 @@
+H1 "Inventory validator"
+SPAN "required"
+P "Storage traffic. Empty inherits network_interface."

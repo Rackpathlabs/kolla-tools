@@ -6,6 +6,14 @@ trafienia" złapałoby licznik zliczający połówki par, licznik gubiący konka
 i licznik z przesuniętym parowaniem cudzysłowów — czyli trzy z sześciu awarii
 oprzyrządowania, których w tym repozytorium nie złapało nic.
 
+MIGAWKA (#67) ma fixture na ODMOWE, nie tylko na kontrole. Ten straznik ma wlasny
+tryb awarii nazwany przy narodzinach: umiera w dniu, w ktorym ktos odruchowo pusci
+--update na czerwonym diffie, i robi to po cichu. Testowane jest wiec, ze --update
+przy UBYTKU tekstu odmawia, wypisuje pozycje po pozycji i NIE RUSZA pliku — ostatnie
+osobno, bo straznik wypisujacy odmowe i mimo to zapisujacy wyglada w logu identycznie.
+Przyrost tekstu przechodzi bez ceregieli; gdyby odmawiał takze na nim, odmowa stalaby
+sie szumem i ktos dopisalby --accept-removals do runnera na stale.
+
 KAŻDA fixtura brudna niesie PRZYNĘTĘ: coś, co wygląda na naruszenie, a nim nie jest,
 plus asercję, że nie zostało policzone. Strażnik za czuły jest szkodliwy tak samo jak
 za luźny, tylko inaczej — nie przepuszcza błędu, lecz produkuje szum, aż ktoś go
@@ -25,7 +33,9 @@ Przynęty, obecne i planowane:
   kryterium       napis ze słownika z liczbą z przodu ("5 hosts")              ZROBIONE
                   + cztery dalsze przynęty w report-known.json: liczba, krótki
                     segment przez równość, treść podglądu, wartość <option>
-  pusty scenariusz  scenariusz legalnie nieruszający korpusu, ze zwolnieniem   DO ZROBIENIA
+  pusty scenariusz  scenariusz legalnie nieruszajacy korpusu, ze zwolnieniem   DO ZROBIENIA
+  migawka         przyrost tekstu (zwykla praca) obok ubytku (awaria)         ZROBIONE
+                  + tresc podgladu pliku, ktora do migawki NIE wchodzi
 
 Dwie ostatnie zamieniają dzisiejszy problem w przypadek testowy: „5 hosts" przestaje
 być zagadką i staje się przynętą, na której normalizacja musi się udowodnić.
