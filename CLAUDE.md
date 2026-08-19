@@ -55,3 +55,42 @@ differently and that behaviour is not ours to depend on. A rule shaped like the 
 behaviour of somebody else's parser goes stale without anybody noticing — which is the
 same reason the exception categories in this repository are written as criteria rather
 than as lists.
+
+## A ratchet threshold may only fall
+
+Two guards hold a number that existing debt is measured against, and both are ratchets:
+
+| threshold | file | what it counts |
+|---|---|---|
+| `BASELINE` | `tools/check-dictionary.js` | visible strings not covered by the dictionary |
+| `ORPHAN_BASELINE` | `tools/check-markup-dict.js` | dictionary keys with no anchor in the markup |
+
+The rule below applies to both. Naming one of two identical mechanisms invites the other
+to drift.
+
+**Raising a threshold because the guard started seeing a NEW CLASS of text is allowed.**
+A new scenario, a new sink, a widened collection scope — the debt did not grow, the
+instrument did. The pull request description must carry the decomposition, arithmetic
+included, showing how much of the rise is coverage and how much is anything else. A
+number offered without its parts is not a measurement; it is a request to be believed.
+
+**Raising a threshold because new unanchored text was added is forbidden. No
+exceptions.** A change that adds text outside the dictionary either gets to zero new
+debt or does not land. This is the entire purpose of the threshold: existing debt is
+described by a number, and every new string goes through a key.
+
+**In the long run the number may only fall.** Every allowed rise is a rise for a reason
+that is not debt, so the debt component itself never grows. When it drops, lower the
+threshold in the same pull request — a threshold left above the measurement stops
+protecting the distance between them.
+
+**The defect that produced this rule.** In one session `BASELINE` went 444 → 461 → 488 →
+530. Each step was decomposed and each was defensible, and the sequence still reads as a
+threshold that follows the code instead of constraining it. Three of the four rises were
+coverage, one was measurement artefact, and the fourth — during #9 — was **zero**: an
+entire new interface layer went in without moving the number, which is what the guard is
+for and what the previous three rises made hard to see.
+
+A meter nobody trusts stops protecting anything. That is the lesson of #63, where a
+language guard reported zero against thirteen hand-found positions and had been green
+for weeks.
