@@ -291,6 +291,25 @@ report.forEach(function (f) {
 
    +42 to znowu NOWE POKRYCIE: piętnasty scenariusz renderuje tabelę zestawienia,
    a razem z nią całą warstwę findingów i podglądu, której tamten stan nie pokazywał. */
+/* ===========================================================================
+   ZASADA ZMIANY TEGO PROGU — pełna wersja w CLAUDE.md, sekcja
+   „A ratchet threshold may only fall". Tu jest to, co musi przeczytać ktoś,
+   kto właśnie chce podnieść tę liczbę:
+
+     PODNIESIENIE, BO STRAŻNIK ZACZĄŁ WIDZIEĆ NOWĄ KLASĘ TEKSTU — wolno.
+       Nowy scenariusz, nowe ujście, poszerzony zakres zbierania. Dług nie urósł,
+       urósł przyrząd. Opis PR-a MUSI nieść rozbicie z arytmetyką.
+
+     PODNIESIENIE, BO PRZYBYŁO NIEOKOTWICZONEGO TEKSTU — ZAKAZANE, bez wyjątków.
+       PR schodzi do zera nowego długu albo nie wchodzi. Po to jest ten próg.
+
+     DOCELOWO LICZBA MOŻE JUŻ TYLKO SPADAĆ. Gdy spadnie — obniż próg w tym samym
+       PR-ze. Próg zostawiony nad pomiarem przestaje chronić odległość między nimi.
+
+   Powód: w jednej sesji ta liczba przeszła 444 -> 461 -> 488 -> 530. Każdy krok
+   był rozbity i każdy dało się obronić, a ciąg i tak czyta się jak próg, który
+   podąża za kodem zamiast go ograniczać.
+   =========================================================================== */
 var BASELINE = 530;
 
 console.log("segmentów w słowniku: " + SEGS.length +

@@ -201,6 +201,9 @@ var orphan = Object.keys(DICT).filter(function (k) { return !anchored[k]; });
    nowy klucz bez elementu to nowy tekst poza zasięgiem kryterium równości, a jego
    jedynym strażnikiem zostają wtedy kontrole zależne od pokrycia scenariuszami.
    Spadek jest dobrym znakiem i wtedy próg się obniża. */
+/* Ta sama zasada zmiany co przy BASELINE w check-dictionary.js: podniesienie wolno
+   wyłącznie wtedy, gdy strażnik zaczął WIDZIEĆ więcej, nigdy gdy PRZYBYŁO tekstu.
+   Pełna wersja w CLAUDE.md, sekcja „A ratchet threshold may only fall". */
 var ORPHAN_BASELINE = 123;
 var FULL_RUN = process.argv.length <= 2;
 

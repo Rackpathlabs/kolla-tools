@@ -81,7 +81,8 @@ else
     echo "OK   CLAUDE.md ($n B)"
   fi
   for want in "Never write a closing keyword next to an issue number" \
-              "The defect that produced this rule"; do
+              "The defect that produced this rule" \
+              "A ratchet threshold may only fall"; do
     if grep -qF "$want" CLAUDE.md; then
       echo "OK   reguła: $want"
     else
