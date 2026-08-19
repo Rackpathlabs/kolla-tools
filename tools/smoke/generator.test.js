@@ -5,6 +5,7 @@ lib.installDom();
 var T = lib.loadTool(process.argv[2],
   ["validate", "findRelease", "DISTROS", "KOLLA_MATRIX", "buildYaml", "badFields",
    "DEFAULTS", "baseDev", "physnets", "LINT", "DIAG_IDS",
+   "overrides", "overridesText", "I18N",
    "GLOBALS", "rawStateFromParsed", "changedOverrides", "yamlBool"]);
 
 var R = lib.runner();
@@ -418,6 +419,68 @@ ok("każda reguła z LINT ma identyfikator z własnym numerem KV",
    Object.keys(T.LINT).filter(function (k) { return /^KV-/.test(k); }).every(function (k) {
      return Object.keys(T.DIAG_IDS).some(function (i) { return i.indexOf(k + "-") === 0; });
    }));
+
+/* ---- widok „tylko to, co się różni" (#9) ----
+   Linia odniesienia to STAN POCZĄTKOWY TEGO NARZĘDZIA. Zgłoszenie prosiło o różnicę
+   wobec wartości domyślnych Kolla-Ansible i tego nie da się dowieźć uczciwie: macierz
+   zna upstreamowy default dla jednego z emitowanych kluczy. Asercje pilnują GRANICY
+   TWIERDZENIA, nie tylko działania — bo to ona jest tu najłatwiejsza do zgubienia
+   przy pierwszej korekcie redakcyjnej. */
+console.log("widok różnic:");
+
+function diffOf(over) {
+  var s = base(over);
+  return T.overrides(T.buildYaml(s, T.badFields(T.validate(s, null))).text);
+}
+/* base() ustawia vip, więc stanem POCZĄTKOWYM jest samo DEFAULTS. */
+var pristine = {};
+Object.keys(T.DEFAULTS).forEach(function (k) { pristine[k] = T.DEFAULTS[k]; });
+var zero = T.overrides(T.buildYaml(pristine, T.badFields(T.validate(pristine, null))).text);
+ok("stan początkowy nie różni się od samego siebie", zero.length === 0,
+   JSON.stringify(zero.map(function (r) { return r.key; })));
+
+var one = diffOf({ vip: "10.0.0.250" });
+ok("zmiana jednego pola daje DOKŁADNIE jedną różnicę", one.length === 1,
+   JSON.stringify(one.map(function (r) { return r.key; })));
+ok("i jest nią ten klucz", one.length === 1 && one[0].key === "kolla_internal_vip_address");
+
+/* Klucz, który w stanie początkowym BYŁ, a teraz go nie ma. Jedyna różnica,
+   której nie da się zapisać linią — ma być w zestawieniu i nie ma jej w snippecie. */
+var gone = diffOf({ vip: "10.0.0.250", br_name: "" });
+var goneRow = gone.filter(function (r) { return r.key === "neutron_bridge_name"; });
+ok("klucz zniknięty jest różnicą", goneRow.length === 1, JSON.stringify(gone.map(function(r){return r.key;})));
+ok("i ma pustą stronę „teraz\"", goneRow.length === 1 && goneRow[0].now === null);
+ok("i NIE trafia do snippetu, bo nie jest linią",
+   T.overridesText(gone).indexOf("neutron_bridge_name") === -1, T.overridesText(gone));
+
+/* Wartość odrzucona przez walidację nie jest różnicą WARTOŚCI. Bez tego stan
+   początkowy raportował jedną różnicę wobec samego siebie — pusty VIP kontra
+   pusty VIP z adnotacją. */
+ok("adnotacja odrzucenia nie jest różnicą wartości", diffOf({ vip: "999.9.9.9" }).length === 0,
+   JSON.stringify(diffOf({ vip: "999.9.9.9" })));
+
+/* GRANICA TWIERDZENIA. Snippet wyjeżdża poza przeglądarkę i nikt nie zobaczy obok
+   niego zdania z interfejsu, więc musi nieść je sam. */
+var snip = T.overridesText(one);
+ok("snippet nazywa linię odniesienia", /this tool's initial values/.test(snip), snip.split("\n")[0]);
+ok("snippet WPROST zaprzecza porównaniu z upstreamem",
+   /NOT a comparison against kolla-ansible defaults/.test(snip), snip.split("\n")[1]);
+
+/* Żaden wpis słownika nie ma prawa TWIERDZIĆ porównania z defaultami Kolli.
+   Kontrola kształtu, nie treści: szukamy twierdzenia, nie konkretnego zdania. */
+var claims = Object.keys(T.I18N.dict).filter(function (k) {
+  var v = String(T.I18N.dict[k]);
+  return /(differs?|different|compared?)[^.]{0,40}(kolla|upstream)[^.]{0,20}default/i.test(v) &&
+         !/\bnot\b/i.test(v);
+});
+ok("żaden wpis słownika nie twierdzi porównania z defaultami Kolli/upstreamu",
+   claims.length === 0, claims.join(","));
+
+/* Wybór widoku nie jest polem konfiguracji — inaczej pojawiłby się we własnym
+   zestawieniu jako klucz, którego nie ma w pliku. */
+ok("wybór widoku nie jest polem stanu",
+   !Object.prototype.hasOwnProperty.call(T.DEFAULTS, "view") &&
+   !Object.prototype.hasOwnProperty.call(T.DEFAULTS, "showDiff"));
 
 console.log("YAML:");
 var y = T.buildYaml(base(), {});

@@ -157,6 +157,25 @@ pre.yaml{
   font:13px/1.62 var(--mono);tab-size:2
 }
 @media (max-width:960px){pre.yaml{max-height:none}}
+/* Przełącznik widoku wyjścia (#9). Segmenty, nie select — wybór jest binarny
+   i ma być widoczny bez rozwijania, bo zmienia to, co kopiuje przycisk obok. */
+.viewsel{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.viewsel label{display:inline-block;font:11px/1.8 var(--mono);font-weight:700;letter-spacing:.4px;
+  padding:1px 9px;cursor:pointer;color:var(--dim);background:transparent}
+.viewsel input{position:absolute;opacity:0;width:0;height:0}
+.viewsel input:checked+span{color:var(--accent)}
+.viewsel label:has(input:checked){background:#222b34}
+.viewsel input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+/* Zestawienie obok siebie: klucz, wartość początkowa, wartość w tym pliku. */
+table.difftab{width:100%;border-collapse:collapse;font:12px/1.7 var(--mono)}
+table.difftab th{text-align:left;font-weight:700;color:var(--dim);border-bottom:1px solid var(--line);
+  padding:5px 8px;font-size:11px;letter-spacing:.4px}
+table.difftab td{padding:4px 8px;border-bottom:1px solid var(--line);vertical-align:top;word-break:break-word}
+table.difftab td.k{color:var(--accent)}
+table.difftab td.was{color:var(--dim)}
+table.difftab tr:last-child td{border-bottom:0}
+table.difftab td.none{color:var(--dim);font-style:italic}
+.diffnote{padding:8px 12px;border-bottom:1px solid var(--line)}
 .row{display:block;white-space:pre;padding:0 16px 0 0}
 .row .no{
   display:inline-block;width:44px;padding-right:14px;text-align:right;color:#5f6d7a;
@@ -519,11 +538,31 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         <div class="out-head">
           <span class="fname">/etc/kolla/globals.yml</span>
           <span class="mode" id="out-mode" hidden>original + edits</span>
+          <span class="viewsel" role="radiogroup" data-i18n-label="g.view.group">
+            <label><input type="radio" name="outview" id="view-full" checked><span data-i18n="g.view.full"></span></label>
+            <label><input type="radio" name="outview" id="view-diff"><span data-i18n="g.view.diff"></span></label>
+          </span>
           <span class="sp"></span>
           <button type="button" id="btn-copy" aria-describedby="status-txt">Copy</button>
           <button type="button" class="primary" id="btn-download" aria-describedby="status-txt">Download globals.yml</button>
         </div>
+        <p class="hint diffnote" id="view-note" data-i18n="g.view.note" hidden></p>
         <pre class="yaml" id="out" tabindex="0" aria-label="Preview of the generated globals.yml"></pre>
+      </div>
+
+      <div class="panel" id="diffpanel" style="margin-top:18px" hidden>
+        <h2 data-i18n="g.h.diff"></h2>
+        <div class="body">
+          <p class="hint" data-i18n="g.view.tableNote"></p>
+          <table class="difftab" id="difftab">
+            <thead><tr>
+              <th data-i18n="g.diff.key"></th>
+              <th data-i18n="g.diff.initial"></th>
+              <th data-i18n="g.diff.thisFile"></th>
+            </tr></thead>
+            <tbody id="diffbody"></tbody>
+          </table>
+        </div>
       </div>
 
       <div class="panel" style="margin-top:18px">
@@ -652,6 +691,22 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
          a bez JS-u nic nie zostało sprawdzone. Poprzednik ("Konfiguracja poprawna."
          wpisana w markup) orzekał w tym miejscu, że plik jest poprawny — przy pustym
          VIP-ie, czyli akurat wtedy, gdy audyt renderuje tam błąd. #64 */
+      /* Widok wyjścia (#9). LINIA ODNIESIENIA JEST NAZWANA WPROST i ani jeden z tych
+         napisów nie mówi „Kolla defaults" — narzędzie nie zna wartości domyślnych
+         upstreamu dla 24 z 25 emitowanych kluczy, więc takie zdanie byłoby
+         twierdzeniem bez pokrycia, czyli dokładnie tym, czego zabrania SCOPE.md.
+         Pełne porównanie z upstreamem czeka na skuratowaną tabelę defaultów. */
+      "g.view.group":          "Output view",
+      "g.view.full":           "full file",
+      "g.view.diff":           "only what differs",
+      "g.view.note":           "Showing only the keys whose value differs from this tool's initial values — the state this form starts in. This is <strong>not</strong> a comparison against kolla-ansible defaults: this tool does not know them, so a key missing here may still differ from upstream.",
+      "g.view.tableNote":      "Left is this tool's initial value, right is the value in the file above.",
+      "g.h.diff":              "Differences from the initial values",
+      "g.diff.key":            "key",
+      "g.diff.initial":        "initial value",
+      "g.diff.thisFile":       "this file",
+      "g.diff.absent":         "not emitted",
+
       "g.verdict.pending":     "Not checked yet.",
       "g.verdict.blocked":     "This file is not ready to deploy: {errors}{warnings}. Export is blocked.",
       "g.verdict.warn":        "This file is ready. {warnings} to check before deploying.",
@@ -1873,11 +1928,21 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
   var diag = document.getElementById("diag");
   var statusBox = document.getElementById("status");
   var statusTxt = document.getElementById("status-txt");
+  var diffBody = document.getElementById("diffbody");
+  var diffPanel = document.getElementById("diffpanel");
+  var viewNote = document.getElementById("view-note");
+  var viewFull = document.getElementById("view-full");
+  var viewDiff = document.getElementById("view-diff");
   var btnCopy = document.getElementById("btn-copy");
   var btnDownload = document.getElementById("btn-download");
   var toastEl = document.getElementById("toast");
 
   var currentYaml = "";
+  /* Wybór widoku NIE jest polem konfiguracji i celowo nie leży w DEFAULTS ani
+     w readState(). Gdyby leżał, pojawiłby się we własnym zestawieniu różnic jako
+     klucz, którego nie ma w pliku — miernik mierzący sam siebie. */
+  var showDiff = false;
+  var currentRows = [];
   var hasErrors = false;
 
   /* localStorage bywa niedostępny: file:// w części przeglądarek, tryb prywatny, polityka firmowa */
@@ -2703,6 +2768,101 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     out.innerHTML = html;
   }
 
+  /* ------------------------------------------------------------------ */
+  /* Widok „tylko to, co się różni" (#9)                                  */
+  /* ------------------------------------------------------------------ */
+  /* LINIA ODNIESIENIA TO STAN POCZĄTKOWY TEGO NARZĘDZIA, i to zdanie jest całą
+     ostrożnością tej funkcji. Zgłoszenie prosiło o różnicę wobec WARTOŚCI DOMYŚLNYCH
+     KOLLA-ANSIBLE — i tego nie da się tu dowieźć uczciwie: KOLLA_MATRIX.keys zna
+     upstreamowy default dla czterech kluczy, z czego generator emituje JEDEN
+     (om_enable_rabbitmq_stream_fanout). Pozostałych dwudziestu czterech nie zna.
+     Napisanie „differs from Kolla defaults" nad porównaniem z NASZYMI wartościami
+     byłoby twierdzeniem bez pokrycia — tym samym, czego zabrania SCOPE.md i czym jest
+     cały ten projekt. Adnotacji „prawdziwy default upstreamu" też tu nie ma: jeden
+     klucz na dwadzieścia pięć to nie adnotacja, tylko sugestia, że sprawdzone są też
+     pozostałe. Pełne porównanie czeka na skuratowaną tabelę defaultów per wydanie.
+
+     PORÓWNUJEMY WYEMITOWANE PLIKI, nie pola formularza. Mapowanie pole -> klucz nie
+     jest jeden do jednego: część kluczy pada tylko przy włączonej usłudze, część
+     składa się z kilku pól. Zbudowanie pliku dwa razy i porównanie go po kluczach
+     mierzy to, co użytkownik faktycznie dostaje, a nie naszą reprezentację tego. */
+  var KEY_LINE_RE = /^([A-Za-z_][A-Za-z0-9_]*):[ \t](.*)$/;
+
+  function yamlKeys(text) {
+    var map = Object.create(null), order = [];
+    text.split("\n").forEach(function (line) {
+      var m = KEY_LINE_RE.exec(line);
+      if (!m) return;
+      if (!(m[1] in map)) order.push(m[1]);
+      map[m[1]] = m[2];
+    });
+    return { map: map, order: order };
+  }
+
+  /* Bez komentarzy i bez znaczników odrzucenia: linia odniesienia ma być samym
+     zestawem par klucz-wartość, w które ten formularz startuje. */
+  function baselineKeys() {
+    var b = {};
+    Object.keys(DEFAULTS).forEach(function (k) { b[k] = DEFAULTS[k]; });
+    b.t_comments = false;
+    return yamlKeys(buildYaml(b, {}).text);
+  }
+
+  /* Adnotacja odrzucenia NIE JEST różnicą wartości. Linia odniesienia powstaje bez
+     znaczników walidacji, więc pole puste i odrzucone („" # INVALID: …") różniło się
+     od pola pustego — i stan początkowy formularza raportował jedną różnicę wobec
+     samego siebie. Porównujemy wartość, pokazujemy linię. */
+  function cmpVal(v) {
+    return v === null ? null : v.replace(/\s+# INVALID:.*$/, "");
+  }
+
+  function overrides(text) {
+    var base = baselineKeys(), cur = yamlKeys(text), rows = [];
+    cur.order.forEach(function (k) {
+      var was = Object.prototype.hasOwnProperty.call(base.map, k) ? base.map[k] : null;
+      if (cmpVal(was) === cmpVal(cur.map[k])) return;
+      rows.push({ key: k, was: was, now: cur.map[k] });
+    });
+    /* Klucz, który w stanie początkowym BYŁ, a teraz go nie ma, jest różnicą tak samo
+       jak zmiana wartości — i jest jedyną, której nie da się zapisać linią w snippecie.
+       Pominięcie go dałoby zestawienie zgadzające się ze snippetem i niezgadzające się
+       z plikiem. Wchodzi do tabeli, nie wchodzi do snippetu. */
+    base.order.forEach(function (k) {
+      if (Object.prototype.hasOwnProperty.call(cur.map, k)) return;
+      rows.push({ key: k, was: base.map[k], now: null });
+    });
+    return rows;
+  }
+
+  /* Snippet do wklejenia w pull requeście. Nagłówek mówi, czym JEST linia odniesienia
+     i czym NIE JEST — bo ten tekst wyjeżdża poza przeglądarkę i nikt nie zobaczy obok
+     niego interfejsu, w którym stało wyjaśnienie. */
+  function overridesText(rows) {
+    var L = ["# Keys whose value differs from this tool's initial values.",
+             "# NOT a comparison against kolla-ansible defaults - this tool does not know them."];
+    var any = false;
+    rows.forEach(function (r) {
+      if (r.now === null) return;
+      any = true;
+      L.push(r.key + ": " + r.now);
+    });
+    if (!any) L.push("# (nothing differs from the initial values)");
+    return L.join("\n");
+  }
+
+  function renderDiff(rows) {
+    diffBody.innerHTML = rows.map(function (r) {
+      var was = r.was === null
+        ? '<span class="none">' + esc(T("g.diff.absent")) + "</span>"
+        : esc(r.was);
+      var now = r.now === null
+        ? '<span class="none">' + esc(T("g.diff.absent")) + "</span>"
+        : esc(r.now);
+      return '<tr><td class="k">' + esc(r.key) + '</td><td class="was">' + was +
+             "</td><td>" + now + "</td></tr>";
+    }).join("");
+  }
+
   function renderDiagnostics(list) {
     var errors = 0, warns = 0;
     var describedBy = {};
@@ -2953,7 +3113,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     }
 
     currentYaml = built.text;
-    renderYaml(currentYaml);
+    currentRows = overrides(currentYaml);
+    renderDiff(currentRows);
+    renderView();
     renderDiagnostics(d);
     clearTimeout(saveTimer);
     saveTimer = setTimeout(function () { save(s); }, 300);
@@ -2972,6 +3134,18 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     toastTimer = setTimeout(function () { toastEl.classList.remove("on"); }, 2400);
   }
 
+  /* Podgląd pokazuje TO, CO KOPIUJE przycisk obok — inaczej „Copy" znaczyłoby co
+     innego niż to, na co użytkownik patrzy. Pobieranie zostaje przy PEŁNYM pliku
+     zawsze: snippet nie jest plikiem globals.yml i nazwanie go tak byłoby tą samą
+     klasą pomyłki co werdykt przed sprawdzeniem. */
+  function renderView() {
+    var text = showDiff ? overridesText(currentRows) : currentYaml;
+    renderYaml(text);
+    diffPanel.hidden = !showDiff;
+    viewNote.hidden = !showDiff;
+  }
+
+  function viewText() { return showDiff ? overridesText(currentRows) : currentYaml; }
   function exportText() { return currentYaml.replace(/\n?$/, "\n"); }
 
   function copyText(text) {
@@ -3019,7 +3193,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
   btnCopy.addEventListener("click", function () {
     if (hasErrors) return;
-    copyText(exportText());
+    copyText(viewText().replace(/\n?$/, "\n"));
   });
   btnDownload.addEventListener("click", function () {
     if (hasErrors) return;
@@ -3127,6 +3301,12 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
   }
 
   /* ------------------------------------------------------------------ */
+  /* Przełącznik widoku. Nie przelicza pliku — plik jest ten sam, zmienia się to,
+     co z niego pokazujemy. Przeliczanie tutaj dawałoby drugą drogę do renderu
+     i drugą okazję, żeby te dwie drogi się rozjechały. */
+  viewFull.addEventListener("change", function () { showDiff = false; renderView(); });
+  viewDiff.addEventListener("change", function () { showDiff = true; renderView(); });
+
   applyI18n();
   populateFromMatrix();
   applyState(load() || DEFAULTS);

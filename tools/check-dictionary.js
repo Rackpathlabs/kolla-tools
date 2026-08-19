@@ -273,8 +273,25 @@ report.forEach(function (f) {
    dziecka. Żaden z trzech napisów nie równa się żadnemu segmentowi.
 
    Sprawdzone, nie założone: przeniesienie tekstu reguły z literału do słownika
-   obniżyło licznik o 3 (491 -> 488), nie o 8. Reszta została po stronie artefaktu. */
-var BASELINE = 488;
+   obniżyło licznik o 3 (491 -> 488), nie o 8. Reszta została po stronie artefaktu.
+
+   ---------------------------------------------------------------------------
+   530, zmierzone 2026-08-19 przy #9. Rozbite tak samo i z tym samym wnioskiem
+   w odwrotną stronę:
+
+       488   main @ 3df500b, 14 scenariuszy
+     +  0    widok różnic (#9), te same 14 scenariuszy
+     + 42    piętnasty scenariusz (widok różnic)
+     = 530
+
+   ZERO. Cała nowa warstwa interfejsu — przełącznik, zdanie o linii odniesienia,
+   nagłówki zestawienia, etykieta „not emitted" — idzie przez słownik, więc licznik
+   na niezmienionym zestawie scenariuszy nie drgnął. To jest dokładnie to zachowanie,
+   którego ten próg pilnuje, i pierwszy raz, kiedy nowa funkcja go nie ruszyła.
+
+   +42 to znowu NOWE POKRYCIE: piętnasty scenariusz renderuje tabelę zestawienia,
+   a razem z nią całą warstwę findingów i podglądu, której tamten stan nie pokazywał. */
+var BASELINE = 530;
 
 console.log("segmentów w słowniku: " + SEGS.length +
             "   pustych odfiltrowanych: " + EMPTY_SEGMENTS);
