@@ -4,7 +4,7 @@ var lib = require("../testlib");
 lib.installDom();
 var T = lib.loadTool(process.argv[2],
   ["validate", "findRelease", "DISTROS", "KOLLA_MATRIX", "buildYaml", "badFields",
-   "DEFAULTS", "baseDev", "physnets", "LINT",
+   "DEFAULTS", "baseDev", "physnets", "LINT", "DIAG_IDS",
    "GLOBALS", "rawStateFromParsed", "changedOverrides", "yamlBool"]);
 
 var R = lib.runner();
@@ -331,6 +331,93 @@ var pending = require("fs").readFileSync(require("path").join(__dirname, "..", "
 ok("klucz stanu początkowego istnieje w słowniku", !!pending);
 ok("i nie orzeka poprawności — SCOPE.md zabrania twierdzenia 'correct' o cudzym pliku",
    !!pending && !/\b(correct|valid|poprawn)/i.test(pending[1]), pending && pending[1]);
+
+
+/* ---- stabilne identyfikatory diagnostyki (#26) ----
+   Kontrakt jest DWUKIERUNKOWY i drugi kierunek jest ważniejszy.
+
+   W jedną stronę: żaden emitowany identyfikator nie może być spoza DIAG_IDS.
+   To zamyka drogę „wymyśl ID w miejscu wywołania", przez którą tabela stałaby się
+   dokumentacją nieaktualną od pierwszej nowej reguły.
+
+   W drugą: żadna pozycja tabeli nie może być nieosiągalna inaczej niż z zapisanym
+   powodem. Martwy wpis wygląda na przemyślany i właśnie dlatego jest gorszy od
+   braku wpisu — to samo zdanie co przy martwej kategorii wyjątku i przy martwym
+   zwolnieniu w check-rendered.js. */
+console.log("identyfikatory diagnostyki:");
+
+var DRIVE = [
+  {}, {distro:"zzz"}, {release:""}, {release:"a b!"}, {release:"stable/master"},
+  {release:"victoria"}, {release:"20.1"}, {release:"stable/2019.2"}, {release:"2026.2"},
+  {release:"2024.1"}, {release:"2026.1",distro:"centos"},
+  {vip:""}, {vip:"999.1.1.1"}, {vip:"127.0.0.1"}, {vip:"169.254.1.1"}, {vip:"10.0.0.0"},
+  {vip:"10.0.0.255"}, {vip:"192.0.2.5"}, {vip:"100.70.0.5"}, {vip:"8.8.8.8"},
+  {ext_if:""}, {net_if:""}, {net_if:"averyveryverylongifname0"}, {net_if:"10.0.0.1"},
+  {net_if:"eth0!"}, {net_if:"lo"}, {br_name:"br-ex,br-ex2"}, {ext_if:"bond0,bond1",br_name:"br-ex"},
+  {net_if:"bond0.10",api_if:"bond0.10",stg_if:"bond0.10",t_hacluster:true},
+  {t_masakari:true,t_hacluster:true,mig_if:""},
+  {net_if:"bond0.10",ext_if:"bond0"}, {net_if:"bond0",ext_if:"bond0"},
+  {t_octavia:true,amp_net:"vlan",physnet:"physnet9",ext_if:"bond0"},
+  {t_octavia:true,amp_net:"vlan",t_provider:true,physnet:"physnet1"},
+  {t_octavia:true,amp_net:"flat"}, {t_tls_int:true,t_copy_ca:false},
+  {int_fqdn:"a.example.net",ext_fqdn:"a.example.net"},
+  {int_fqdn:"",ext_fqdn:"",vip:"10.0.0.250",ext_vip:"10.0.1.250"},
+  {vip:"10.0.0.250",ext_vip:"10.0.0.250",ext_vip_if:"bond9"},
+  {t_cinder:true,storage:"none"}, {t_grafana:true,t_prometheus:false},
+  {t_octavia:true,t_barbican:false}, {t_masakari:true,t_hacluster:false},
+  {t_haproxy:false}, {t_prometheus:true}, {storage:"ceph"}, {t_provider:true,ext_if:"bond0,bond1"}
+];
+
+var fired = {};
+DRIVE.forEach(function (c) {
+  T.validate(base(c), null).forEach(function (x) { fired[x.id] = (fired[x.id] || 0) + 1; });
+});
+T.validate(base({release:"2026.1"}), T.GLOBALS.parse('---\nkolla_base_distro: "rocky"\n'))
+ .forEach(function (x) { fired[x.id] = (fired[x.id] || 0) + 1; });
+
+var alien = Object.keys(fired).filter(function (i) { return !T.DIAG_IDS[i]; });
+ok("każda diagnostyka niesie identyfikator z DIAG_IDS", alien.length === 0, alien.join(","));
+ok("żadna diagnostyka nie jest bez identyfikatora",
+   Object.keys(fired).every(function (i) { return i && i !== "undefined"; }), Object.keys(fired).join(",").slice(0,80));
+
+/* Pozycje, których te konfiguracje nie zapalają — KAŻDA Z POWODEM, nie z liczbą.
+   Lista jest zamknięta: dopisanie reguły bez scenariusza ją powiększa i test pada. */
+var UNREACHED = {
+  /* Poza validate(): te cztery padają w doImport() i refresh(), których ten test
+     nie wywołuje — wymagają wczytanego pliku i DOM-u formularza. */
+  "IMPORT-VALUE-SANITISED":   "ścieżka importu, nie validate()",
+  "IMPORT-NON-SCALAR-KEPT":   "ścieżka importu, nie validate()",
+  "IMPORT-TEMPLATE-WITHHELD": "ścieżka importu, nie validate()",
+  "SERIALISER-TRIPPED":       "zapora serializera, nie validate()",
+  /* Zależy od ŚRODOWISKA, nie od stanu formularza: przeglądarka blokująca
+     localStorage. Żadna konfiguracja tego nie ustawia i nie ma jak. */
+  "STORAGE-UNAVAILABLE":      "warunek środowiskowy (storageOk), nie stan",
+  /* NIEOSIĄGALNE PRZY DZISIEJSZEJ MACIERZY, nie martwe. Reguła zapala się, gdy
+     distro jest na liście DISTROS, ale nie na liście baseDistros wydania — a dziś
+     każde wydanie w macierzy dopuszcza wszystkie cztery obrazy. Sprawdzone wprost:
+     iteracja po wszystkich parach (wydanie × distro) daje zero trafień. Reguła
+     odżyje w dniu, w którym upstream przestanie publikować obraz dla wydania.
+     Zapisane, bo „nieosiągalne przy tych danych" to co innego niż „martwe", a bez
+     tego zdania następny czytelnik usunąłby ją jako zbędną. */
+  "DISTRO-NOT-IN-RELEASE":    "żadne wydanie w macierzy nie odrzuca dziś obrazu z DISTROS"
+};
+
+var unreached = Object.keys(T.DIAG_IDS).filter(function (i) { return !fired[i]; }).sort();
+var undocumented = unreached.filter(function (i) { return !UNREACHED[i]; });
+ok("każda niezapalona pozycja ma zapisany powód", undocumented.length === 0,
+   "bez powodu: " + undocumented.join(","));
+var staleReasons = Object.keys(UNREACHED).filter(function (i) { return fired[i]; });
+ok("i żaden powód nie jest nieaktualny (pozycja jednak się zapala)",
+   staleReasons.length === 0, staleReasons.join(","));
+ok("pokrycie: " + (Object.keys(T.DIAG_IDS).length - unreached.length) + " z " +
+   Object.keys(T.DIAG_IDS).length + " pozycji zapalonych", true);
+
+/* Reguły rulesetu KV niosą swój numer z przodu — ta sama rodzina co
+   KV-01-FENCING i KV-09-VIP-COLLISION po stronie walidatora. */
+ok("każda reguła z LINT ma identyfikator z własnym numerem KV",
+   Object.keys(T.LINT).filter(function (k) { return /^KV-/.test(k); }).every(function (k) {
+     return Object.keys(T.DIAG_IDS).some(function (i) { return i.indexOf(k + "-") === 0; });
+   }));
 
 console.log("YAML:");
 var y = T.buildYaml(base(), {});

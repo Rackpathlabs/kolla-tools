@@ -1644,6 +1644,89 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     }
   };
 
+  /* STABILNE IDENTYFIKATORY DIAGNOSTYKI — jedno miejsce, w którym widać wszystkie naraz.
+   *
+   * POWÓD (#26): golden generatora pinuje emitowany plik co do bajtu, ale diagnostyka
+   * nie zmienia emisji, więc CAŁA warstwa lintu leżała poza tym, co golden dowodzi.
+   * Drabinę wag KV-06 dało się odwrócić — enable_masakari zdegradować do info, goły
+   * plik laboratoryjny podnieść do błędu — i każdy wzorzec przechodziłby dalej.
+   * Między tym a wydaniem stały wyłącznie ręczne asercje, które z definicji pokrywają
+   * to, o co ktoś pomyślał zapytać.
+   *
+   * TREŚĆ KOMUNIKATU NIE NADAJE SIĘ NA KLUCZ: zmienia się przy każdej korekcie
+   * redakcyjnej, a wzorzec na niej oparty produkowałby fałszywe czerwone. Walidator
+   * nie ma tego problemu, bo jego findingi od początku niosą stabilny `code`.
+   *
+   * TA TABELA JEST DOKUMENTACJĄ I KONTRAKTEM NARAZ. Test dymny sprawdza w obie strony:
+   * żaden emitowany identyfikator nie może być spoza niej (wymyślenie ID w miejscu
+   * wywołania = czerwony build) i żadna pozycja nie może być nieosiągalna (martwy wpis
+   * wygląda na przemyślany, a nie jest). Drugi kierunek jest ważniejszy: to on złapał
+   * kategorię wyjątku, która nie zwalniała niczego, i regułę bez scenariusza.
+   *
+   * Rodzina nazw jak w walidatorze: SCREAMING-KEBAB, reguły rulesetu z własnym numerem
+   * KV z przodu i wariantem z tyłu tam, gdzie jedna reguła produkuje różne findingi
+   * (tak jak KV-09-VIP-COLLISION i KV-09-VIP-SUBNET po tamtej stronie).
+   */
+  var DIAG_IDS = {
+    "DISTRO-UNSUPPORTED":           "obraz bazowy spoza listy wspieranych",
+    "DISTRO-NOT-IN-RELEASE":        "obraz bazowy niedopuszczony w tym wydaniu",
+    "DISTRO-NO-IMAGES":             "wydanie dopuszcza obraz, Kolla go nie publikuje",
+    "RELEASE-REQUIRED":             "pole openstack_release puste",
+    "RELEASE-CHARSET":              "znaki niedozwolone w tagu obrazu",
+    "RELEASE-MASTER":               "gałąź master to obrazy rozwojowe",
+    "RELEASE-LEGACY-NAME":          "wydanie nazwane, sprzed schematu RRRR.N",
+    "RELEASE-UNUSUAL-FORM":         "wartość spoza formy YYYY.N i spoza nazw",
+    "RELEASE-NOT-IN-MATRIX":        "wydania nie ma w macierzy",
+    "RELEASE-STATUS":               "status wydania z macierzy (waga z RELEASE_STATUS)",
+    "RELEASE-HOST-OS":              "systemy hosta wspierane w wydaniu",
+    "KEY-SET-EXPLICITLY":           "klucz ustawiony jawnie, nie dziedziczy domyślnej",
+    "KEY-RELEASE-DEFAULT":          "klucz nieustawiony, obowiązuje domyślna wydania",
+    "VIP-REQUIRED":                 "pole kolla_internal_vip_address puste",
+    "VIP-NOT-IPV4":                 "VIP nie jest adresem IPv4",
+    "VIP-RESERVED-RANGE":           "VIP w zakresie zarezerwowanym",
+    "VIP-LINK-LOCAL":               "VIP w 169.254.0.0/16",
+    "VIP-NETWORK-BROADCAST":        "ostatni oktet to adres sieci albo rozgłoszeniowy",
+    "VIP-DOC-RANGE":                "VIP z zakresu dokumentacyjnego RFC 5737",
+    "VIP-CGNAT":                    "VIP w zakresie CGNAT",
+    "VIP-NOT-PRIVATE":              "VIP poza zakresami prywatnymi RFC 1918",
+    "EXT-IF-REQUIRED":              "pole neutron_external_interface puste",
+    "BRIDGE-COUNT-MISMATCH":        "liczba mostków != liczba interfejsów zewnętrznych",
+    "IFACE-REQUIRED":               "nazwa interfejsu pusta",
+    "IFACE-NAME-TOO-LONG":          "nazwa interfejsu dłuższa niż 15 znaków",
+    "IFACE-IS-IP":                  "w polu interfejsu stoi adres IP",
+    "IFACE-CHARSET":                "znaki niedozwolone w nazwie interfejsu",
+    "IFACE-LOOPBACK":               "interfejs pętli zwrotnej w układzie wielowęzłowym",
+    "KV-05-STORAGE-API-LINK":       "KV-05: magazyn i pierścień Corosync na jednym łączu",
+    "KV-06-MIGRATION-IFACE":        "KV-06: migracja na łączu API",
+    "KV-10-EXTERNAL-DIRECT":        "KV-10: interfejs zewnętrzny = interfejs zarządzania",
+    "KV-10-EXTERNAL-SHARED":        "KV-10: wspólne urządzenie bazowe",
+    "KV-13-AMP-PROVIDER-OFF":       "KV-13: amfory na VLAN bez sieci provider",
+    "KV-13-AMP-PHYSNET":            "KV-13: physnet spoza listy z interfejsów zewnętrznych",
+    "KV-13-AMP-FLAT":               "KV-13: amfory typu flat też opierają się o provider",
+    "KV-14-TLS-CA":                 "KV-14: TLS wewnętrzny bez CA w kontenerach",
+    "KV-14-FQDN-IDENTICAL":         "KV-14: równe FQDN wewnętrzny i zewnętrzny",
+    "KV-14-FQDN-EMPTY":             "KV-14: różne VIP-y przy obu FQDN pustych",
+    "KV-14-VIP-SHARED":             "KV-14: ten sam VIP na dwóch interfejsach",
+    "DEPENDENCY-CINDER-BACKEND":    "enable_cinder bez backendu magazynu",
+    "DEPENDENCY-GRAFANA-PROMETHEUS":"enable_grafana bez enable_prometheus",
+    "DEPENDENCY-OCTAVIA-BARBICAN":  "enable_octavia bez enable_barbican",
+    "DEPENDENCY-MASAKARI-HACLUSTER":"enable_masakari bez enable_hacluster",
+    "HAPROXY-OFF-VIP-REAL":         "bez HAProxy VIP musi być adresem rzeczywistym",
+    "PROMETHEUS-MONITORING-GROUP":  "Prometheus wymaga hosta w grupie monitoring",
+    "CEPH-EXTERNAL":                "Kolla nie wdraża Cepha, klaster musi istnieć",
+    "PROVIDER-PHYSNETS":            "odwzorowanie sieci provider na sieci fizyczne",
+    "STORAGE-UNAVAILABLE":          "przeglądarka blokuje pamięć lokalną",
+    "IMPORT-VALUE-SANITISED":       "wartość z wczytanego pliku nie przeszła sanityzacji",
+    "IMPORT-NON-SCALAR-KEPT":       "klucze nieskalarne zostawione bez zmian",
+    "IMPORT-TEMPLATE-WITHHELD":     "podmiana wstrzymana: treść wykonywalna przez Ansible",
+    "SERIALISER-TRIPPED":           "serializer zatrzymał generowanie pliku"
+  };
+
+  /* Identyfikatory findingów PARSERA (UNSUPPORTED, KEY-REPEATED, KEY-DEPRECATED,
+     KEY-UNKNOWN) nie są tu powtórzone celowo: ścieżka importu PRZENOSI `f.code`
+     zamiast wymyślać nowy identyfikator. Powtórzenie ich tutaj byłoby drugą kopią
+     listy, która rozjedzie się z globals-parser.js przy pierwszej nowej regule. */
+
   /* Klucze, które generator wypisuje jawnie zamiast zostawiać wartość domyślną
      wydania. Kontrakt z KV-12a: plik wyprodukowany tym narzędziem nie ma prawa
      wpadać we własną regułę walidacyjną. */
@@ -1933,25 +2016,25 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
   function checkIface(name, label, d) {
     var tag = "<code>" + label + "</code>";
     if (!name) {
-      d.push({ level: "error", field: label, msg: "Field " + tag + " is required." });
+      d.push({ id: "IFACE-REQUIRED", level: "error", field: label, msg: "Field " + tag + " is required." });
       return;
     }
     if (name.length > 15) {
-      d.push({ level: "error", field: label, msg: tag + ": <code>" + esc(name) + "</code> ma " + name.length +
+      d.push({ id: "IFACE-NAME-TOO-LONG", level: "error", field: label, msg: tag + ": <code>" + esc(name) + "</code> ma " + name.length +
               " characters; on Linux an interface name may be at most 15." });
       return;
     }
     if (parseIPv4(name)) {
-      d.push({ level: "error", field: label, msg: tag + ": <code>" + esc(name) + "</code> to adres IP, a oczekiwana jest nazwa interfejsu." });
+      d.push({ id: "IFACE-IS-IP", level: "error", field: label, msg: tag + ": <code>" + esc(name) + "</code> to adres IP, a oczekiwana jest nazwa interfejsu." });
       return;
     }
     if (!IFACE_RE.test(name)) {
-      d.push({ level: "error", field: label, msg: tag + ": <code>" + esc(name) +
+      d.push({ id: "IFACE-CHARSET", level: "error", field: label, msg: tag + ": <code>" + esc(name) +
               "</code> contains characters that are not allowed. Letters, digits and <code>. _ -</code> are." });
       return;
     }
     if (name === "lo") {
-      d.push({ level: "error", field: label, msg: tag + ": a loopback interface is no use for a multinode deployment." });
+      d.push({ id: "IFACE-LOOPBACK", level: "error", field: label, msg: tag + ": a loopback interface is no use for a multinode deployment." });
     }
   }
 
@@ -1965,7 +2048,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     var sameLink = baseDev(f.stg) === baseDev(f.api);
     var inheritsWithHa = !f.stgExplicit && s.t_hacluster && !sameLink;
     if (sameLink || inheritsWithHa) {
-      d.push({
+      d.push({ id: "KV-05-STORAGE-API-LINK",
         level: lintSev("KV-05", lintVariant("KV-05", s), s),
         field: R["KV-05"].field,
         msg: (sameLink
@@ -1980,7 +2063,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
     /* --- KV-06: migracja na łączu API --- */
     if (!f.migExplicit || baseDev(f.mig) === baseDev(f.api)) {
-      d.push({
+      d.push({ id: "KV-06-MIGRATION-IFACE",
         level: lintSev("KV-06", lintVariant("KV-06", s), s),
         field: R["KV-06"].field,
         msg: (!f.migExplicit
@@ -2005,13 +2088,13 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     splitList(s.ext_if).forEach(function (ext) {
       mgmt.forEach(function (p) {
         if (ext === p[1]) {
-          d.push({
+          d.push({ id: "KV-10-EXTERNAL-DIRECT",
             level: lintSev("KV-10", "direct", s), field: R["KV-10"].field,
             msg: "<code>neutron_external_interface</code> (<code>" + esc(ext) + "</code>) is the " +
                  "same interface as <code>" + p[0] + "</code>. " + lintHint("KV-10", s)
           });
         } else if (baseDev(p[1]) === ext || baseDev(ext) === p[1]) {
-          d.push({
+          d.push({ id: "KV-10-EXTERNAL-SHARED",
             level: lintSev("KV-10", "shared", s), field: R["KV-10"].field,
             msg: "<code>neutron_external_interface</code> (<code>" + esc(ext) + "</code>) shares a " +
                  "base device with <code>" + p[0] + "</code> (<code>" + esc(p[1]) + "</code>). " +
@@ -2025,14 +2108,14 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     if (s.t_octavia && s.amp_net === "vlan") {
       var nets = physnets(s);
       if (!s.t_provider) {
-        d.push({
+        d.push({ id: "KV-13-AMP-PROVIDER-OFF",
           level: lintSev("KV-13", "missing", s), field: "amp_net",
           msg: "<code>octavia_amp_network</code> of type <code>vlan</code> requires " +
                "<code>enable_neutron_provider_networks</code>. " + lintHint("KV-13", s)
         });
       }
       if (nets.indexOf(s.physnet) === -1) {
-        d.push({
+        d.push({ id: "KV-13-AMP-PHYSNET",
           level: lintSev("KV-13", "missing", s), field: R["KV-13"].field,
           msg: "<code>" + esc(s.physnet) + "</code> does not follow from the external interface " +
                "list — available: " + (nets.length ? "<code>" + nets.join("</code>, <code>") + "</code>" : "none") +
@@ -2041,7 +2124,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         });
       }
     } else if (s.t_octavia && s.amp_net === "flat") {
-      d.push({
+      d.push({ id: "KV-13-AMP-FLAT",
         level: "info", field: "amp_net",
         msg: "An amphora network of type <code>flat</code> also rests on a provider network — " +
              "check that <code>enable_neutron_provider_networks</code> matches the design."
@@ -2050,7 +2133,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
     /* --- KV-14: TLS wewnętrzny, nazwy i adresy --- */
     if (s.t_tls_int && !s.t_copy_ca && !s.t_letsencrypt) {
-      d.push({
+      d.push({ id: "KV-14-TLS-CA",
         level: lintSev("KV-14", "ca", s), field: null,
         msg: "<code>kolla_enable_tls_internal</code> without <code>kolla_copy_ca_into_containers</code> " +
              "and without Let's Encrypt: the containers will not trust a private CA. At Keystone " +
@@ -2060,7 +2143,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       });
     }
     if (s.int_fqdn && s.ext_fqdn && s.int_fqdn === s.ext_fqdn) {
-      d.push({
+      d.push({ id: "KV-14-FQDN-IDENTICAL",
         level: lintSev("KV-14", "fqdn", s), field: "ext_fqdn",
         msg: "<code>kolla_internal_fqdn</code> and <code>kolla_external_fqdn</code> are identical. " +
              "The internal and public endpoints in the service catalogue then point at the same " +
@@ -2070,7 +2153,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       });
     }
     if (!s.int_fqdn && !s.ext_fqdn && s.vip && s.ext_vip && s.vip !== s.ext_vip) {
-      d.push({
+      d.push({ id: "KV-14-FQDN-EMPTY",
         level: lintSev("KV-14", "fqdn", s), field: "ext_fqdn",
         msg: "The VIP addresses differ while both FQDNs are empty — both service catalogue " +
              "entries are then built from addresses and drift away from the certificate. Set " +
@@ -2078,7 +2161,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       });
     }
     if (s.vip && s.ext_vip && s.vip === s.ext_vip && baseDev(f.extVip) !== baseDev(f.net)) {
-      d.push({
+      d.push({ id: "KV-14-VIP-SHARED",
         level: lintSev("KV-14", "vip", s), field: "ext_vip",
         msg: "The same VIP address on different interfaces (<code>" + esc(f.net) + "</code> and " +
              "<code>" + esc(f.extVip) + "</code>) — HAProxy would try to claim one address twice."
@@ -2086,19 +2169,24 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     }
 
     /* --- zależności usług --- */
+    /* Piąta pozycja wiersza to STABILNE ID. Osobne dla każdej zależności, nie jedno
+       wspólne: golden porównuje {id, level, field}, a wszystkie cztery mają field null,
+       więc pod jednym ID zlałyby się w cztery nierozróżnialne wiersze i zniknięcie
+       jednej reguły byłoby dla wzorca niewidoczne. */
     [[s.t_cinder && s.storage === "none", "enable_cinder", "a storage backend",
       "Cinder without a backend will not create a volume — the deployment passes and the " +
-      "first <code>volume create</code> ends in <code>error</code>."],
+      "first <code>volume create</code> ends in <code>error</code>.", "DEPENDENCY-CINDER-BACKEND"],
      [s.t_grafana && !s.t_prometheus, "enable_grafana", "enable_prometheus",
-      "Grafana without a data source starts up and shows empty dashboards."],
+      "Grafana without a data source starts up and shows empty dashboards.", "DEPENDENCY-GRAFANA-PROMETHEUS"],
      [s.t_octavia && !s.t_barbican, "enable_octavia", "enable_barbican",
-      "Octavia keeps the amphora certificates in Barbican — without it no load balancer is created."],
+      "Octavia keeps the amphora certificates in Barbican — without it no load balancer is created.",
+      "DEPENDENCY-OCTAVIA-BARBICAN"],
      [s.t_masakari && !s.t_hacluster, "enable_masakari", "enable_hacluster",
       "The Masakari host monitor rests on Pacemaker and Corosync; without them it has " +
-      "nowhere to learn that a node failed."]
+      "nowhere to learn that a node failed.", "DEPENDENCY-MASAKARI-HACLUSTER"]
     ].forEach(function (r) {
       if (!r[0]) return;
-      d.push({
+      d.push({ id: r[4],
         level: lintSev("ZALEZNOSC", "missing", s), field: null,
         msg: "<code>" + r[1] + "</code> requires " +
              (r[2].indexOf("enable_") === 0 ? "<code>" + r[2] + "</code>" : r[2]) + ". " + r[3]
@@ -2116,19 +2204,19 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
     /* --- obraz bazowy --- */
     if (DISTROS.indexOf(s.distro) === -1) {
-      d.push({
+      d.push({ id: "DISTRO-UNSUPPORTED",
         level: "error", field: "distro",
         msg: "<code>kolla_base_distro</code>: pick one of the supported distributions (" + DISTROS.join(", ") + ")."
       });
     } else if (rel && rel.baseDistros && rel.baseDistros.indexOf(s.distro) === -1) {
-      d.push({
+      d.push({ id: "DISTRO-NOT-IN-RELEASE",
         level: "error", field: "distro",
         msg: "<code>" + esc(s.distro) + "</code> is not a supported base image in release <code>" +
              esc(rel.id) + "</code>. Dopuszczalne: " +
              rel.baseDistros.map(function (x) { return "<code>" + esc(x) + "</code>"; }).join(", ") + "."
       });
     } else if (rel && (rel.unpublished || []).indexOf(s.distro) !== -1) {
-      d.push({
+      d.push({ id: "DISTRO-NO-IMAGES",
         level: "warn", field: "distro",
         msg: "Release <code>" + esc(rel.id) + "</code> allows <code>" + esc(s.distro) +
              "</code> in the configuration, but Kolla publishes no images for it. " +
@@ -2138,9 +2226,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
     /* --- wydanie --- */
     if (!s.release) {
-      d.push({ level: "error", field: "release", msg: "Field <code>openstack_release</code> is required." });
+      d.push({ id: "RELEASE-REQUIRED", level: "error", field: "release", msg: "Field <code>openstack_release</code> is required." });
     } else if (!RELEASE_RE.test(s.release)) {
-      d.push({
+      d.push({ id: "RELEASE-CHARSET",
         level: "error", field: "release",
         msg: "<code>openstack_release</code>: <code>" + esc(s.release) +
              "</code> contains characters that are not allowed. An image tag may hold letters, digits and <code>. _ - /</code>."
@@ -2148,14 +2236,14 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     } else {
       var base = s.release.replace(/^stable\//, "");
       if (base === "master") {
-        d.push({ level: "warn", field: "release", msg: "The <code>master</code> branch means development images, not production ones." });
+        d.push({ id: "RELEASE-MASTER", level: "warn", field: "release", msg: "The <code>master</code> branch means development images, not production ones." });
       } else if (NAMED_RELEASES.indexOf(base.toLowerCase()) !== -1) {
-        d.push({
+        d.push({ id: "RELEASE-LEGACY-NAME",
           level: "info", field: "release",
           msg: "<code>" + esc(base) + "</code> to wydanie sprzed schematu <code>RRRR.N</code>."
         });
       } else if (!/^\d{4}\.\d$/.test(base)) {
-        d.push({
+        d.push({ id: "RELEASE-UNUSUAL-FORM",
           level: "warn", field: "release",
           msg: "<code>openstack_release</code>: unusual value <code>" + esc(s.release) +
                "</code>. Kolla uses the <code>YYYY.N</code> form (2025.1), a release name, or <code>master</code>."
@@ -2165,7 +2253,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       /* --- macierz wydań --- */
       /* 'master' celowo omija macierz: to ruchomy cel, a nie wydanie. */
       if (base !== "master" && !rel) {
-        d.push({
+        d.push({ id: "RELEASE-NOT-IN-MATRIX",
           level: "warn", field: "release",
           msg: "<code>" + esc(base) + "</code> does not appear in the release matrix (as of " +
                esc(KOLLA_MATRIX.updated) + "). Base image compatibility with the release cannot be checked."
@@ -2174,7 +2262,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         var st = RELEASE_STATUS[rel.status];
         if (st && st.level) {
           var dt = st.dateField ? rel[st.dateField] : null;
-          d.push({
+          d.push({ id: "RELEASE-STATUS",
             level: st.level, field: "release",
             msg: "<code>" + esc(rel.id) + "</code> (" + esc(rel.name) +
                  (rel.kolla ? ", kolla-ansible " + esc(rel.kolla) : "") + "): " + st.text +
@@ -2182,7 +2270,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           });
         }
         if (rel.hostOs && rel.hostOs.length) {
-          d.push({
+          d.push({ id: "RELEASE-HOST-OS",
             level: "info", field: null,
             msg: "Host systems supported in release <code>" + esc(rel.id) + "</code>: " +
                  rel.hostOs.map(esc).join(", ") + "."
@@ -2200,14 +2288,14 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
              „Stwórz mi plik" może dopisywać, „popraw mi plik" nie może. */
           var present = doc ? !!doc.keys[key] : !!EMITTED_KEYS[key];
           if (present) {
-            d.push({
+            d.push({ id: "KEY-SET-EXPLICITLY",
               level: "info", field: null,
               msg: "<code>" + esc(key) + "</code> is set explicitly in the file — the value no " +
                    "longer depends on the release default (" + meta.label + "). " + meta.why
             });
             return;
           }
-          d.push({
+          d.push({ id: "KEY-RELEASE-DEFAULT",
             level: meta.sev || "info", field: null,
             msg: (doc ? "The loaded file does not set " : "The file does not set ") +
                  "<code>" + esc(key) + "</code> — the release default <code>" +
@@ -2220,22 +2308,22 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
     /* --- VIP --- */
     if (!s.vip) {
-      d.push({ level: "error", field: "vip", msg: "Field <code>kolla_internal_vip_address</code> is required." });
+      d.push({ id: "VIP-REQUIRED", level: "error", field: "vip", msg: "Field <code>kolla_internal_vip_address</code> is required." });
     } else {
       var ip = parseIPv4(s.vip);
       if (!ip) {
-        d.push({ level: "error", field: "vip", msg: "<code>kolla_internal_vip_address</code>: <code>" + esc(s.vip) + "</code> nie jest poprawnym adresem IPv4." });
+        d.push({ id: "VIP-NOT-IPV4", level: "error", field: "vip", msg: "<code>kolla_internal_vip_address</code>: <code>" + esc(s.vip) + "</code> nie jest poprawnym adresem IPv4." });
       } else if (ip[0] === 0 || ip[0] === 127 || ip[0] >= 224) {
-        d.push({
+        d.push({ id: "VIP-RESERVED-RANGE",
           level: "error", field: "vip",
           msg: "<code>kolla_internal_vip_address</code>: adres <code>" + esc(s.vip) +
                "</code> is in a reserved range (loopback, multicast or 0.0.0.0/8)."
         });
       } else if (ip[0] === 169 && ip[1] === 254) {
-        d.push({ level: "error", field: "vip", msg: "<code>kolla_internal_vip_address</code>: adres link-local (169.254.0.0/16) nie może pełnić roli VIP." });
+        d.push({ id: "VIP-LINK-LOCAL", level: "error", field: "vip", msg: "<code>kolla_internal_vip_address</code>: adres link-local (169.254.0.0/16) nie może pełnić roli VIP." });
       } else {
         if (ip[3] === 0 || ip[3] === 255) {
-          d.push({
+          d.push({ id: "VIP-NETWORK-BROADCAST",
             level: "warn", field: "vip",
             msg: "<code>kolla_internal_vip_address</code>: ostatni oktet <code>" + ip[3] +
                  "</code> is the network or broadcast address of a /24. Check the subnet mask."
@@ -2247,17 +2335,17 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         var isCgnat = (ip[0] === 100 && ip[1] >= 64 && ip[1] <= 127);
         var isPriv = (ip[0] === 10) || (ip[0] === 172 && ip[1] >= 16 && ip[1] <= 31) || (ip[0] === 192 && ip[1] === 168);
         if (isDoc) {
-          d.push({
+          d.push({ id: "VIP-DOC-RANGE",
             level: "warn", field: "vip",
             msg: "Adres <code>" + esc(s.vip) + "</code> is from the documentation range (RFC 5737), which usually means a value copied from an example and never replaced."
           });
         } else if (isCgnat) {
-          d.push({
+          d.push({ id: "VIP-CGNAT",
             level: "warn", field: "vip",
             msg: "Adres <code>" + esc(s.vip) + "</code> is in the CGNAT range (100.64.0.0/10), which carrier infrastructure also uses. Make sure the management network is yours alone."
           });
         } else if (!isPriv) {
-          d.push({
+          d.push({ id: "VIP-NOT-PRIVATE",
             level: "info", field: "vip",
             msg: "The VIP is outside the private ranges (RFC 1918). The internal API network should not be publicly reachable."
           });
@@ -2269,7 +2357,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     checkIface(s.net_if, "network_interface", d);
     var extList = splitList(s.ext_if);
     if (!extList.length) {
-      d.push({ level: "error", field: "ext_if", msg: "Field <code>neutron_external_interface</code> is required." });
+      d.push({ id: "EXT-IF-REQUIRED", level: "error", field: "ext_if", msg: "Field <code>neutron_external_interface</code> is required." });
     } else {
       extList.forEach(function (x) { checkIface(x, "neutron_external_interface", d); });
     }
@@ -2281,7 +2369,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
     var brList = splitList(s.br_name);
     if (brList.length && extList.length && brList.length !== extList.length) {
-      d.push({
+      d.push({ id: "BRIDGE-COUNT-MISMATCH",
         level: "error", field: "br_name",
         msg: "<code>neutron_bridge_name</code> has " + brList.length + " entries and " +
              "<code>neutron_external_interface</code> has " + extList.length +
@@ -2293,26 +2381,26 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
     /* --- spójność usług --- */
     if (!s.t_haproxy) {
-      d.push({
+      d.push({ id: "HAPROXY-OFF-VIP-REAL",
         level: "warn", field: null,
         msg: "With <code>enable_haproxy</code> off, <code>kolla_internal_vip_address</code> must be a real address on the single control node, not a virtual one."
       });
     }
     if (s.t_prometheus) {
-      d.push({
+      d.push({ id: "PROMETHEUS-MONITORING-GROUP",
         level: "info", field: null,
         msg: "Prometheus wymaga co najmniej jednego hosta w grupie <code>monitoring</code> w inventory."
       });
     }
     if (s.storage === "ceph") {
-      d.push({
+      d.push({ id: "CEPH-EXTERNAL",
         level: "info", field: null,
         msg: "Kolla-Ansible does not deploy Ceph. The cluster must already exist, and " +
              "<code>ceph.conf</code> and the keyrings go into the config directory before deploying."
       });
     }
     if (s.t_provider && extList.length) {
-      d.push({
+      d.push({ id: "PROVIDER-PHYSNETS",
         level: "info", field: null,
         msg: "Provider networks map onto " + (extList.length === 1
               ? "one physical network (<code>physnet1</code>)"
@@ -2322,7 +2410,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     }
 
     if (!storageOk) {
-      d.push({
+      d.push({ id: "STORAGE-UNAVAILABLE",
         level: "info", field: null,
         msg: "The browser blocks local storage in this mode, so settings will not survive a reload."
       });
@@ -2775,7 +2863,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     var found = [];
 
     parsed.findings.forEach(function (f) {
-      found.push({ level: f.sev, field: null,
+      found.push({ id: f.code, level: f.sev, field: null,
                    msg: f.msg + (f.hint ? " " + f.hint : "") });
     });
 
@@ -2794,7 +2882,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     var clean = sanitize(raw);
     TEXT_FIELDS.forEach(function (id) {
       if (String(raw[id]) === String(clean[id])) return;
-      found.push({
+      found.push({ id: "IMPORT-VALUE-SANITISED",
         level: "warn", field: id,
         msg: "The value <code>" + esc(String(raw[id])) + "</code> from the file failed the " +
              "formatu pola <code>" + id + "</code> — <code>" + esc(String(clean[id])) +
@@ -2806,7 +2894,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     Object.keys(IMPORT_MAP).forEach(function (k) { known[k] = 1; });
     Object.keys(KNOWN_NO_FIELD).forEach(function (k) { known[k] = 1; });
     GLOBALS.review(parsed, findRelease(clean.release), known).forEach(function (f) {
-      found.push({ level: f.sev, field: null,
+      found.push({ id: f.code, level: f.sev, field: null,
                    msg: "line " + f.line + ": " + f.msg + (f.hint ? " " + f.hint : "") });
     });
 
@@ -2832,14 +2920,14 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       Object.keys(over).forEach(function (k) {
         if (!/\{\{|\}\}|\{%|%\}|[\r\u0085\u2028\u2029]/.test(String(over[k]))) return;
         delete over[k];
-        d.unshift({ level: "error", field: null,
+        d.unshift({ id: "IMPORT-TEMPLATE-WITHHELD", level: "error", field: null,
           msg: "The value for <code>" + esc(k) + "</code> holds content executable by " +
                "Ansible; the substitution was withheld." });
       });
       var res = GLOBALS.emit(importedDoc, over);
       built = { text: res.text.replace(/\n$/, ""), tripped: false };
       if (res.skipped.length) {
-        d.push({ level: "info", field: null,
+        d.push({ id: "IMPORT-NON-SCALAR-KEPT", level: "info", field: null,
           msg: "Keys whose value is not a scalar are left unchanged: <code>" +
                res.skipped.map(esc).join("</code>, <code>") + "</code>." });
       }
@@ -2847,7 +2935,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       built = buildYaml(s, bad);
     }
     if (built.tripped) {
-      d.unshift({
+      d.unshift({ id: "SERIALISER-TRIPPED",
         level: "error", field: null,
         msg: "The serialiser stopped generating the file: the result held content executable by Ansible, or a character that breaks the YAML structure."
       });
