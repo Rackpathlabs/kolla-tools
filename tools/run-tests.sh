@@ -113,5 +113,9 @@ tmp_files="$tmp_files .audit.tmp.json"
 "$NODE" tools/check-dictionary.js .audit.tmp.json || rc=1
 
 echo
+echo "== golden: migawka widocznego tekstu =="
+"$NODE" tools/golden/snapshot.golden.js .audit.tmp.json $GOLDEN_FLAG || rc=1
+
+echo
 [ "$rc" -eq 0 ] && echo "Wszystko przeszło." || echo "Są niepowodzenia."
 exit "$rc"

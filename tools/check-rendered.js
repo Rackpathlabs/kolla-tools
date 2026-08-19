@@ -349,10 +349,19 @@ FILES.forEach(function (sc) {
     bad = 1;
   }
 
+  /* Rekordy niosą SCENARIUSZ, z którego pochodzą. Bez tego raport jest jedną
+     płaską listą trzynastu przebiegów sklejonych w kupę — wystarczy do liczenia
+     pokrycia (check-dictionary.js), ale nie do pytania „co użytkownik widział
+     na TEJ ścieżce przed zmianą, a co widzi po" (#67). Pole dopisane, nie
+     zamienione: czytelnik raportu, który go nie zna, działa dalej. */
   if (AUDIT_OUT) {
     var acc = [];
     try { acc = JSON.parse(fs.readFileSync(AUDIT_OUT, "utf8")); } catch (e) { acc = []; }
-    fs.writeFileSync(AUDIT_OUT, JSON.stringify(acc.concat(res.texts)));
+    var tagged = res.texts.map(function (t) {
+      return { tag: t.tag, cls: t.cls, text: t.text, inData: t.inData,
+               fromInput: t.fromInput, file: sc.file, scenario: sc.name };
+    });
+    fs.writeFileSync(AUDIT_OUT, JSON.stringify(acc.concat(tagged)));
   }
 
   if (res.visibleHidden.length) {
