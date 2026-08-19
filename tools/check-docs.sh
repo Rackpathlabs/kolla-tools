@@ -63,6 +63,33 @@ else
   fi
 fi
 
+# CLAUDE.md niesie zakazy, nie opisy — a zakaz, który da się usunąć bez śladu w review,
+# jest zakazem na jedną iterację. Objęty tym samym strażnikiem i z tego samego powodu,
+# który stoi wyżej przy PRINCIPLES.md: rozdzielenie, po którym połowa treści przestaje
+# być czymkolwiek chroniona, jest gorsze niż jeden długi dokument.
+#
+# Sprawdzana jest OBECNOŚĆ SEKCJI, nie sama długość pliku. Reguła wypatroszona do
+# nagłówka waży tyle samo bajtów co reguła z uzasadnieniem, a uzasadnienie jest tym,
+# co powstrzymuje przed jej skasowaniem za miesiąc.
+if [ ! -f CLAUDE.md ]; then
+  echo "FAIL CLAUDE.md: brak pliku"; rc=1
+else
+  n=$(wc -c < CLAUDE.md)
+  if [ "$n" -lt 1500 ]; then
+    echo "FAIL CLAUDE.md: $n bajtów — reguły wyglądają na wypatroszone (próg 1500)"; rc=1
+  else
+    echo "OK   CLAUDE.md ($n B)"
+  fi
+  for want in "Never write a closing keyword next to an issue number" \
+              "The defect that produced this rule"; do
+    if grep -qF "$want" CLAUDE.md; then
+      echo "OK   reguła: $want"
+    else
+      echo "FAIL CLAUDE.md: brak sekcji \"$want\""; rc=1
+    fi
+  done
+fi
+
 # README należy do issue #1 (Igor). Dopóki nie istnieje, sprawdzenie odnośnika jest
 # pomijane — ale głośno, żeby pominięcie nie wyglądało jak zaliczenie.
 if [ -f README.md ]; then
@@ -70,6 +97,11 @@ if [ -f README.md ]; then
     echo "OK   README.md odsyła do SCOPE.md"
   else
     echo "FAIL README.md: brak odnośnika do SCOPE.md"; rc=1
+  fi
+  if grep -q "CLAUDE.md" README.md; then
+    echo "OK   README.md odsyła do CLAUDE.md"
+  else
+    echo "FAIL README.md: brak odnośnika do CLAUDE.md"; rc=1
   fi
   if grep -q "PRINCIPLES.md" README.md; then
     echo "OK   README.md odsyła do PRINCIPLES.md"
