@@ -214,8 +214,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 </header>
 
 <main class="wrap" id="main">
-  <h1 data-i18n="v.h1"></h1>
-  <p class="lede" data-i18n="v.lede"></p>
+  <h1 data-i18n="v.h1"><em>Multinode</em> inventory validator for Kolla-Ansible</h1>
+  <p class="lede" data-i18n="v.lede">Reads an INI inventory and checks it: the presence and membership of the <code>control</code>, <code>network</code>, <code>compute</code>, <code>storage</code> and <code>monitoring</code> groups, duplicate hosts, empty groups, contradictory variables and syntax errors. Optionally takes a <code>globals.yml</code> and adds the rules that need both files at once. Everything is analysed in your browser — the file is never uploaded or stored. Scope and limits are described in <a href="https://github.com/Rackpathlabs/kolla-tools/blob/main/SCOPE.md">SCOPE.md</a>.</p>
 
   <div class="cols">
 
@@ -223,51 +223,57 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     <div>
       <div class="panel">
         <div class="tools">
-          <button type="button" class="small" id="btn-file" data-i18n="v.btn.file"></button>
-          <button type="button" class="small ghost" id="btn-sample-ok" data-i18n="v.btn.sampleOk"></button>
-          <button type="button" class="small ghost" id="btn-sample-bad" data-i18n="v.btn.sampleBad"></button>
+          <button type="button" class="small" id="btn-file" data-i18n="v.btn.file">Load file…</button>
+          <button type="button" class="small ghost" id="btn-sample-ok" data-i18n="v.btn.sampleOk">Valid example</button>
+          <button type="button" class="small ghost" id="btn-sample-bad" data-i18n="v.btn.sampleBad">Example with errors</button>
           <span class="sp"></span>
           <!-- pozycje pochodzą z macierzy wydań (KOLLA_MATRIX), nie z tego znacznika -->
-          <label class="rel" for="release"><span data-i18n="v.release.label"></span>
-            <select id="release" data-i18n-title="v.release.title"></select>
+          <label class="rel" for="release"><span data-i18n="v.release.label">release</span>
+            <select id="release" data-i18n-title="v.release.title" title="The release the group names are checked against"></select>
           </label>
-          <label class="rel" for="release_to"><span data-i18n="v.releaseTo.label"></span>
-            <select id="release_to" data-i18n-title="v.releaseTo.title"></select>
+          <label class="rel" for="release_to"><span data-i18n="v.releaseTo.label">&rarr; target</span>
+            <select id="release_to" data-i18n-title="v.releaseTo.title" title="Optional: the release you plan to move to"></select>
           </label>
-          <button type="button" class="small" id="btn-run" data-i18n="v.btn.run" data-i18n-title="v.btn.run.title"></button>
-          <button type="button" class="small ghost" id="btn-clear" data-i18n="v.btn.clear"></button>
+          <button type="button" class="small" id="btn-run" data-i18n="v.btn.run" data-i18n-title="v.btn.run.title" title="Run the analysis against the current contents of the fields">Analyse</button>
+          <button type="button" class="small ghost" id="btn-clear" data-i18n="v.btn.clear">Clear</button>
           <input type="file" id="file" accept=".ini,.yml,.yaml,.txt,text/plain" class="sr" aria-hidden="true" tabindex="-1">
         </div>
         <div class="editor" id="editor">
           <div class="gutter" id="gutter" aria-hidden="true"></div>
           <textarea id="src" spellcheck="false" autocapitalize="off" autocomplete="off"
-            data-i18n-ph="v.editor.placeholder"
-            data-i18n-label="v.editor.label"></textarea>
+            data-i18n-ph="v.editor.placeholder" placeholder="[control]
+ctrl01 ansible_host=10.0.0.11
+
+[network]
+…
+
+Paste the contents of your multinode file, or drag it here."
+            data-i18n-label="v.editor.label" aria-label="Inventory file contents"></textarea>
         </div>
       </div>
 
       <div class="panel" style="margin-top:18px">
-        <h2><span data-i18n="v.globals.h"></span>
+        <h2><span data-i18n="v.globals.h">globals.yml</span>
           <span class="sp"></span>
           <span class="chip" id="chip-globals"></span>
         </h2>
         <div class="tools">
-          <button type="button" class="small" id="btn-gfile" data-i18n="v.btn.file"></button>
-          <button type="button" class="small ghost" id="btn-gclear" disabled data-i18n="v.btn.clear"></button>
+          <button type="button" class="small" id="btn-gfile" data-i18n="v.btn.file">Load file…</button>
+          <button type="button" class="small ghost" id="btn-gclear" disabled data-i18n="v.btn.clear">Clear</button>
           <input type="file" id="gfile" accept=".yml,.yaml,.txt,text/plain" class="sr" aria-hidden="true" tabindex="-1">
         </div>
         <textarea id="gsrc" class="plain" spellcheck="false" autocapitalize="off" autocomplete="off"
-          data-i18n-label="v.globals.label"
-          data-i18n-ph="v.globals.placeholder"></textarea>
+          data-i18n-label="v.globals.label" aria-label="Contents of globals.yml — optional"
+          data-i18n-ph="v.globals.placeholder" placeholder="Optional. Paste or drag a globals.yml to enable the rules that need both files at once."></textarea>
         <label class="ack-row" for="ack_nobmc">
           <input type="checkbox" id="ack_nobmc">
-          <span class="t-txt"><b data-i18n="v.ack.nobmc.h"></b><span data-i18n="v.ack.nobmc.p"></span></span>
+          <span class="t-txt"><b data-i18n="v.ack.nobmc.h">Lab without BMC — Masakari for testing only</b><span data-i18n="v.ack.nobmc.p">Acknowledging this lowers the fencing finding to informational. It does not silence it: an environment <em>named</em> "dev" is not an exemption, because the configuration gets copied to production.</span></span>
         </label>
-        <div class="scope-note" id="gscope" hidden data-i18n="v.scope.note"></div>
+        <div class="scope-note" id="gscope" hidden data-i18n="v.scope.note"><strong>This file is used here only for the rules that need both files at once</strong> — VIP collisions, Cinder clustering and Masakari fencing. The validator <strong>does not check</strong> the <code>globals.yml</code> itself: interfaces, TLS, service dependencies and release compatibility are linted by the <a href="generator.html">globals.yml generator</a>. An empty list below does not mean the file is correct — it means there is no conflict with this inventory.</div>
       </div>
 
       <div class="panel" style="margin-top:18px">
-        <h2><span data-i18n="v.topology"></span>
+        <h2><span data-i18n="v.topology">Topology</span>
           <span class="sp"></span>
           <span class="chip" id="chip-hosts">0 hosts</span>
         </h2>
@@ -278,9 +284,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     <!-- ============ RESULTS ============ -->
     <div>
       <div class="panel">
-        <h2><span data-i18n="v.result"></span>
+        <h2><span data-i18n="v.result">Validation result</span>
           <span class="sp"></span>
-          <button type="button" class="small ghost" id="btn-report" disabled data-i18n="v.btn.report"></button>
+          <button type="button" class="small ghost" id="btn-report" disabled data-i18n="v.btn.report">Copy report</button>
         </h2>
         <div class="body">
           <div class="verdict" id="verdict" role="status" aria-live="polite">
@@ -289,8 +295,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
             <span class="counts" id="counts"></span>
           </div>
           <div class="stale" id="stale" hidden>
-            <span data-i18n="v.stale.bar"></span>
-            <button type="button" id="btn-stale-run" data-i18n="v.stale.run"></button>
+            <span data-i18n="v.stale.bar">The input has changed since this result was produced.</span>
+            <button type="button" id="btn-stale-run" data-i18n="v.stale.run">Analyse now</button>
           </div>
           <ul class="findings" id="findings"></ul>
         </div>
@@ -299,7 +305,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
   </div>
 
-  <footer data-i18n="v.footer"></footer>
+  <footer data-i18n="v.footer">Rackpathlabs — OpenStack tooling. A single HTML file, no external dependencies, works offline.</footer>
 </main>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
