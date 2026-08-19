@@ -1,0 +1,35 @@
+{
+  "release": "2026.1",
+  "upgradeTo": null,
+  "globals": false,
+  "findings": [
+    {
+      "code": "GROUP-RENAMED",
+      "sev": "error",
+      "src": "inventory",
+      "line": 23,
+      "refs": []
+    },
+    {
+      "code": "COLLOCATION-NETWORK",
+      "sev": "warn",
+      "src": "inventory",
+      "line": 9,
+      "refs": []
+    },
+    {
+      "code": "GROUP-RETIRED",
+      "sev": "warn",
+      "src": "inventory",
+      "line": 26,
+      "refs": []
+    },
+    {
+      "code": "COLLOCATION-STORAGE",
+      "sev": "info",
+      "src": "inventory",
+      "line": 17,
+      "refs": []
+    }
+  ]
+}

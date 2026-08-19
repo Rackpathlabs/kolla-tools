@@ -1308,6 +1308,17 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       "v.sev.warn":            "WARN ",
       "v.sev.info":            "INFO ",
 
+      /* Findingi walidatora są dziś składane z literałów w kodzie — wszystkie 27.
+         Ten jest pierwszym, który idzie przez słownik, i nie jest to niekonsekwencja,
+         tylko kierunek: próg w check-dictionary.js mówi wprost, że KAŻDY NOWY tekst
+         ma iść przez słownik, bo inaczej liczba rośnie. Migracja pozostałych 26 to
+         #58 i nie robimy jej tutaj — dopisanie nowego długu i tak byłoby ruchem
+         w przeciwną stronę niż to zgłoszenie. Mechanizm jest gotowy (wstawki {…}
+         w t()), więc nie powstaje tu nic nowego poza dwoma kluczami. */
+      "v.f.hostNoKollaGroup":      "Host <code>{host}</code> is in no group that Kolla-Ansible deploys onto.",
+      "v.f.hostNoKollaGroup.hint": "Its groups are {groups}, and Kolla-Ansible selects hosts by group name. No service will be deployed on this host.",
+      "v.f.hostNoKollaGroup.none": "It belongs to no group beyond the implicit ones. No service will be deployed on this host.",
+
       "v.verdict.errors":      "The inventory contains errors that block deployment.",
       "v.verdict.warnings":    "Syntax is valid — there are warnings to review.",
       "v.verdict.clean":       "No objections within what this tool checks.",
@@ -2553,6 +2564,57 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         add("info", "GROUP-CUSTOM", "Group <code>" + esc(name) + "</code> does not appear in the reference Kolla-Ansible inventory.",
             line, "That is fine as long as it is used deliberately, for example for custom roles or a hardware split.");
       }
+    });
+
+    /* --- hosty poza zasięgiem Kolla-Ansible --- */
+    /* Czwarte kryterium #10, jedyne, którego nie pokrywała żadna reguła. Do dziś
+       inventory z hostem wyłącznie we własnej grupie dawało JEDEN wpis: GROUP-CUSTOM,
+       waga info, o treści dotyczącej GRUPY, ze wskazaniem linii jej deklaracji.
+       Trzy rzeczy się nie zgadzały i trzecia jest istotą sprawy:
+
+         waga     — kryterium mówi warning, było info;
+         podmiot  — wpis mówił o grupie, host nie pojawiał się w komunikacie;
+         ROZRÓŻNIENIE — reguła zapalała się TAK SAMO, gdy host stał w [moja_grupa]
+           I w [compute], jak wtedy, gdy stał WYŁĄCZNIE w [moja_grupa]. Pierwszy
+           przypadek jest nieszkodliwy: dodatkowa etykieta. Drugi znaczy, że na tym
+           hoście nie wdroży się nic. Po wpisie o grupie nie dało się ich odróżnić.
+
+       GROUP-CUSTOM ZOSTAJE i nie jest to duplikat: tamten wpis odpowiada na pytanie
+       „czy ta grupa jest z Kolli", ten na pytanie „czy na tym hoście cokolwiek się
+       wdroży". Dwa pytania o dwóch różnych podmiotach — inventory z hostem w [compute]
+       i w [moja_grupa] dostaje tamten wpis i NIE dostaje tego.
+
+       ZBIÓR GRUP EFEKTYWNYCH, nie zadeklarowanych wprost. Host stojący w [ceph-osd],
+       którą [storage:children] wciąga do storage, jest w zasięgu Kolli — mimo że sama
+       nazwa ceph-osd nie jest grupą Kolli. Pytanie o przynależność bezpośrednią dałoby
+       tu fałszywy alarm, i to na układzie z referencyjnego inventory.
+
+       WAGA JEST STAŁA i dlatego nie ma tu LINT[id].by. Wzorzec z #25 wybiera wagę
+       z DANYCH, gdy jest z czego wybierać; „na tym hoście nie wdroży się nic" wynika
+       z samego inventory i żaden drugi plik tego nie stopniuje. Tabela z jedną
+       pozycją byłaby drugim mechanizmem udającym pierwszy, a nie jego użyciem. */
+    var kollaGroups = Object.create(null);
+    KNOWN.forEach(function (k) { if (!IMPLICIT[k]) kollaGroups[k] = 1; });
+
+    var hostGroups = Object.create(null);
+    order.forEach(function (name) {
+      if (IMPLICIT[name]) return;
+      (effective[name] || []).forEach(function (h) {
+        (hostGroups[h] || (hostGroups[h] = Object.create(null)))[name] = 1;
+      });
+    });
+
+    hostNames.forEach(function (host) {
+      var mine = Object.keys(hostGroups[host] || Object.create(null)).sort();
+      if (mine.some(function (g) { return kollaGroups[g]; })) return;
+      var rec = hostIndex[host];
+      add("warn", "HOST-NO-KOLLA-GROUP",
+          T("v.f.hostNoKollaGroup", { host: esc(host) }),
+          rec.defs[0].line,
+          mine.length
+            ? T("v.f.hostNoKollaGroup.hint",
+                { groups: "<code>" + mine.map(esc).join("</code>, <code>") + "</code>" })
+            : T("v.f.hostNoKollaGroup.none"));
     });
 
     /* --- kolokacja ról --- */

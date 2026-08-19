@@ -857,6 +857,17 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       "v.sev.warn":            "WARN ",
       "v.sev.info":            "INFO ",
 
+      /* Findingi walidatora są dziś składane z literałów w kodzie — wszystkie 27.
+         Ten jest pierwszym, który idzie przez słownik, i nie jest to niekonsekwencja,
+         tylko kierunek: próg w check-dictionary.js mówi wprost, że KAŻDY NOWY tekst
+         ma iść przez słownik, bo inaczej liczba rośnie. Migracja pozostałych 26 to
+         #58 i nie robimy jej tutaj — dopisanie nowego długu i tak byłoby ruchem
+         w przeciwną stronę niż to zgłoszenie. Mechanizm jest gotowy (wstawki {…}
+         w t()), więc nie powstaje tu nic nowego poza dwoma kluczami. */
+      "v.f.hostNoKollaGroup":      "Host <code>{host}</code> is in no group that Kolla-Ansible deploys onto.",
+      "v.f.hostNoKollaGroup.hint": "Its groups are {groups}, and Kolla-Ansible selects hosts by group name. No service will be deployed on this host.",
+      "v.f.hostNoKollaGroup.none": "It belongs to no group beyond the implicit ones. No service will be deployed on this host.",
+
       "v.verdict.errors":      "The inventory contains errors that block deployment.",
       "v.verdict.warnings":    "Syntax is valid — there are warnings to review.",
       "v.verdict.clean":       "No objections within what this tool checks.",

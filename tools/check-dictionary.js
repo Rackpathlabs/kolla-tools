@@ -246,8 +246,35 @@ report.forEach(function (f) {
    Artefaktu (74 pozycje) NIE naprawiamy tutaj, choć jest defektem pomiaru, a nie
    długiem: jego naprawa przesądza wybór z ADR-002, który czeka na decyzję. Po tej
    decyzji ta liczba znowu przestanie być porównywalna — i ma to być ogłoszone
-   PRZED pracą, nie po. */
-var BASELINE = 461;
+   PRZED pracą, nie po.
+
+   ---------------------------------------------------------------------------
+   488, zmierzone 2026-08-19 przy #10. Rozbite na składniki PRZED podniesieniem,
+   bo próg podniesiony bez rozbicia jest progiem dopasowanym do wyniku:
+
+       461   main @ a8bc25a, 13 scenariuszy
+     + 5     reguła HOST-NO-KOLLA-GROUP, te same 13 scenariuszy
+     + 22    czternasty scenariusz (host poza zasięgiem Kolli)
+     = 488
+
+   TE DWA SKŁADNIKI ZNACZĄ CO INNEGO i dlatego stoją osobno.
+
+   +22 to NOWE POKRYCIE, nie nowy dług: scenariusz renderuje findingi, których tekst
+   od dawna leżał w kodzie i nigdy nie był mierzony. Rosnąca liczba przy rosnącym
+   pokryciu jest dobrym znakiem — martwiąca byłaby stała, o czym mówi nagłówek tego
+   pliku. Gdyby scenariusz nie wszedł razem z regułą, jej komunikat byłby findingiem
+   nieosiągalnym w rozumieniu #56.
+
+   +5 to wyposażenie wiersza findingu z nowymi wartościami (kod reguły, odnośnik
+   „inventory: line N", licznik „3 warnings") ORAZ sam komunikat reguły — który
+   JEST w słowniku i mimo to jest liczony. To jest artefakt opisany wyżej, a nie
+   dług: wpis „Host <code>{host}</code> is in no group…" tnie się po wstawce na
+   segmenty „Host" i „is in no group…", a ekran pokazuje ich sklejenie bez treści
+   dziecka. Żaden z trzech napisów nie równa się żadnemu segmentowi.
+
+   Sprawdzone, nie założone: przeniesienie tekstu reguły z literału do słownika
+   obniżyło licznik o 3 (491 -> 488), nie o 8. Reszta została po stronie artefaktu. */
+var BASELINE = 488;
 
 console.log("segmentów w słowniku: " + SEGS.length +
             "   pustych odfiltrowanych: " + EMPTY_SEGMENTS);

@@ -1,0 +1,21 @@
+{
+  "release": "2026.1",
+  "upgradeTo": null,
+  "globals": false,
+  "findings": [
+    {
+      "code": "COLLOCATION-NETWORK",
+      "sev": "warn",
+      "src": "inventory",
+      "line": 11,
+      "refs": []
+    },
+    {
+      "code": "GROUP-CUSTOM",
+      "sev": "info",
+      "src": "inventory",
+      "line": 19,
+      "refs": []
+    }
+  ]
+}
