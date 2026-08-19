@@ -117,6 +117,22 @@
          a bez JS-u nic nie zostało sprawdzone. Poprzednik ("Konfiguracja poprawna."
          wpisana w markup) orzekał w tym miejscu, że plik jest poprawny — przy pustym
          VIP-ie, czyli akurat wtedy, gdy audyt renderuje tam błąd. #64 */
+      /* Widok wyjścia (#9). LINIA ODNIESIENIA JEST NAZWANA WPROST i ani jeden z tych
+         napisów nie mówi „Kolla defaults" — narzędzie nie zna wartości domyślnych
+         upstreamu dla 24 z 25 emitowanych kluczy, więc takie zdanie byłoby
+         twierdzeniem bez pokrycia, czyli dokładnie tym, czego zabrania SCOPE.md.
+         Pełne porównanie z upstreamem czeka na skuratowaną tabelę defaultów. */
+      "g.view.group":          "Output view",
+      "g.view.full":           "full file",
+      "g.view.diff":           "only what differs",
+      "g.view.note":           "Showing only the keys whose value differs from this tool's initial values — the state this form starts in. This is <strong>not</strong> a comparison against kolla-ansible defaults: this tool does not know them, so a key missing here may still differ from upstream.",
+      "g.view.tableNote":      "Left is this tool's initial value, right is the value in the file above.",
+      "g.h.diff":              "Differences from the initial values",
+      "g.diff.key":            "key",
+      "g.diff.initial":        "initial value",
+      "g.diff.thisFile":       "this file",
+      "g.diff.absent":         "not emitted",
+
       "g.verdict.pending":     "Not checked yet.",
       "g.verdict.blocked":     "This file is not ready to deploy: {errors}{warnings}. Export is blocked.",
       "g.verdict.warn":        "This file is ready. {warnings} to check before deploying.",

@@ -140,6 +140,14 @@ var FILES = [
     mayNotChangeInterface: true,
     steps: check("t_barbican", true) },
 
+  /* Widok różnic (#9). Tabela zestawienia i jej nagłówki nie renderują się w żadnym
+     innym scenariuszu — bez tego wpisu ich tekst byłby poza zasięgiem check-english.js,
+     check-dictionary.js i migawki. Scenariusz wchodzi razem z funkcją. */
+  { file: "generator.html", name: "widok różnic wobec stanu początkowego",
+    steps: set("vip", "10.0.0.250") + set("net_if", "bond0") + check("t_cinder", true) +
+           'document.getElementById("view-diff").checked = true;' +
+           'document.getElementById("view-diff").dispatchEvent(new Event("change", { bubbles: true }));' },
+
   { file: "index.html", name: "stan początkowy", steps: "" }
 ];
 

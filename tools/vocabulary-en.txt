@@ -32,10 +32,11 @@
 # do zbioru zaakceptowanego zapisuje wade pomiaru jako fakt o produkcie.
 #
 # Zbior otwarty 2026-08-19 na main @ 9a45b4e: 1007 pozycji, zero polskich.
-# +3 przy #10 (beyond, implicit, selects — przeczytane i przyjete): 1009 pozycji.
 
+# +3 przy #10, +11 przy #9 (etykiety widoku roznic) — kazde przeczytane: 1020 pozycji.
 a
 about
+above
 absence
 absent
 acknowledged
@@ -198,6 +199,7 @@ come
 comma
 comment
 comments
+comparison
 compatibility
 compete
 competes
@@ -281,7 +283,9 @@ device
 devices
 dies
 differ
+differences
 different
+differs
 direct
 disable
 discard
@@ -308,6 +312,7 @@ edits
 effect
 either
 elsewhere
+emitted
 empty
 enable
 encrypt
@@ -477,6 +482,7 @@ informational
 inheriting
 inherits
 ini
+initial
 initialisation
 input
 installation
@@ -586,6 +592,7 @@ masks
 match
 matches
 matrix
+may
 md
 mean
 means
@@ -856,6 +863,7 @@ sharing
 shipped
 should
 show
+showing
 shown
 shows
 side
@@ -979,6 +987,7 @@ upgrade
 upgrading
 upload
 uploaded
+upstream
 use
 used
 uses
@@ -995,6 +1004,7 @@ variable
 variables
 verify
 version
+view
 vip
 virtual
 visible
@@ -1018,6 +1028,7 @@ which
 while
 who
 whole
+whose
 why
 will
 with

@@ -62,6 +62,16 @@ configuration. No file we read contains them. Where a rule depends on such a fac
 offers an acknowledgment that records the operator's decision instead of pretending to
 have verified it.
 
+**Whether a value matches the upstream Kolla-Ansible default.** The generator can show
+only the keys whose value differs from **its own initial values** — the state the form
+starts in. That is not the same question, and the interface says so where it offers it.
+The release matrix carries the upstream default for four keys, of which the generator
+emits one; for the other twenty-four it has no upstream value to compare against.
+Presenting our starting point as "the Kolla default" would be the kind of claim this
+document exists to prevent. A curated per-release defaults table, sourced from
+`group_vars/all.yml` at a specific tag and verifiable rather than hand-written, is filed
+separately; until it exists, a key absent from that view may still differ from upstream.
+
 **Per-host heterogeneity in `host_vars`.** The current input model is one inventory file
 and optionally one `globals.yml`. Configuration that varies per host — an
 `octavia_network_interface` present on two of three health-manager nodes, per-host Cinder
