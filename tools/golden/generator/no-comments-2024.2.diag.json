@@ -1,0 +1,22 @@
+[
+ {
+  "id": "RELEASE-STATUS",
+  "level": "warn",
+  "field": "release"
+ },
+ {
+  "id": "KV-05-STORAGE-API-LINK",
+  "level": "warn",
+  "field": "stg_if"
+ },
+ {
+  "id": "RELEASE-HOST-OS",
+  "level": "info",
+  "field": null
+ },
+ {
+  "id": "KV-06-MIGRATION-IFACE",
+  "level": "info",
+  "field": "mig_if"
+ }
+]

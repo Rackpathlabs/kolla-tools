@@ -1,0 +1,42 @@
+[
+ {
+  "id": "KV-05-STORAGE-API-LINK",
+  "level": "error",
+  "field": "stg_if"
+ },
+ {
+  "id": "KV-06-MIGRATION-IFACE",
+  "level": "error",
+  "field": "mig_if"
+ },
+ {
+  "id": "RELEASE-HOST-OS",
+  "level": "info",
+  "field": null
+ },
+ {
+  "id": "KEY-SET-EXPLICITLY",
+  "level": "info",
+  "field": null
+ },
+ {
+  "id": "KEY-RELEASE-DEFAULT",
+  "level": "info",
+  "field": null
+ },
+ {
+  "id": "PROMETHEUS-MONITORING-GROUP",
+  "level": "info",
+  "field": null
+ },
+ {
+  "id": "CEPH-EXTERNAL",
+  "level": "info",
+  "field": null
+ },
+ {
+  "id": "PROVIDER-PHYSNETS",
+  "level": "info",
+  "field": null
+ }
+]
