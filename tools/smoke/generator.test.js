@@ -305,6 +305,33 @@ ok("tryb generowania od zera nadal spełnia kontrakt KV-12a",
    has(T.validate(base(), null), "info", /set explicitly in the file/) &&
    !has(T.validate(base(), null), "warn", /om_enable_rabbitmq_stream_fanout/));
 
+/* ZAKAZ KONSTRUKCJI, nie kontrola treści. #64: #status-txt niósł w markupie
+   "Konfiguracja poprawna." — werdykt orzeczony, zanim cokolwiek zostało sprawdzone,
+   i w formie, której SCOPE.md zabrania wprost ("correct" o cudzej konfiguracji).
+   Widać go było wyłącznie przed wykonaniem JS albo gdy JS padnie, czyli dokładnie
+   wtedy, gdy nic nie zostało sprawdzone i kiedy kłamał najgłośniej.
+
+   Asercja pyta o KSZTAŁT: element werdyktu jest w źródle pusty. Kontrola treści
+   ("nie ma tam słowa correct") przepuściłaby każde inne zdanie, o którym autor nie
+   pomyślał — a tu zakazane jest orzekanie, nie konkretny wyraz. */
+console.log("werdykt:");
+var genHtml = require("fs").readFileSync(require("path").join(__dirname, "..", "..", "generator.html"), "utf8");
+var statusEl = genHtml.match(/<span id="status-txt"[^>]*>([\s\S]*?)<\/span>/);
+ok("element werdyktu istnieje w markupie", !!statusEl);
+ok("i jest w źródle PUSTY — werdykt tylko z wykonanego sprawdzenia",
+   !!statusEl && statusEl[1].trim() === "", statusEl && JSON.stringify(statusEl[1]));
+ok("niesie klucz stanu sprzed sprawdzenia",
+   !!statusEl && /data-i18n="g\.verdict\.pending"/.test(statusEl[0]), statusEl && statusEl[0]);
+/* Pierwsza wersja tej asercji brzmiała !/correct|valid/.test(T.I18N ? "" : "") —
+   czyli testowała pusty napis i przechodziła zawsze. Pusty zielony we własnym
+   teście, napisany w commicie o werdykcie orzekanym bez sprawdzenia. Zostaje
+   zapisana, bo trafiła dokładnie w klasę, którą ten commit naprawia. */
+var pending = require("fs").readFileSync(require("path").join(__dirname, "..", "..", "i18n.js"), "utf8")
+  .match(/"g\.verdict\.pending"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+ok("klucz stanu początkowego istnieje w słowniku", !!pending);
+ok("i nie orzeka poprawności — SCOPE.md zabrania twierdzenia 'correct' o cudzym pliku",
+   !!pending && !/\b(correct|valid|poprawn)/i.test(pending[1]), pending && pending[1]);
+
 console.log("YAML:");
 var y = T.buildYaml(base(), {});
 ok("nagłówek zawiera nazwę wydania", /Epoxy/.test(y.text), y.text.split("\n").slice(0, 8).join(" | "));
