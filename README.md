@@ -109,7 +109,9 @@ bash tools/sync-blocks.sh          # push shared blocks into the HTML files
 ```
 
 Rules for changing this code — severity against evidence, what a tool may claim, where a
-check has to stand — are in [docs/PRINCIPLES.md](docs/PRINCIPLES.md).
+check has to stand — are in [docs/PRINCIPLES.md](docs/PRINCIPLES.md). The operational
+rules for making a change — git and review hygiene, and which thresholds a change may
+move — are in [CLAUDE.md](CLAUDE.md).
 
 Code shared between tools lives in `matrix.js`, `globals-parser.js` and `theme.css`, and
 is pasted byte-identically into each file that needs it; CI fails if the copies drift.
