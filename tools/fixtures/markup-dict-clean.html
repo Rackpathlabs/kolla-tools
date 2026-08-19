@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>fixtura: markup zgodny ze slownikiem</title></head>
+<body>
+<!-- ZERO naruszen. Wartosci sa przepisane ze slownika (i18n.js), bo to on jest
+     zrodlem prawdy — rozstrzygniecie 4 z ADR-002. -->
+<h2 data-i18n="g.h.params">Deployment parameters</h2>
+<h3 data-i18n="g.h.network">Networking</h3>
+
+<!-- PRZYNETA 1: ZAWINIECIE I WCIECIE. Regula normalizacji zwija ciagi bialych znakow
+     do jednej spacji po OBU stronach; bez niej straznik bylby czerwony na wszystkim,
+     bo markup lamie linie, a slownik jest jednolinijkowy. -->
+<span data-i18n="g.field.required">
+      required
+</span>
+
+<!-- PRZYNETA 2: ZAGNIEZDZONY ZNACZNIK TEJ SAMEJ NAZWY. Domykanie "do pierwszego </span>"
+     ucieloby tresc w polowie, "do ostatniego" polkneloby reszte dokumentu. Wartosc
+     wewnetrzna jest tu celowo rowna wpisowi, wiec obie pomylki daja czerwone. -->
+<span data-i18n="g.h.network">Networking</span>
+<span class="outer"><span class="inner">nie jest podstawieniem</span></span>
+
+<!-- PRZYNETA 3: forma atrybutowa. Trzy z czterech form nios� tekst widoczny tak samo
+     jak tresc elementu i sa objete od pierwszego dnia (rozstrzygniecie 2). -->
+<button data-i18n-title="v.btn.run" title="Analyse"></button>
+
+<!-- PRZYNETA 4: klucz spoza slownika. To bl�d, ale NIE TEN — pilnuje go check-i18n.js.
+     Gdyby ten straznik go liczyl, mowilby o cudzym bledzie cudzym jezykiem. -->
+<span data-i18n="g.nie.ma.takiego.klucza">cokolwiek</span>
+</body></html>

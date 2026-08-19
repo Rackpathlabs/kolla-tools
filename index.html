@@ -128,46 +128,46 @@ footer a{color:var(--muted)}
 
 <main class="wrap" id="main">
   <h1 data-i18n="hub.h1">Two tools for Kolla-Ansible</h1>
-  <p class="lede" data-i18n="hub.lede"></p>
-  <p class="for-whom" data-i18n="hub.forWhom"></p>
+  <p class="lede" data-i18n="hub.lede">One writes <code>globals.yml</code> and keeps it free of configuration that passes a deployment and breaks weeks later. The other reads a <em>multinode</em> inventory and looks for what reading it will not show you: quorum, role collocation, group names retired in your release.</p>
+  <p class="for-whom" data-i18n="hub.forWhom">For people who deploy and run OpenStack with Kolla — from a single-node lab to a multinode installation with HA.</p>
 
   <div class="cards">
     <a class="card" href="generator.html">
-      <h2 data-i18n="hub.gen.h"></h2>
+      <h2 data-i18n="hub.gen.h">globals.yml generator</h2>
       <span class="file">generator.html</span>
-      <p data-i18n="hub.gen.p"></p>
+      <p data-i18n="hub.gen.p">Fill in a form, get a finished file with comments explaining every decision.</p>
       <ul>
-        <li data-i18n="hub.gen.li1"></li>
-        <li data-i18n="hub.gen.li2"></li>
-        <li data-i18n="hub.gen.li3"></li>
-        <li data-i18n="hub.gen.li4"></li>
+        <li data-i18n="hub.gen.li1">release against base image</li>
+        <li data-i18n="hub.gen.li2">interfaces: collisions and shared base devices</li>
+        <li data-i18n="hub.gen.li3">TLS, endpoint names, service dependencies</li>
+        <li data-i18n="hub.gen.li4">import an existing file — it patches your original instead of rewriting it</li>
       </ul>
-      <span class="go" data-i18n="hub.gen.go"></span>
+      <span class="go" data-i18n="hub.gen.go">Open the generator &rarr;</span>
     </a>
 
     <a class="card" href="validator.html">
-      <h2 data-i18n="hub.val.h"></h2>
+      <h2 data-i18n="hub.val.h">Inventory validator</h2>
       <span class="file">validator.html</span>
-      <p data-i18n="hub.val.p"></p>
+      <p data-i18n="hub.val.p">Paste an inventory, get a list of problems with line numbers and what each one will cause.</p>
       <ul>
-        <li data-i18n="hub.val.li1"></li>
-        <li data-i18n="hub.val.li2"></li>
-        <li data-i18n="hub.val.li3"></li>
-        <li data-i18n="hub.val.li4"></li>
+        <li data-i18n="hub.val.li1">quorum and group sizes, role collocation</li>
+        <li data-i18n="hub.val.li2">duplicate hosts and addresses, syntax, group cycles</li>
+        <li data-i18n="hub.val.li3"><strong>combined mode</strong> — add <code>globals.yml</code> and check what only both files together can show</li>
+        <li data-i18n="hub.val.li4"><strong>upgrade mode</strong> — pick a target release and see what in your files changes on the way</li>
       </ul>
-      <span class="go" data-i18n="hub.val.go"></span>
+      <span class="go" data-i18n="hub.val.go">Open the validator &rarr;</span>
     </a>
   </div>
 
   <div class="panel">
-    <h2 data-i18n="hub.limits.h"></h2>
+    <h2 data-i18n="hub.limits.h">Before you click — two boundaries</h2>
     <div class="body">
-      <p data-i18n="hub.limits.offline"></p>
-      <p data-i18n="hub.limits.scope"></p>
+      <p data-i18n="hub.limits.offline"><strong>Everything happens in your browser.</strong> Files are never uploaded or stored, the tools make no network requests at all, and each one is a single HTML file — download it and use it offline, from <code>file://</code>.</p>
+      <p data-i18n="hub.limits.scope"><strong>The tools do not check everything</strong>, and they say so outright. Some failures do not follow from the contents of these files: deployment history, switch configuration and database state cannot be read out of YAML. <a href="SCOPE.md">SCOPE.md</a> lists what is deliberately left out, where an answer is an inference rather than a fact, and what an empty result means. The document is in English.</p>
     </div>
   </div>
 
-  <footer data-i18n="hub.footer"></footer>
+  <footer data-i18n="hub.footer">Rackpathlabs — OpenStack tooling. Code and issues: <a href="https://github.com/Rackpathlabs/kolla-tools">github.com/Rackpathlabs/kolla-tools</a>. MIT licence.</footer>
 </main>
 
 <script>

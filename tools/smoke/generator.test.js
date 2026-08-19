@@ -312,15 +312,31 @@ ok("tryb generowania od zera nadal spełnia kontrakt KV-12a",
    Widać go było wyłącznie przed wykonaniem JS albo gdy JS padnie, czyli dokładnie
    wtedy, gdy nic nie zostało sprawdzone i kiedy kłamał najgłośniej.
 
-   Asercja pyta o KSZTAŁT: element werdyktu jest w źródle pusty. Kontrola treści
-   ("nie ma tam słowa correct") przepuściłaby każde inne zdanie, o którym autor nie
-   pomyślał — a tu zakazane jest orzekanie, nie konkretny wyraz. */
+   Asercja pyta o KSZTAŁT, nie o treść: kontrola „nie ma tam słowa correct" przepuściłaby
+   każde inne zdanie, o którym autor nie pomyślał, a zakazane jest ORZEKANIE, nie wyraz.
+
+   KSZTAŁT ZMIENIŁ SIĘ PRZY ADR-002 (opcja B) i jest to jedyne miejsce, w którym te dwie
+   decyzje się zderzyły. Do 2026-08-19 brzmiał „element jest w źródle PUSTY". Opcja B
+   wymaga, żeby tekst domyślny stał w markupie, więc pustego elementu już nie ma i nie ma
+   go mieć: bez JavaScriptu użytkownik ma przeczytać „Not checked yet." zamiast patrzeć
+   na puste miejsce.
+
+   Zakaz jest ten sam i dalej jest kształtem, tylko przeniesiony o jeden poziom:
+   element ma nieść klucz stanu sprzed sprawdzenia, jego tekst ma być RÓWNY wpisowi
+   słownika przy tym kluczu (pilnuje tego check-markup-dict.js na wszystkich 119
+   podstawieniach), a ten wpis nie ma prawa orzekać poprawności. Dowolne zdanie wpisane
+   tu ręcznie przestaje przechodzić nie dlatego, że ktoś je przeczytał, tylko dlatego,
+   że nie równa się słownikowi. Osłabieniem byłoby dopiero porzucenie któregokolwiek
+   z tych trzech ogniw. */
 console.log("werdykt:");
+var pendingVal = (require("fs").readFileSync(require("path").join(__dirname, "..", "..", "i18n.js"), "utf8")
+  .match(/"g\.verdict\.pending"\s*:\s*"((?:[^"\\]|\\.)*)"/) || [])[1];
 var genHtml = require("fs").readFileSync(require("path").join(__dirname, "..", "..", "generator.html"), "utf8");
 var statusEl = genHtml.match(/<span id="status-txt"[^>]*>([\s\S]*?)<\/span>/);
 ok("element werdyktu istnieje w markupie", !!statusEl);
-ok("i jest w źródle PUSTY — werdykt tylko z wykonanego sprawdzenia",
-   !!statusEl && statusEl[1].trim() === "", statusEl && JSON.stringify(statusEl[1]));
+ok("i jego tekst w źródle jest RÓWNY wpisowi słownika, a nie zdaniem wpisanym ręcznie",
+   !!statusEl && !!pendingVal && statusEl[1].replace(/\s+/g, " ").trim() === pendingVal,
+   statusEl && JSON.stringify(statusEl[1]));
 ok("niesie klucz stanu sprzed sprawdzenia",
    !!statusEl && /data-i18n="g\.verdict\.pending"/.test(statusEl[0]), statusEl && statusEl[0]);
 /* Pierwsza wersja tej asercji brzmiała !/correct|valid/.test(T.I18N ? "" : "") —
