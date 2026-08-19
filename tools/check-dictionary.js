@@ -215,16 +215,39 @@ report.forEach(function (f) {
   miss.push(f);
 });
 
-/* PRÓG, nie cel. Stan na 2026-08-12: 444 wystąpienia angielskiego tekstu nadal
-   budowanego w kodzie zamiast pobieranego z klucza. Nie ma być osiągnięte zero —
-   ma nie wzrosnąć: KAŻDY NOWY tekst musi iść przez słownik, bo inaczej liczba
-   rośnie i build pada. Istniejące 444 są długiem opisanym liczbą, nie ukrytym,
-   i mają własne zgłoszenie (#58).
+/* PRÓG, nie cel. Nie ma być osiągnięte zero — ma nie wzrosnąć: KAŻDY NOWY tekst musi
+   iść przez słownik, bo inaczej liczba rośnie i build pada. Istniejąca zaległość jest
+   długiem opisanym liczbą, nie ukrytym, i ma własne zgłoszenie (#58).
 
    Czerwony strażnik na stałe zostaje zignorowany w tydzień i przestaje cokolwiek
    znaczyć — tracimy go wtedy także dla przyszłości. Próg chroni dokładnie to, co
-   ma sens chronić dziś. */
-var BASELINE = 444;
+   ma sens chronić dziś.
+
+   461, zmierzone 2026-08-19 na main @ e19a77d, raportem z check-rendered.js --texts
+   (13 scenariuszy). PODNIESIONE Z 444 i to nie jest naginanie miernika do wyniku —
+   powód jest taki, że 444 i 461 liczą różne rzeczy:
+
+     444  stan sprzed #70
+     461  stan po #70, ten sam kontrkorpus po obu stronach
+          z tego artefakt pomiaru:  18 -> 74
+          faktyczny dług:          394 -> 387   (SPADŁ o siedem)
+
+   Naprawa z #70 przywróciła podpowiedzi niosące znaczniki, a jednostką po stronie
+   ekranu jest WŁASNY TEKST ELEMENTU, do którego treść dzieci nie wchodzi:
+
+       wpis w słowniku:  "Empty inherits <code>network_interface</code>."
+       korpus widzi:      empty inherits network_interface .
+       ekran widzi:       Empty inherits .
+
+   Miernik ukarał naprawę. Zostawienie 444 zapisałoby jako regres coś, co regresem
+   nie jest — a strażnik czerwony z powodu, którego nikt nie zamierza usuwać, to
+   dokładnie ten strażnik, którego akapit wyżej zabrania.
+
+   Artefaktu (74 pozycje) NIE naprawiamy tutaj, choć jest defektem pomiaru, a nie
+   długiem: jego naprawa przesądza wybór z ADR-002, który czeka na decyzję. Po tej
+   decyzji ta liczba znowu przestanie być porównywalna — i ma to być ogłoszone
+   PRZED pracą, nie po. */
+var BASELINE = 461;
 
 console.log("segmentów w słowniku: " + SEGS.length +
             "   pustych odfiltrowanych: " + EMPTY_SEGMENTS);

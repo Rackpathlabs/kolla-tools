@@ -149,6 +149,24 @@ at once. Both kinds are kept; the golden files catch what nobody thought to ask.
 gap is open as issue #26: the generator's golden files pin the file it emits but not the
 severities of its diagnostics, so a severity change is invisible to them.
 
+**A guard that does not execute in the build is not a guard, and only the build log
+proves it does.** Three failures in one day shared this shape, and the third is why the
+rule is written down. A guard was added, run once by hand, seen green, and merged
+unwired; a second was nearly merged the same way and was caught only because somebody
+asked for the runner's output rather than the tool's. The third had been sitting outside
+both the runner and CI for long enough to go red — 461 occurrences against its own
+threshold of 444 — with every build reporting success the whole time. Running a guard
+yourself answers whether it works. It does not answer whether anything will run it again
+after you stop looking, and that second question is the entire value of a guard.
+
+So a new guard enters together with the log line showing it executed in the build, and a
+guard that deliberately stays out carries the reason in its own header, where the next
+person to look for it will be. The reason has to be re-measured, not inherited: the case
+above was argued as "the runner has no browser", which had stopped being true — the
+runner already fails without one, because a smoke test invokes the rendering audit twice
+and asserts on its exit codes. A premise about a mechanism's scope goes stale exactly
+like a belief about the repository, and this one had gone stale unmeasured.
+
 **A check built from watching one run describes that run, not the tool.** This is separate
 from proving a check can fail: a check can fail immaculately and still never look at most
 of the cases. The English-completeness assertion drove the generator through a single

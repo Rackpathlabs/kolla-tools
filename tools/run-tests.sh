@@ -56,6 +56,10 @@ echo "== słownik: klucz produkuje tekst na ekranie =="
 "$NODE" tools/check-i18n-apply.js || rc=1
 
 echo
+echo "== literały w ujściach tekstu =="
+"$NODE" tools/check-literals.js || rc=1
+
+echo
 echo "== spójność bloków współdzielonych =="
 bash tools/check-blocks.sh || rc=1
 
@@ -93,6 +97,20 @@ echo "== golden: round-trip parsera =="
 echo
 echo "== golden: walidator =="
 "$NODE" tools/golden/validator.golden.js .val.test.tmp.js $GOLDEN_FLAG || rc=1
+
+# Na końcu, bo jako jedyna sekcja uruchamia przeglądarkę i trwa dziesiątki sekund.
+# Nie jest to sekcja opcjonalna: runner NIE przechodzi dziś bez przeglądarki także bez
+# niej, bo guards.test.js uruchamia check-rendered.js dwukrotnie i żąda konkretnych
+# kodów wyjścia. Zmierzone na kopii drzewa z pustą listą kandydatów (#72): rc=1.
+# Raport kasujemy przed przebiegiem — check-rendered.js DOPISUJE do istniejącego pliku,
+# więc pozostałość po poprzednim uruchomieniu zawyżyłaby korpus i pokrycie zmierzone
+# na niej mówiłoby o dwóch przebiegach naraz.
+echo
+echo "== widoczność i pokrycie słownikiem (przeglądarka) =="
+rm -f .audit.tmp.json
+tmp_files="$tmp_files .audit.tmp.json"
+"$NODE" tools/check-rendered.js --texts .audit.tmp.json || rc=1
+"$NODE" tools/check-dictionary.js .audit.tmp.json || rc=1
 
 echo
 [ "$rc" -eq 0 ] && echo "Wszystko przeszło." || echo "Są niepowodzenia."

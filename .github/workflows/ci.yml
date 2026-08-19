@@ -50,6 +50,12 @@ jobs:
       - name: Słownik — klucz produkuje tekst na ekranie
         run: node tools/check-i18n-apply.js
 
+      # ZAPOBIEGA, w odróżnieniu od dwóch powyższych, które WYKRYWAJĄ: działa na kodzie,
+      # więc nie ma pojęcia „scenariusz" i nie zależy od pokrycia. Powód rozdzielenia
+      # jest w nagłówku pliku. Do 2026-08-19 nie wykonywał się w żadnym buildzie (#72).
+      - name: Literały w ujściach tekstu
+        run: node tools/check-literals.js
+
       - name: Spójność bloków współdzielonych
         run: bash tools/check-blocks.sh
 
@@ -67,6 +73,13 @@ jobs:
       # Składnia (node --check), testy dymne i golden-file dla obu narzędzi.
       - name: Pełny zestaw testów
         run: bash tools/run-tests.sh
+
+      # Progu pokrycia słownikiem (check-dictionary.js) NIE ma tu osobnym krokiem, choć
+      # do 2026-08-19 nie wykonywał się nigdzie (#72). Wykonuje się w „Pełnym zestawie
+      # testów", a osobny krok kosztowałby DRUGI pełny przebieg przeglądarki — podczas
+      # gdy uzasadnienie osobnych kroków wypisane wyżej brzmi „kosztują milisekundy".
+      # Odstępstwo trzyma się powodu tamtej reguły, a nie jej litery, i dlatego jest
+      # zapisane tutaj zamiast przemilczane.
 
       # Kontrola mierzona na WYRENDEROWANEJ stronie, nie na jej reprezentacji.
       # Pasek nieaktualności walidatora miał ustawiony atrybut hidden i był widoczny:
