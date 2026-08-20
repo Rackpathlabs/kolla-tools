@@ -261,8 +261,9 @@ R.ok("ZNANA DZIURA #101: wywołania sieciowe składane w czasie działania PRZEC
    Regula, ktora z tego powstala, byla do dzis SAMA NIEEGZEKWOWANA — nic nie sprawdzalo,
    czy tools/check-* ma jakiekolwiek wystapienie w buildzie. */
 var W = "tools/fixtures/wiring/";
-function wiring(dir, runner, ci) {
-  return run("check-wiring.js", ["--dir", W + dir, "--runner", W + runner, "--ci", W + ci]);
+function wiring(dir, runner, ci, fixtures) {
+  return run("check-wiring.js", ["--dir", W + dir, "--runner", W + runner, "--ci", W + ci,
+                                 "--fixtures", W + (fixtures || "fixtures-clean.js")]);
 }
 
 var wClean = wiring("guards-clean", "runner-clean.sh", "ci-clean.yml");
@@ -271,7 +272,7 @@ R.ok("każdy strażnik wpięty -> zielone", wClean.code === 0, wClean.out.split(
    a nie ze sprawdzamy tylko jedno i drugie przechodzi przypadkiem. */
 R.ok("i wystarczy jedno ze ŹRÓDEŁ, nie oba", /wpiętych: 2/.test(wClean.out), wClean.out.split("\n")[0]);
 
-var wOrphan = wiring("guards-orphan", "runner-orphan.sh", "ci-orphan.yml");
+var wOrphan = wiring("guards-orphan", "runner-orphan.sh", "ci-orphan.yml", "fixtures-orphan.js");
 R.ok("strażnik poza buildem -> czerwone", wOrphan.code === 1, "kod " + wOrphan.code);
 R.ok("i nazywa go", /check-sierota\.js/.test(wOrphan.out));
 /* PRZYNETA, ktora jest istota tej kontroli: nazwa pliku pada w KOMENTARZU runnera.
@@ -290,6 +291,25 @@ R.ok("brak źródła -> czerwone, nie przejście",
 var wEmpty = run("check-wiring.js", ["--dir", "tools/fixtures", "--runner", W + "runner-clean.sh", "--ci", W + "ci-clean.yml"]);
 R.ok("katalog bez ani jednego strażnika -> czerwone, nie „wszystko wpięte\"",
      wEmpty.code === 1 && /przedmiot pomiaru jest nieobecny/.test(wEmpty.out), "kod " + wEmpty.code);
+
+/* ---- drugi warunek: fixtura obok wpiecia ----
+   „13 z 13 ma dowod upadku" trzymalo sie UWAGA, nie mechanizmem. Wymaganie ma ten sam
+   ksztalt co wpiecie, wiec siedzi w tym samym strazniku. */
+var wNoFix = wiring("guards-clean", "runner-clean.sh", "ci-clean.yml", "fixtures-missing.js");
+R.ok("wpięty, ale BEZ fixtury -> czerwone", wNoFix.code === 1, "kod " + wNoFix.code);
+R.ok("i nazywa strażnika bez dowodu upadku",
+     /BEZ FIXTURY: 1/.test(wNoFix.out) && /check-b\.js/.test(wNoFix.out), wNoFix.out.split("\n")[0]);
+/* PRZYNETA, ktora zlapala PIERWSZA wersje tego warunku: nazwa straznika pada w prozie
+   komentarza. Linia kontynuacji komentarza blokowego nie zaczyna sie od gwiazdki, wiec
+   filtr komentarzy uznawal ja za wykonywalna i wzmianka liczyla sie za sprawdzenie.
+   Kryterium jest teraz KSZTALTEM WYWOLANIA — proza nie zawiera run("check-x.js". */
+R.ok("wzmianka w PROZIE komentarza nie liczy się za fixturę",
+     /BEZ FIXTURY: 1/.test(wNoFix.out), wNoFix.out.split("\n")[0]);
+
+var wBothOk = wiring("guards-clean", "runner-clean.sh", "ci-clean.yml", "fixtures-clean.js");
+R.ok("wpięty I wywołany na fixturze -> zielone", wBothOk.code === 0, wBothOk.out.split("\n")[0]);
+R.ok("brak pliku z fixturami -> czerwone, nie przejście",
+     wiring("guards-clean", "runner-clean.sh", "ci-clean.yml", "nie-ma.js").code === 1);
 
 /* PROTOTYP z #94 celowo nie ma przedrostka check-, wiec NIE MA go w zestawieniu. */
 var wReal = run("check-wiring.js", []);
