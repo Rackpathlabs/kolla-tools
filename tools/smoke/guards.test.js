@@ -138,6 +138,124 @@ R.ok("i zero do przeczytania", /DO PRZECZYTANIA: 0$/m.test(engOk.out), engOk.out
 R.ok("licznik słów domyka się na obu fixturach",
      !/licznik się nie domyka/.test(engBad.out + engOk.out));
 
+/* ---- dokumenty normatywne ----
+   Ten straznik byl w tej sesji zepsuty RECZNIE i ogladany na czerwono — jako CZYNNOSC.
+   Czynnosc nie powtarza sie przy zmianie straznika i nie lapie regresu; to jest powod,
+   dla ktorego ten plik w ogole istnieje. #96 zamienia tamta czynnosc w test. */
+function docs(variant) {
+  return run("check-docs.sh", ["--root", "tools/fixtures/docs/" + variant]);
+}
+R.ok("komplet dokumentów z sekcjami i odnośnikami -> zielone", docs("clean").code === 0,
+     docs("clean").out.split("\n").pop());
+
+/* WYPATROSZENIE: znika JEDNA sekcja, plik zostaje dlugi. CLAUDE.md ma tu 1711 bajtow,
+   czyli PONAD progiem rozmiaru — kontrola rozmiaru przechodzi i lapie to wylacznie
+   kontrola sekcji. Regula sciety do naglowka wazy prawie tyle, co regula z powodem. */
+var dh = docs("hollowed");
+R.ok("sekcja usunięta przy pliku wciąż dużym -> czerwone", dh.code === 1, "kod " + dh.code);
+R.ok("i nazywa BRAKUJĄCĄ sekcję, nie sam fakt różnicy",
+     /brak sekcji "A ratchet threshold may only fall"/.test(dh.out), dh.out.split("\n")[0]);
+R.ok("a kontrola ROZMIARU tego nie złapała — plik jest nad progiem",
+     !/CLAUDE\.md: [0-9]+ bajtów/.test(dh.out));
+
+/* UTRATA ODNOSNIKA: README zachowuje dwa z trzech. Nikt nie liczy odnosnikow. */
+var dl = docs("lost-link");
+R.ok("README traci jeden z trzech odnośników -> czerwone", dl.code === 1, "kod " + dl.code);
+R.ok("i mówi, którego brakuje", /brak odnośnika do CLAUDE\.md/.test(dl.out));
+
+/* WYDRAZENIE: dokument skrocony do samych naglowkow. Kontrola rozmiaru istnieje
+   wlasnie po to i nigdy nie zostala pokazana, jak zapala. */
+var dg = docs("gutted");
+R.ok("dokument skrócony do nagłówków -> czerwone na rozmiarze", dg.code === 1, "kod " + dg.code);
+R.ok("i podaje liczbę bajtów oraz próg",
+     /SCOPE\.md: 157 bajtów/.test(dg.out) && /próg 2000/.test(dg.out), dg.out.split("\n")[0]);
+
+/* ---- spójność bloków współdzielonych ----
+   Straznik bez dowodu upadku do #96, a to, czego pilnuje, jest niewidoczne z definicji:
+   blok rozjechany ze zrodlem nie daje ZADNEGO objawu na ekranie. Dwie kopie tego samego
+   kodu, rozne o jeden bajt, zachowuja sie inaczej i wygladaja identycznie.
+   Dlatego fixtury to rozjazdy, ktorych nikt nie wypatrzy okiem — nie skasowana polowa
+   bloku, ktora zlapalby dowolny naiwny grep. */
+/* Lista blokow ARGUMENTEM, nie zmienna srodowiskowa. Pierwsza wersja szla przez
+   srodowisko i cicho nie dzialala: node.exe z Windows nie przekazuje zmiennych do
+   basha bez WSLENV, wiec straznik ruszal na domyslnej liscie i zglaszal brak
+   matrix.js w fixturze. Ta sama pulapka jest opisana w check-rendered.js. */
+function blocks(variant) {
+  return run("check-blocks.sh",
+             ["--root", "tools/fixtures/blocks/" + variant,
+              "--blocks", "DEMO:demo.js:page.html"]);
+}
+R.ok("kopia identyczna ze źródłem -> zielone", blocks("clean").code === 0,
+     blocks("clean").out.split("\n").pop());
+
+/* SPACJA NA KONCU LINII. To robi edytor przy zapisie i jest to ksztalt czynnosci
+   ZAKAZANEJ przez zasady repo: edycja kopii w HTML zamiast zrodla. */
+var bt = blocks("trailing-space");
+R.ok("spacja na końcu linii w kopii -> czerwone", bt.code === 1, "kod " + bt.code);
+R.ok("i mówi, z którym plikiem źródłowym się rozjechało",
+     /rozjechał się z demo\.js/.test(bt.out), bt.out.split("\n")[0]);
+
+/* NBSP: U+00A0 tam, gdzie nalezy sie zwykla spacja. Bajtowo c2 a0 zamiast 20,
+   wizualnie nie do odroznienia w zadnym przegladzie. */
+R.ok("niełamliwa spacja zamiast zwykłej -> czerwone", blocks("nbsp").code === 1);
+/* KOLEJNOSC: ta sama tresc, ta sama dlugosc, inny plik. */
+R.ok("przestawione linie przy tej samej treści -> czerwone", blocks("reordered").code === 1);
+
+/* ---- gwarancja offline ----
+   Straznik, ktory do #96 nie mial NIGDZIE dowodu upadku — a stoi miedzy repozytorium
+   a rdzeniem obietnicy produktu: jeden plik HTML, file://, zero sieci, polityka przypieta
+   co do znaku. Kazda fixtura ma ksztalt realnej awarii, nie podrecznikowej; fixtura,
+   ktora zlapalby dowolny naiwny grep, nie dowodzi niczego o TYM strazniku. */
+var OFF = "tools/fixtures/offline/";
+/* Straznik skanuje KATALOG, wiec kazdy przypadek musi stac OSOBNO — inaczej jedna
+   czerwona fixtura barwilaby wynik pozostalych i „dokladnie ten jeden powod" byloby
+   nie do odroznienia od „ktorykolwiek z czterech".
+   Kopie ida do sciezki ignorowanej przez git (*.tmp), a nie obok fixtur: katalog
+   pochodny w fixtures/ wygladalby po chwili jak fixtura, ktorej nikt nie pisal. */
+var fsx = require("fs"), pathx = require("path");
+var CASES = ".offline-cases.tmp";
+["clean", "bait-a-csp-permissive", "bait-a2-csp-single-quoted",
+ "bait-b-runtime-network", "bait-c-no-csp"].forEach(function (name) {
+  var d = pathx.join(root, CASES, name);
+  fsx.mkdirSync(d, { recursive: true });
+  fsx.copyFileSync(pathx.join(root, OFF, name + ".html"), pathx.join(d, name + ".html"));
+});
+function offline(file) { return run("check-offline.js", ["--dir", CASES + "/" + file]); }
+
+R.ok("polityka zgodna, brak API sieciowych -> zielone", offline("clean").code === 0,
+     offline("clean").out.split("\n").pop());
+
+/* (a) Bajtowo inna i semantycznie PRZEPUSZCZALNA: jedna dyrektywa wiecej. Tak wyglada
+   edycja zrobiona po to, zeby „cos zadzialalo", a nie zlosliwa podmiana. */
+var oa = offline("bait-a-csp-permissive");
+R.ok("polityka z dodatkową dyrektywą (connect-src) -> czerwone", oa.code === 1, "kod " + oa.code);
+R.ok("i pokazuje OBIE polityki, nie sam fakt różnicy",
+     /oczekiwano:/.test(oa.out) && /connect-src https:/.test(oa.out));
+
+/* (a2) KSZTALT HISTORYCZNEJ AWARII z docs/PRINCIPLES.md: wzorzec wykluczal apostrofy,
+   a polityka jest ich pelna, wiec nie znalazl znacznika w ogole. Tutaj ogranicznik
+   atrybutu JEST apostrofem, a polityka jest szeroko otwarta. Dzisiejszy wzorzec
+   zapamietuje ogranicznik — to jest dokladnie ta poprawka, ktorej tamten nie mial. */
+var oa2 = offline("bait-a2-csp-single-quoted");
+R.ok("ogranicznik apostrofowy + polityka otwarta -> czerwone", oa2.code === 1, "kod " + oa2.code);
+R.ok("i wzorzec ODCZYTAŁ politykę, zamiast zgubić się na apostrofach",
+     /default-src \*/.test(oa2.out), oa2.out.split("\n")[1]);
+
+/* (c) Brak znacznika. Obrona przed zielonym przy NIEOBECNYM przedmiocie — jedyna klasa,
+   ktorej nie da sie wykryc psuciem, bo popsucie rzeczy nieobecnej tez nie zapala lampki. */
+var oc = offline("bait-c-no-csp");
+R.ok("brak znacznika CSP -> czerwone, nie „nic do sprawdzenia\"",
+     oc.code === 1 && /brak znacznika meta/.test(oc.out), "kod " + oc.code);
+
+/* (b) ZNANA DZIURA, przypięta świadomie: #101. Ta asercja mówi, że fixtura DZIŚ
+   PRZECHODZI, i nie jest to zgoda — jest to uczynienie granicy widoczną. Gdy dziura
+   zostanie zamknięta, ta asercja zapali się na czerwono i zmusi do aktualizacji,
+   a #101 da się wtedy domknąć. Straznik milczacy o wlasnej granicy jest gorszy od
+   granicy zapisanej. */
+var ob = offline("bait-b-runtime-network");
+R.ok("ZNANA DZIURA #101: wywołania sieciowe składane w czasie działania PRZECHODZĄ",
+     ob.code === 0, "kod " + ob.code + " — jeśli to czerwone, dziura zamknięta, zaktualizuj #101");
+
 /* ---- wpięcie strażników w build ----
    #72: dwaj straznicy nie wykonywali sie nigdzie, jeden byl czerwony, build byl zielony.
    Regula, ktora z tego powstala, byla do dzis SAMA NIEEGZEKWOWANA — nic nie sprawdzalo,

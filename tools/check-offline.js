@@ -39,7 +39,14 @@ var FORBIDDEN = [
 /* znaczniki, które ładują zasób — w nich adres zewnętrzny jest realnym żądaniem */
 var RESOURCE_TAGS = /<(script|link|img|iframe|frame|embed|object|source|track|video|audio)\b[^>]*>/gi;
 
-var root = path.join(__dirname, "..");
+/* Katalog jest podmienialny argumentem, żeby strażnika dało się uruchomić na fixturze
+   o znanej charakterystyce — ten sam powód co w check-literals.js i check-wiring.js.
+   Dowód, że kontrola potrafi upaść, ma być TESTEM, a nie czynnością wykonaną raz
+   w dniu, w którym powstawała: czynność nie powtarza się przy zmianie strażnika. */
+var dirArg = process.argv.indexOf("--dir");
+var root = dirArg !== -1 && process.argv[dirArg + 1]
+  ? path.resolve(path.join(__dirname, ".."), process.argv[dirArg + 1])
+  : path.join(__dirname, "..");
 var files = fs.readdirSync(root).filter(function (f) { return /\.html$/i.test(f); }).sort();
 
 var rc = 0;

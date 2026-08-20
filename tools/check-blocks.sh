@@ -3,8 +3,30 @@
 # Kod wyjścia 1 = rozjazd. Wpięte w CI.
 set -uo pipefail
 
-cd "$(dirname "$0")/.."
-. tools/blocks-lib.sh
+# Biblioteka idzie z katalogu SKRYPTU, korzen moze byc podmieniony argumentem —
+# inaczej uruchomienie na fixturze szukaloby tools/ wewnatrz fixtury.
+here=$(cd "$(dirname "$0")" && pwd)
+
+# Korzen i lista blokow ARGUMENTAMI, nie zmiennymi srodowiskowymi. Powod jest zapisany
+# w check-rendered.js i kosztowal juz raz: proces Windows uruchomiony z WSL nie dziedziczy
+# zmiennych bez WSLENV, wiec przekazanie przez srodowisko cicho by nie zadzialalo —
+# a straznik ruszylby wtedy na domyslnej liscie i zglosil brak matrix.js w fixturze.
+root_arg=""
+blocks_arg=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --root)   root_arg="${2:-}"; shift 2 ;;
+    --blocks) blocks_arg="${2:-}"; shift 2 ;;
+    *) echo "FAIL nieznany argument: $1"; exit 1 ;;
+  esac
+done
+
+[ -n "$blocks_arg" ] && BLOCKS="$blocks_arg"
+. "$here/blocks-lib.sh"
+
+root="$here/.."
+[ -n "$root_arg" ] && root="$here/../$root_arg"
+cd "$root"
 
 ref=$(mktemp); cur=$(mktemp)
 trap 'rm -f "$ref" "$cur"' EXIT

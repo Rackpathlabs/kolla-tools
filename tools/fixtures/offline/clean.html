@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<title>fixtura czysta</title></head>
+<body>
+<script>
+(function () {
+  /* Komentarz wymienia fetch() i XMLHttpRequest — straznik wycina komentarze,
+     wiec wlasny opis polityki nie ma prawa go zapalic. */
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob(["x"]));
+})();
+</script>
+</body></html>
