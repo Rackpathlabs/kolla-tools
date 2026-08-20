@@ -18,7 +18,13 @@ jobs:
     name: testy
     runs-on: ubuntu-latest
     steps:
+      # fetch-depth: 0, bo krok „Słowo-klucz zamykające" liczy zakres commitów PR-a
+      # przez git merge-base. Domyślna płytka kopia daje pusty zakres, a pusty zakres
+      # wyglądałby jak czysty wynik — strażnik odmawia wtedy przejścia, ale lepiej
+      # nie stawiać go w tej sytuacji w ogóle.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -49,6 +55,38 @@ jobs:
       # tamten na zielono z pięćdziesięcioma pustymi elementami w generatorze.
       - name: Słownik — klucz produkuje tekst na ekranie
         run: node tools/check-i18n-apply.js
+
+      # DWIE POWIERZCHNIE, JEDNA REGUŁA. GitHub zamyka issues ze słowa-klucza w opisie
+      # PR-a ORAZ z komunikatów commitów trafiających na gałąź domyślną. To repozytorium
+      # ma włączone wszystkie trzy strategie merge'a i faktycznie merguje przez merge
+      # commit, więc komunikaty pojedynczych commitów lądują na main.
+      #
+      # Powierzchnia commitowa jest tu NIEUDOWODNIONA, a nie obalona: wszystkie osiem
+      # zamkniętych issue ma commit_id=null, ale słowo-klucz stał za każdym razem w obu
+      # miejscach naraz, więc historia nie rozstrzyga. Obejmujemy ją świadomie —
+      # strażnik pilnujący jednej powierzchni daje poczucie osłony bez osłony.
+      #
+      # Tylko na pull_request: przy push na main nie ma czego chronić, bo merge już
+      # zaszedł. Krok jest wtedy JAWNIE pominięty, a nie cicho zielony.
+      - name: Słowo-klucz zamykające obok numeru issue
+        if: github.event_name == 'pull_request'
+        env:
+          # Przez zmienną środowiskową, nie przez podstawienie do skryptu: treść opisu
+          # PR-a jest wejściem od użytkownika i nie ma prawa trafić do powłoki jako kod.
+          PR_BODY: ${{ github.event.pull_request.body }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          # body bywa null w payloadzie — wtedy plik jest pusty, a strażnik mówi o tym
+          # wprost zamiast milczeć. Bez :- krok padłby na unbound variable.
+          printf '%s' "${PR_BODY:-}" > .pr-body.tmp
+          # merge-base, nie base.sha wprost: main mógł się przesunąć od otwarcia PR-a,
+          # a wtedy zakres wciągnąłby cudze commity i strażnik mówiłby o nie swoim tekście.
+          MB="$(git merge-base "$BASE_SHA" "$HEAD_SHA")"
+          git log --no-merges --format='%B%n' "$MB..$HEAD_SHA" > .commits.tmp
+          echo "zakres: $MB..$HEAD_SHA  ($(git rev-list --no-merges --count "$MB..$HEAD_SHA") commitów)"
+          node tools/check-closing-keyword.js --pr-body .pr-body.tmp --commits .commits.tmp
 
       # RÓWNOŚĆ, nie pokrycie. Jedyna kontrola tekstu w tym repozytorium, która NIE
       # zależy od pokrycia scenariuszami: porównuje dwa napisy leżące obok siebie

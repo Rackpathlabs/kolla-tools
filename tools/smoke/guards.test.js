@@ -138,6 +138,67 @@ R.ok("i zero do przeczytania", /DO PRZECZYTANIA: 0$/m.test(engOk.out), engOk.out
 R.ok("licznik słów domyka się na obu fixturach",
      !/licznik się nie domyka/.test(engBad.out + engOk.out));
 
+/* ---- słowo-klucz zamykające obok #NN ----
+   Straznik pilnuje DWOCH powierzchni jedna regula: opisu PR-a i komunikatow commitow.
+   Fixtury sa parami, a jedna z nich jest DOSLOWNA KOPIA opisu PR#42 — tekstu, ktory
+   naprawde zamknal #41 osiemdziesiat jeden sekund po jego utworzeniu. Przypadek
+   wymyslony dowodzi, ze kontrola zyje; przypadek z historii dowodzi, ze lapie to,
+   co juz raz kosztowalo. */
+function ck(args) { return run("check-closing-keyword.js", args); }
+var F = "tools/fixtures/closing-keyword-";
+
+var ckClean = ck(["--pr-body", F + "clean-pr.txt"]);
+R.ok("legalny „Fixes #NN\" jako cała linia -> zielone", ckClean.code === 0, ckClean.out.split("\n").pop());
+
+var ckNeg = ck(["--pr-body", F + "negated-pr.txt"]);
+R.ok("„Does not close #NN\" w środku zdania -> czerwone", ckNeg.code === 1, "kod " + ckNeg.code);
+R.ok("i wskazuje LINIĘ, nie tylko fakt", /--pr-body, linia 3:/.test(ckNeg.out), ckNeg.out.split("\n")[1]);
+
+/* PRAWDZIWY tekst, nie wymyslony: opis PR#42 pobrany z GitHuba bajtowo. */
+var ckReal = ck(["--pr-body", F + "real-pr42.txt"]);
+R.ok("prawdziwy opis PR#42 (ten, który zamknął #41) -> czerwone", ckReal.code === 1, "kod " + ckReal.code);
+
+/* DRUGA POWIERZCHNIA. Straznik pilnujacy jednej i zostawiajacy druga otwarta jest
+   gorszy od swojego braku, bo daje poczucie oslony. */
+var ckCommitsOk = ck(["--commits", F + "clean-commits.txt"]);
+R.ok("commity z trailerem „Fixes #NN\" -> zielone", ckCommitsOk.code === 0, ckCommitsOk.out.split("\n").pop());
+R.ok("i liczy OBA sąsiedztwa, także to z kropką na końcu",
+     /z #NN: 2   naruszeń: 0/.test(ckCommitsOk.out), ckCommitsOk.out.split("\n")[1]);
+
+var ckCommitsBad = ck(["--commits", F + "midsentence-commits.txt"]);
+R.ok("commit ze słowem-kluczem w środku zdania -> czerwone", ckCommitsBad.code === 1, "kod " + ckCommitsBad.code);
+R.ok("i nazywa powierzchnię, na której zapalił", /--commits, linia/.test(ckCommitsBad.out));
+
+/* PRZYNETY. Kazda jest osobna awaria straznika za czulego — a straznik za czuly
+   produkuje szum, az ktos go oslabi. */
+R.ok("„refs #NN\" nie jest słowem-kluczem", !/refs #58/i.test(ckClean.out));
+R.ok("„prefixes #12\" NIE jest trafieniem — granica słowa, nie podciąg",
+     ckClean.code === 0 && !/prefixes/.test(ckClean.out));
+R.ok("słowo-klucz i numer w jednej linii, ale NIESĄSIADUJĄCE, nie są trafieniem",
+     /z #NN: 1 /.test(ckClean.out), ckClean.out.split("\n")[1]);
+
+/* PUSTE WEJSCIE — punkt 2 rozstrzygniecia. Opis PR-a bywa null w payloadzie
+   i nie ma prawa wywalic kroku bledem interpretera; ma przejsc, ale JAWNIE. */
+var ckEmptyPr = ck(["--pr-body", F + "empty-pr.txt"]);
+R.ok("pusty opis PR-a przechodzi", ckEmptyPr.code === 0, "kod " + ckEmptyPr.code);
+R.ok("ale mówi o tym wprost, zamiast milczeć",
+     /wejście puste/.test(ckEmptyPr.out), ckEmptyPr.out.split("\n")[0]);
+
+/* FAIL CLOSED — punkt 4. Straznik, ktory przy bledzie mowi „ok", to jest #63
+   jeszcze raz: zielone, bo przedmiot pomiaru sie nie wykonal. */
+var ckEmptyCommits = ck(["--commits", F + "empty-commits.txt"]);
+R.ok("PUSTA lista commitów to awaria zakresu, nie czysty wynik",
+     ckEmptyCommits.code === 1 && /Zakres git został policzony źle/.test(ckEmptyCommits.out),
+     "kod " + ckEmptyCommits.code);
+
+var ckMissing = ck(["--pr-body", F + "nie-ma-takiego.txt"]);
+R.ok("brakujący plik wejściowy -> czerwone, nie przejście",
+     ckMissing.code === 1 && /awaria pomiaru/.test(ckMissing.out), "kod " + ckMissing.code);
+
+var ckBadArg = ck(["--body", F + "clean-pr.txt"]);
+R.ok("nieznany argument -> czerwone", ckBadArg.code === 1, "kod " + ckBadArg.code);
+R.ok("brak jakiejkolwiek powierzchni -> czerwone", ck([]).code === 1);
+
 /* ---- markup kontra słownik (ADR-002, opcja B) ----
    Jedyna kontrola tekstu w tym repozytorium, która NIE zależy od pokrycia: porównuje
    dwa napisy leżące obok siebie w plikach. Powstała czerwona przed migracją — 108

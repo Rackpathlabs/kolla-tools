@@ -1,0 +1,7 @@
+Stop escaping backticks in the watcher's issue body
+
+Cosmetic, but the issue body is the part a human actually reads. Re-running the
+watcher overwrites the existing issue body by design, so this fixes #41 in place
+on the next run.
+
+Refs #40
