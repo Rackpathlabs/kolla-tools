@@ -57,7 +57,14 @@ var SKIP = [".git"];
    cokolwiek. Wyjątek zapisany tutaj jest widoczny w review; wyjątek zrobiony przez
    ciszę nie jest. */
 var EXEMPT = [
-  /* { at: "tools/coś/package.json", why: "powód, dla którego to nie jest zależność" } */
+  /* Brudna fixtura TEGO strażnika. Musi zawierać PRAWDZIWE pliki o zakazanych nazwach,
+     bo inaczej nie dowodziłaby niczego — fixtura z nazwą podobną sprawdzałaby coś
+     innego niż kontrola. Dwie DOKŁADNE ścieżki, nie przedrostek katalogu: trzeci ślad
+     npm dołożony tam kiedykolwiek ma się zapalić, a nie schować pod zwolnieniem. */
+  { at: "tools/fixtures/npm/dirty/tools/package.json",
+    why: "brudna fixtura check-npm.js — dowód, że kontrola potrafi upaść" },
+  { at: "tools/fixtures/npm/dirty/sub/node_modules",
+    why: "brudna fixtura check-npm.js — dowód, że kontrola potrafi upaść" }
 ];
 
 var exemptBad = EXEMPT.filter(function (e) { return !e.why || !e.why.trim(); });

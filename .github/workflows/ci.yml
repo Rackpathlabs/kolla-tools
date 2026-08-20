@@ -33,14 +33,12 @@ jobs:
       # Twarda zasada repozytorium. Narzędzia są pojedynczymi plikami HTML
       # działającymi z file://; cokolwiek z npm w drzewie znaczy, że ktoś zaczął
       # budować to inaczej, niż brzmi obietnica produktu.
+      #
+      # Do 2026-08-20 stała tu pętla po PIĘCIU ŚCIEŻKACH W KORZENIU i tools/package.json
+      # przechodził przez nią bez słowa. Teraz plik, bo krok w YAML-u nie może mieć
+      # fixtury, a strażnik bez fixtury to dokładnie to, co usuwało #96.
       - name: Zero zależności npm
-        run: |
-          bad=0
-          for p in package.json package-lock.json yarn.lock pnpm-lock.yaml node_modules; do
-            if [ -e "$p" ]; then echo "FAIL: w repo pojawiło się $p"; bad=1; fi
-          done
-          [ "$bad" -eq 0 ] && echo "OK   brak śladów npm"
-          exit "$bad"
+        run: node tools/check-npm.js
 
       # Osobne kroki, mimo że run-tests.sh uruchamia je ponownie: kosztują
       # milisekundy, a w interfejsie GitHuba od razu widać, co poszło źle.
