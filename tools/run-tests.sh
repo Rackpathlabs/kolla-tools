@@ -125,6 +125,12 @@ echo "== widoczność i pokrycie słownikiem (przeglądarka) =="
 rm -f .audit.tmp.json
 tmp_files="$tmp_files .audit.tmp.json"
 "$NODE" tools/check-rendered.js --texts .audit.tmp.json || rc=1
+
+# Pytanie o SKUTEK, nie o źródło: check-offline.js czyta listę sześciu nazw i przepuszcza
+# m.in. new Image().src (#101). Ten uruchamia te same scenariusze i patrzy, co wyszło.
+echo
+echo "== żądania sieciowe na wykonanych scenariuszach =="
+"$NODE" tools/check-network.js || rc=1
 "$NODE" tools/check-dictionary.js .audit.tmp.json || rc=1
 
 echo

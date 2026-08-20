@@ -1,0 +1,9 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<title>fixtura brudna</title></head>
+<body>
+<!-- Polityka jest POPRAWNA, wiec check-offline.js przechodzi ten plik w calosci.
+     A kod probuje wyslac zadanie — dokladnie ten przypadek, ktory tamten straznik
+     przepuszcza (#101): new Image().src, zwykly kod, nie obfuskacja. -->
+<script>new Image().src = "https://telemetry.example.invalid/pixel.gif";</script>
+</body></html>

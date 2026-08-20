@@ -152,6 +152,12 @@ jobs:
       - name: Widoczność mierzona w przeglądarce
         run: node tools/check-rendered.js
 
+      # SKUTEK, nie źródło. check-offline.js czyta listę sześciu nazw i przepuszcza
+      # wywołania, które nie wyglądają na wywołania (#101, ADR-003 opcja D). Ten
+      # uruchamia te same scenariusze co krok wyżej i patrzy, co faktycznie wyszło.
+      - name: Żądania sieciowe na wykonanych scenariuszach
+        run: node tools/check-network.js
+
       # Komparator upstreamu żyje w osobnym workflow, ale jego dowód poprawności
       # należy tutaj: gdyby psuł się tylko w cotygodniowym cronie, dowiedzielibyśmy
       # się o tym z braku alarmu, czyli dokładnie tak, jak się nie da.
