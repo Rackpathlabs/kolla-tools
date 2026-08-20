@@ -55,6 +55,13 @@ echo
 echo "== słownik: klucz produkuje tekst na ekranie =="
 "$NODE" tools/check-i18n-apply.js || rc=1
 
+# PIERWSZY, bo odpowiada na pytanie warunkujące sens wszystkich pozostałych sekcji:
+# czy strażnicy, których zaraz uruchomimy, to komplet. #72 — dwaj stali poza buildem,
+# jeden był czerwony, build był zielony.
+echo
+echo "== wpięcie strażników w build =="
+"$NODE" tools/check-wiring.js || rc=1
+
 echo
 echo "== markup kontra słownik (ADR-002, opcja B) =="
 "$NODE" tools/check-markup-dict.js || rc=1

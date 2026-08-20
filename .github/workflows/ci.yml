@@ -102,6 +102,12 @@ jobs:
                                               --pr-body .pr-body.tmp \
                                               --commits .commits.tmp
 
+      # Pytanie warunkujące sens pozostałych kroków: czy zestaw strażników jest
+      # kompletny. Reguła „strażnik ma się wykonywać w buildzie" powstała po #72
+      # i do #98 nie miała żadnej egzekucji — pilnowała jej czyjaś pamięć.
+      - name: Wpięcie strażników w build
+        run: node tools/check-wiring.js
+
       # RÓWNOŚĆ, nie pokrycie. Jedyna kontrola tekstu w tym repozytorium, która NIE
       # zależy od pokrycia scenariuszami: porównuje dwa napisy leżące obok siebie
       # w plikach. Powstała czerwona przed migracją z ADR-002 (108 pustych elementów).
