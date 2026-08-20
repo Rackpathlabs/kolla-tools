@@ -1,0 +1,6 @@
+name: CI (fixtura)
+jobs:
+  test:
+    steps:
+      # tu tez nic nie uruchamia check-sierota.js
+      - run: echo nic

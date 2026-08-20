@@ -1,0 +1,5 @@
+name: CI (fixtura)
+jobs:
+  test:
+    steps:
+      - run: node tools/check-b.js

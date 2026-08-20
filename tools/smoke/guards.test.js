@@ -138,6 +138,46 @@ R.ok("i zero do przeczytania", /DO PRZECZYTANIA: 0$/m.test(engOk.out), engOk.out
 R.ok("licznik słów domyka się na obu fixturach",
      !/licznik się nie domyka/.test(engBad.out + engOk.out));
 
+/* ---- wpięcie strażników w build ----
+   #72: dwaj straznicy nie wykonywali sie nigdzie, jeden byl czerwony, build byl zielony.
+   Regula, ktora z tego powstala, byla do dzis SAMA NIEEGZEKWOWANA — nic nie sprawdzalo,
+   czy tools/check-* ma jakiekolwiek wystapienie w buildzie. */
+var W = "tools/fixtures/wiring/";
+function wiring(dir, runner, ci) {
+  return run("check-wiring.js", ["--dir", W + dir, "--runner", W + runner, "--ci", W + ci]);
+}
+
+var wClean = wiring("guards-clean", "runner-clean.sh", "ci-clean.yml");
+R.ok("każdy strażnik wpięty -> zielone", wClean.code === 0, wClean.out.split("\n")[0]);
+/* Jeden w runnerze, drugi w ci.yml — dowod, ze WYSTARCZY jedno z dwoch zrodel,
+   a nie ze sprawdzamy tylko jedno i drugie przechodzi przypadkiem. */
+R.ok("i wystarczy jedno ze ŹRÓDEŁ, nie oba", /wpiętych: 2/.test(wClean.out), wClean.out.split("\n")[0]);
+
+var wOrphan = wiring("guards-orphan", "runner-orphan.sh", "ci-orphan.yml");
+R.ok("strażnik poza buildem -> czerwone", wOrphan.code === 1, "kod " + wOrphan.code);
+R.ok("i nazywa go", /check-sierota\.js/.test(wOrphan.out));
+/* PRZYNETA, ktora jest istota tej kontroli: nazwa pliku pada w KOMENTARZU runnera.
+   Dokladnie taki akapit stoi dzis w ci.yml przy check-dictionary.js — wymienia go
+   w zdaniu o jego NIEobecnosci. Naiwne „szukaj nazwy" uznaloby to za wpiecie. */
+R.ok("wzmianka w KOMENTARZU nie liczy się jako wpięcie",
+     /NIEWPIĘTYCH: 1/.test(wOrphan.out), wOrphan.out.split("\n")[0]);
+R.ok("a strażnik wymieniony w linii wykonywalnej liczy się",
+     !/check-wpiety\.js/.test(wOrphan.out.split("FAIL")[1] || ""));
+
+/* FAIL CLOSED w obie strony. */
+R.ok("brak źródła -> czerwone, nie przejście",
+     wiring("guards-clean", "nie-ma.sh", "ci-clean.yml").code === 1);
+/* Zero straznikow w katalogu = nieobecny przedmiot pomiaru. Zielone znaczyloby
+   wtedy „nic nie sprawdzilem", czyli trzeci wariant pustego zielonego. */
+var wEmpty = run("check-wiring.js", ["--dir", "tools/fixtures", "--runner", W + "runner-clean.sh", "--ci", W + "ci-clean.yml"]);
+R.ok("katalog bez ani jednego strażnika -> czerwone, nie „wszystko wpięte\"",
+     wEmpty.code === 1 && /przedmiot pomiaru jest nieobecny/.test(wEmpty.out), "kod " + wEmpty.code);
+
+/* PROTOTYP z #94 celowo nie ma przedrostka check-, wiec NIE MA go w zestawieniu. */
+var wReal = run("check-wiring.js", []);
+R.ok("prototyp bez przedrostka check- nie wpada w zestawienie",
+     !/prototype-rule-pointers/.test(wReal.out), wReal.out.split("\n")[0]);
+
 /* ---- słowo-klucz zamykające obok #NN ----
    Straznik pilnuje DWOCH powierzchni jedna regula: opisu PR-a i komunikatow commitow.
    Fixtury sa parami, a jedna z nich jest DOSLOWNA KOPIA opisu PR#42 — tekstu, ktory
