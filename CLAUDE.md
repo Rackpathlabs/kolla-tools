@@ -117,3 +117,30 @@ for and what the previous three rises made hard to see.
 A meter nobody trusts stops protecting anything. That is the lesson of #63, where a
 language guard reported zero against thirteen hand-found positions and had been green
 for weeks.
+
+## A milestone's name describes what is in it
+
+An issue that fits no milestone goes to the waiting room — never to the nearest one that
+roughly fits.
+
+**Nothing enforces this rule.** It is judgement about what an issue is about, and no check
+can make that call. Said plainly rather than left to be assumed: `tools/check-docs.sh`
+holds this section in place, so the rule cannot quietly vanish from the document, but
+nothing at all stops somebody breaking it. Those are different guarantees and only the
+first one exists. (The scheme that would make this status machine-visible for every rule
+here is #94, deliberately parked.)
+
+`backlog — poza wydaniami` is that waiting room, and its description carries the exit
+condition: an item leaves when a release exists whose name describes it, or when it stops
+being a description and becomes a task with its preconditions settled. Time passing is
+not an exit condition.
+
+**The defect that produced this rule.** #94 was filed with no milestone, then put into
+`v0.4 upstream data` because that was the newest one — and it has nothing to do with
+upstream data. The proposed repair was worse than the mistake: rename `v0.4` to something
+roomier. That is the manufacture of a bucket in one step. `v0.4` is an accurate name for
+exactly one issue, and the right move was to leave it accurate and admit the other issue
+had nowhere to go.
+
+A milestone named after what it happens to contain stops answering the question people
+open it for, which is what will be in the next release.

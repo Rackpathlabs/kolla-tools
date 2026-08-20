@@ -80,9 +80,13 @@ else
   else
     echo "OK   CLAUDE.md ($n B)"
   fi
+  # Reguła o nazwach milestone'ów jest NIEEGZEKWOWANA co do treści — nikt nie sprawdzi,
+  # czy issue pasuje tematycznie. Jej OBECNOŚĆ w dokumencie pilnujemy tak samo jak reszty:
+  # to dwie różne gwarancje i tylko ta druga istnieje.
   for want in "Never write a closing keyword next to an issue number" \
               "The defect that produced this rule" \
-              "A ratchet threshold may only fall"; do
+              "A ratchet threshold may only fall" \
+              "A milestone's name describes what is in it"; do
     if grep -qF "$want" CLAUDE.md; then
       echo "OK   reguła: $want"
     else
