@@ -138,6 +138,61 @@ R.ok("i zero do przeczytania", /DO PRZECZYTANIA: 0$/m.test(engOk.out), engOk.out
 R.ok("licznik słów domyka się na obu fixturach",
      !/licznik się nie domyka/.test(engBad.out + engOk.out));
 
+/* ---- gwarancja offline ----
+   Straznik, ktory do #96 nie mial NIGDZIE dowodu upadku — a stoi miedzy repozytorium
+   a rdzeniem obietnicy produktu: jeden plik HTML, file://, zero sieci, polityka przypieta
+   co do znaku. Kazda fixtura ma ksztalt realnej awarii, nie podrecznikowej; fixtura,
+   ktora zlapalby dowolny naiwny grep, nie dowodzi niczego o TYM strazniku. */
+var OFF = "tools/fixtures/offline/";
+/* Straznik skanuje KATALOG, wiec kazdy przypadek musi stac OSOBNO — inaczej jedna
+   czerwona fixtura barwilaby wynik pozostalych i „dokladnie ten jeden powod" byloby
+   nie do odroznienia od „ktorykolwiek z czterech".
+   Kopie ida do sciezki ignorowanej przez git (*.tmp), a nie obok fixtur: katalog
+   pochodny w fixtures/ wygladalby po chwili jak fixtura, ktorej nikt nie pisal. */
+var fsx = require("fs"), pathx = require("path");
+var CASES = ".offline-cases.tmp";
+["clean", "bait-a-csp-permissive", "bait-a2-csp-single-quoted",
+ "bait-b-runtime-network", "bait-c-no-csp"].forEach(function (name) {
+  var d = pathx.join(root, CASES, name);
+  fsx.mkdirSync(d, { recursive: true });
+  fsx.copyFileSync(pathx.join(root, OFF, name + ".html"), pathx.join(d, name + ".html"));
+});
+function offline(file) { return run("check-offline.js", ["--dir", CASES + "/" + file]); }
+
+R.ok("polityka zgodna, brak API sieciowych -> zielone", offline("clean").code === 0,
+     offline("clean").out.split("\n").pop());
+
+/* (a) Bajtowo inna i semantycznie PRZEPUSZCZALNA: jedna dyrektywa wiecej. Tak wyglada
+   edycja zrobiona po to, zeby „cos zadzialalo", a nie zlosliwa podmiana. */
+var oa = offline("bait-a-csp-permissive");
+R.ok("polityka z dodatkową dyrektywą (connect-src) -> czerwone", oa.code === 1, "kod " + oa.code);
+R.ok("i pokazuje OBIE polityki, nie sam fakt różnicy",
+     /oczekiwano:/.test(oa.out) && /connect-src https:/.test(oa.out));
+
+/* (a2) KSZTALT HISTORYCZNEJ AWARII z docs/PRINCIPLES.md: wzorzec wykluczal apostrofy,
+   a polityka jest ich pelna, wiec nie znalazl znacznika w ogole. Tutaj ogranicznik
+   atrybutu JEST apostrofem, a polityka jest szeroko otwarta. Dzisiejszy wzorzec
+   zapamietuje ogranicznik — to jest dokladnie ta poprawka, ktorej tamten nie mial. */
+var oa2 = offline("bait-a2-csp-single-quoted");
+R.ok("ogranicznik apostrofowy + polityka otwarta -> czerwone", oa2.code === 1, "kod " + oa2.code);
+R.ok("i wzorzec ODCZYTAŁ politykę, zamiast zgubić się na apostrofach",
+     /default-src \*/.test(oa2.out), oa2.out.split("\n")[1]);
+
+/* (c) Brak znacznika. Obrona przed zielonym przy NIEOBECNYM przedmiocie — jedyna klasa,
+   ktorej nie da sie wykryc psuciem, bo popsucie rzeczy nieobecnej tez nie zapala lampki. */
+var oc = offline("bait-c-no-csp");
+R.ok("brak znacznika CSP -> czerwone, nie „nic do sprawdzenia\"",
+     oc.code === 1 && /brak znacznika meta/.test(oc.out), "kod " + oc.code);
+
+/* (b) ZNANA DZIURA, przypięta świadomie: #101. Ta asercja mówi, że fixtura DZIŚ
+   PRZECHODZI, i nie jest to zgoda — jest to uczynienie granicy widoczną. Gdy dziura
+   zostanie zamknięta, ta asercja zapali się na czerwono i zmusi do aktualizacji,
+   a #101 da się wtedy domknąć. Straznik milczacy o wlasnej granicy jest gorszy od
+   granicy zapisanej. */
+var ob = offline("bait-b-runtime-network");
+R.ok("ZNANA DZIURA #101: wywołania sieciowe składane w czasie działania PRZECHODZĄ",
+     ob.code === 0, "kod " + ob.code + " — jeśli to czerwone, dziura zamknięta, zaktualizuj #101");
+
 /* ---- wpięcie strażników w build ----
    #72: dwaj straznicy nie wykonywali sie nigdzie, jeden byl czerwony, build byl zielony.
    Regula, ktora z tego powstala, byla do dzis SAMA NIEEGZEKWOWANA — nic nie sprawdzalo,
