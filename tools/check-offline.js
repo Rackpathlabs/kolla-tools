@@ -8,8 +8,25 @@
  *
  *   1. meta CSP istnieje, ma dokładnie oczekiwaną treść i stoi PRZED pierwszym
  *      znacznikiem ładującym zasób (inaczej nie obejmuje go polityka),
- *   2. w kodzie nie ma API wychodzących do sieci,
- *   3. w znacznikach ładujących zasoby nie ma adresów http(s).
+ *   2. w kodzie nie występuje ŻADNA Z WYMIENIONYCH NIŻEJ NAZW API sieciowych
+ *      (lista FORBIDDEN) w postaci literału,
+ *   3. w znacznikach ładujących zasoby oraz w url() i @import nie ma adresów http(s).
+ *
+ * PUNKT 2 NIE ZNACZY „w kodzie nie ma API wychodzących do sieci" — i tak brzmiał tu
+ * do 2026-08-20. Zdanie było SZERSZE NIŻ DOWÓD: to kontrola treści nad listą nazw,
+ * więc przepuszcza wszystko, o czym autor listy nie pomyślał. #101 pokazuje trzy takie
+ * przejścia, z czego jedno — `new Image().src = "https://…"` — nie jest obfuskacją,
+ * tylko zwykłym kodem, jaki ktoś napisze w dobrej wierze.
+ *
+ * Nazwa mechanizmu jest twierdzeniem o jego zakresie i podlega tej samej regule co
+ * każde inne twierdzenie w tym repozytorium. Ta poprawka to ta sama kuracja, którą
+ * dostało zdanie „każdy strażnik został raz zepsuty celowo" — twierdzenie zwężone do
+ * tego, co faktycznie jest sprawdzane, a luka wskazana numerem zamiast przemilczana.
+ *
+ * OBIETNICY PRODUKTU BRONI POLITYKA, NIE PUNKT 2. default-src 'none' odrzuca te
+ * żądania w czasie działania, a polityka jest przypięta co do znaku przez punkt 1.
+ * Żeby cokolwiek wyszło do sieci, musiałyby zawieść oba punkty naraz — dlatego #101
+ * jest luką w zakresie strażnika, a nie dziurą w gwarancji.
  *
  * Sama polityka została zweryfikowana ręcznie w przeglądarce, w obu kontekstach
  * (file:// oraz http://), na headless Chrome: oba narzędzia wykonują swój skrypt,
