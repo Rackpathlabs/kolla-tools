@@ -15,9 +15,27 @@ deleted the first time it is inconvenient.
 ## Never write a closing keyword next to an issue number
 
 Do not write **close**, **closes**, **closed**, **fix**, **fixes**, **fixed**,
-**resolve**, **resolves** or **resolved** immediately before `#NN` in a commit message,
-a pull request title, or a pull request description — unless you intend that issue to be
-closed when the pull request merges.
+**resolve**, **resolves** or **resolved** immediately before `#NN` — except in the one
+form each surface allows, which is not the same on all three.
+
+| surface | allowed |
+|---|---|
+| commit message, pull request description | the whole line, and nothing else on it: `Fixes #NN`, optionally with a full stop |
+| **pull request title** | **nothing. Never.** |
+
+`tools/check-closing-keyword.js` enforces exactly this on all three surfaces and runs in
+CI on every pull request. The rule below is not advice; it is the thing that turns the
+build red.
+
+**Why the title is stricter, so it does not read as an inconsistency.** In a description
+or a commit message, declaring the link is the point — the trailer is how one says "this
+closes that". In a title it is only ever a side effect. GitHub's documentation names two
+surfaces, the description and the commit message, and the title is not among them — but
+this repository's merge settings copy the title INTO a commit message
+(`squash_merge_commit_title`, `merge_commit_message`), and a commit on the default branch
+is a documented surface. A commit on `main` already carries a past title complete with its
+keyword and number. And if the title were parsed nowhere at all, the ban would stand
+anyway: a title promising a link it does not create lies to whoever reads the list.
 
 **GitHub parses the phrase, not the sentence.** Negation does not help, quotation marks
 do not help, and neither does the surrounding argument. There is no context in which the
