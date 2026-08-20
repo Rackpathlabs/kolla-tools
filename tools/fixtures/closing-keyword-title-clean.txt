@@ -1,0 +1,1 @@
+Guard the closing keyword on the third surface it reaches

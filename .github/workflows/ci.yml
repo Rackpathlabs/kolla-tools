@@ -72,21 +72,35 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           # Przez zmienną środowiskową, nie przez podstawienie do skryptu: treść opisu
-          # PR-a jest wejściem od użytkownika i nie ma prawa trafić do powłoki jako kod.
+          # i tytułu PR-a jest wejściem od użytkownika i nie ma prawa trafić do powłoki
+          # jako kod.
+          PR_TITLE: ${{ github.event.pull_request.title }}
           PR_BODY: ${{ github.event.pull_request.body }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
+          # TYTUŁ jest trzecią powierzchnią, z OSTRZEJSZĄ regułą — zakaz blankietowy
+          # zamiast „całej linii". Nie dlatego, że GitHub parsuje pole tytułu (jego
+          # dokumentacja wymienia opis PR-a i komunikat commita, tytułu nie), tylko
+          # dlatego, że konfiguracja merge'a tego repozytorium KOPIUJE tytuł do
+          # komunikatu commita: squash_merge_commit_title=COMMIT_OR_PR_TITLE oraz
+          # merge_commit_message=PR_TITLE. Commit 0fd2f9e na main jest dowodem —
+          # niesie tytuł PR#52 razem ze słowem-kluczem obok numeru.
+          printf '%s' "$PR_TITLE" > .pr-title.tmp
           # body bywa null w payloadzie — wtedy plik jest pusty, a strażnik mówi o tym
-          # wprost zamiast milczeć. Bez :- krok padłby na unbound variable.
+          # wprost zamiast milczeć. Bez :- krok padłby na unbound variable. Tytuł
+          # takiego domyślnika NIE dostaje: PR bez tytułu nie istnieje, więc pusty
+          # znaczyłby awarię kroku, nie legalny stan.
           printf '%s' "${PR_BODY:-}" > .pr-body.tmp
           # merge-base, nie base.sha wprost: main mógł się przesunąć od otwarcia PR-a,
           # a wtedy zakres wciągnąłby cudze commity i strażnik mówiłby o nie swoim tekście.
           MB="$(git merge-base "$BASE_SHA" "$HEAD_SHA")"
           git log --no-merges --format='%B%n' "$MB..$HEAD_SHA" > .commits.tmp
           echo "zakres: $MB..$HEAD_SHA  ($(git rev-list --no-merges --count "$MB..$HEAD_SHA") commitów)"
-          node tools/check-closing-keyword.js --pr-body .pr-body.tmp --commits .commits.tmp
+          node tools/check-closing-keyword.js --pr-title .pr-title.tmp \
+                                              --pr-body .pr-body.tmp \
+                                              --commits .commits.tmp
 
       # RÓWNOŚĆ, nie pokrycie. Jedyna kontrola tekstu w tym repozytorium, która NIE
       # zależy od pokrycia scenariuszami: porównuje dwa napisy leżące obok siebie
