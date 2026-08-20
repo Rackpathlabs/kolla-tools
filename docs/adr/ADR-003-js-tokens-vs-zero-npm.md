@@ -1,6 +1,6 @@
 # ADR-003: Real JavaScript tokens against the zero-dependency rule
 
-**Status:** **Proposed** — awaiting a decision
+**Status:** **Accepted** (Mariusz, 2026-08-20) — **D for #101, C for #77**
 **Date:** 2026-08-20
 **Concerns:** #77 (a source-side language guard), #101 (network calls that do not look like
 network calls), #57 (check-literals beyond four sinks)
@@ -217,13 +217,32 @@ paid for.
 
 ---
 
+## Decision
+
+**#101 — option D.** Observe the effect through `--log-net-log`. Verified empirically, no
+dependency, and it measures the effect rather than the representation.
+
+**#77 — option C**, until the cost of not having it is demonstrated. The reason is taken
+from this document unchanged: option A's failure mode is silent wrong answers, this
+repository has already produced three, and the fourth would be the most convincing of them.
+
+**On revision, the option is B. Never A.** Buying an approximation to avoid buying a
+dependency is how the last three wrong answers were paid for. If the source-side question
+ever becomes expensive enough to spend something on, what gets spent is the dependency,
+not the correctness.
+
 ## Actions
 
-1. [ ] Decision: D for #101, C for #77 — or otherwise
-2. [ ] Regardless of the decision: make the *"Zero zależności npm"* step's scope match its
-       name. It checks the repository root only, and a dependency under `tools/` would pass
-       it silently
-3. [ ] With D: a spike on netlog size and parse cost in CI before wiring anything
+1. [x] Decision: **D for #101, C for #77** (Mariusz, 2026-08-20)
+2. [x] Regardless of the decision: make the *"Zero zależności npm"* step's scope match its
+       name — it checked the repository root only. Now `tools/check-npm.js`, whole tree,
+       with two named exemptions for its own dirty fixture
+3. [ ] With D: `check-network.js` over the scenarios that already exist (#67), with a scope
+       sentence describing what it measures from the first version — behaviour on the paths
+       that ran, not "the tool does not reach the network"
 4. [ ] With C: narrow #77's own promise in its issue and say plainly what is not checked
-5. [ ] With B, if ever: the exception is written down as applying to `tools/` alone, and
-       the artifact guarantee is restated in the same commit
+5. [ ] Not now, but if B ever returns: the exception is written down as applying to `tools/`
+       alone, and the artifact guarantee is restated in the same commit
+6. [ ] Revisit if a source-level defect reaches users, if the netlog flag or format is
+       withdrawn, or if any other need for real structure appears — a formatter, a codemod,
+       an AST-based refactor — because then B is being weighed for several reasons at once
