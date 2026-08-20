@@ -138,6 +138,38 @@ R.ok("i zero do przeczytania", /DO PRZECZYTANIA: 0$/m.test(engOk.out), engOk.out
 R.ok("licznik słów domyka się na obu fixturach",
      !/licznik się nie domyka/.test(engBad.out + engOk.out));
 
+/* ---- dokumenty normatywne ----
+   Ten straznik byl w tej sesji zepsuty RECZNIE i ogladany na czerwono — jako CZYNNOSC.
+   Czynnosc nie powtarza sie przy zmianie straznika i nie lapie regresu; to jest powod,
+   dla ktorego ten plik w ogole istnieje. #96 zamienia tamta czynnosc w test. */
+function docs(variant) {
+  return run("check-docs.sh", ["--root", "tools/fixtures/docs/" + variant]);
+}
+R.ok("komplet dokumentów z sekcjami i odnośnikami -> zielone", docs("clean").code === 0,
+     docs("clean").out.split("\n").pop());
+
+/* WYPATROSZENIE: znika JEDNA sekcja, plik zostaje dlugi. CLAUDE.md ma tu 1711 bajtow,
+   czyli PONAD progiem rozmiaru — kontrola rozmiaru przechodzi i lapie to wylacznie
+   kontrola sekcji. Regula sciety do naglowka wazy prawie tyle, co regula z powodem. */
+var dh = docs("hollowed");
+R.ok("sekcja usunięta przy pliku wciąż dużym -> czerwone", dh.code === 1, "kod " + dh.code);
+R.ok("i nazywa BRAKUJĄCĄ sekcję, nie sam fakt różnicy",
+     /brak sekcji "A ratchet threshold may only fall"/.test(dh.out), dh.out.split("\n")[0]);
+R.ok("a kontrola ROZMIARU tego nie złapała — plik jest nad progiem",
+     !/CLAUDE\.md: [0-9]+ bajtów/.test(dh.out));
+
+/* UTRATA ODNOSNIKA: README zachowuje dwa z trzech. Nikt nie liczy odnosnikow. */
+var dl = docs("lost-link");
+R.ok("README traci jeden z trzech odnośników -> czerwone", dl.code === 1, "kod " + dl.code);
+R.ok("i mówi, którego brakuje", /brak odnośnika do CLAUDE\.md/.test(dl.out));
+
+/* WYDRAZENIE: dokument skrocony do samych naglowkow. Kontrola rozmiaru istnieje
+   wlasnie po to i nigdy nie zostala pokazana, jak zapala. */
+var dg = docs("gutted");
+R.ok("dokument skrócony do nagłówków -> czerwone na rozmiarze", dg.code === 1, "kod " + dg.code);
+R.ok("i podaje liczbę bajtów oraz próg",
+     /SCOPE\.md: 157 bajtów/.test(dg.out) && /próg 2000/.test(dg.out), dg.out.split("\n")[0]);
+
 /* ---- spójność bloków współdzielonych ----
    Straznik bez dowodu upadku do #96, a to, czego pilnuje, jest niewidoczne z definicji:
    blok rozjechany ze zrodlem nie daje ZADNEGO objawu na ekranie. Dwie kopie tego samego
