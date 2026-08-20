@@ -256,6 +256,29 @@ var ob = offline("bait-b-runtime-network");
 R.ok("ZNANA DZIURA #101: wywołania sieciowe składane w czasie działania PRZECHODZĄ",
      ob.code === 0, "kod " + ob.code + " — jeśli to czerwone, dziura zamknięta, zaktualizuj #101");
 
+/* ---- zero zależności npm ----
+   Do 2026-08-20 ta kontrola byla krokiem w ci.yml i sprawdzala PIEC SCIEZEK W KORZENIU.
+   tools/package.json przechodzil bez slowa. Fixtura brudna niesie dokladnie ten przypadek. */
+function npm(variant) { return run("check-npm.js", ["--dir", "tools/fixtures/npm/" + variant]); }
+
+var npmClean = npm("clean");
+R.ok("drzewo bez śladów npm -> zielone", npmClean.code === 0, npmClean.out.split("\n")[0]);
+
+var npmDirty = npm("dirty");
+R.ok("package.json w PODKATALOGU -> czerwone", npmDirty.code === 1, "kod " + npmDirty.code);
+R.ok("i node_modules w podkatalogu też", /sub\/node_modules\//.test(npmDirty.out), npmDirty.out);
+R.ok("i wskazuje ŚCIEŻKĘ, nie sam fakt", /tools\/package\.json/.test(npmDirty.out));
+
+/* PRZYNETY. Kontrola idzie po SCIEZKACH, nie po tresci — jej wlasny naglowek wymienia
+   zakazane nazwy czterokrotnie i nie ma prawa zapalic sie na sobie. */
+R.ok("wzmianka w TREŚCI pliku nie jest naruszeniem", npmClean.code === 0);
+R.ok("nazwa PODOBNA (package.json.example) nie jest naruszeniem",
+     !/package\.json\.example/.test(npmClean.out));
+R.ok("katalog ZAWIERAJĄCY zakazaną nazwę (node_modules_backup) nie jest naruszeniem",
+     !/node_modules_backup/.test(npmClean.out));
+R.ok("brak katalogu -> czerwone, nie „nic nie znalazłem\"",
+     npm("nie-ma-takiego").code === 1);
+
 /* ---- wpięcie strażników w build ----
    #72: dwaj straznicy nie wykonywali sie nigdzie, jeden byl czerwony, build byl zielony.
    Regula, ktora z tego powstala, byla do dzis SAMA NIEEGZEKWOWANA — nic nie sprawdzalo,

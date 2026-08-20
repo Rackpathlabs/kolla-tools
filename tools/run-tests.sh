@@ -59,6 +59,10 @@ echo "== słownik: klucz produkuje tekst na ekranie =="
 # czy strażnicy, których zaraz uruchomimy, to komplet. #72 — dwaj stali poza buildem,
 # jeden był czerwony, build był zielony.
 echo
+echo "== zero zależności npm =="
+"$NODE" tools/check-npm.js || rc=1
+
+echo
 echo "== wpięcie strażników w build =="
 "$NODE" tools/check-wiring.js || rc=1
 
