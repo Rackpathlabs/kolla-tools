@@ -309,6 +309,13 @@ report.forEach(function (f) {
    Powód: w jednej sesji ta liczba przeszła 444 -> 461 -> 488 -> 530. Każdy krok
    był rozbity i każdy dało się obronić, a ciąg i tak czyta się jak próg, który
    podąża za kodem zamiast go ograniczać.
+
+   ZASADA JEST NIEPEŁNA DOPÓKI NIE WEJDZIE #86. Ta liczba to WYSTĄPIENIA, nie różne
+   napisy: 530 wystąpień to 138 napisów. Dodanie scenariusza podnosi ją, nie dodając
+   ani jednego nowego napisu, a jeden szablon użyty 32 razy rusza nią o 32. Takie
+   podniesienie nie jest ani pokryciem nowej klasy tekstu, ani długiem — i przejdzie
+   powyższy test jako „pokrycie". Nie opieraj się na tej zasadzie przy uzasadnianiu
+   podniesienia, dopóki jednostka nie jest naprawiona.
    =========================================================================== */
 var BASELINE = 530;
 
