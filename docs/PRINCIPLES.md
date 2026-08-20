@@ -106,9 +106,14 @@ exist yet.
 
 ### Where a check has to stand, and how wide
 
-**A check nobody has seen fail is not a check.** Every guard here has been broken on
-purpose once, to watch it turn red. A guard meant to reject NUL bytes was written with a
-shell pattern that could not contain a NUL byte, so the pattern was empty, matched every
+**A check nobody has seen fail is not a check.** Nine of the twelve guards here have a
+fixture that makes them turn red, run on every build. Three do not — `check-blocks.sh`,
+`check-docs.sh` and `check-offline.js` have no failure proof anywhere, and closing that
+gap is issue #96. Until it does, this paragraph states the count rather than the
+principle, because the sentence it replaced — that every guard here had been broken on
+purpose once — was **not true**, and an unsupported completeness claim inside the rule
+against unsupported completeness claims is the worst place for one to sit. A guard meant
+to reject NUL bytes was written with a shell pattern that could not contain a NUL byte, so the pattern was empty, matched every
 file, and reported failures on files that were already clean — while its own verification
 fell for the same trick. A guard meant to verify the Content-Security-Policy used a
 pattern that excluded apostrophes, and the policy text is full of them, so it found no
