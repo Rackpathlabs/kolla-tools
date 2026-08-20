@@ -1,7 +1,9 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><title>fixtura brudna</title></head>
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<title>fixtura brudna</title></head>
 <body>
-<!-- Dokladnie ten przypadek, ktory check-offline.js przepuszcza (#101): zwykly kod,
-     nie obfuskacja. Straznik zrodlowy nie ma "Image" na liscie i nie widzi przypisania
-     do .src. Ten straznik widzi wychodzace zadanie. -->
+<!-- Polityka jest POPRAWNA, wiec check-offline.js przechodzi ten plik w calosci.
+     A kod probuje wyslac zadanie — dokladnie ten przypadek, ktory tamten straznik
+     przepuszcza (#101): new Image().src, zwykly kod, nie obfuskacja. -->
 <script>new Image().src = "https://telemetry.example.invalid/pixel.gif";</script>
 </body></html>

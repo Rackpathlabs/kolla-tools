@@ -256,6 +256,31 @@ var ob = offline("bait-b-runtime-network");
 R.ok("ZNANA DZIURA #101: wywołania sieciowe składane w czasie działania PRZECHODZĄ",
      ob.code === 0, "kod " + ob.code + " — jeśli to czerwone, dziura zamknięta, zaktualizuj #101");
 
+/* ---- zadania sieciowe na wykonanych scenariuszach ----
+   ADR-003 opcja D dla #101. check-offline.js czyta LISTE SZESCIU NAZW i przepuszcza
+   new Image().src — zwykly kod, nie obfuskacja. Ten straznik nie czyta zrodla: uruchamia
+   strone i patrzy, co wyszlo. */
+function network(variant) { return run("check-network.js", ["--dir", "tools/fixtures/network/" + variant]); }
+
+var netClean = network("clean");
+R.ok("strona bez żądań -> zielone", netClean.code === 0, netClean.out.split("\n").pop());
+/* PRZYNETA: dokument WYMIENIA adres http i przypisuje go do zmiennej, ale nikt go nie
+   pobiera. Straznik obserwuje SKUTEK — napis nie jest zadaniem. Gdyby liczyl tresc,
+   bylby drugim check-offline.js, tyle ze wolniejszym. */
+R.ok("adres w treści i w zmiennej NIE jest żądaniem", !/example\.invalid/.test(netClean.out));
+
+var netDirty = network("dirty");
+R.ok("new Image().src = https://… -> czerwone", netDirty.code === 1, "kod " + netDirty.code);
+R.ok("i nazywa HOSTA, do którego poszło żądanie",
+     /telemetry\.example\.invalid/.test(netDirty.out), netDirty.out.split("\n")[2]);
+/* To jest DOKLADNIE ten przypadek, ktory przechodzi przez check-offline.js — para
+   fixtur po obu stronach jednej dziury pokazuje, ze te dwa straznice sie uzupelniaja,
+   a nie dubluja. */
+R.ok("czyli łapie to, co check-offline.js przepuszcza (#101)",
+     run("check-offline.js", ["--dir", "tools/fixtures/network/dirty"]).code === 0);
+
+R.ok("brak katalogu -> czerwone, nie „zero scenariuszy\"", network("nie-ma").code === 1);
+
 /* ---- zero zależności npm ----
    Do 2026-08-20 ta kontrola byla krokiem w ci.yml i sprawdzala PIEC SCIEZEK W KORZENIU.
    tools/package.json przechodzil bez slowa. Fixtura brudna niesie dokladnie ten przypadek. */

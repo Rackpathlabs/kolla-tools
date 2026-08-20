@@ -1,7 +1,9 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><title>fixtura czysta</title></head>
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<title>fixtura czysta</title></head>
 <body>
 <!-- PRZYNETA: tresc wymienia adres http, ale nikt go nie pobiera. Straznik obserwuje
-     SKUTEK, nie tresc — napis w dokumencie nie jest zadaniem. -->
+     SKUTEK — napis w dokumencie nie jest zadaniem. -->
 <p>Dokumentacja: https://example.invalid/nie-pobierane</p>
 <script>var url = "https://example.invalid/tez-nie"; var x = url.length;</script>
 </body></html>

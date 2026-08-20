@@ -32,6 +32,24 @@
  *   ŻĄDANIA WYCHODZĄCE PO ZAKOŃCZENIU POMIARU — netlog zamyka się razem z przeglądarką.
  * ============================================================================
  *
+ * POLITYKA CSP JEST ZDEJMOWANA Z KOPII — CELOWO, I TO JEST SEDNO TEGO PLIKU.
+ *
+ * Pierwsza wersja ładowała stronę taką, jaka jest, i była ZIELONA NA WSZYSTKIM. Powód:
+ * `default-src 'none'` odrzuca żądanie ZANIM trafi ono do stosu sieciowego, więc netlog
+ * nie widzi niczego. Zmierzone: ta sama strona z polityką daje zero trafień, bez polityki
+ * daje szesnaście. Strażnik mierzyłby wtedy POLITYKĘ, nie kod — i byłby zielony niezależnie
+ * od tego, co kod robi, czyli byłby pustym zielonym o najgorszej odmianie: takim, który
+ * wygląda na pomiar.
+ *
+ * Dlatego kopia ma zdjęty znacznik polityki. Pytanie brzmi „czy w kodzie jest ścieżka,
+ * która PODEJMUJE żądanie", a nie „czy polityka je zatrzyma". Polityka jest sprawdzana
+ * osobno i przypięta co do znaku przez check-offline.js, punkt 1; sprawdzanie jej tutaj
+ * drugi raz zastąpiłoby pytanie o kod pytaniem o nią.
+ *
+ * Kopia różni się więc od źródła DWOMA znanymi zmianami — zdjętym znacznikiem polityki
+ * i wstrzykniętym blokiem scenariusza — i obie są weryfikowane bajtowo niżej. Trzecia
+ * różnica oznaczałaby, że mierzymy plik, którego nikt nie wdroży.
+ *
  * JAK ODDZIELAMY ŻĄDANIA STRONY OD WŁASNYCH ŻĄDAŃ CHROME'A. Nie listą znanych hostów —
  * to byłaby kontrola treści, czyli dokładnie ta klasa, przed którą ten plik ucieka.
  * Zamiast tego PRZEBIEG KONTROLNY: najpierw ładowana jest strona bez ani jednego
@@ -108,15 +126,23 @@ function render(file, steps, label) {
   fs.mkdirSync(prof, { recursive: true });
 
   var src = fs.readFileSync(file, "utf8");
+  /* Zdjęcie polityki — patrz nagłówek. Bez tego netlog jest pusty zawsze. */
+  var CSP_TAG = /[ \t]*<meta\s+http-equiv=(["'])Content-Security-Policy\1[\s\S]*?>\n?/i;
+  var stripped = src.replace(CSP_TAG, "");
+  var removedCsp = stripped !== src;
   var block = steps ? "<script>try{" + steps + "}catch(e){}</script>" : "";
-  fs.writeFileSync(page, block ? src.replace("</body>", block + "\n</body>") : src);
-  /* Ta sama gwarancja co w check-rendered.js: kopia różni się od źródła WYŁĄCZNIE
-     wstrzykniętym blokiem, inaczej mierzylibyśmy plik, którego nikt nie wdroży. */
-  if (block) {
-    var back = fs.readFileSync(page, "utf8");
-    if (back.replace(block + "\n", "") !== src) {
-      die(label + ": kopia różni się od źródła nie tylko wstrzykniętym blokiem");
-    }
+  fs.writeFileSync(page, block ? stripped.replace("</body>", block + "\n</body>") : stripped);
+  /* Ta sama gwarancja co w check-rendered.js, rozszerzona o drugą znaną zmianę:
+     kopia różni się od źródła WYŁĄCZNIE zdjętym znacznikiem polityki i wstrzykniętym
+     blokiem. Trzecia różnica znaczy, że mierzymy plik, którego nikt nie wdroży. */
+  var back = fs.readFileSync(page, "utf8");
+  if ((block ? back.replace(block + "\n", "") : back) !== stripped) {
+    die(label + ": kopia różni się od źródła nie tylko znanymi zmianami");
+  }
+  if (label.indexOf("kontroln") === -1 && !removedCsp && /\.html$/i.test(file)) {
+    /* Brak polityki w źródle jest sprawą check-offline.js, nie tego pliku — ale
+       odnotowujemy, bo inaczej „nie zdjęto" wyglądałoby jak „zdjęto". */
+    console.log("     (uwaga: " + label + " nie ma znacznika CSP w źródle)");
   }
 
   var url = "file:///" + (winChrome ? winPath(page) : page).replace(/^\//, "");
@@ -140,6 +166,8 @@ fs.writeFileSync(blank,
   "<title>control</title></head><body></body></html>\n");
 var background = render(blank, "", "przebieg kontrolny");
 console.log("tło (własne żądania przeglądarki): " + Object.keys(background).length + " hostów");
+console.log("polityka CSP zdejmowana z kopii — mierzymy, co kod PRÓBUJE zrobić, " +
+            "nie czego polityka nie dopuszcza");
 
 /* --- scenariusze --- */
 var cases = fixtureDir
