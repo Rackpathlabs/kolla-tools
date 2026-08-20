@@ -199,6 +199,25 @@ passes from short segments — and the truth came out only because someone asked
 distribution of segment lengths instead of accepting the count. A number nobody has looked
 at does not belong in a commit message or in a conversation.
 
+**Recognising comments by pattern gives the wrong answer.** Three times here, and the
+third was in a guard written to catch exactly this family. A scanner counting Polish
+literals stripped block comments with a regular expression and desynchronised on a regex
+literal, because `/` opens a comment in one reading and a regex in another; it reported
+zero Polish strings in a file holding four, and that number was published. Its replacement,
+a hand-written lexer, broke on the same construct from the other side. The third looked for
+a guard's name in "a line that is not a comment", and a continuation line of a block comment
+does not begin with a star — so a mention in prose counted as a check, and the fixture that
+caught it was its own.
+
+The repair is never another edge case in the pattern. It is a criterion that does not need
+to know what a comment is: the shape of a call, which prose does not contain; or the effect,
+observed by running the thing. Both were used to replace two of the three above, and both
+are shorter than the pattern they replaced.
+
+> NOT ENFORCED. Whether a criterion needs to understand comments is a judgement about a
+> design, and no check makes it. Written here so the next person reaches for a different
+> shape rather than a fourth edge case.
+
 **Parts that are each correct compose into an answer that is wrong.** A counter measuring
 translation progress filtered by file path, paired quotes to find strings, and numbered
 lines after stripping comments. Every step was defensible alone; together they hid
