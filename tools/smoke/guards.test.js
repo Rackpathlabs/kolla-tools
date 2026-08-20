@@ -199,6 +199,35 @@ var ckBadArg = ck(["--body", F + "clean-pr.txt"]);
 R.ok("nieznany argument -> czerwone", ckBadArg.code === 1, "kod " + ckBadArg.code);
 R.ok("brak jakiejkolwiek powierzchni -> czerwone", ck([]).code === 1);
 
+/* TRZECIA POWIERZCHNIA: TYTUL PR-a, z INNA regula — zakaz blankietowy zamiast
+   „calej linii". Nie jest to niekonsekwencja i asercje maja to udowodnic wprost:
+   TEN SAM napis przechodzi jako opis i upada jako tytul. */
+var ckTitleOk = ck(["--pr-title", F + "title-clean.txt"]);
+R.ok("tytuł opisowy -> zielone", ckTitleOk.code === 0, ckTitleOk.out.split("\n").pop());
+
+/* PRAWDZIWY tytul PR#52 — ten, ktory wszedl na main jako komunikat commita 0fd2f9e. */
+var ckTitleReal = ck(["--pr-title", F + "title-real-pr52.txt"]);
+R.ok("prawdziwy tytuł PR#52 (wszedł na main jako komunikat commita) -> czerwone",
+     ckTitleReal.code === 1, "kod " + ckTitleReal.code);
+
+var ckTitleTrailer = ck(["--pr-title", F + "title-trailer.txt"]);
+var ckBodyTrailer  = ck(["--pr-body",  F + "title-trailer.txt"]);
+R.ok("legalny trailer W TYTULE -> czerwone mimo poprawnej formy", ckTitleTrailer.code === 1,
+     "kod " + ckTitleTrailer.code);
+R.ok("TEN SAM napis w OPISIE -> zielone", ckBodyTrailer.code === 0, "kod " + ckBodyTrailer.code);
+/* Bez tej pary „inna regula" byloby zdaniem w komentarzu, a nie wlasciwoscia kodu. */
+R.ok("czyli reguła zależy od POWIERZCHNI, nie od kształtu napisu",
+     ckTitleTrailer.code !== ckBodyTrailer.code);
+R.ok("i komunikat tłumaczy, dlaczego reguły się różnią",
+     /W TYTULE PR-a NIE MA FORMY DOZWOLONEJ/.test(ckTitleTrailer.out));
+R.ok("a przy naruszeniu w opisie NIE straszy regułą tytułu",
+     !/W TYTULE PR-a/.test(ckNeg.out));
+
+/* PR bez tytulu nie istnieje — pusty plik znaczy, ze krok nie wyprodukowal wejscia. */
+var ckTitleEmpty = ck(["--pr-title", F + "empty-pr.txt"]);
+R.ok("PUSTY tytuł to awaria pomiaru, nie czysty wynik",
+     ckTitleEmpty.code === 1 && /tytuł jest PUSTY/.test(ckTitleEmpty.out), "kod " + ckTitleEmpty.code);
+
 /* ---- markup kontra słownik (ADR-002, opcja B) ----
    Jedyna kontrola tekstu w tym repozytorium, która NIE zależy od pokrycia: porównuje
    dwa napisy leżące obok siebie w plikach. Powstała czerwona przed migracją — 108

@@ -1,0 +1,1 @@
+Fix #38: make a stale result impossible to mistake for a current one

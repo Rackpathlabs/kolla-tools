@@ -60,10 +60,34 @@
  * git został policzony źle — a strażnik, który przy błędzie mówi „ok", to jest #63
  * jeszcze raz: zielone, bo przedmiot pomiaru się nie wykonał.
  *
+ * TRZECIA POWIERZCHNIA MA INNĄ REGUŁĘ, i to nie jest niekonsekwencja.
+ *
+ *   opis PR-a, commity   REGUŁA „CAŁA LINIA". Deklaracja powiązania jest tam legalna
+ *                        i potrzebna — trailer „Fixes #NN" to sposób, w jaki mówi się
+ *                        „ten PR domyka tamto".
+ *
+ *   tytuł PR-a           ZAKAZ BLANKIETOWY. Słowo-klucz obok numeru nie ma tam NIGDY
+ *                        uzasadnienia, więc nie ma czego dopuszczać.
+ *
+ * Uzasadnienie nie zależy od tego, czy GitHub parsuje samo pole tytułu. Dokumentacja
+ * wymienia dwie powierzchnie — opis PR-a i komunikat commita — i tytułu wśród nich NIE MA.
+ * Ale konfiguracja merge'a tego repozytorium KOPIUJE tytuł do komunikatu commita:
+ *
+ *     squash_merge_commit_title:  COMMIT_OR_PR_TITLE
+ *     merge_commit_message:       PR_TITLE
+ *
+ * Oba zweryfikowane na prawdziwych commitach z main. Commit 0fd2f9e niesie komunikat
+ * „Fix #38: make a stale result impossible to mistake for a current one (#52)" — to jest
+ * tytuł PR#52, który wszedł na gałąź domyślną jako komunikat commita, ze słowem-kluczem
+ * obok numeru. Dowód leży w historii, nie w rozumowaniu.
+ *
+ * A gdyby tytuł nie był parsowany w żaden sposób, zakaz i tak zostaje: tytuł obiecujący
+ * domknięcie tam, gdzie go nie ma, KŁAMIE CZŁOWIEKOWI. Obie możliwości prowadzą do tego
+ * samego zakazu, więc rozstrzygnięcie jest uzasadnieniem, a nie warunkiem.
+ *
  * Użycie:
- *     node tools/check-closing-keyword.js --pr-body <plik> --commits <plik>
- *     node tools/check-closing-keyword.js --pr-body <plik>          # fixtura
- *     node tools/check-closing-keyword.js --commits <plik>          # fixtura
+ *     node tools/check-closing-keyword.js --pr-title <plik> --pr-body <plik> --commits <plik>
+ *     node tools/check-closing-keyword.js --pr-title <plik>          # fixtura
  */
 
 var fs = require("fs");
@@ -84,16 +108,16 @@ function die(msg) {
 var surfaces = [];
 for (var i = 2; i < process.argv.length; i += 2) {
   var flag = process.argv[i], file = process.argv[i + 1];
-  if (flag !== "--pr-body" && flag !== "--commits") {
+  if (flag !== "--pr-body" && flag !== "--commits" && flag !== "--pr-title") {
     die("nieznany argument " + JSON.stringify(flag) +
-        " — użycie: --pr-body <plik> --commits <plik>");
+        " — użycie: --pr-title <plik> --pr-body <plik> --commits <plik>");
   }
   if (file === undefined) die("brak ścieżki po " + flag);
   surfaces.push({ flag: flag, file: file });
 }
 if (!surfaces.length) die("nie podano żadnej powierzchni do sprawdzenia");
 
-var violations = 0, scanned = 0;
+var violations = 0, scanned = 0, titleHit = false;
 
 surfaces.forEach(function (s) {
   var text;
@@ -113,6 +137,12 @@ surfaces.forEach(function (s) {
       die("--commits: lista commitów jest PUSTA. Zakres git został policzony źle " +
           "(za płytki checkout?). PR bez commitów nie istnieje.");
     }
+    if (s.flag === "--pr-title") {
+      /* PR bez tytułu nie istnieje — GitHub go nie przyjmie. Pusty plik znaczy, że
+         krok CI nie wyprodukował wejścia, czyli awarię pomiaru. */
+      die("--pr-title: tytuł jest PUSTY. PR bez tytułu nie istnieje — krok nie " +
+          "wyprodukował wejścia.");
+    }
     /* Pusty opis PR-a jest legalny: body bywa null w payloadzie. Przechodzi, ale
        JAWNIE — cicha zgoda na pustkę jest nieodróżnialna od cichej zgody na błąd. */
     console.log("  " + s.flag + ": wejście puste (opis PR-a bez treści) — nic do sprawdzenia");
@@ -124,8 +154,12 @@ surfaces.forEach(function (s) {
     var trimmed = line.replace(/^[ \t]+|[ \t\r]+$/g, "");
     if (!ADJACENT.test(trimmed)) return;
     scanned++;
-    if (ALLOWED.test(trimmed)) return;
+    /* Tytuł nie ma formy dozwolonej — patrz nagłówek. Reguła jest inna, bo inne jest
+       pytanie: w opisie i w commicie deklaracja powiązania jest treścią, w tytule
+       jest wyłącznie skutkiem ubocznym. */
+    if (s.flag !== "--pr-title" && ALLOWED.test(trimmed)) return;
     violations++;
+    titleHit = titleHit || s.flag === "--pr-title";
     console.log("");
     console.log("  " + s.flag + ", linia " + (idx + 1) + ":");
     console.log("      " + JSON.stringify(trimmed.slice(0, 110)));
@@ -137,17 +171,30 @@ console.log("sąsiedztw słowa-klucza z #NN: " + scanned + "   naruszeń: " + vi
 
 if (violations) {
   console.log("");
-  console.log("FAIL słowo-klucz zamykające obok #NN poza formą „cała linia\", " +
+  console.log("FAIL słowo-klucz zamykające obok #NN tam, gdzie nie wolno, " +
               violations + " razy.");
   console.log("");
   console.log("  GitHub parsuje FRAZĘ, nie zdanie. Przeczenie nie działa: to repozytorium");
   console.log("  zamknęło tak #41 (PR#42, w środku zdania) i #58 (PR#83, „Does not close\").");
+  if (violations > (titleHit ? 1 : 0) || !titleHit) {
+    console.log("");
+    console.log("  W OPISIE I W COMMITACH — dozwolona jest JEDNA forma:");
+    console.log("      Fixes #58            (cała linia, ewentualnie z kropką)");
+    console.log("  Sufiks przepisz na drugą linię. Zamiast deklaracji: „issue #58 stays open\",");
+    console.log("  „part of #58\", „refs #58\".");
+  }
+  if (titleHit) {
+    console.log("");
+    console.log("  W TYTULE PR-a NIE MA FORMY DOZWOLONEJ — i to nie jest niekonsekwencja.");
+    console.log("  Deklaracja powiązania należy do opisu, gdzie jest treścią. W tytule jest");
+    console.log("  wyłącznie skutkiem ubocznym: konfiguracja merge'a tego repozytorium");
+    console.log("  kopiuje tytuł do komunikatu commita (squash_merge_commit_title,");
+    console.log("  merge_commit_message), a komunikat commita zamyka. Commit 0fd2f9e na main");
+    console.log("  jest tego dowodem. Przenieś deklarację do opisu, tytuł zostaw opisowy.");
+  }
   console.log("");
-  console.log("  DOZWOLONE:  Fixes #58            (cała linia, ewentualnie z kropką)");
-  console.log("  ZAMIAST:    issue #58 stays open / part of #58 / refs #58");
   console.log("");
-  console.log("  Sufiks przepisz na drugą linię. Zasada: CLAUDE.md, sekcja");
-  console.log("  „Never write a closing keyword next to an issue number\".");
+  console.log("  Zasada: CLAUDE.md, sekcja „Never write a closing keyword next to an issue number\".");
   process.exit(1);
 }
 
