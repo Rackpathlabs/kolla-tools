@@ -138,6 +138,37 @@ R.ok("i zero do przeczytania", /DO PRZECZYTANIA: 0$/m.test(engOk.out), engOk.out
 R.ok("licznik słów domyka się na obu fixturach",
      !/licznik się nie domyka/.test(engBad.out + engOk.out));
 
+/* ---- spójność bloków współdzielonych ----
+   Straznik bez dowodu upadku do #96, a to, czego pilnuje, jest niewidoczne z definicji:
+   blok rozjechany ze zrodlem nie daje ZADNEGO objawu na ekranie. Dwie kopie tego samego
+   kodu, rozne o jeden bajt, zachowuja sie inaczej i wygladaja identycznie.
+   Dlatego fixtury to rozjazdy, ktorych nikt nie wypatrzy okiem — nie skasowana polowa
+   bloku, ktora zlapalby dowolny naiwny grep. */
+/* Lista blokow ARGUMENTEM, nie zmienna srodowiskowa. Pierwsza wersja szla przez
+   srodowisko i cicho nie dzialala: node.exe z Windows nie przekazuje zmiennych do
+   basha bez WSLENV, wiec straznik ruszal na domyslnej liscie i zglaszal brak
+   matrix.js w fixturze. Ta sama pulapka jest opisana w check-rendered.js. */
+function blocks(variant) {
+  return run("check-blocks.sh",
+             ["--root", "tools/fixtures/blocks/" + variant,
+              "--blocks", "DEMO:demo.js:page.html"]);
+}
+R.ok("kopia identyczna ze źródłem -> zielone", blocks("clean").code === 0,
+     blocks("clean").out.split("\n").pop());
+
+/* SPACJA NA KONCU LINII. To robi edytor przy zapisie i jest to ksztalt czynnosci
+   ZAKAZANEJ przez zasady repo: edycja kopii w HTML zamiast zrodla. */
+var bt = blocks("trailing-space");
+R.ok("spacja na końcu linii w kopii -> czerwone", bt.code === 1, "kod " + bt.code);
+R.ok("i mówi, z którym plikiem źródłowym się rozjechało",
+     /rozjechał się z demo\.js/.test(bt.out), bt.out.split("\n")[0]);
+
+/* NBSP: U+00A0 tam, gdzie nalezy sie zwykla spacja. Bajtowo c2 a0 zamiast 20,
+   wizualnie nie do odroznienia w zadnym przegladzie. */
+R.ok("niełamliwa spacja zamiast zwykłej -> czerwone", blocks("nbsp").code === 1);
+/* KOLEJNOSC: ta sama tresc, ta sama dlugosc, inny plik. */
+R.ok("przestawione linie przy tej samej treści -> czerwone", blocks("reordered").code === 1);
+
 /* ---- gwarancja offline ----
    Straznik, ktory do #96 nie mial NIGDZIE dowodu upadku — a stoi miedzy repozytorium
    a rdzeniem obietnicy produktu: jeden plik HTML, file://, zero sieci, polityka przypieta
