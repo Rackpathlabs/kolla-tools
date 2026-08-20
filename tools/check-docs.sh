@@ -4,7 +4,11 @@
 # a to jest dokładnie ta klasa zmian, której nikt nie zauważa w review.
 set -uo pipefail
 
-cd "$(dirname "$0")/.."
+# Korzen podmienialny argumentem. Wszystkie sciezki nizej sa WZGLEDNE wobec tego cd,
+# wiec jedna zmiana wystarcza za trzydziesci szesc wystapien nazw plikow — i nie ma
+# ryzyka, ze ktores zostanie zaszyte na bezwzglednie.
+here=$(cd "$(dirname "$0")" && pwd)
+if [ "${1:-}" = "--root" ] && [ -n "${2:-}" ]; then cd "$here/../$2"; else cd "$here/.."; fi
 
 rc=0
 MIN_BYTES=2000
