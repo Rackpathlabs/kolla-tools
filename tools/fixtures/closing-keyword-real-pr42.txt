@@ -1,0 +1,5 @@
+The `printf` format string is single-quoted, so `\`` stayed a literal backslash-backtick and leaked into the rendered issue — visible in #41 as `\`matrix.js\`` instead of code formatting.
+
+Cosmetic, but the issue body is the part a human actually reads. Re-running the watcher overwrites the existing issue body by design, so this fixes #41 in place on the next run.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)

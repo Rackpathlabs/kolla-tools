@@ -1,0 +1,15 @@
+Fixes #58
+
+Legalny opis PR-a. Slowo-klucz stoi w pierwszej linii jako CALA LINIA i jest to
+jedyna dozwolona postac.
+
+PRZYNETY, ktore NIE MOGA zapalic straznika:
+  - "refs #58" nie jest slowem-kluczem, tylko odwolaniem;
+  - "part of #60" nie jest slowem-kluczem;
+  - "prefixes #12" zawiera ciag "fixes", ale nie jako slowo — granica slowa
+    musi go odrzucic, inaczej straznik zapali sie na nazwach identyfikatorow;
+  - "This fixes the parser. See #58." ma slowo-klucz i numer w jednej linii,
+    ale NIE SASIADUJA — miedzy nimi stoi zdanie, wiec GitHub tego nie parsuje;
+  - samo "#81" bez slowa-klucza jest zwyklym odwolaniem.
+
+Refs #81

@@ -1,0 +1,12 @@
+The status line stops pronouncing a verdict before anything is checked
+
+generator.html carried "Konfiguracja poprawna." statically in #status-txt.
+Guarded by shape, not by content.
+
+Fixes #64
+--- commit ---
+Give generator diagnostics a stable identifier, and pin them as data
+
+Message text is unusable as a key. See also refs #58 and part of #86.
+
+Fixes #26.

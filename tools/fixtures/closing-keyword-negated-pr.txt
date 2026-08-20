@@ -1,0 +1,6 @@
+Refs #58 · implementuje ADR-002 opcja B
+
+Does **not** close #58. Weszla infrastruktura, migracja nie.
+
+Zdanie napisane PO TO, zeby issue zostalo otwarte — i dokladnie ono je zamknelo.
+Straznik ma zapalic sie TU, w linii trzeciej.
