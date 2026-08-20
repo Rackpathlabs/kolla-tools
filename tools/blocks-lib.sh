@@ -11,10 +11,13 @@
 # Format wpisu: NAZWA:plik-źródłowy:cel,cel,...
 # Cele są per blok, bo nie każdy blok należy wszędzie — hub w korzeniu potrzebuje
 # motywu, ale nie macierzy wydań ani parsera globals.
-BLOCKS="KOLLA-MATRIX:matrix.js:generator.html,validator.html
+# Podmienialna z zewnatrz, zeby straznika dalo sie uruchomic na fixturze o znanej
+# charakterystyce. Dowod, ze kontrola potrafi upasc, ma byc TESTEM, a nie czynnoscia
+# wykonana raz w dniu, w ktorym powstawala.
+BLOCKS="${BLOCKS:-KOLLA-MATRIX:matrix.js:generator.html,validator.html
 GLOBALS-PARSER:globals-parser.js:generator.html,validator.html
 KOLLA-THEME:theme.css:generator.html,validator.html,index.html
-KOLLA-I18N:i18n.js:generator.html,validator.html,index.html"
+KOLLA-I18N:i18n.js:generator.html,validator.html,index.html}"
 
 block_name()    { echo "$1" | cut -d: -f1; }
 block_source()  { echo "$1" | cut -d: -f2; }

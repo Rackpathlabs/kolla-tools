@@ -3,8 +3,14 @@
 # Kod wyjścia 1 = rozjazd. Wpięte w CI.
 set -uo pipefail
 
-cd "$(dirname "$0")/.."
-. tools/blocks-lib.sh
+# Biblioteka idzie z katalogu SKRYPTU, korzen moze byc podmieniony argumentem —
+# inaczej uruchomienie na fixturze szukaloby tools/ wewnatrz fixtury.
+here=$(cd "$(dirname "$0")" && pwd)
+. "$here/blocks-lib.sh"
+
+root="$here/.."
+if [ "${1:-}" = "--root" ] && [ -n "${2:-}" ]; then root="$here/../$2"; fi
+cd "$root"
 
 ref=$(mktemp); cur=$(mktemp)
 trap 'rm -f "$ref" "$cur"' EXIT
