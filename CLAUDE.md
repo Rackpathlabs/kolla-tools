@@ -79,6 +79,11 @@ exceptions.** A change that adds text outside the dictionary either gets to zero
 debt or does not land. This is the entire purpose of the threshold: existing debt is
 described by a number, and every new string goes through a key.
 
+> **This rule is incomplete until #86 lands.** `BASELINE` counts occurrences, not distinct
+> strings, so adding a scenario raises it without adding a single new string — a rise that
+> is neither coverage of a new class nor debt, and that passes the test below as
+> "coverage". Do not lean on this rule to justify a rise until the unit is fixed.
+
 **In the long run the number may only fall.** Every allowed rise is a rise for a reason
 that is not debt, so the debt component itself never grows. When it drops, lower the
 threshold in the same pull request — a threshold left above the measurement stops
