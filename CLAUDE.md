@@ -148,9 +148,20 @@ one in the tree was removed the same day.**
 
 | where | what | state |
 |---|---|---|
-| `b2c3867` | commit message body, two occurrences | on `main`, stays |
-| `16e341a` | commit message body, one occurrence | only on `origin/two-guards-before-migration`, a branch left behind after PR #59 was squashed |
-| `9df107e` | commit message body, one occurrence | same branch |
+| `b2c3867` | commit message body, two occurrences | reachable from `main`, stays; cited in 7 issues and pull requests |
+| `16e341a` | commit message body, one occurrence | **orphaned** — reachable from no ref, only by SHA |
+| `9df107e` | commit message body, one occurrence | **orphaned** — same |
+
+The two orphans were on the branch behind PR #59, which was squashed: its commits never
+reached `main`, and the squash concatenated their messages into `b2c3867`, which is why
+one commit carries two occurrences. The branch itself no longer exists on the remote.
+
+**And that is the argument of this section, demonstrated rather than asserted.** Those two
+commits are reachable from nothing, and they are still there — GitHub serves an orphaned
+commit by its SHA, and both are cited by SHA in PR #59 and #112. Deleting the last ref
+that pointed at them removed a way of *finding* them and no part of their content. A
+force-push would do the same thing, on 112 more commits, at the cost of every reference in
+the table below it.
 | `tools/check-docs.sh` | a code comment | removed 2026-08-21 |
 
 The contents are not quoted here, for the reason the guard does not quote them either.
