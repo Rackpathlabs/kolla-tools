@@ -247,14 +247,25 @@ var oc = offline("bait-c-no-csp");
 R.ok("brak znacznika CSP -> czerwone, nie „nic do sprawdzenia\"",
      oc.code === 1 && /brak znacznika meta/.test(oc.out), "kod " + oc.code);
 
-/* (b) ZNANA DZIURA, przypięta świadomie: #101. Ta asercja mówi, że fixtura DZIŚ
-   PRZECHODZI, i nie jest to zgoda — jest to uczynienie granicy widoczną. Gdy dziura
-   zostanie zamknięta, ta asercja zapali się na czerwono i zmusi do aktualizacji,
-   a #101 da się wtedy domknąć. Straznik milczacy o wlasnej granicy jest gorszy od
+/* (b) GRANICA, nie dziura — i to jest rozstrzygniete, a nie odlozone. check-offline.js
+   czyta ZRODLO i szuka szesciu nazw; wywolanie skladane w czasie dzialania nie wyglada
+   jak zadna z nich, wiec przechodzi. ADR-003 rozstrzygnal, ze tej klasy NIE gonimy
+   dluzsza lista literalow: lista jest przegrana z gory wobec kodu, ktory sie sklada,
+   a kazdy dopisany wzorzec podnosilby wrazenie osloniecia, nie osloniecie.
+   Klase pokrywa tools/check-network.js — pyta o SKUTEK na wykonanych scenariuszach
+   zamiast o ksztalt zrodla (docs/adr/ADR-003-js-tokens-vs-zero-npm.md, opcja D).
+   Zakres check-offline.js zostal zwezony do tego, co faktycznie sprawdza (#103), wiec
+   ta fixtura nie opisuje juz niedotrzymanej obietnicy.
+
+   Asercja zostaje PRZYPIETA mimo rozstrzygniecia: mowi, ze granica lezy TAM, GDZIE
+   ZAPISANO. Gdyby check-offline.js kiedys zaczal to lapac — nowym wzorcem albo cudza
+   poprawka — zapali sie na czerwono i zmusi do sprawdzenia, czy ktos nie wraca do
+   drogi, ktora ADR-003 odrzucil. Straznik milczacy o wlasnej granicy jest gorszy od
    granicy zapisanej. */
 var ob = offline("bait-b-runtime-network");
-R.ok("ZNANA DZIURA #101: wywołania sieciowe składane w czasie działania PRZECHODZĄ",
-     ob.code === 0, "kod " + ob.code + " — jeśli to czerwone, dziura zamknięta, zaktualizuj #101");
+R.ok("GRANICA check-offline.js: wywołania składane w czasie działania przechodzą (ADR-003, pokrywa check-network.js)",
+     ob.code === 0, "kod " + ob.code + " — jeśli to czerwone, zakres straznika sie zmienil; " +
+     "sprawdz ADR-003 i tools/check-network.js zanim uznasz to za poprawe");
 
 /* ---- zadania sieciowe na wykonanych scenariuszach ----
    ADR-003 opcja D dla #101. check-offline.js czyta LISTE SZESCIU NAZW i przepuszcza
@@ -274,9 +285,9 @@ R.ok("new Image().src = https://… -> czerwone", netDirty.code === 1, "kod " + 
 R.ok("i nazywa HOSTA, do którego poszło żądanie",
      /telemetry\.example\.invalid/.test(netDirty.out), netDirty.out.split("\n")[2]);
 /* To jest DOKLADNIE ten przypadek, ktory przechodzi przez check-offline.js — para
-   fixtur po obu stronach jednej dziury pokazuje, ze te dwa straznice sie uzupelniaja,
-   a nie dubluja. */
-R.ok("czyli łapie to, co check-offline.js przepuszcza (#101)",
+   fixtur po obu stronach jednej GRANICY pokazuje, ze te dwa straznice sie uzupelniaja,
+   a nie dubluja. Granica jest zamierzona i opisana w ADR-003, nie zaleglosc. */
+R.ok("czyli łapie to, co check-offline.js przepuszcza (granica z ADR-003)",
      run("check-offline.js", ["--dir", "tools/fixtures/network/dirty"]).code === 0);
 
 R.ok("brak katalogu -> czerwone, nie „zero scenariuszy\"", network("nie-ma").code === 1);

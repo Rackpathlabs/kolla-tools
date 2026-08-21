@@ -28,6 +28,13 @@
  * Żeby cokolwiek wyszło do sieci, musiałyby zawieść oba punkty naraz — dlatego #101
  * jest luką w zakresie strażnika, a nie dziurą w gwarancji.
  *
+ * TA LUKA JEST DZIŚ ROZSTRZYGNIĘTA, nie otwarta. ADR-003 odrzucił gonienie klasy
+ * dłuższą listą literałów: lista przegrywa z kodem, który się składa, a każdy dopisany
+ * wzorzec podnosiłby wrażenie osłonięcia bardziej niż osłonięcie. Klasę pokrywa
+ * tools/check-network.js — pyta o SKUTEK na wykonanych scenariuszach zamiast o kształt
+ * źródła. #101 zamknięte jako not_planned 2026-08-21; opis granicy stoi w
+ * docs/adr/ADR-003-js-tokens-vs-zero-npm.md, a jej przypięcie w tools/smoke/guards.test.js.
+ *
  * Sama polityka została zweryfikowana ręcznie w przeglądarce, w obu kontekstach
  * (file:// oraz http://), na headless Chrome: oba narzędzia wykonują swój skrypt,
  * fetch jest blokowany przez default-src 'none', a pobieranie przez blob: działa.
