@@ -3,9 +3,12 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
 <title>przyneta B — wywolania sieciowe, ktore NIE WYGLADAJA na wywolania</title></head>
 <body>
-<!-- ZNANA DZIURA. Ta fixtura PRZECHODZI dzis i to nie jest przeoczenie w fixturze,
-     tylko zmierzona granica straznika. Zapisana, zeby bylo widac, kiedy przestanie
-     przechodzic. Szczegoly i granica klasy: patrz issue w naglowku asercji. -->
+<!-- ZMIERZONA GRANICA, nie przeoczenie. Ta fixtura PRZECHODZI przez check-offline.js
+     dzis i ma przechodzic: ten straznik czyta ZRODLO i szuka szesciu nazw, a tego
+     kodu nie widac z zadnej listy literalow. ADR-003 rozstrzygnal, ze klasy nie
+     gonimy dluzsza lista; pokrywa ja tools/check-network.js, pytajac o SKUTEK.
+     Zapisana, zeby bylo widac, gdyby granica sie przesunela.
+     docs/adr/ADR-003-js-tokens-vs-zero-npm.md -->
 <script>
 (function () {
   /* 1. nazwa API skladana w czasie dzialania — lista FORBIDDEN szuka literalu */

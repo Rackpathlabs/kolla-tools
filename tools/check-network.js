@@ -32,6 +32,31 @@
  *   ŻĄDANIA WYCHODZĄCE PO ZAKOŃCZENIU POMIARU — netlog zamyka się razem z przeglądarką.
  * ============================================================================
  *
+ * ============================================================================
+ * REGUŁA MIEJSCA, NIEEGZEKWOWANA: TEN STRAŻNIK STOI W run-tests.sh I W ci.yml NARAZ.
+ * PRZENIESIENIE GO DO SAMEGO CI JEST ZAKAZANE.
+ *
+ * Nic tego nie sprawdza — żaden strażnik nie pilnuje, w ilu miejscach stoi inny.
+ * check-wiring.js żąda obecności w JEDNYM z dwóch, więc skasowanie linii z run-tests.sh
+ * przeszłoby przez build bez słowa. Reguła stoi tutaj, przy przedmiocie, bo tutaj się ją
+ * czyta w chwili, gdy się o niej myśli.
+ *
+ * Jedyny powód, dla którego ktoś by go stąd wyjął, to czas: przebieg kosztuje około
+ * czternastu sekund lokalnie. To nie jest cena warta rozmowy. Kupując ją, płaci się tym,
+ * że słowo „zielono" zaczyna znaczyć CO INNEGO na maszynie autora niż na PR-ze — a autor
+ * dowiaduje się o czerwonym po wypchnięciu, czyli wtedy, gdy przestał na to patrzeć.
+ * To jest dokładnie kształt #72: strażnik poza buildem, build zielony, strażnik czerwony.
+ * Tam kosztowało to dwie kontrole niewykonywane nigdzie; tutaj kosztowałoby jedną
+ * wykonywaną w połowie miejsc, co jest tą samą chorobą w łagodniejszym stadium.
+ *
+ * DOZWOLONE CIĘCIE, gdyby czas kiedyś zabolał naprawdę: MNIEJ SCENARIUSZY, dobranych
+ * pod istotność sieciową — ścieżki, które faktycznie mogą coś wysłać, zamiast pełnej
+ * piętnastki dzielonej z check-rendered.js. Wtedy oba przebiegi nadal mierzą to samo,
+ * tylko krócej, a zawężenie jest widoczne w liście FILES zamiast w konfiguracji builda.
+ * Cięcie przez przeniesienie do CI-only nie jest cięciem kosztu — jest przeniesieniem
+ * kosztu na moment, w którym jest droższy.
+ * ============================================================================
+ *
  * POLITYKA CSP JEST ZDEJMOWANA Z KOPII — CELOWO, I TO JEST SEDNO TEGO PLIKU.
  *
  * Pierwsza wersja ładowała stronę taką, jaka jest, i była ZIELONA NA WSZYSTKIM. Powód:
