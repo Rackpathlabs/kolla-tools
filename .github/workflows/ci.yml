@@ -95,6 +95,11 @@ jobs:
           # a wtedy zakres wciągnąłby cudze commity i strażnik mówiłby o nie swoim tekście.
           MB="$(git merge-base "$BASE_SHA" "$HEAD_SHA")"
           git log --no-merges --format='%B%n' "$MB..$HEAD_SHA" > .commits.tmp
+          # Pola author i committer tego samego zakresu. Osobny plik, bo to osobne
+          # pytanie: tamten czyta TREŚĆ, ten pyta, KTO jest podpisany. --no-merges,
+          # bo commit merge'a wytwarza platforma i jego committer jest z definicji
+          # tożsamością platformy, nie autora.
+          git log --no-merges --format='%an <%ae>%n%cn <%ce>' "$MB..$HEAD_SHA" > .identities.tmp
           echo "zakres: $MB..$HEAD_SHA  ($(git rev-list --no-merges --count "$MB..$HEAD_SHA") commitów)"
           node tools/check-closing-keyword.js --pr-title .pr-title.tmp \
                                               --pr-body .pr-body.tmp \
@@ -107,7 +112,8 @@ jobs:
           # między krokami, co jest gorsze od wspólnego kroku.
           node tools/check-personal-names.js --pr-title .pr-title.tmp \
                                              --pr-body .pr-body.tmp \
-                                             --commits .commits.tmp
+                                             --commits .commits.tmp \
+                                             --identities .identities.tmp
 
       # Pytanie warunkujące sens pozostałych kroków: czy zestaw strażników jest
       # kompletny. Reguła „strażnik ma się wykonywać w buildzie" powstała po #72

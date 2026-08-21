@@ -498,6 +498,12 @@ R.ok("CAŁY adres na liście -> czerwone, choć żadna jego część słowna na 
 var pnClean = pn(PNH.concat(["--commits", PN + "clean-commits.txt"]));
 R.ok("ten sam komunikat bez napisu z listy -> zielone", pnClean.code === 0, pnClean.out.split("\n").pop());
 
+/* UCHWYT Z MYSLNIKIEM ma wlasny dowod, bo bez niego wpis takiego ksztaltu na liscie
+   bylby MARTWY: rozbicie na czesci sprawia, ze skrot calosci nigdy nie pada. Lista,
+   ktorej czesc nie moze zadzialac, wyglada na pokrycie, ktorego nie ma. */
+var pnHandle = pn(PNH.concat(["--commits", PN + "dirty-handle.txt"]));
+R.ok("login z myślnikiem jako CAŁY token -> czerwone", pnHandle.code === 1, "kod " + pnHandle.code);
+
 /* PRZYPIETA GRANICA, nie przeoczenie: dopasowujemy CALE tokeny. Dopasowanie po podciagu
    dawaloby falszywe alarmy na zwyklych slowach, a falszywy alarm w strazniku, ktory nie
    moze pokazac, co znalazl, jest nie do zdiagnozowania. */
@@ -521,6 +527,37 @@ R.ok("brak pliku listy -> czerwone", pnNoList.code === 1, "kod " + pnNoList.code
 var pnReal = run("check-personal-names.js", ["--commits", "tools/fixtures/personal-names/clean-commits.txt"]);
 R.ok("domyślna lista produkcyjna wczytana i NIEPUSTA",
      pnReal.code === 0 && /skrótów na liście: [1-9]/.test(pnReal.out), pnReal.out.split("\n").pop());
+
+/* POLA author / committer: ODMOWA DOMYSLNA. Druga polowa tego samego pliku i JEDYNA
+   w tym repozytorium lista POZWOLEN — mozliwa dlatego, ze zbior dozwolonych tozsamosci
+   jest zamkniety i ma dwa elementy. Powod rozdzielenia mechanizmow stoi w naglowku. */
+var idClean = pn(["--identities", PN + "identities-clean.txt"]);
+R.ok("obie dozwolone tożsamości -> zielone", idClean.code === 0, idClean.out.split("\n").pop());
+
+var idBad = pn(["--identities", PN + "identities-foreign.txt"]);
+R.ok("trzecia tożsamość -> czerwone", idBad.code === 1, "kod " + idBad.code);
+/* KSZTALT REALNEGO RYZYKA, nie podrecznikowego: swiezy klon bez `git config --local`
+   commituje z loginu i nazwy hosta. To jest wlasnie ta tozsamosc, o ktorej nikt nie
+   pomyslal — i lista ZAKAZOW nie mialaby jej skad znac. */
+var idHost = pn(["--identities", PN + "identities-hostname.txt"]);
+R.ok("login i nazwa hosta -> czerwone, choć nikt ich nie przewidział", idHost.code === 1,
+     "kod " + idHost.code);
+R.ok("i NIE cytuje tożsamości, tylko linię i skrót",
+     /--identities, linia \d+, długość \d+/.test(idHost.out) &&
+     /skrót [0-9a-f]{12}…/.test(idHost.out) && !/DESKTOP/.test(idHost.out),
+     idHost.out.split("\n")[1]);
+/* PODPOWIEDZ MA BYC JAWNA. Tozsamosc projektowa stoi w kazdym commicie i jest publiczna
+   z definicji — ukrywanie jej byloby teatrem, a strażnik ma ja WYPISAC. */
+R.ok("ale dozwolone wartości wypisuje wprost, bo są publiczne z definicji",
+     /rackpathlabs-ops </.test(idHost.out) && /GitHub <noreply@github\.com>/.test(idHost.out));
+
+var idEmpty = pn(["--identities", PN + "identities-empty.txt"]);
+R.ok("PUSTY zakres tożsamości -> czerwone, nie „nic do sprawdzenia\"",
+     idEmpty.code === 1 && /jest PUSTY/.test(idEmpty.out), "kod " + idEmpty.code);
+
+/* Komunikat sukcesu ma mowic o powierzchniach, ktore FAKTYCZNIE zbadano. */
+R.ok("„OK\" nie mówi o powierzchni, której nie podano",
+     !/w treści/.test(idClean.out.split("\n").pop()), idClean.out.split("\n").pop());
 
 /* ---- markup kontra słownik (ADR-002, opcja B) ----
    Jedyna kontrola tekstu w tym repozytorium, która NIE zależy od pokrycia: porównuje
