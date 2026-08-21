@@ -1,6 +1,6 @@
 # ADR-003: Real JavaScript tokens against the zero-dependency rule
 
-**Status:** **Accepted** (Mariusz, 2026-08-20) — **D for #101, C for #77**
+**Status:** **Accepted** (the repository owner, 2026-08-20) — **D for #101, C for #77**
 **Date:** 2026-08-20
 **Concerns:** #77 (a source-side language guard), #101 (network calls that do not look like
 network calls), #57 (check-literals beyond four sinks)
@@ -233,7 +233,7 @@ not the correctness.
 
 ## Actions
 
-1. [x] Decision: **D for #101, C for #77** (Mariusz, 2026-08-20)
+1. [x] Decision: **D for #101, C for #77** (the repository owner, 2026-08-20)
 2. [x] Regardless of the decision: make the *"Zero zależności npm"* step's scope match its
        name — it checked the repository root only. Now `tools/check-npm.js`, whole tree,
        with two named exemptions for its own dirty fixture
