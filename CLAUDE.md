@@ -89,20 +89,48 @@ names indexed as a side effect of a merge.
 | message bodies, PR title and description | whoever is typing | `tools/check-personal-names.js`, on every pull request |
 
 **Commits go out with the local repository configuration, never with the machine's global
-one.** `user.name` and `user.email` are set in `.git/config` of this clone and must stay
-set. Global configuration belongs to the machine and follows its owner into every other
+one.** Global configuration belongs to the machine and follows its owner into every other
 repository; a clone that falls back to it commits under whatever identity that machine
 happens to carry, which on a fresh machine is a login name and a hostname nobody chose to
 publish. Measured on 2026-08-21: all 185 commits across every ref carry the project
 identity in both `author` and `committer`, so the configuration has held from the start.
-This rule exists to keep it that way on the next clone, which is the moment it will be
-easiest to get wrong.
+
+**`.git/config` IS NOT CLONED. This is the entry step for every new clone, on every
+machine, before the first commit:**
+
+```
+git config --local user.name  rackpathlabs-ops
+git config --local user.email 310609378+rackpathlabs-ops@users.noreply.github.com
+```
+
+The protection this repository has today lives in one untracked file on one machine.
+`git clone` does not copy it. A fresh clone — a new person, a new laptop, a rebuilt
+container — starts with nothing, and nothing in the repository will put it back.
+
+What saves that clone today is an accident of configuration and not a property of this
+project: with no global `user.name` either, git **refuses to commit** instead of inventing
+an identity from the login name and the hostname. That is a loud failure, which is the
+good kind. But it is a fact about that particular machine. A machine whose owner has ever
+set a global identity — which is most machines, because most people set it once and forget
+— gets the silent version instead: the commit succeeds and carries a person.
+
+So the two-line command above is not paperwork. It is the whole of the protection, and it
+has to be run by hand because there is nowhere in a git repository to put it.
 
 **Enforcement status, stated honestly because the two halves differ.**
 
 - The `author` / `committer` half is enforced by **nothing** — no check reads those fields.
-  It rests on a configuration file that is not even tracked. A clone with an empty
-  `.git/config` would produce a wrong identity and no build would notice.
+  It rests on a configuration file that is not even tracked and does not survive a clone.
+  A clone that inherits a machine's global identity commits under a person's name and no
+  build notices.
+
+  **And no check ever could make this a barrier, only a warning.** Anything running in CI
+  sees a commit's metadata after that commit exists and has been pushed — the wrong
+  identity is already published to the branch by the time anything can object. What a
+  guard on those fields would buy is that it never reaches `main`: the fix is a rebase on
+  the branch, which is cheap, and no history that anyone has cited is touched. The entry
+  step above is the only thing that acts *before* the commit, and it is a two-line command
+  somebody has to remember to run.
 - The message half is enforced on pull requests by `tools/check-personal-names.js`, and
   its scope is narrower than this section's title: it catches occurrences of strings on a
   **closed list of hashes**, and does not detect personal data in general. A name nobody
@@ -127,15 +155,31 @@ one in the tree was removed the same day.**
 
 The contents are not quoted here, for the reason the guard does not quote them either.
 
-**Why the history is not rewritten.** A force-push on a public repository does not remove
-published data. Orphaned objects stay reachable by SHA, forks and clones hold their own
-copies, and anything a platform has already served may be cached elsewhere. What the
-rewrite would certainly cost is concrete: every SHA on `main` invalidated, dead `commit_id`
-references in closed issues, and every "the proof is in commit X" sentence in this
-repository broken — and there are several, because that is how evidence is recorded here.
-Paying a certain price for a removal that does not remove is an empty green in a different
-domain: the appearance of a clean history bought by breaking the record that makes the
-history worth keeping.
+**Why the history is not rewritten.** Decided after the measurement, not before it, and
+the measurement is the argument:
+
+| measured 2026-08-21 | |
+|---|---|
+| commits on `main` | 112 |
+| commits across every ref | 185 |
+| distinct `author` values | **1**, the project identity, on 185 of 185 |
+| distinct `committer` values | 2 — the project identity (124) and `GitHub <noreply@github.com>` (61) |
+| personal data in commit metadata | **0 occurrences, in either field, anywhere** |
+| e-mail addresses in message bodies | 1 distinct, `noreply@anthropic.com`, 181 occurrences |
+| exposure | **3 occurrences, in 3 message bodies**, of which 1 commit is reachable from `main` |
+
+So the trade is 112 invalidated SHAs against 3 occurrences of a first name — and the
+rewrite does not even deliver the 3. A force-push on a public repository does not remove
+published data: orphaned objects stay reachable by SHA, forks and clones hold their own
+copies, and anything a platform has already served may be cached elsewhere. What it
+certainly costs is concrete: every SHA on `main` invalidated, dead `commit_id` references
+in closed issues, and every "the proof is in commit X" sentence in this repository broken
+— and there are several, because that is how evidence is recorded here.
+
+Thirty-seven invalidated SHAs for each occurrence removed, from a removal that removes
+nothing, is not a close call. Paying a certain price for an uncertain benefit is an empty green in a
+different domain: the appearance of a clean history, bought by breaking the record that
+makes the history worth keeping.
 
 So the rule says **in force from today, three known exceptions in the history** rather than
 pretending to describe a repository that never carried them.
