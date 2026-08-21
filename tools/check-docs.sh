@@ -95,7 +95,8 @@ else
               "The defect that produced this rule" \
               "A ratchet threshold may only fall" \
               "A milestone's name describes what is in it" \
-              "Commits carry the project identity, never a person"; do
+              "Commits carry the project identity, never a person" \
+              "A citation carries the evidence; the SHA is an aid"; do
     if grep -qF "$want" CLAUDE.md; then
       echo "OK   reguła: $want"
     else
