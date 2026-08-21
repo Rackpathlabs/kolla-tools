@@ -1,0 +1,3 @@
+Wire the reporter into the weekly run
+
+Reported by qwargle2@example.invalid during the dry run.

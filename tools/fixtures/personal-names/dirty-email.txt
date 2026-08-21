@@ -1,0 +1,3 @@
+Wire the reporter into the weekly run
+
+Co-Authored-By: Somebody <qwarglep@example.invalid>

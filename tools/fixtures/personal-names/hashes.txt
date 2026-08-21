@@ -1,0 +1,5 @@
+# Przynęta dla tools/smoke/guards.test.js. Skrót WYMYŚLONEGO tokenu, nie danych
+# prawdziwych — fixtura dowodząca strażnika chroniącego napisy nie ma prawa nieść
+# tych napisów, bo byłaby ich publikacją pod pozorem testu.
+b3dec3d1344f451da92977f68fc260a6d9ff35522ffa7471aa7faee73d498acf
+9605b7f8f6a3f9cdd00d1309a9b0fa23613070b39cff1929679227e143b5cf21

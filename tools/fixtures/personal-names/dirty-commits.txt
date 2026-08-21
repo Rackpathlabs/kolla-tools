@@ -1,0 +1,4 @@
+Lower the baseline to what was measured: 473 -> 444
+
+Two corrections qwarglep asked for are why that last figure is zero. Matching
+the measurement to the claim, not the claim to the measurement.
