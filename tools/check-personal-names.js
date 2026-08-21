@@ -42,6 +42,14 @@
  *     fixturą (clean-substring), więc widać ją, zamiast się jej domyślać.
  *   NAPISU ROZBITEGO ZNAKIEM. „M-a-r-…" rozpada się na tokeny jednoliterowe.
  *     Ta klasa jest poza zasięgiem listy z definicji — patrz zdanie otwierające.
+ *   PLIKÓW, KOMENTARZY W KODZIE I OPISÓW ISSUE — znana luka, dziś NIEZAMYKANA.
+ *     Ten strażnik ogląda komunikaty commitów oraz tytuł i opis PR-a. Personalia
+ *     w treści pliku, w komentarzu w kodzie albo w opisie issue przechodzą, bo nikt
+ *     tam nie patrzy. Nie jest to przeoczenie ani zapowiedź: komentarz w kodzie
+ *     złapano tu raz i ręcznie (tools/check-docs.sh, 2026-08-21), a opisy issue leżą
+ *     poza drzewem i poza zakresem builda. Granica nazwana, żeby zieleń tego pliku
+ *     nie była czytana jako „w repozytorium nie ma personaliów".
+ *
  *   POWIERZCHNI SPOZA PODANYCH. Sprawdza to, co dostanie w argumentach, i nic więcej.
  *     Zwłaszcza NIE sprawdza pól author/committer commita — te bierze git z konfiguracji,
  *     nie autor z klawiatury, i pilnuje ich reguła w CLAUDE.md razem z konfiguracją
@@ -150,6 +158,11 @@ var DEFAULT_HASHES = path.join(__dirname, "personal-names.sha256");
    CAŁY adres jako jeden token, bo na liście może stać adres, a nie jego kawałek. */
 var WORD = /[\p{L}\p{N}]+/gu;
 var EMAIL = /[^\s<>()[\]{},;:"']+@[^\s<>()[\]{},;:"']+/gu;
+/* UCHWYT: login z myslnikiem, kropka albo podkresleniem w srodku. Dodany, bo bez niego
+   wpis „mb-itdev" na liscie bylby wpisem MARTWYM — WORD rozbija go na „mb" i „itdev",
+   wiec skrot calosci nie mialby szansy paść. Lista, ktorej czesc nie moze zadzialac,
+   jest gorsza od krotszej: wyglada na pokrycie, ktorego nie ma. */
+var HANDLE = /[\p{L}\p{N}][\p{L}\p{N}._-]*[\p{L}\p{N}]/gu;
 
 function die(msg) {
   console.log("FAIL " + msg);
@@ -229,7 +242,7 @@ surfaces.forEach(function (s) {
   }
 
   text.split("\n").forEach(function (line, idx) {
-    [WORD, EMAIL].forEach(function (re) {
+    [WORD, EMAIL, HANDLE].forEach(function (re) {
       re.lastIndex = 0;
       var m;
       while ((m = re.exec(line)) !== null) {

@@ -498,6 +498,12 @@ R.ok("CAŁY adres na liście -> czerwone, choć żadna jego część słowna na 
 var pnClean = pn(PNH.concat(["--commits", PN + "clean-commits.txt"]));
 R.ok("ten sam komunikat bez napisu z listy -> zielone", pnClean.code === 0, pnClean.out.split("\n").pop());
 
+/* UCHWYT Z MYSLNIKIEM ma wlasny dowod, bo bez niego wpis takiego ksztaltu na liscie
+   bylby MARTWY: rozbicie na czesci sprawia, ze skrot calosci nigdy nie pada. Lista,
+   ktorej czesc nie moze zadzialac, wyglada na pokrycie, ktorego nie ma. */
+var pnHandle = pn(PNH.concat(["--commits", PN + "dirty-handle.txt"]));
+R.ok("login z myślnikiem jako CAŁY token -> czerwone", pnHandle.code === 1, "kod " + pnHandle.code);
+
 /* PRZYPIETA GRANICA, nie przeoczenie: dopasowujemy CALE tokeny. Dopasowanie po podciagu
    dawaloby falszywe alarmy na zwyklych slowach, a falszywy alarm w strazniku, ktory nie
    moze pokazac, co znalazl, jest nie do zdiagnozowania. */
