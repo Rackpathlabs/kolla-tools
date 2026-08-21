@@ -195,6 +195,44 @@ makes the history worth keeping.
 So the rule says **in force from today, three known exceptions in the history** rather than
 pretending to describe a repository that never carried them.
 
+## A citation carries the evidence; the SHA is an aid
+
+Write down what a commit **showed** — the sequence, the order, what was red and when —
+in the issue or the document that relies on it. Then add the SHA. Never the SHA alone.
+
+**Nothing enforces this.** No check can tell a pointer that still resolves from one that
+resolves today and not next year, and none can judge whether a sentence carries enough of
+the evidence to stand without the object. `tools/check-docs.sh` holds this section in
+place so the rule cannot quietly vanish, and that is a different guarantee from anybody
+obeying it.
+
+**Why.** Evidence cited by SHA lasts exactly as long as the object stays reachable, and
+reachability is not a property anybody here controls. A squash merge leaves every commit
+of the branch unreachable from the default branch. Deleting the branch afterwards leaves
+them reachable from no ref at all. A platform garbage-collects orphaned objects on its own
+schedule, without notice, and owes nobody a warning. None of that is misconduct — it is
+the ordinary lifecycle of a merged branch, and this repository has run it dozens of times.
+
+**The defect that produced this rule.** PR #59 went in as a squash: all **50** of its
+commits are unreachable from `main`, and two of them — `9df107e` and `16e341a` — are
+reachable from no ref whatsoever. What those two showed was the discipline this repository
+now runs on: guards created **red on purpose** before the migration they measure, with
+`check-dictionary.js` first committed **with no threshold at all**, the number arriving a
+day later and being lowered to the measured value rather than the measurement being raised
+to it. That is the origin of the ratchet rule in the section below, and it was recorded
+nowhere except in the commits themselves.
+
+The whole argument rested on pointers into objects that had already lost their last
+reference. The repair was to write the sequence out in the issues that lean on it, with
+hours and with what each step made red, and to leave the SHAs behind it as an aid marked
+as possibly ceasing to resolve.
+
+**The objects are deliberately not anchored.** A tag would keep them alive, and two of the
+three occurrences of a personal name in this history live in exactly those two commits —
+so their eventual collection is welcome. That is also why the citation must not quote what
+their messages said: the protected string is meant to disappear with the object, not to be
+copied into an issue that outlives it.
+
 ## A ratchet threshold may only fall
 
 Two guards hold a number that existing debt is measured against, and both are ratchets:

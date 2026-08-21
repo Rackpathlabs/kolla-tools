@@ -18,3 +18,7 @@ Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypeln
 ## Commits carry the project identity, never a person
 
 Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika.
+
+## A citation carries the evidence; the SHA is an aid
+
+Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika.
