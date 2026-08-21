@@ -65,14 +65,82 @@
  * skrótem — wszystko to jest PORAŻKĄ POMIARU, nie czystym wynikiem. Strażnik, który
  * przy zepsutym wejściu mówi „ok", to #63 jeszcze raz.
  *
+ * ============================================================================
+ * DWA MECHANIZMY W JEDNYM PLIKU, I TO NIE JEST NIEKONSEKWENCJA — TO JEDYNY POWÓD,
+ * DLA KTÓREGO POLA METADANYCH DA SIĘ OBRONIĆ LEPIEJ NIŻ TREŚĆ.
+ *
+ *   TREŚĆ (komunikat, tytuł, opis)     LISTA ZAKAZÓW, po skrótach.
+ *   POLA author / committer            LISTA POZWOLEŃ, po jawnych napisach.
+ *
+ * Różnica nie jest wygodą implementacji, tylko własnością zbiorów, i za rok nie będzie
+ * oczywista, więc stoi tutaj wprost.
+ *
+ * DLA METADANYCH ZBIÓR DOZWOLONYCH JEST ZAMKNIĘTY — dwie wartości, wypisane niżej —
+ * więc możliwa jest ODMOWA DOMYŚLNA: czerwone jest wszystko, co nie jest jedną z nich.
+ * To łapie także tożsamość, o której nikt nie pomyślał, czyli dokładnie ten przypadek,
+ * którego lista zakazów nie umie złapać z definicji. Ten sam kształt co
+ * `default-src 'none'` w polityce CSP tych narzędzi: nie wyliczaj tego, co zabronione,
+ * wylicz to, co dozwolone, i odmów reszcie.
+ *
+ * DLA TREŚCI TO NIEMOŻLIWE, bo zbiór zakazanych to cała ludzkość, a zbiór dozwolonych
+ * to cały język. Nie ma czego wyliczyć po żadnej ze stron, więc zostaje lista zakazów
+ * z jej znaną granicą — opisaną wyżej i nieudawaną.
+ *
+ * DLACZEGO LISTA POZWOLEŃ MOŻE STAĆ JAWNYM NAPISEM, skoro lista zakazów nie może.
+ * Warunek konstrukcyjny dotyczy napisów CHRONIONYCH. Tożsamość projektowa nie jest
+ * chroniona — stoi w każdym ze 185 commitów tego repozytorium i jest publiczna z
+ * definicji, więc jej ukrywanie byłoby teatrem. Odwrotnie: musi stać jawnie, bo
+ * strażnik ma ją WYPISAĆ w komunikacie błędu jako podpowiedź. Napis nie na liście
+ * jest hashowany jak wszystko inne — to on może być czyjąś tożsamością.
+ * ============================================================================
+ *
+ * DWIE GRANICE TEGO ROZSZERZENIA, obie znane przed napisaniem kodu:
+ *
+ *   ZAPORA DLA main, OSTRZEŻENIE DLA GAŁĘZI. Krok CI widzi metadane commita dopiero
+ *     wtedy, gdy commit istnieje i został wypchnięty — zła tożsamość jest już na
+ *     gałęzi, zanim cokolwiek zaprotestuje. To, co strażnik kupuje, to że nie wejdzie
+ *     na gałąź domyślną; naprawa to rebase przed merge'em, tania i nietykająca
+ *     historii, którą ktokolwiek cytuje.
+ *
+ *   NIC MIESZKAJĄCE W REPOZYTORIUM NIE ZADZIAŁA PRZED COMMITEM. .git/config nie
+ *     podlega klonowaniu, hooki też nie. Jedyne, co działa wcześniej, to dwie linie
+ *     `git config --local`, które ktoś musi pamiętać, żeby wykonać — CLAUDE.md,
+ *     sekcja „Commits carry the project identity, never a person".
+ *
  * Użycie:
- *     node tools/check-personal-names.js --pr-title <plik> --pr-body <plik> --commits <plik>
+ *     node tools/check-personal-names.js --pr-title <plik> --pr-body <plik> \
+ *                                        --commits <plik> --identities <plik>
  *     node tools/check-personal-names.js --hashes <plik> --commits <plik>      # fixtura
+ *
+ * Plik --identities: po jednej tożsamości w linii, w postaci „Nazwa <adres>", taki,
+ * jaki produkuje `git log --no-merges --format='%an <%ae>%n%cn <%ce>'`.
  */
 
 var fs = require("fs");
 var path = require("path");
 var crypto = require("crypto");
+
+/* ██████████████████████████████████████████████████████████████████████████████
+ * LISTA POZWOLEŃ DLA PÓL author / committer. DWIE WARTOŚCI. WSZYSTKO INNE JEST
+ * CZERWONE — łącznie z tożsamością, o której nikt nie pomyślał.
+ *
+ * DOPISANIE TRZECIEJ MA BYĆ WIDOCZNĄ DECYZJĄ, nie linijką, która wpada w diff między
+ * refaktoryzacjami. Dlatego stoi tu, w ramce, na górze pliku, a nie w konfiguracji
+ * ani w danych: zmiana tej tablicy zajmuje w przeglądzie tyle miejsca, ile waży.
+ *
+ * ŻEBY DOPISAĆ TRZECIĄ, TRZEBA UDOWODNIĆ, ŻE JEST TOŻSAMOŚCIĄ PROJEKTOWĄ, A NIE
+ * CZYJĄŚ WŁASNĄ: że nie niesie imienia, nazwiska ani adresu osoby, i że powstała
+ * po to, żeby publikować pracę tego repozytorium, a nie dlatego, że ktoś sklonował
+ * je na maszynie, na której akurat była taka konfiguracja.
+ * ██████████████████████████████████████████████████████████████████████████████ */
+var ALLOWED_IDENTITIES = [
+  /* tożsamość projektowa — autor i committer wszystkich commitów pisanych ręcznie */
+  "rackpathlabs-ops <310609378+rackpathlabs-ops@users.noreply.github.com>",
+  /* committer commitów wytworzonych przez samą platformę: squash i merge z interfejsu.
+     Zmierzone: 30 commitów bez merge'y ma ten committer, więc bez tego wpisu strażnik
+     byłby czerwony na każdym PR-ze zawierającym wcześniejszy squash. */
+  "GitHub <noreply@github.com>"
+];
 
 var DEFAULT_HASHES = path.join(__dirname, "personal-names.sha256");
 
@@ -118,18 +186,20 @@ function loadHashes(file) {
 }
 
 /* ---- wejście ---------------------------------------------------------------- */
-var surfaces = [], hashFile = DEFAULT_HASHES;
+var surfaces = [], identityFiles = [], hashFile = DEFAULT_HASHES;
 for (var i = 2; i < process.argv.length; i += 2) {
   var flag = process.argv[i], file = process.argv[i + 1];
   if (file === undefined) die("brak ścieżki po " + flag);
   if (flag === "--hashes") { hashFile = file; continue; }
+  if (flag === "--identities") { identityFiles.push(file); continue; }
   if (flag !== "--pr-body" && flag !== "--commits" && flag !== "--pr-title") {
     die("nieznany argument " + JSON.stringify(flag) +
-        " — użycie: --pr-title <plik> --pr-body <plik> --commits <plik> [--hashes <plik>]");
+        " — użycie: --pr-title <plik> --pr-body <plik> --commits <plik> " +
+        "--identities <plik> [--hashes <plik>]");
   }
   surfaces.push({ flag: flag, file: file });
 }
-if (!surfaces.length) die("nie podano żadnej powierzchni do sprawdzenia");
+if (!surfaces.length && !identityFiles.length) die("nie podano żadnej powierzchni do sprawdzenia");
 
 var H = loadHashes(hashFile);
 var violations = 0, tokens = 0;
@@ -176,9 +246,61 @@ surfaces.forEach(function (s) {
   });
 });
 
+/* ---- POLA author / committer: ODMOWA DOMYŚLNA ------------------------------- */
+var identLines = 0, identBad = 0;
+identityFiles.forEach(function (file) {
+  var text;
+  try {
+    text = fs.readFileSync(file, "utf8");
+  } catch (e) {
+    die("--identities: nie mogę przeczytać " + file + " (" + e.code + "). " +
+        "Brakujące wejście to awaria pomiaru, nie czysty wynik.");
+  }
+  if (text.trim() === "") {
+    /* Ta sama klasa co pusty --commits: zakres policzony źle wygląda jak czysty wynik.
+       PR bez commitów nie istnieje, więc nie istnieje też PR bez ani jednej tożsamości. */
+    die("--identities: plik jest PUSTY. Zakres git został policzony źle " +
+        "(za płytki checkout?). PR bez commitów nie istnieje.");
+  }
+  text.split("\n").forEach(function (line, idx) {
+    var t = line.replace(/^[ \t]+|[ \t\r]+$/g, "");
+    if (t === "") return;
+    identLines++;
+    if (ALLOWED_IDENTITIES.indexOf(t) !== -1) return;
+    identBad++;
+    console.log("");
+    console.log("  --identities, linia " + (idx + 1) + ", długość " + t.length);
+    console.log("      skrót " + sha(t).slice(0, 12) + "…  (tożsamości NIE cytuję — " +
+                "to ona może być czyimś nazwiskiem)");
+  });
+});
+
 console.log("");
 console.log("tokenów zbadanych: " + tokens + "   skrótów na liście: " + H.count +
             "   trafień: " + violations);
+if (identityFiles.length) {
+  console.log("tożsamości zbadanych: " + identLines + "   dozwolonych wartości: " +
+              ALLOWED_IDENTITIES.length + "   spoza listy: " + identBad);
+}
+
+if (identBad) {
+  console.log("");
+  console.log("FAIL tożsamość spoza listy pozwoleń w polu author albo committer, " +
+              identBad + " raz(y).");
+  console.log("");
+  console.log("  Dozwolone są DWIE wartości i nic więcej:");
+  ALLOWED_IDENTITIES.forEach(function (a) { console.log("      " + a); });
+  console.log("");
+  console.log("  Najczęstsza przyczyna: świeży klon bez `git config --local`. .git/config");
+  console.log("  NIE podlega klonowaniu, więc commit poszedł z konfiguracji maszyny.");
+  console.log("      git config --local user.name  rackpathlabs-ops");
+  console.log("      git config --local user.email 310609378+rackpathlabs-ops@users.noreply.github.com");
+  console.log("");
+  console.log("  Naprawa: ustaw powyższe i przepisz commity TEJ GAŁĘZI przez rebase, PRZED");
+  console.log("  merge'em. Na gałęzi to jest tanie i nie rusza historii, którą ktoś cytuje.");
+  console.log("  Po wejściu na main byłoby już za późno — CLAUDE.md, sekcja");
+  console.log("  „Commits carry the project identity, never a person\".");
+}
 
 if (violations) {
   console.log("");
@@ -195,4 +317,12 @@ if (violations) {
   process.exit(1);
 }
 
-console.log("OK   żaden napis z listy nie wystąpił na sprawdzonych powierzchniach.");
+if (identBad) process.exit(1);
+
+/* Komunikat sukcesu wymienia to, co FAKTYCZNIE zbadano. „OK" mówiące o powierzchniach,
+   których nie podano, jest zieloną odpowiedzią na niezadane pytanie — a to jest ta sama
+   klasa co zdanie szersze niż dowód, tylko na wyjściu zamiast w nagłówku. */
+var done = [];
+if (surfaces.length) done.push("żaden napis z listy nie wystąpił w treści");
+if (identityFiles.length) done.push("każda tożsamość jest na liście pozwoleń");
+console.log("OK   " + done.join("; ") + ".");
