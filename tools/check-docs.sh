@@ -87,10 +87,15 @@ else
   # Reguła o nazwach milestone'ów jest NIEEGZEKWOWANA co do treści — nikt nie sprawdzi,
   # czy issue pasuje tematycznie. Jej OBECNOŚĆ w dokumencie pilnujemy tak samo jak reszty:
   # to dwie różne gwarancje i tylko ta druga istnieje.
+  # Sekcja o tożsamości jest tu z tego samego powodu, co reguła o milestone'ach:
+  # jej połowa dotycząca pól author/committer jest NIEEGZEKWOWANA i opiera się na
+  # nieśledzonym .git/config. Pilnujemy OBECNOŚCI zapisu, bo to jedyna gwarancja,
+  # jaka w tej połowie istnieje — a dwie różne gwarancje trzeba umieć rozróżnić.
   for want in "Never write a closing keyword next to an issue number" \
               "The defect that produced this rule" \
               "A ratchet threshold may only fall" \
-              "A milestone's name describes what is in it"; do
+              "A milestone's name describes what is in it" \
+              "Commits carry the project identity, never a person"; do
     if grep -qF "$want" CLAUDE.md; then
       echo "OK   reguła: $want"
     else
@@ -99,8 +104,13 @@ else
   done
 fi
 
-# README należy do issue #1 (Igor). Dopóki nie istnieje, sprawdzenie odnośnika jest
-# pomijane — ale głośno, żeby pominięcie nie wyglądało jak zaliczenie.
+# README powstał w ramach issue #1, dziś zamkniętego. Warunek „dopóki nie istnieje"
+# zostaje mimo to: plik może zniknąć, a sprawdzenie odnośnika w nieistniejącym pliku
+# ma być POMINIĘTE GŁOŚNO, żeby pominięcie nie wyglądało jak zaliczenie.
+#
+# Do 2026-08-21 stało tu imię osoby prowadzącej tamto issue. Skasowane bez zastępnika:
+# komunikaty i komentarze w tym repozytorium mówią o pracy, nie o ludziach —
+# CLAUDE.md, sekcja „Commits carry the project identity, never a person".
 if [ -f README.md ]; then
   if grep -q "SCOPE.md" README.md; then
     echo "OK   README.md odsyła do SCOPE.md"

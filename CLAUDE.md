@@ -74,6 +74,72 @@ behaviour of somebody else's parser goes stale without anybody noticing — whic
 same reason the exception categories in this repository are written as criteria rather
 than as lists.
 
+## Commits carry the project identity, never a person
+
+Everything this repository publishes — commit metadata, commit messages, pull request
+titles and descriptions, code comments — speaks about the work. Not about who did it.
+It is a public repository, and the people who work in it did not agree to have their
+names indexed as a side effect of a merge.
+
+**Two surfaces, two different mechanisms, and they are not equally guarded.**
+
+| surface | who writes it | guarded by |
+|---|---|---|
+| `author` / `committer` fields | git, from configuration | the repository's local `.git/config`, set to the project identity |
+| message bodies, PR title and description | whoever is typing | `tools/check-personal-names.js`, on every pull request |
+
+**Commits go out with the local repository configuration, never with the machine's global
+one.** `user.name` and `user.email` are set in `.git/config` of this clone and must stay
+set. Global configuration belongs to the machine and follows its owner into every other
+repository; a clone that falls back to it commits under whatever identity that machine
+happens to carry, which on a fresh machine is a login name and a hostname nobody chose to
+publish. Measured on 2026-08-21: all 185 commits across every ref carry the project
+identity in both `author` and `committer`, so the configuration has held from the start.
+This rule exists to keep it that way on the next clone, which is the moment it will be
+easiest to get wrong.
+
+**Enforcement status, stated honestly because the two halves differ.**
+
+- The `author` / `committer` half is enforced by **nothing** — no check reads those fields.
+  It rests on a configuration file that is not even tracked. A clone with an empty
+  `.git/config` would produce a wrong identity and no build would notice.
+- The message half is enforced on pull requests by `tools/check-personal-names.js`, and
+  its scope is narrower than this section's title: it catches occurrences of strings on a
+  **closed list of hashes**, and does not detect personal data in general. A name nobody
+  put on the list passes without a trace. That is a content check over a list — the same
+  class as the six API names in `check-offline.js` — and unlike that case, no
+  effect-measuring alternative exists, because whether a string is somebody's name is a
+  question about the world.
+
+The guard holds hashes rather than strings, and its failure message names a position and
+twelve hex characters rather than the match. A file listing the protected names would
+publish exactly what it defends, and a public CI log printing a hit would do it again.
+
+**This rule takes effect on 2026-08-21. Three known occurrences in the history stay, and
+one in the tree was removed the same day.**
+
+| where | what | state |
+|---|---|---|
+| `b2c3867` | commit message body, two occurrences | on `main`, stays |
+| `16e341a` | commit message body, one occurrence | only on `origin/two-guards-before-migration`, a branch left behind after PR #59 was squashed |
+| `9df107e` | commit message body, one occurrence | same branch |
+| `tools/check-docs.sh` | a code comment | removed 2026-08-21 |
+
+The contents are not quoted here, for the reason the guard does not quote them either.
+
+**Why the history is not rewritten.** A force-push on a public repository does not remove
+published data. Orphaned objects stay reachable by SHA, forks and clones hold their own
+copies, and anything a platform has already served may be cached elsewhere. What the
+rewrite would certainly cost is concrete: every SHA on `main` invalidated, dead `commit_id`
+references in closed issues, and every "the proof is in commit X" sentence in this
+repository broken — and there are several, because that is how evidence is recorded here.
+Paying a certain price for a removal that does not remove is an empty green in a different
+domain: the appearance of a clean history bought by breaking the record that makes the
+history worth keeping.
+
+So the rule says **in force from today, three known exceptions in the history** rather than
+pretending to describe a repository that never carried them.
+
 ## A ratchet threshold may only fall
 
 Two guards hold a number that existing debt is measured against, and both are ratchets:
