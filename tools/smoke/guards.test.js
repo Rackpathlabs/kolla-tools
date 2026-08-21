@@ -465,6 +465,63 @@ var ckTitleEmpty = ck(["--pr-title", F + "empty-pr.txt"]);
 R.ok("PUSTY tytuł to awaria pomiaru, nie czysty wynik",
      ckTitleEmpty.code === 1 && /tytuł jest PUSTY/.test(ckTitleEmpty.out), "kod " + ckTitleEmpty.code);
 
+/* ---- personalia z zamknietej listy skrotow ----
+   TA SAMA POWIERZCHNIA co wyzej i INNE PYTANIE: tamten pyta o KSZTALT, ten o TRESC
+   wobec listy. Powod rozdzielenia plikow stoi w naglowku straznika.
+
+   FIXTURA UZYWA WLASNEJ PRZYNETY Z WLASNYM SKROTEM. Fixtura dowodzaca straznika, ktory
+   chroni napisy, nie ma prawa niesc tych napisow — byloby to ich publikacja pod pozorem
+   testu, czyli dokladnie ta awaria, ktorej straznik broni.
+
+   KSZTALT PRZYNETY ODPOWIADA KSZTALTOWI REALNEGO SLADU: imie w SRODKU ZDANIA w ciele
+   komunikatu commita, nie w polu autora. Tak wyglada b2c3867 na main. */
+function pn(args) { return run("check-personal-names.js", args); }
+var PN = "tools/fixtures/personal-names/";
+var PNH = ["--hashes", PN + "hashes.txt"];
+
+var pnDirty = pn(PNH.concat(["--commits", PN + "dirty-commits.txt"]));
+R.ok("napis z listy w środku zdania -> czerwone", pnDirty.code === 1, "kod " + pnDirty.code);
+/* NAJWAZNIEJSZA ASERCJA W TYM BLOKU. Log CI jest publiczny; straznik wypisujacy
+   znalezisko publikowalby to, czego broni — i bylby zartem z samego siebie. */
+R.ok("i NIE cytuje trafienia, tylko pozycję i skrót",
+     /kolumna \d+, długość \d+/.test(pnDirty.out) && /skrót [0-9a-f]{12}…/.test(pnDirty.out) &&
+     !/qwarglep/.test(pnDirty.out), pnDirty.out.split("\n")[1]);
+
+/* DWIE DROGI DOJSCIA DO TOKENU, KAZDA Z WLASNYM DOWODEM. Bez drugiej fixtury galaz
+   adresowa bylaby kodem, ktorego nikt nigdy nie wykonal. */
+var pnMail = pn(PNH.concat(["--commits", PN + "dirty-email.txt"]));
+R.ok("napis z listy WEWNĄTRZ adresu pocztowego -> czerwone", pnMail.code === 1, "kod " + pnMail.code);
+var pnMailWhole = pn(PNH.concat(["--commits", PN + "dirty-email-whole.txt"]));
+R.ok("CAŁY adres na liście -> czerwone, choć żadna jego część słowna na niej nie stoi",
+     pnMailWhole.code === 1, "kod " + pnMailWhole.code);
+
+var pnClean = pn(PNH.concat(["--commits", PN + "clean-commits.txt"]));
+R.ok("ten sam komunikat bez napisu z listy -> zielone", pnClean.code === 0, pnClean.out.split("\n").pop());
+
+/* PRZYPIETA GRANICA, nie przeoczenie: dopasowujemy CALE tokeny. Dopasowanie po podciagu
+   dawaloby falszywe alarmy na zwyklych slowach, a falszywy alarm w strazniku, ktory nie
+   moze pokazac, co znalazl, jest nie do zdiagnozowania. */
+var pnSub = pn(PNH.concat(["--commits", PN + "clean-substring.txt"]));
+R.ok("GRANICA: napis z listy jako podciąg dłuższego słowa PRZECHODZI", pnSub.code === 0,
+     "kod " + pnSub.code + " — jeśli to czerwone, ktoś zmienił dopasowanie na podciągowe");
+
+/* FAIL CLOSED NA SAMEJ LISCIE — klasa, ktorej pozostali straznicy nie maja, bo nie maja
+   danych na zewnatrz. Lista krotsza, niz sie autorowi wydaje, jest cichym przejsciem. */
+var pnBroken = pn(["--hashes", PN + "broken-hashes.txt", "--commits", PN + "clean-commits.txt"]);
+R.ok("linia listy, która nie jest skrótem -> czerwone", pnBroken.code === 1, "kod " + pnBroken.code);
+var pnEmpty = pn(["--hashes", PN + "empty-hashes.txt", "--commits", PN + "clean-commits.txt"]);
+R.ok("PUSTA lista skrótów -> czerwone, nie „nic do sprawdzenia\"",
+     pnEmpty.code === 1 && /jest PUSTA/.test(pnEmpty.out), "kod " + pnEmpty.code);
+var pnNoList = pn(["--hashes", PN + "nie-ma.txt", "--commits", PN + "clean-commits.txt"]);
+R.ok("brak pliku listy -> czerwone", pnNoList.code === 1, "kod " + pnNoList.code);
+
+/* LISTA PRODUKCYJNA JEST ZYWA, a nie tylko poprawna skladniowo. Bez tej asercji plik
+   tools/personal-names.sha256 moglby zostac oprozniony i wszystko zostaloby zielone,
+   bo kazda pozostala asercja tego bloku uzywa listy fixturowej. */
+var pnReal = run("check-personal-names.js", ["--commits", "tools/fixtures/personal-names/clean-commits.txt"]);
+R.ok("domyślna lista produkcyjna wczytana i NIEPUSTA",
+     pnReal.code === 0 && /skrótów na liście: [1-9]/.test(pnReal.out), pnReal.out.split("\n").pop());
+
 /* ---- markup kontra słownik (ADR-002, opcja B) ----
    Jedyna kontrola tekstu w tym repozytorium, która NIE zależy od pokrycia: porównuje
    dwa napisy leżące obok siebie w plikach. Powstała czerwona przed migracją — 108

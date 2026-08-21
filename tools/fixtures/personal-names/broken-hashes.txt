@@ -1,0 +1,2 @@
+# Linia, ktora nie jest skrotem — lista zepsuta albo przycieta.
+0123456789abcdef

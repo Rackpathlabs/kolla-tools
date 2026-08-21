@@ -15,3 +15,4 @@ Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypeln
 Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. 
 
 **The defect that produced this rule.** Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. 
+## Commits carry the project identity, never a person

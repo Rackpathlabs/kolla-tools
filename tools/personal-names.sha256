@@ -1,0 +1,26 @@
+# SKRÓTY SHA-256 NAPISÓW, KTÓRE NIE MAJĄ PRAWA WYSTĄPIĆ W KOMUNIKACIE COMMITA ANI
+# W TYTULE I OPISIE PR-A. Jeden skrót w linii, 64 znaki szesnastkowe, małe litery.
+#
+# ŻADNEGO NAPISU ŹRÓDŁOWEGO W TYM PLIKU — to jest warunek konstrukcyjny, nie ozdoba.
+# Repozytorium jest publiczne; plik z listą imion i adresów opublikowałby dokładnie to,
+# czego broni, i byłby najwygodniejszym miejscem, od którego zaczyna ktoś zbierający
+# dane o autorach.
+#
+# SKRÓT KRÓTKIEGO ZNANEGO SŁOWA NIE JEST TAJEMNICĄ. Przestrzeń imion jest mała, więc
+# ktoś zdeterminowany dopasuje je słownikiem w kilka sekund. To jest zasłona przed
+# PRZYPADKOWYM CZYTELNIKIEM i przed wyszukiwarką, nie ochrona kryptograficzna —
+# napisane tutaj, żeby nikt nie wziął tego pliku za więcej, niż jest.
+#
+# Skrót liczony z napisu po normalizacji: małe litery, obcięte białe znaki.
+#     node -e 'console.log(require("crypto").createHash("sha256").update("słowo","utf8").digest("hex"))'
+#
+# Wpis dodaje się bez podawania, czego dotyczy. Lista nie potrzebuje komentarzy
+# opisujących pozycje — komentarz „to jest nazwisko autora" przywraca dokładnie
+# ten wyciek, którego plik unika.
+ec124f90471bd3826f29dddc104122ca552500421766202e4df9cf0fc9be3eae
+498795bcd93f2ff58cfa72f827be6b672da8b9897d49f107ef3f1c26cffcd9f8
+d081eb05206e7f7439d7669c51a6f4bd1a700719edf5354ce799ce3e67063e5f
+1277ac7aada72ea793beaa8fb007a1ec6ad9faf8beee02e337cd000847dc72eb
+27ca88eb9bd32bb1f5e5cd72689a794d8b2099f1e37a6947bf29077825bb6184
+acdb36487c2308152950b379ecbd918918d140f6b04d6f19008b7d618c9e9900
+6ab84705e5d695efd532f462bc41ffc7a05f3a097b877dd2b95d168cd9f3b93d
