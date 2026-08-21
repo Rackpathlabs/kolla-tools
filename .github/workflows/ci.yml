@@ -66,7 +66,7 @@ jobs:
       #
       # Tylko na pull_request: przy push na main nie ma czego chronić, bo merge już
       # zaszedł. Krok jest wtedy JAWNIE pominięty, a nie cicho zielony.
-      - name: Słowo-klucz zamykające obok numeru issue
+      - name: Słowo-klucz zamykające obok numeru issue; personalia na liście
         if: github.event_name == 'pull_request'
         env:
           # Przez zmienną środowiskową, nie przez podstawienie do skryptu: treść opisu
@@ -99,6 +99,15 @@ jobs:
           node tools/check-closing-keyword.js --pr-title .pr-title.tmp \
                                               --pr-body .pr-body.tmp \
                                               --commits .commits.tmp
+          # Ta sama trójka plików, drugi strażnik, INNE PYTANIE. Tamten pyta o KSZTAŁT
+          # (konstrukcja zakazana niezależnie od treści), ten o TREŚĆ wobec zamkniętej
+          # listy skrótów. Powód rozdzielenia stoi w nagłówku tools/check-personal-names.js.
+          # Krok jest wspólny, bo zakres commitów liczy się raz — merge-base nie ma powodu
+          # być liczony dwa razy, a dwa kroki musiałyby go powtórzyć albo współdzielić plik
+          # między krokami, co jest gorsze od wspólnego kroku.
+          node tools/check-personal-names.js --pr-title .pr-title.tmp \
+                                             --pr-body .pr-body.tmp \
+                                             --commits .commits.tmp
 
       # Pytanie warunkujące sens pozostałych kroków: czy zestaw strażników jest
       # kompletny. Reguła „strażnik ma się wykonywać w buildzie" powstała po #72
