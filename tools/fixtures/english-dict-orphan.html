@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>fixtura: wartosc slownika przy kluczu bez kotwicy</title></head>
+<body>
+<!-- WLASNOSC, OD KTOREJ ZALEZY OPCJA B W ADR-004, przypieta osobno od pary
+     english-clean/english-thirteen.
+
+     Tamta para dowodzi, ze straznik odroznia jezyki. Ta fixtura dowodzi czegos
+     innego i wezszego: ze wartosc slownika jest czytana takze wtedy, gdy klucz
+     NIE MA KOTWICY W MARKUPIE i NIE RENDERUJE GO ZADEN SCENARIUSZ.
+
+     Dlatego markup nizej jest CALY po angielsku i nie ma w nim ani jednego
+     atrybutu data-i18n. Jedyne naruszenie siedzi w slowniku, wiec czerwone moze
+     pochodzic wylacznie stamtad. Gdyby ktos kiedys zawezil zbieranie do kluczy
+     zakotwiczonych albo do tego, co wyrenderowal scenariusz, ta fixtura zzielenieje
+     i ADR-004 straci podstawe — po cichu, przy wszystkich pozostalych testach
+     zielonych. -->
+<h1>Inventory validator</h1>
+<p>Reads an INI inventory and reports what it finds.</p>
+<input type="text" id="api_if" placeholder="inherits network_interface">
+
+<script>
+(function () {
+  var I18N = {
+    dict: {
+      /* NARUSZENIE. Klucz bez kotwicy, bez elementu i bez scenariusza. */
+      "v.stale.run": "Uruchom teraz ponownie",
+
+      /* PRZYNETA: ten sam ksztalt po angielsku. Bez niej czerwone mowiloby
+         wylacznie, ze straznik czyta slownik — nie, ze go ocenia. */
+      "v.stale.bar": "The input has changed since this result was produced."
+    }
+  };
+  globalThis.__probe = I18N;
+})();
+</script>
+</body>
+</html>
