@@ -10,8 +10,10 @@
 #           Zostaje na stale. Powod obowiazkowy.
 #   b#NN    luka narzedzia: element jest, brakuje FORMY kotwicy. TYMCZASOWE —
 #           numer zgloszenia obowiazkowy, a po dodaniu formy linia znika.
-#   m       do migracji. Stan zerowy: kazda partia #58 zamienia to na kotwice
-#           albo na a z powodem.
+#   m       do migracji. Kod ZOSTAJE zdefiniowany, choc od 2026-09-01 nie ma ani
+#           jednej takiej linii: konczac partie v.* kazdy klucz mial juz kotwice
+#           albo powod. Nowy klucz bez kotwicy laduje wlasnie tutaj i ma stad
+#           wyjsc, a nie zostac.
 #
 # Format:  <klucz>  <kod>  <powod>
 g.diff.absent  a  komorka tabeli roznic budowana per wiersz; tabeli nie ma, dopoki nie ma czego porownac
@@ -65,9 +67,9 @@ v.c.net.same.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.c.storage.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
 v.c.storage.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.empty  a  element <p class=empty-state> tworzony przez JS; zakotwiczenie znaczyloby DOPISANIE markupu, nie przeniesienie klucza
-v.f.hostNoKollaGroup  m  do migracji (#58)
-v.f.hostNoKollaGroup.hint  m  do migracji (#58)
-v.f.hostNoKollaGroup.none  m  do migracji (#58)
+v.f.hostNoKollaGroup  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
+v.f.hostNoKollaGroup.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
+v.f.hostNoKollaGroup.none  a  wariant podpowiedzi findingu wybierany warunkowo; findingu nie ma, dopoki nie powstanie
 v.globals.loaded  a  kolejny STAN elementu #chip-globals; stanem poczatkowym jest v.globals.none i to tamten klucz ma kotwice
 v.q.aio.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
 v.q.aio.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
@@ -79,11 +81,11 @@ v.q.ovnSpof.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
 v.q.ovnSpof.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.q.single.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.q.tooFew  a  fragment komunikatu findingu skladany warunkowo; findingu nie ma, dopoki nie powstanie
-v.r.group  m  do migracji (#58)
-v.r.removed  m  do migracji (#58)
-v.r.renamed  m  do migracji (#58)
-v.rel.planned  m  do migracji (#58)
-v.rel.since  m  do migracji (#58)
+v.r.group  a  komunikat findingu o zmianie nazwy grupy; findingu nie ma, dopoki nie powstanie
+v.r.removed  a  fragment komunikatu o wydaniu, w ktorym grupa zniknela; skladany w komunikat findingu
+v.r.renamed  a  fragment komunikatu o wydaniu, w ktorym grupe przemianowano; skladany w komunikat findingu
+v.rel.planned  a  etykieta daty w opisie statusu wydania; wstrzykiwana w komunikat findingu
+v.rel.since  a  etykieta daty w opisie statusu wydania; wstrzykiwana w komunikat findingu
 v.releaseTo.none  a  element <option> tworzony przez JS; zakotwiczenie znaczyloby DOPISANIE markupu, nie przeniesienie klucza
 v.rep.absent  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopoki nie ma wyniku
 v.rep.both  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopoki nie ma wyniku
@@ -98,9 +100,9 @@ v.rep.release  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopok
 v.rep.result  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopoki nie ma wyniku
 v.rep.title  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopoki nie ma wyniku
 v.rep.topology  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopoki nie ma wyniku
-v.rs.development  m  do migracji (#58)
-v.rs.eol  m  do migracji (#58)
-v.rs.unmaintained  m  do migracji (#58)
+v.rs.development  a  opis statusu wydania wybierany z tabeli w JS; wlasnego elementu nie ma
+v.rs.eol  a  opis statusu wydania wybierany z tabeli w JS; wlasnego elementu nie ma
+v.rs.unmaintained  a  opis statusu wydania wybierany z tabeli w JS; wlasnego elementu nie ma
 v.sample.bad  a  tresc przykladowego inventory wpisywana w pole wejscia; nie jest tekstem interfejsu w zadnym elemencie
 v.sample.ok  a  tresc przykladowego inventory wpisywana w pole wejscia; nie jest tekstem interfejsu w zadnym elemencie
 v.sev.error  a  etykieta wagi findingu; findingu nie ma, dopoki nie powstanie
@@ -114,19 +116,19 @@ v.topology.hosts  a  komorka albo naglowek tabeli topologii budowanej per wiersz
 v.topology.missing  a  komorka albo naglowek tabeli topologii budowanej per wiersz; tabeli nie ma w dokumencie poczatkowym
 v.topology.required  a  komorka albo naglowek tabeli topologii budowanej per wiersz; tabeli nie ma w dokumencie poczatkowym
 v.topology.subgroups  a  komorka albo naglowek tabeli topologii budowanej per wiersz; tabeli nie ma w dokumencie poczatkowym
-v.u.gap.hint  m  do migracji (#58)
-v.u.gap.which1  m  do migracji (#58)
-v.u.gap.whichN  m  do migracji (#58)
-v.u.todo.renameGroup  m  do migracji (#58)
-v.u.todo.renameKey  m  do migracji (#58)
+v.u.gap.hint  a  podpowiedz findingu trybu aktualizacji; findingu nie ma, dopoki nie powstanie
+v.u.gap.which1  a  wariant liczebnika wstrzykiwany w podpowiedz findingu; wlasnego elementu nie ma nigdy
+v.u.gap.whichN  a  wariant liczebnika wstrzykiwany w podpowiedz findingu; wlasnego elementu nie ma nigdy
+v.u.todo.renameGroup  a  fragment zadania do wykonania, wybierany warunkowo i wstrzykiwany w finding
+v.u.todo.renameKey  a  fragment zadania do wykonania, wybierany warunkowo i wstrzykiwany w finding
 v.verdict.clean  a  kolejny STAN elementu #verdict-txt; stanem poczatkowym jest v.start i to tamten klucz ma kotwice
 v.verdict.errors  a  kolejny STAN elementu #verdict-txt; stanem poczatkowym jest v.start i to tamten klucz ma kotwice
 v.verdict.warnings  a  kolejny STAN elementu #verdict-txt; stanem poczatkowym jest v.start i to tamten klucz ma kotwice
-v.x.kv01.hint  m  do migracji (#58)
-v.x.kv01.msg  m  do migracji (#58)
-v.x.kv07.hint  m  do migracji (#58)
-v.x.kv07.msg  m  do migracji (#58)
-v.x.kv09.collision.hint  m  do migracji (#58)
-v.x.kv09.collision.msg  m  do migracji (#58)
-v.x.kv09.subnet.hint  m  do migracji (#58)
-v.x.kv09.subnet.msg  m  do migracji (#58)
+v.x.kv01.hint  a  podpowiedz findingu dwuplikowego; findingu nie ma, dopoki nie powstanie
+v.x.kv01.msg  a  komunikat findingu dwuplikowego; findingu nie ma, dopoki nie powstanie
+v.x.kv07.hint  a  podpowiedz findingu dwuplikowego; findingu nie ma, dopoki nie powstanie
+v.x.kv07.msg  a  komunikat findingu dwuplikowego; findingu nie ma, dopoki nie powstanie
+v.x.kv09.collision.hint  a  podpowiedz findingu dwuplikowego; findingu nie ma, dopoki nie powstanie
+v.x.kv09.collision.msg  a  komunikat findingu dwuplikowego; findingu nie ma, dopoki nie powstanie
+v.x.kv09.subnet.hint  a  podpowiedz findingu dwuplikowego; findingu nie ma, dopoki nie powstanie
+v.x.kv09.subnet.msg  a  komunikat findingu dwuplikowego; findingu nie ma, dopoki nie powstanie
