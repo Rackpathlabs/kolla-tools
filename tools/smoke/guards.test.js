@@ -593,6 +593,30 @@ R.ok("i nazwa scenariusza jest w nazwie pliku, nie sam numer przebiegu",
      require("fs").readdirSync(NETWORK_WORK).some(function (f) { return /pixel/.test(f); }),
      require("fs").existsSync(NETWORK_WORK)
        ? require("fs").readdirSync(NETWORK_WORK).join(" ") : "katalogu nie ma");
+
+/* PODEJRZENIE TŁA JEST CZERWONE — i to ODWRACA rozstrzygnięcie z PR #134.
+
+   Tamten PR zrobił z tego wynik zielony z blokiem informacyjnym, i koszt był przy regule
+   nazwany: żądanie z bloku WSPÓŁDZIELONEGO trafia do każdej strony naraz i do żadnego
+   przebiegu kontrolnego, więc wygląda dokładnie jak tło. Tyle że matrix.js i
+   globals-parser.js SĄ wklejane do wszystkich trzech plików — ten kształt nie jest
+   hipotetyczny, jest domyślnym kształtem kodu współdzielonego w tym repozytorium.
+
+   Zieleń przy takim wyniku była więc świadomym wpuszczeniem klasy #101 z powrotem, czyli
+   dokładnie tej, dla której ten strażnik powstał. Fixtura `shared` to pokazuje: dwie strony,
+   jeden blok, jedno żądanie — i przed tą zmianą kod wyjścia 0.
+
+   Werdykt jest czerwony, a komunikat INNY niż przy naruszeniu, bo pytanie jest inne:
+   przy naruszeniu wiadomo, że to kod, przy podejrzeniu trzeba rozstrzygnąć, czy to kod,
+   czy przeglądarka. Rozróżnienie zostaje, zielony werdykt nie. */
+var netShared = run("check-network.js", ["--dir", "tools/fixtures/network/shared"]);
+R.ok("żądanie z bloku WSPÓŁDZIELONEGO -> czerwone", netShared.code === 1, kod(netShared));
+R.ok("i jest to PODEJRZENIE TŁA, nie zwykłe naruszenie",
+     /PODEJRZENIE TŁA/.test(netShared.out), netDetail(netShared));
+R.ok("i komunikat niesie host, liczbę scenariuszy i brak w kontrolnych",
+     /shared-block\.example\.invalid/.test(netShared.out) &&
+     /wszystkich 2 scenariuszach/.test(netShared.out) &&
+     /ŻADNYM z 3 przebiegów kontrolnych/.test(netShared.out), netDetail(netShared));
 R.ok("new Image().src = https://… -> czerwone", netDirty.code === 1, kod(netDirty));
 R.ok("i nazywa HOSTA, do którego poszło żądanie",
      /telemetry\.example\.invalid/.test(netDirty.out), netDirty.out.split("\n")[2]);
