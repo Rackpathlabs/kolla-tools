@@ -576,6 +576,16 @@ footer a{color:var(--muted)}
       "v.f.typo.hint":             "Kolla-Ansible will not recognise a group under a different name — check the spelling.",
       "v.f.groupCustom":           "Group <code>{group}</code> does not appear in the reference Kolla-Ansible inventory.",
       "v.f.groupCustom.hint":      "That is fine as long as it is used deliberately, for example for custom roles or a hardware split.",
+      /* Rodzina STATUSU WYDANIA — przeniesione 2026-09-01 (#58).
+
+         W tej rodzinie ZOSTAJE 40 napisów, których TU NIE MA, i to jest decyzja, a nie
+         niedokończona robota: pola `note:` w matrix.js opisują konkretne wycofanie
+         w konkretnym wydaniu upstreamu. Macierz jest DANYMI ZE ŹRÓDŁA ZEWNĘTRZNEGO
+         (tools/upstream_watch.py, kamień milowy v0.4), a przeniesienie jej treści do
+         słownika oznaczałoby, że tekst opisujący cudze wydanie jest utrzymywany po naszej
+         stronie i rozjeżdża się przy każdej regeneracji macierzy. Klasa jest opisana
+         w #58; z tych 40 tylko 2 renderuje jakikolwiek scenariusz. */
+      "v.f.release.hint":          "Group names are checked against this release.",
       "v.f.syntax.hint":           "Expected format: <code>[name]</code>, <code>[name:children]</code> or <code>[name:vars]</code>.",
       "v.f.sectionKind":           "Unknown section type <code>{kind}</code>.",
       "v.f.childrenFormat":        "Section <code>[{group}:children]</code> may contain only group names, one per line.",

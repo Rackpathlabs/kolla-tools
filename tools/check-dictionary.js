@@ -554,7 +554,10 @@ report.forEach(function (f) {
 /* 55 -> 46, partia #58: rodzina GRUP WYMAGANYCH i NAZW, dwanaście kluczy z czterech
    wywołań. Spadek 9 — pięć wariantów podpowiedzi o pustej grupie wymaganej renderuje się
    w scenariuszach, reszta nie. */
-var BASELINE = 46;
+/* 46 -> 45, partia #58: rodzina STATUSU WYDANIA. Jeden klucz — reszta tej rodziny to
+   40 pol `note:` w matrix.js, ktore sa danymi ze zrodla zewnetrznego i swiadomie NIE ida
+   do slownika; powod stoi przy wpisie w i18n.js i w #58. */
+var BASELINE = 45;
 var bArg = process.argv.indexOf("--baseline");
 if (bArg !== -1) {
   var bVal = Number(process.argv[bArg + 1]);

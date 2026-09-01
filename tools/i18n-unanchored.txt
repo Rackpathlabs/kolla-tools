@@ -93,6 +93,7 @@ v.f.outsideGroup  a  komunikat findingu OUTSIDE-GROUP; findingu nie ma, dopoki n
 v.f.outsideGroup.hint  a  podpowiedz findingu OUTSIDE-GROUP; findingu nie ma, dopoki nie powstanie
 v.f.range  a  komunikat findingu RANGE; findingu nie ma, dopoki nie powstanie
 v.f.range.hint  a  podpowiedz findingu RANGE; findingu nie ma, dopoki nie powstanie
+v.f.release.hint  a  podpowiedz findingu RELEASE; findingu nie ma, dopoki nie powstanie
 v.f.requiredEmpty  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.f.requiredEmpty.compute  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
 v.f.requiredEmpty.control  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
