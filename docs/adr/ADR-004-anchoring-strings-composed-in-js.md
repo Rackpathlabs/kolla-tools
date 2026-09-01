@@ -1,6 +1,6 @@
 # ADR-004: Anchoring dictionary keys whose text is composed in JavaScript
 
-**Status:** **Proposed** — decision the repository owner's
+**Status:** **Accepted** (the repository owner, 2026-09-01) — option B, do not anchor
 **Date:** 2026-09-01
 **Concerns:** #58 (move the remaining interface text into the dictionary), #77 (the ledger
 of Polish text that passed every guard), #86 (the threshold's unit)
@@ -151,6 +151,53 @@ quietest possible way.
 
 ---
 
+---
+
+## Decision
+
+**Option B, accepted 2026-09-01.** Two things are settled with it, and both were sharpened
+by the warm-up batch rather than by the argument above.
+
+### The criterion is not "composed in JavaScript"
+
+Two of the six warm-up keys disproved that on the first batch. `hub.title` filled a
+`<title>` element that stands in the markup; `nav.tools` filled an `aria-label` on a `<nav>`
+that also stands there. Neither was composed anywhere — both were assigned by hand in
+`apply()` and simply had no anchor.
+
+The criterion is: **the text has no element in the initial document.** It resolves into
+three subclasses, and they do not share a fate. Confusing them is what made "123 orphans"
+look like one number:
+
+| | subclass | example | fate |
+|---|---|---|---|
+| **(a)** | a label for content that does not exist yet | `sev.error`, `sev.warn`, `sev.info` — they label findings, and there is no finding until one is produced | **orphan by nature.** Stays, permanently, with its reason recorded |
+| **(b)** | an attribute for which no anchor form exists | `hub.desc` fills a `meta` element's `content`; the guard knows four forms and `content` is not among them | **a gap in the tooling, to be closed.** Temporary, and its marking must name the issue that closes it |
+| **(c)** | a hand assignment in `apply()` with no reason behind it | `hub.title`, `nav.tools` | **work.** Anchor it |
+
+(b) is the interesting one, because it looks like (a) from the outside. The element exists;
+what is missing is the form. Marking it as (a) would park a repairable gap as physics.
+
+### The floor is not a number
+
+`ORPHAN_BASELINE` is removed. A single integer cannot distinguish (a) from (b) from (c), so
+it turned every unanchored key into anonymous debt and made the honest state — "this key
+will never have an anchor, and here is why" — indistinguishable from neglect.
+
+In its place: **every key without an anchor carries an explicit marking with a reason code,
+in one place, or it gets anchored.** The guard's requirement is a set being empty:
+
+> the set of keys that are **unanchored and unmarked** is empty.
+
+That is a criterion rather than a threshold, it needs no ratchet rule, and it cannot be
+raised. The markings are a list somebody can read and disagree with, which an integer never
+was. The guard prints (b) separately from (a), because (b) is supposed to reach zero and
+(a) is not.
+
+The starting state is honest rather than flattering: all 121 currently unanchored keys are
+marked **to migrate**, not (a). Each batch converts markings into anchors, or into (a) with
+a reason written next to the key.
+
 ## Consequences
 
 **Easier:**
@@ -184,11 +231,15 @@ quietest possible way.
 
 ## Actions
 
-1. [ ] Decision: **B** or **A** (the repository owner)
-2. [ ] With B: assertion that a non-English dictionary value fails, red on its fixture
-       before any migration
-3. [ ] With B: per-key floor for `ORPHAN_BASELINE`, recorded in #58 with the classification
-4. [ ] With B: decide `hub.desc` — fifth anchor form for `content`, or floor
-5. [ ] Either way: #58's batch rule that a migration batch must leave the visible-text
+1. [x] Decision: **B**, do not anchor (the repository owner, 2026-09-01)
+2. [x] With B: assertion that a non-English dictionary value fails, red on its fixture
+       before any migration — `tools/fixtures/english-dict-orphan.html`, four assertions
+3. [x] With B: the floor is **not a number**. `ORPHAN_BASELINE` is removed and replaced by
+       a readable list of markings with reason codes, and a guard requiring that the set of
+       unanchored, unmarked keys is empty
+4. [ ] With B: `hub.desc` is subclass **(b)** — add a `data-i18n-content` anchor form, in a
+       small pull request of its own before the first namespace batch. The applier lives in
+       three copies (#69, open and undecided), so the form goes into all three
+5. [x] Either way: #58's batch rule that a migration batch must leave the visible-text
        snapshot **unchanged**, and any difference is a finding for the description rather
-       than a candidate for `--update`
+       than a candidate for `--update` — recorded in #58, and met by the warm-up batch
