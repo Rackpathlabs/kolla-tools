@@ -544,6 +544,18 @@ footer a{color:var(--muted)}
       "v.f.range":                 "Pattern <code>{pattern}</code> is not a valid host range.",
       "v.f.range.hint":            "Ansible expects <code>name[01:10]</code> or <code>name[a:f]</code>, optionally with a step " +
                                    "(<code>[01:10:2]</code>). Both ends must be of the same kind, and with a leading zero also of the same length.",
+      /* Rodzina STRUKTURY — przeniesione 2026-09-01 z literałów walidatora (#58). */
+      "v.f.emptyGroup":            "Group <code>[{group}]</code> holds no host.",
+      "v.f.emptyGroup.hint":       "An empty group is ignored at deploy time; drop it or give it hosts.",
+      "v.f.groupUndefined":        "Group <code>{group}</code> is listed as a child group but defined nowhere.",
+      "v.f.groupUndefined.hint":   "Add a <code>[{group}]</code> section, or drop the entry from the children list.",
+      "v.f.duplicateHost":         "Host <code>{host}</code> is listed twice in group <code>[{group}]</code>.",
+      "v.f.duplicateHost.hint":    "First occurrence: line {line}. The repeated entry can override the host variables.",
+      "v.f.conflictingVar":        "Host <code>{host}</code> has two different values for <code>{key}</code>: " +
+                                   "<code>{first}</code> (line {line}) and <code>{second}</code>.",
+      "v.f.conflictingVar.hint":   "Ansible takes the last definition — a mismatch here is almost always a mistake in the file.",
+      "v.f.duplicateEndpoint":     "Endpoint <code>{endpoint}</code> is assigned to different hosts: {hosts}.",
+      "v.f.duplicateEndpoint.hint": "Kolla treats them as separate nodes and deploys conflicting configurations onto one machine.",
       "v.f.syntax.hint":           "Expected format: <code>[name]</code>, <code>[name:children]</code> or <code>[name:vars]</code>.",
       "v.f.sectionKind":           "Unknown section type <code>{kind}</code>.",
       "v.f.childrenFormat":        "Section <code>[{group}:children]</code> may contain only group names, one per line.",

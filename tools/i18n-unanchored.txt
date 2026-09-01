@@ -68,8 +68,18 @@ v.c.storage.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
 v.c.storage.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.empty  a  element <p class=empty-state> tworzony przez JS; zakotwiczenie znaczyloby DOPISANIE markupu, nie przeniesienie klucza
 v.f.childrenFormat  a  komunikat findingu CHILDREN-FORMAT; findingu nie ma, dopoki nie powstanie
+v.f.conflictingVar  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
+v.f.conflictingVar.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
+v.f.duplicateEndpoint  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
+v.f.duplicateEndpoint.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
+v.f.duplicateHost  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
+v.f.duplicateHost.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
 v.f.duplicateVar  a  komunikat findingu DUPLICATE-VAR; findingu nie ma, dopoki nie powstanie
+v.f.emptyGroup  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
+v.f.emptyGroup.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
 v.f.groupCycle.hint  a  podpowiedz findingu GROUP-CYCLE; findingu nie ma, dopoki nie powstanie
+v.f.groupUndefined  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
+v.f.groupUndefined.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
 v.f.groupVar  a  komunikat findingu GROUP-VAR; findingu nie ma, dopoki nie powstanie
 v.f.groupVar.hint  a  podpowiedz findingu GROUP-VAR; findingu nie ma, dopoki nie powstanie
 v.f.hostNoKollaGroup  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
