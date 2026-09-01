@@ -658,6 +658,47 @@ var pnSub = pn(PNH.concat(["--commits", PN + "clean-substring.txt"]));
 R.ok("GRANICA: napis z listy jako podciąg dłuższego słowa PRZECHODZI", pnSub.code === 0,
      kod(pnSub) + " — jeśli to czerwone, ktoś zmienił dopasowanie na podciągowe");
 
+/* ---- TRAILER PRZYPISUJĄCY AUTORSTWO: reguła KSZTAŁTU w pliku, który poza tym jest
+   kontrolą TREŚCI ----
+
+   Zasada „commity mówią o pracy, nie o tym, kto ją wykonał" żyła wyłącznie jako proza
+   w CLAUDE.md. Zmierzone przed napisaniem tych asercji: linia `Co-Authored-By:` z adresem
+   spoza listy skrótów przechodziła przez OBU strażników powierzchni na zielono.
+
+   Lista skrótów nie mogła jej złapać z definicji — to kontrola treści, a trailer jest
+   naruszeniem NIEZALEŻNIE od tego, kogo wymienia. Adres bywa cudzy, bywa usługi, bywa
+   `noreply`; wspólny jest KSZTAŁT. Dlatego reguła jest kształtowa i dlatego ma własne
+   asercje: zieleń jednej nie może być czytana jako zieleń drugiej. */
+var pnTrailer = pn(PNH.concat(["--commits", PN + "dirty-trailer.txt"]));
+R.ok("trailer autorstwa w komunikacie commita -> czerwone", pnTrailer.code === 1,
+     kod(pnTrailer));
+/* NAJWAŻNIEJSZA W TEJ GRUPIE: dowodzi, że zadziałał KSZTAŁT, a nie lista. Bez niej
+   asercja wyżej byłaby zielona także wtedy, gdyby ktoś po prostu dopisał adres do
+   skrótów — czyli mierzyłaby coś innego, niż mówi. */
+R.ok("i powodem jest KSZTAŁT, nie lista — żaden skrót nie padł",
+     /trafień: 0/.test(pnTrailer.out) && /trailer/i.test(pnTrailer.out),
+     pnTrailer.out.split("\n").filter(function (l) { return /trafień/.test(l); })[0]);
+
+var pnTrailerLoose = pn(PNH.concat(["--commits", PN + "dirty-trailer-loose.txt"]));
+R.ok("inna wielkość liter, inne odstępy, inny adres -> też czerwone",
+     pnTrailerLoose.code === 1, kod(pnTrailerLoose));
+
+/* WSZYSTKIE TRZY POWIERZCHNIE, z tego samego powodu, dla którego zakaz słowa-klucza
+   obejmuje tytuł: ustawienia merge'a tego repozytorium przepisują tytuł i opis PR-a
+   w komunikat commita na gałęzi domyślnej. Trailer, który tam trafi, jest trailerem. */
+var pnTrailerTitle = pn(PNH.concat(["--pr-title", PN + "trailer-only.txt"]));
+var pnTrailerBody  = pn(PNH.concat(["--pr-body",  PN + "trailer-only.txt"]));
+R.ok("ten sam trailer w TYTULE PR-a -> czerwone", pnTrailerTitle.code === 1,
+     kod(pnTrailerTitle));
+R.ok("i w OPISIE PR-a -> czerwone", pnTrailerBody.code === 1, kod(pnTrailerBody));
+
+/* PRZYNĘTA. Strażnik za czuły produkuje szum, aż ktoś go osłabi — a o tej regule
+   trzeba móc PISAĆ: w CLAUDE.md, w opisie PR-a, w tym komentarzu. Trailer jest
+   konstrukcją zakotwiczoną na początku linii, nie napisem do wyszukania. */
+var pnMention = pn(PNH.concat(["--commits", PN + "clean-mentions-trailer.txt"]));
+R.ok("WZMIANKA o trailerze w środku zdania NIE jest trailerem", pnMention.code === 0,
+     kod(pnMention) + " — jeśli to czerwone, reguła przestała być kotwiczona do linii");
+
 /* FAIL CLOSED NA SAMEJ LISCIE — klasa, ktorej pozostali straznicy nie maja, bo nie maja
    danych na zewnatrz. Lista krotsza, niz sie autorowi wydaje, jest cichym przejsciem. */
 var pnBroken = pn(["--hashes", PN + "broken-hashes.txt", "--commits", PN + "clean-commits.txt"]);

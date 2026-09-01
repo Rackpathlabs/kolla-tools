@@ -1,0 +1,5 @@
+Wire the reporter into the weekly run
+
+The digest now runs on Mondays and writes into the same log as the nightly job.
+
+Co-Authored-By: An Assistant <noreply@example.invalid>
