@@ -50,35 +50,35 @@ t.report.copied  a  powiadomienie: element powstaje przy zdarzeniu i znika, w do
 t.report.copyFailed  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
 t.sample.bad  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
 t.sample.ok  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
-v.c.ctlcmp.escalated  m  do migracji (#58)
-v.c.ctlcmp.hint  m  do migracji (#58)
-v.c.ctlcmp.msg  m  do migracji (#58)
-v.c.ctlcmp.needGlobals  m  do migracji (#58)
-v.c.gw.hint  m  do migracji (#58)
-v.c.gw.msg  m  do migracji (#58)
-v.c.n.hostCombines  m  do migracji (#58)
-v.c.n.hostServes  m  do migracji (#58)
-v.c.net.partial.hint  m  do migracji (#58)
-v.c.net.partial.msg  m  do migracji (#58)
-v.c.net.same.hint  m  do migracji (#58)
-v.c.net.same.msg  m  do migracji (#58)
-v.c.storage.hint  m  do migracji (#58)
-v.c.storage.msg  m  do migracji (#58)
+v.c.ctlcmp.escalated  a  fragment komunikatu findingu skladany warunkowo; findingu nie ma, dopoki nie powstanie
+v.c.ctlcmp.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
+v.c.ctlcmp.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
+v.c.ctlcmp.needGlobals  a  fragment komunikatu findingu skladany warunkowo; findingu nie ma, dopoki nie powstanie
+v.c.gw.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
+v.c.gw.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
+v.c.n.hostCombines  a  wariant liczebnika wstrzykiwany w komunikat findingu; wlasnego elementu nie ma nigdy
+v.c.n.hostServes  a  wariant liczebnika wstrzykiwany w komunikat findingu; wlasnego elementu nie ma nigdy
+v.c.net.partial.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
+v.c.net.partial.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
+v.c.net.same.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
+v.c.net.same.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
+v.c.storage.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
+v.c.storage.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.empty  a  element <p class=empty-state> tworzony przez JS; zakotwiczenie znaczyloby DOPISANIE markupu, nie przeniesienie klucza
 v.f.hostNoKollaGroup  m  do migracji (#58)
 v.f.hostNoKollaGroup.hint  m  do migracji (#58)
 v.f.hostNoKollaGroup.none  m  do migracji (#58)
 v.globals.loaded  a  kolejny STAN elementu #chip-globals; stanem poczatkowym jest v.globals.none i to tamten klucz ma kotwice
-v.q.aio.hint  m  do migracji (#58)
-v.q.aio.msg  m  do migracji (#58)
-v.q.ceph.msg  m  do migracji (#58)
-v.q.count.msg  m  do migracji (#58)
-v.q.even  m  do migracji (#58)
-v.q.needOdd  m  do migracji (#58)
-v.q.ovnSpof.hint  m  do migracji (#58)
-v.q.ovnSpof.msg  m  do migracji (#58)
-v.q.single.msg  m  do migracji (#58)
-v.q.tooFew  m  do migracji (#58)
+v.q.aio.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
+v.q.aio.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
+v.q.ceph.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
+v.q.count.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
+v.q.even  a  fragment komunikatu findingu skladany warunkowo; findingu nie ma, dopoki nie powstanie
+v.q.needOdd  a  fragment komunikatu findingu skladany warunkowo; findingu nie ma, dopoki nie powstanie
+v.q.ovnSpof.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
+v.q.ovnSpof.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
+v.q.single.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
+v.q.tooFew  a  fragment komunikatu findingu skladany warunkowo; findingu nie ma, dopoki nie powstanie
 v.r.group  m  do migracji (#58)
 v.r.removed  m  do migracji (#58)
 v.r.renamed  m  do migracji (#58)
