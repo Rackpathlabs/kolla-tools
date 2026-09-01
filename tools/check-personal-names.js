@@ -397,5 +397,6 @@ if (trailers || identBad) process.exit(1);
    klasa co zdanie szersze niż dowód, tylko na wyjściu zamiast w nagłówku. */
 var done = [];
 if (surfaces.length) done.push("żaden napis z listy nie wystąpił w treści");
+if (surfaces.length) done.push("żadna linia nie jest trailerem autorstwa");
 if (identityFiles.length) done.push("każda tożsamość jest na liście pozwoleń");
 console.log("OK   " + done.join("; ") + ".");
