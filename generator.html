@@ -2961,8 +2961,13 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       var now = r.now === null
         ? '<span class="none">' + esc(T("g.diff.absent")) + "</span>"
         : esc(r.now);
+      /* Komórka „teraz" dostaje klasę `is`, symetrycznie do `was`. Nie jest to ozdoba:
+         zwolnienie w check-dictionary.js idzie po klasie komórki, więc narzędzie musi
+         oznaczyć w markupie, gdzie renderuje wartości z cudzego pliku. Bez tej klasy
+         kategoria nie miałaby czego rozpoznać, a rozpoznawanie po treści zwalniałoby
+         zdania interfejsu. */
       return '<tr><td class="k">' + esc(r.key) + '</td><td class="was">' + was +
-             "</td><td>" + now + "</td></tr>";
+             '</td><td class="is">' + now + "</td></tr>";
     }).join("");
   }
 

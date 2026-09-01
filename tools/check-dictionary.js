@@ -350,6 +350,20 @@ var CATEGORIES = [
   { why: "lista hostów: dane użytkownika po obróbce, w elemencie oznaczonym jako lista",
     test: function (f) {
       return /(^|\s)hostlist(\s|$)/.test(String(f.cls || ""));
+    } },
+
+  /* WARTOŚĆ W TABELI RÓŻNIC. Widok różnic pokazuje, co stało w pliku użytkownika przed
+     importem („was") i co stoi teraz („is"). To są WARTOŚCI Z JEGO PLIKU, a nie tekst
+     interfejsu — kryterium pochodzenia ich nie widzi, bo są cytowane w cudzysłowach
+     i przez to nie występują DOSŁOWNIE w tym, co wpisał.
+
+     Ta sama konstrukcja co przy listach hostów i z tego samego powodu: zwalnia KLASA
+     KOMÓRKI, którą narzędzie samo stawia w markupie, a nie kształt treści. Kolumna klucza
+     (`k`) i komórka bez klasy zwolnione NIE SĄ — one są tekstem interfejsu. Obie przynęty
+     stoją w tools/fixtures/report-diffcells.json. */
+  { why: "wartość w tabeli różnic: treść pliku użytkownika przed importem i po nim",
+    test: function (f) {
+      return /(^|\s)(was|is)(\s|$)/.test(String(f.cls || "")) && f.tag === "TD";
     } }
 
   /* Kategorii „brak liter" i „nazwa własna wydania" tu nie ma. Nie zwalniały ANI
@@ -610,7 +624,8 @@ report.forEach(function (f) {
    druga odsłona pomyłki naprawionej w #135). Znowu ani jeden napis nie został przeniesiony:
    dwadzieścia dwa napisy pochodziły ze słownika i miernik nie umiał ich dopasować, bo
    wstawka tnie wpis na segmenty, a ekran pokazuje całość. */
-var BASELINE = 21;
+/* 21 -> 18, obniżone 2026-09-01 czwartą kategorią danych: wartości w tabeli różnic. */
+var BASELINE = 18;
 var bArg = process.argv.indexOf("--baseline");
 if (bArg !== -1) {
   var bVal = Number(process.argv[bArg + 1]);
