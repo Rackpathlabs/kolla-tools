@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>fixtura: blok wspoldzielony, strona 1</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'">
+</head>
+<body>
+<!-- DWIE STRONY, TEN SAM BLOK. Tak wyglada matrix.js i globals-parser.js: wklejane
+     bajt w bajt do kazdego pliku, wiec zadanie z takiego bloku trafia do KAZDEGO
+     scenariusza i do zadnego przebiegu kontrolnego — bo przebieg kontrolny renderuje
+     pusta strone, w ktorej tego bloku nie ma.
+     To jest ksztalt, ktory regula podejrzenia tla zwalniala na zielono. -->
+<h1>strona pierwsza</h1>
+<script>
+/* == BLOK WSPOLDZIELONY BEGIN == */
+new Image().src = "https://shared-block.example.invalid/beacon.gif";
+/* == BLOK WSPOLDZIELONY END == */
+</script>
+</body></html>
