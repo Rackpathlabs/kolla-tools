@@ -24,11 +24,11 @@ g.rule.kv13.why  m  do migracji (#58)
 g.verdict.blocked  m  do migracji (#58)
 g.verdict.clean  m  do migracji (#58)
 g.verdict.warn  m  do migracji (#58)
-n.computeNode  m  do migracji (#58)
-n.error  m  do migracji (#58)
-n.host  m  do migracji (#58)
-n.node  m  do migracji (#58)
-n.warning  m  do migracji (#58)
+n.computeNode  a  wariant liczebnika: fragment podstawiany w inny napis, wlasnego elementu nie ma nigdy
+n.error  a  wariant liczebnika: fragment podstawiany w inny napis, wlasnego elementu nie ma nigdy
+n.host  a  wariant liczebnika: fragment podstawiany w inny napis, wlasnego elementu nie ma nigdy
+n.node  a  wariant liczebnika: fragment podstawiany w inny napis, wlasnego elementu nie ma nigdy
+n.warning  a  wariant liczebnika: fragment podstawiany w inny napis, wlasnego elementu nie ma nigdy
 sev.error  a  etykieta wagi findingu; findingu nie ma, dopoki nie powstanie
 sev.info  a  etykieta wagi findingu; findingu nie ma, dopoki nie powstanie
 sev.warn  a  etykieta wagi findingu; findingu nie ma, dopoki nie powstanie
