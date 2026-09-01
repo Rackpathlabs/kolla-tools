@@ -67,9 +67,25 @@ var fs = require("fs");
 var path = require("path");
 
 var root = path.join(__dirname, "..");
-var FILES = process.argv.length > 2
-  ? process.argv.slice(2)
-  : ["generator.html", "validator.html", "index.html"];
+/* Podmienialne wejścia, żeby kryterium „zbiór pusty" dało się pokazać na fixturze
+   o znanej charakterystyce. Na prawdziwych 232 kluczach nie widać, czy zbiór jest
+   pusty — widać tylko, że jest duży. */
+var ARGV = process.argv.slice(2);
+function takeFlag(name) {
+  var i = ARGV.indexOf(name);
+  if (i === -1) return null;
+  var v = ARGV[i + 1];
+  if (v === undefined) {
+    console.log("FAIL brak ścieżki po " + name);
+    process.exit(1);
+  }
+  ARGV.splice(i, 2);
+  return v;
+}
+var DICT_FILE = takeFlag("--dict") || "i18n.js";
+var MARKINGS_ARG = takeFlag("--markings");
+var MARKINGS_FILE = MARKINGS_ARG || "tools/i18n-unanchored.txt";
+var FILES = ARGV.length ? ARGV : ["generator.html", "validator.html", "index.html"];
 
 /* Te same cztery formy co w check-i18n-apply.js i z tego samego powodu: lista jest
    DEFINICJĄ kategorii, a nie wyliczeniem tego, co akurat występuje. Piąta forma
@@ -118,7 +134,7 @@ function unescapeJs(t) {
 /* Czytany z i18n.js, nie z kopii w HTML. Kopie pilnuje check-blocks.sh; gdyby ten
    strażnik czytał kopię, rozjazd bloku uczyniłby go zielonym na złej podstawie. */
 function dictionary() {
-  var s = fs.readFileSync(path.join(root, "i18n.js"), "utf8");
+  var s = fs.readFileSync(path.resolve(root, DICT_FILE), "utf8");
   var dict = Object.create(null), m;
   var re = /"([\w.]+)"\s*:\s*((?:"(?:[^"\\]|\\.)*"\s*\+?\s*)+)/g;
   while ((m = re.exec(s))) {
@@ -197,40 +213,71 @@ FILES.forEach(function (file) {
 /* Rozstrzygnięcie 3: liczba, nie milczenie. */
 var orphan = Object.keys(DICT).filter(function (k) { return !anchored[k]; });
 
-/* PRÓG, nie cel — i pilnowany tylko na PEŁNYM zestawie plików, bo na fixturze liczba
-   sieroctwa mówi o fixturze, nie o produkcie.
+/* ---- LISTA OZNACZEŃ ZAMIAST PROGU (ADR-004, Accepted 2026-09-01) -------------
+   ORPHAN_BASELINE była JEDNĄ LICZBĄ i nie umiała odróżnić klucza, który kotwicy NIGDY
+   nie będzie miał, od takiego, którego nikt jeszcze nie przeniósł. Każdy był anonimowym
+   długiem, a stan uczciwy — „ten klucz nigdy nie dostanie kotwicy, oto powód" — wyglądał
+   w niej identycznie jak zaniedbanie.
 
-   123, zmierzone 2026-08-19 przy migracji z ADR-002. Tyle kluczy słownika nie ma
-   kotwicy w markupie, bo ich tekst jest składany w JS. Ta liczba NIE MA ROSNĄĆ:
-   nowy klucz bez elementu to nowy tekst poza zasięgiem kryterium równości, a jego
-   jedynym strażnikiem zostają wtedy kontrole zależne od pokrycia scenariuszami.
-   Spadek jest dobrym znakiem i wtedy próg się obniża. */
-/* Ta sama zasada zmiany co przy BASELINE w check-dictionary.js: podniesienie wolno
-   wyłącznie wtedy, gdy strażnik zaczął WIDZIEĆ więcej, nigdy gdy PRZYBYŁO tekstu.
-   Pełna wersja w CLAUDE.md, sekcja „A ratchet threshold may only fall". */
-/* JEDNOSTKA, sprawdzona przy #86 i zapisana, żeby nie trzeba było jej wyprowadzać
-   z kodu: to KLUCZE SŁOWNIKA, `Object.keys(DICT)`, więc liczba jest z definicji
-   liczbą RÓŻNYCH pozycji i nie zależy od scenariuszy — ten strażnik w ogóle nie
-   czyta raportu z przeglądarki. Wada, którą #86 opisało dla BASELINE, nigdy tego
-   progu nie dotyczyła i dlatego 123 zostaje bez przeliczenia.
+   Kryterium jest teraz ZBIOREM PUSTYM, a nie progiem: klucz bez kotwicy i bez oznaczenia
+   w tools/i18n-unanchored.txt wywala build. Progu nie da się podnieść, bo progu nie ma.
+   Zamiast liczby jest lista, którą człowiek czyta i z którą może się nie zgodzić.
 
-   Deduplikacji po TREŚCI tu nie ma i mieć nie może: dwa klucze o identycznym tekście
-   to dwa miejsca wymagające kotwicy, a zlanie ich w jedno ukrywałoby brakującą. */
-/* 123 -> 121, obniżone 2026-09-01 w tym samym PR-ze, w którym spadł pomiar (#58, partia
-   rozgrzewkowa). Dwa klucze dostały kotwicę: hub.title na elemencie <title>, nav.tools
-   przez data-i18n-label na <nav>, który stał w markupie od początku. Obie formy już
-   istniały — te klucze nie były „składane w JS", tylko niezakotwiczone.
+   TRZY KODY, z ADR-004:
+     a      sierota z natury — etykieta treści, która jeszcze nie istnieje. Zostaje.
+     b#NN   luka narzędzia — element jest, brakuje FORMY. Tymczasowe, numer obowiązkowy.
+     m      do migracji (#58).
 
-   121 -> 119, obniżone tego samego dnia razem z piątą formą kotwicy: hub.desc i v.desc
-   kotwiczą się na atrybucie content elementu meta. g.desc jest kluczem NOWYM i od razu
-   zakotwiczonym, więc nie wnosi sieroty. */
-var ORPHAN_BASELINE = 119;
-var FULL_RUN = process.argv.length <= 2;
+   Liczone i wypisywane OSOBNO, bo (b) ma zniknąć, a (a) nie: licznik, który je łączy,
+   nie odpowiada na jedyne pytanie, dla którego ta lista istnieje. */
+function markings() {
+  var text;
+  try {
+    text = fs.readFileSync(path.resolve(root, MARKINGS_FILE), "utf8");
+  } catch (e) {
+    console.log("FAIL nie mogę przeczytać listy oznaczeń " + MARKINGS_FILE +
+                " (" + e.code + "). Brakujące wejście to awaria pomiaru, nie czysty wynik.");
+    process.exit(1);
+  }
+  var out = Object.create(null), bad = [];
+  text.split("\n").forEach(function (line, i) {
+    var t = line.trim();
+    /* Komentarzem jest CAŁA linia zaczynająca się od #. Komentarz w środku linii
+       byłby nie do pogodzenia z kodem b#NN, w którym # jest częścią oznaczenia —
+       i pierwszy przebieg właśnie tak zgubił numer zgłoszenia. */
+    if (!t || t.charAt(0) === "#") return;
+    var m = /^(\S+)\s+(a|b#\d+|m)\s+(\S.*)$/.exec(t);
+    if (!m) {
+      /* Kod b bez numeru zgłoszenia wpada tutaj i to jest zamierzone: oznaczenie
+         tymczasowe bez adresu jest oznaczeniem trwałym, które udaje tymczasowe. */
+      bad.push({ line: i + 1, text: t });
+      return;
+    }
+    out[m[1]] = { code: m[2][0], raw: m[2], why: m[3], line: i + 1 };
+  });
+  return { map: out, bad: bad };
+}
+
+/* Kryterium oznaczeń biegnie na PEŁNYM zestawie plików albo gdy listę podano jawnie.
+   Na pojedynczej fixturze markupu sieroctwo mówi o fixturze, nie o produkcie — ta sama
+   granica, którą miał próg, i z tego samego powodu. */
+var CHECK_MARKINGS = MARKINGS_ARG !== null || ARGV.length === 0;
+var MK = CHECK_MARKINGS ? markings() : { map: {}, bad: [] };
+var unmarked = CHECK_MARKINGS ? orphan.filter(function (k) { return !MK.map[k]; }) : [];
+var stale = (CHECK_MARKINGS ? Object.keys(MK.map) : []).filter(function (k) {
+  return anchored[k] || !Object.prototype.hasOwnProperty.call(DICT, k);
+});
+var byCode = { a: 0, b: 0, m: 0 };
+Object.keys(MK.map).forEach(function (k) { byCode[MK.map[k].code]++; });
+
+
 
 console.log("podstawień z kluczem w słowniku: " + (ok + empty.length + drift.length) +
             "   równych: " + ok + "   PUSTYCH: " + empty.length + "   ROZJAZDÓW: " + drift.length);
-console.log("kluczy słownika bez kotwicy w markupie (budowane w JS): " + orphan.length +
-            "   — poza zakresem tego kryterium, patrz nagłówek, punkt 3");
+console.log("kluczy bez kotwicy: " + orphan.length + "   oznaczonych: " +
+            (orphan.length - unmarked.length) +
+            "   [na stałe (a): " + byCode.a + "   tymczasowych (b): " + byCode.b +
+            "   do migracji (m): " + byCode.m + "]");
 
 if (drift.length) {
   console.log("\nFAIL ROZJAZD markup/słownik, " + drift.length + " razy." +
@@ -250,14 +297,34 @@ if (empty.length) {
   });
   if (empty.length > 12) console.log("  ... i " + (empty.length - 12) + " dalszych");
 }
-if (FULL_RUN && orphan.length > ORPHAN_BASELINE) {
-  console.log("\nFAIL kluczy bez kotwicy w markupie: " + orphan.length + " wobec progu " +
-              ORPHAN_BASELINE + ". Nowy klucz ma dostać element z tekstem domyślnym," +
-              " inaczej rośnie tekst poza zasięgiem kryterium równości.");
-  console.log("  nowe: " + orphan.slice(-(orphan.length - ORPHAN_BASELINE)).join(", "));
-  process.exit(1);
+if (MK.bad.length) {
+  console.log("\nFAIL linia listy oznaczeń, która nie jest oznaczeniem, " +
+              MK.bad.length + " raz(y). Format: <klucz>  a|b#NN|m  <powód>.");
+  console.log("  Kod b BEZ numeru zgłoszenia trafia tutaj celowo: oznaczenie tymczasowe");
+  console.log("  bez adresu jest oznaczeniem trwałym, które udaje tymczasowe.");
+  MK.bad.forEach(function (b) {
+    console.log("  " + MARKINGS_FILE + ":" + b.line + "  " + JSON.stringify(b.text.slice(0, 70)));
+  });
 }
+if (stale.length) {
+  console.log("\nFAIL oznaczenie klucza, który MA kotwicę albo nie jest w słowniku, " +
+              stale.length + " raz(y). Lista, której nikt nie sprząta, opisuje");
+  console.log("  repozytorium sprzed roku — a wtedy pusty zbiór nie znaczy już nic:");
+  stale.forEach(function (k) {
+    console.log("  " + MARKINGS_FILE + ":" + MK.map[k].line + "  " + k);
+  });
+}
+if (unmarked.length) {
+  console.log("\nFAIL klucz bez kotwicy i BEZ oznaczenia, " + unmarked.length + " raz(y).");
+  console.log("  Zakotwicz go albo dopisz linię do " + MARKINGS_FILE + " z kodem i powodem:");
+  console.log("      a      sierota z natury — etykieta treści, która jeszcze nie istnieje");
+  console.log("      b#NN   luka narzędzia — brakuje formy kotwicy, numer zgłoszenia obowiązkowy");
+  console.log("      m      do migracji (#58)");
+  unmarked.forEach(function (k) { console.log("  " + k); });
+}
+if (MK.bad.length || stale.length || unmarked.length) process.exit(1);
 if (drift.length || empty.length) process.exit(1);
 
-console.log("\nOK   każdy tekst domyślny w markupie jest równy wpisowi słownika");
+console.log("\nOK   każdy tekst domyślny w markupie jest równy wpisowi słownika;\n     " +
+            "każdy klucz bez kotwicy ma oznaczenie z powodem");
 process.exit(0);
