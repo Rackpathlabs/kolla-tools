@@ -77,6 +77,8 @@ v.f.duplicateHost.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie pows
 v.f.duplicateVar  a  komunikat findingu DUPLICATE-VAR; findingu nie ma, dopoki nie powstanie
 v.f.emptyGroup  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.f.emptyGroup.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
+v.f.groupCustom  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
+v.f.groupCustom.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
 v.f.groupCycle.hint  a  podpowiedz findingu GROUP-CYCLE; findingu nie ma, dopoki nie powstanie
 v.f.groupUndefined  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.f.groupUndefined.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
@@ -85,14 +87,24 @@ v.f.groupVar.hint  a  podpowiedz findingu GROUP-VAR; findingu nie ma, dopoki nie
 v.f.hostNoKollaGroup  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.f.hostNoKollaGroup.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
 v.f.hostNoKollaGroup.none  a  wariant podpowiedzi findingu wybierany warunkowo; findingu nie ma, dopoki nie powstanie
+v.f.missingGroup  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
+v.f.missingGroup.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
 v.f.outsideGroup  a  komunikat findingu OUTSIDE-GROUP; findingu nie ma, dopoki nie powstanie
 v.f.outsideGroup.hint  a  podpowiedz findingu OUTSIDE-GROUP; findingu nie ma, dopoki nie powstanie
 v.f.range  a  komunikat findingu RANGE; findingu nie ma, dopoki nie powstanie
 v.f.range.hint  a  podpowiedz findingu RANGE; findingu nie ma, dopoki nie powstanie
+v.f.requiredEmpty  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
+v.f.requiredEmpty.compute  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
+v.f.requiredEmpty.control  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
+v.f.requiredEmpty.monitoring  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
+v.f.requiredEmpty.network  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
+v.f.requiredEmpty.storage  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
 v.f.sectionKind  a  komunikat findingu SYNTAX; findingu nie ma, dopoki nie powstanie
 v.f.syntax.emptyName  a  komunikat findingu SYNTAX; findingu nie ma, dopoki nie powstanie
 v.f.syntax.hint  a  podpowiedz findingu SYNTAX; findingu nie ma, dopoki nie powstanie
 v.f.syntax.malformed  a  komunikat findingu SYNTAX; findingu nie ma, dopoki nie powstanie
+v.f.typo  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
+v.f.typo.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
 v.globals.loaded  a  kolejny STAN elementu #chip-globals; stanem poczatkowym jest v.globals.none i to tamten klucz ma kotwice
 v.hostList.more  a  skrocona lista hostow skladana w komunikat findingu; wlasnego elementu nie ma
 v.q.aio.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie

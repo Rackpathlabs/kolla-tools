@@ -972,6 +972,26 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       "v.f.conflictingVar.hint":   "Ansible takes the last definition — a mismatch here is almost always a mistake in the file.",
       "v.f.duplicateEndpoint":     "Endpoint <code>{endpoint}</code> is assigned to different hosts: {hosts}.",
       "v.f.duplicateEndpoint.hint": "Kolla treats them as separate nodes and deploys conflicting configurations onto one machine.",
+      /* Rodzina GRUP WYMAGANYCH i NAZW — przeniesione 2026-09-01 (#58).
+         Pięć wariantów podpowiedzi dla pustej grupy wymaganej stoi pod pięcioma kluczami,
+         a nie pod jednym ze wstawką: to są PIĘĆ RÓŻNYCH ZDAŃ o pięciu różnych rolach,
+         a nie jedno zdanie z podstawianą nazwą. Klucze są WYPISANE JAWNIE w drabince
+         warunków, a nie składane z nazwy grupy: check-i18n.js czyta klucze jako literały
+         i klucz składany w czasie działania jest dla niego niewidzialny. Pierwsza wersja
+         składała go i strażnik zgłosił jedno odwołanie spoza słownika oraz pięć kluczy
+         bez użycia — czyli dokładnie to, przed czym ta reguła broni. */
+      "v.f.missingGroup":          "Required group <code>[{group}]</code> is missing.",
+      "v.f.missingGroup.hint":     "A Kolla-Ansible multinode inventory is built on the groups: {groups}.",
+      "v.f.requiredEmpty":         "Group <code>[{group}]</code> is declared but holds no host.",
+      "v.f.requiredEmpty.compute": "With no compute nodes no instance can start.",
+      "v.f.requiredEmpty.network": "With no network nodes the L3, DHCP and metadata agents have nowhere to run.",
+      "v.f.requiredEmpty.control": "With no control nodes the control plane services cannot be deployed.",
+      "v.f.requiredEmpty.storage": "The deployment succeeds, but the volume services (Cinder) have nowhere to start.",
+      "v.f.requiredEmpty.monitoring": "The deployment succeeds, but Prometheus and Grafana have nowhere to start.",
+      "v.f.typo":                  "Group <code>{group}</code> resembles the standard group <code>{standard}</code>.",
+      "v.f.typo.hint":             "Kolla-Ansible will not recognise a group under a different name — check the spelling.",
+      "v.f.groupCustom":           "Group <code>{group}</code> does not appear in the reference Kolla-Ansible inventory.",
+      "v.f.groupCustom.hint":      "That is fine as long as it is used deliberately, for example for custom roles or a hardware split.",
       "v.f.syntax.hint":           "Expected format: <code>[name]</code>, <code>[name:children]</code> or <code>[name:vars]</code>.",
       "v.f.sectionKind":           "Unknown section type <code>{kind}</code>.",
       "v.f.childrenFormat":        "Section <code>[{group}:children]</code> may contain only group names, one per line.",
