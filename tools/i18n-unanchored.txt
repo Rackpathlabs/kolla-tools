@@ -67,10 +67,16 @@ v.c.net.same.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.c.storage.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
 v.c.storage.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.empty  a  element <p class=empty-state> tworzony przez JS; zakotwiczenie znaczyloby DOPISANIE markupu, nie przeniesienie klucza
+v.f.childrenFormat  a  komunikat findingu CHILDREN-FORMAT; findingu nie ma, dopoki nie powstanie
+v.f.duplicateVar  a  komunikat findingu DUPLICATE-VAR; findingu nie ma, dopoki nie powstanie
+v.f.groupCycle.hint  a  podpowiedz findingu GROUP-CYCLE; findingu nie ma, dopoki nie powstanie
 v.f.hostNoKollaGroup  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.f.hostNoKollaGroup.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
 v.f.hostNoKollaGroup.none  a  wariant podpowiedzi findingu wybierany warunkowo; findingu nie ma, dopoki nie powstanie
+v.f.sectionKind  a  komunikat findingu SYNTAX; findingu nie ma, dopoki nie powstanie
+v.f.syntax.hint  a  podpowiedz findingu SYNTAX; findingu nie ma, dopoki nie powstanie
 v.globals.loaded  a  kolejny STAN elementu #chip-globals; stanem poczatkowym jest v.globals.none i to tamten klucz ma kotwice
+v.hostList.more  a  skrocona lista hostow skladana w komunikat findingu; wlasnego elementu nie ma
 v.q.aio.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
 v.q.aio.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.q.ceph.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
