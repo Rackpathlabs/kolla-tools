@@ -501,7 +501,10 @@ function network(variant) { return run("check-network.js", ["--dir", "tools/fixt
    strażnika ZAWSZE kończy się znakiem nowej linii — więc detal był pusty przy KAŻDYM
    wyniku, zielonym i czerwonym. Asercja, która upada, nie umiała powiedzieć, co
    zobaczyła; #128 opisuje przypadek, w którym to bolało naprawdę. */
-function netDetail(r) { return r.out.split("\n").pop(); }
+function netDetail(r) {
+  var f = r.out.split("\n").filter(function (l) { return /FAIL|PODEJRZENIE/.test(l); });
+  return f.length ? f[0] : r.out.trim().split("\n").pop();
+}
 
 var netClean = network("clean");
 R.ok("strona bez żądań -> zielone", netClean.code === 0, netDetail(netClean));

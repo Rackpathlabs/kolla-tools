@@ -173,6 +173,24 @@ jobs:
       - name: Żądania sieciowe na wykonanych scenariuszach
         run: node tools/check-network.js
 
+      # DOWÓD, KTÓRY ZNIKA PRZED OBEJRZENIEM, NIE JEST DOWODEM (#128). Strażnik zostawia
+      # netlogi na dysku wyłącznie przy czerwonym — po jednym na scenariusz, z jego nazwą
+      # w nazwie pliku. Bez tego kroku żyją tyle, co maszyna runnera, czyli do końca joba,
+      # a rozjazd z #128 dało się rozstrzygnąć tylko dlatego, że akurat wystarczyła liczba
+      # z nagłówka. Następny może nie mieć tak wygodnego kształtu.
+      #
+      # if: failure() zamiast always(): przy zielonym katalogu nie ma, bo strażnik go
+      # kasuje, a krok wysyłający nieistniejący katalog jest krokiem, który raz na jakiś
+      # czas świeci na czerwono bez powodu.
+      - name: Netlogi z czerwonego przebiegu (dowód do #128)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: netlogi
+          path: .netcheck.tmp/
+          if-no-files-found: ignore
+          retention-days: 14
+
       # Komparator upstreamu żyje w osobnym workflow, ale jego dowód poprawności
       # należy tutaj: gdyby psuł się tylko w cotygodniowym cronie, dowiedzielibyśmy
       # się o tym z braku alarmu, czyli dokładnie tak, jak się nie da.

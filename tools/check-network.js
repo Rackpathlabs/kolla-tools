@@ -150,12 +150,20 @@ function hostsFrom(logFile) {
   return out;
 }
 
+/* Nazwa scenariusza w NAZWIE PLIKU, nie sam numer przebiegu. Netlog nazwany „net7.json"
+   jest dowodem, którego nikt nie przypisze do scenariusza bez liczenia w głowie, a liczy
+   się go wtedy, gdy build jest czerwony i nikt nie ma na to głowy. */
+function slug(t) {
+  return String(t).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+}
+
 var runNo = 0;
 function render(file, steps, label) {
   runNo++;
+  var tag = runNo + "-" + (slug(label) || "bez-nazwy");
   var prof = path.join(work, "prof" + runNo);
-  var page = path.join(work, "page" + runNo + ".html");
-  var log = path.join(work, "net" + runNo + ".json");
+  var page = path.join(work, "page" + tag + ".html");
+  var log = path.join(work, "net" + tag + ".json");
   fs.mkdirSync(prof, { recursive: true });
 
   var src = fs.readFileSync(file, "utf8");
@@ -197,8 +205,31 @@ var blank = path.join(work, "control.html");
 fs.writeFileSync(blank,
   "<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\">" +
   "<title>control</title></head><body></body></html>\n");
-var background = render(blank, "", "przebieg kontrolny");
-console.log("tło (własne żądania przeglądarki): " + Object.keys(background).length + " hostów");
+/* TŁO Z UNII K PRZEBIEGÓW, NIE Z JEDNEGO — i K jest wybrane, a nie zgadnięte.
+
+   #128: w CI przebieg kontrolny zobaczył raz 4 hosty, raz 5, na tym samym commicie, a
+   brakującym był `csp.withgoogle.com` — po czym pojawiał się w KAŻDYM z piętnastu
+   scenariuszy i był raportowany jako naruszenie. Tło mierzone jednym przebiegiem jest
+   pojedynczą próbką i tak właśnie się zachowuje.
+
+   K = 3, i powód jest zapisany razem z tym, czego pomiar NIE pokazał. Lokalnie
+   dziesięć przebiegów kontrolnych dało DZIESIĘĆ RAZY TEN SAM zbiór pięciu hostów —
+   wariancja zero, więc lokalny pomiar nie mówi nic o rozkładzie, który widać w CI.
+   Wybranie K z rozkładu, którego się nie zmierzyło, byłoby liczbą z głowy. K = 3 to
+   najmniejsze K większe od jednego: kosztuje dwa dodatkowe uruchomienia przeglądarki
+   i trzykrotnie zwiększa szansę zobaczenia hosta, który bywa w tle.
+
+   Ciężar naprawy NIE leży jednak w K, tylko w regule niżej: host obecny w KAŻDYM
+   scenariuszu i w ŻADNYM przebiegu kontrolnym jest zgłaszany jako PODEJRZENIE TŁA, a nie
+   jako naruszenie. Ta reguła nie zależy od K i sama zamyka awarię z #128. */
+var CONTROL_RUNS = 3;
+var background = {};
+for (var ci = 0; ci < CONTROL_RUNS; ci++) {
+  var one = render(blank, "", "przebieg kontrolny " + (ci + 1));
+  Object.keys(one).forEach(function (h) { background[h] = (background[h] || 0) + one[h]; });
+}
+console.log("tło (własne żądania przeglądarki): " + Object.keys(background).length +
+            " hostów, unia z " + CONTROL_RUNS + " przebiegów kontrolnych");
 console.log("polityka CSP zdejmowana z kopii — mierzymy, co kod PRÓBUJE zrobić, " +
             "nie czego polityka nie dopuszcza");
 
@@ -213,17 +244,69 @@ var cases = fixtureDir
 
 if (!cases.length) die("zero scenariuszy — przedmiot pomiaru jest nieobecny");
 
-var bad = 0;
-cases.forEach(function (sc) {
+/* Najpierw ZBIERAMY wszystkie scenariusze, dopiero potem rozstrzygamy. Reguła podejrzenia
+   tła jest zdaniem o WSZYSTKICH scenariuszach naraz („w każdym, w żadnym kontrolnym") i nie
+   da się jej wypowiedzieć, oceniając scenariusze po kolei. */
+var results = cases.map(function (sc) {
   var hosts = render(path.join(root, sc.file), sc.steps, sc.name);
-  var out = Object.keys(hosts).filter(function (h) { return !background[h]; }).sort();
-  if (!out.length) { console.log("OK   " + sc.name + " — brak żądań poza tłem"); return; }
-  console.log("FAIL " + sc.name + " — ZAOBSERWOWANE ŻĄDANIA: " +
-              out.map(function (h) { return h + " (×" + hosts[h] + ")"; }).join(", "));
+  return { name: sc.name,
+           out: Object.keys(hosts).filter(function (h) { return !background[h]; }).sort(),
+           hosts: hosts };
+});
+
+/* PODEJRZENIE TŁA, nie naruszenie. Host w KAŻDYM scenariuszu i w ŻADNYM z przebiegów
+   kontrolnych zachowuje się jak własne żądanie przeglądarki, którego tło nie złapało —
+   a nie jak ścieżka w kodzie, bo ta trafiłaby do scenariuszy, które jej dotykają, a nie
+   do wszystkich naraz. Zmierzone w #128: dokładnie ten kształt, piętnaście z piętnastu.
+
+   Nie zwalniamy tego po cichu. Strażnik mówi, CO widzi i JAK to rozstrzygnąć, bo różnica
+   między „tło" a „żądanie z każdej strony" jest rozstrzygalna tylko przez człowieka. */
+/* CO NAJMNIEJ DWA SCENARIUSZE, inaczej reguła nie ma o czym mówić: przy jednym „w każdym
+   scenariuszu" jest prawdą dla każdego zaobserwowanego hosta i reguła zwolniłaby JEDYNE
+   naruszenie, jakie ten przebieg umie znaleźć. Złapane na fixturze `dirty`, która ma jeden
+   plik — pierwsza wersja tej reguły przepuściła ją na zielono.
+
+   KOSZT, nazwany tutaj, a nie odkryty przy awarii: żądanie wychodzące z bloku
+   WSPÓŁDZIELONEGO przez wszystkie strony trafi do wszystkich scenariuszy naraz i zostanie
+   zgłoszone jako podejrzenie tła zamiast jako naruszenie. To jest dokładnie klasa #101,
+   czyli ta, dla której ten strażnik powstał. Reguła nie zwalnia po cichu — wypisuje host,
+   liczbę scenariuszy i sposób rozstrzygnięcia — ale zieleń przy takim wyniku znaczy mniej
+   niż zieleń bez niego i tak trzeba ją czytać. */
+var everywhere = results.length >= 2
+  ? results[0].out.filter(function (h) {
+      return results.every(function (r) { return r.out.indexOf(h) !== -1; });
+    })
+  : [];
+var suspect = {};
+everywhere.forEach(function (h) { suspect[h] = true; });
+
+var bad = 0;
+results.forEach(function (r) {
+  var real = r.out.filter(function (h) { return !suspect[h]; });
+  if (!real.length) { console.log("OK   " + r.name + " — brak żądań poza tłem"); return; }
+  console.log("FAIL " + r.name + " — ZAOBSERWOWANE ŻĄDANIA: " +
+              real.map(function (h) { return h + " (×" + r.hosts[h] + ")"; }).join(", "));
   bad = 1;
 });
 
-fs.rmSync(work, { recursive: true, force: true });
+if (everywhere.length) {
+  console.log("");
+  console.log("PODEJRZENIE TŁA (nie liczone jako naruszenie): " + everywhere.join(", "));
+  console.log("  Każdy z tych hostów wystąpił we WSZYSTKICH " + results.length +
+              " scenariuszach i w ŻADNYM z " + CONTROL_RUNS + " przebiegów kontrolnych.");
+  console.log("  Ścieżka w kodzie trafiłaby do scenariuszy, które jej dotykają, a nie do");
+  console.log("  wszystkich naraz — to wygląda na własne żądanie przeglądarki, którego tło");
+  console.log("  nie złapało (#128). ROZSTRZYGNIĘCIE: obejrzyj netlog przebiegu kontrolnego");
+  console.log("  i scenariusza w " + path.relative(root, work) + " — jeśli host jest tylko");
+  console.log("  w scenariuszu i nie wskazuje go żaden zasób strony, to tło; jeśli wskazuje");
+  console.log("  go zasób, to naruszenie i ta reguła właśnie je przepuściła.");
+}
+
+/* Katalog roboczy kasujemy TYLKO przy zielonym. Dowód, który znika przed obejrzeniem,
+   nie jest dowodem — #128 rozstrzygnięto liczbą z nagłówka, bo netlogu już nie było. */
+if (!bad && !everywhere.length) {
+  fs.rmSync(work, { recursive: true, force: true });
+}
 
 if (bad) {
   console.log("\nNa wykonanych scenariuszach ZAOBSERWOWANO żądania sieciowe.");
@@ -231,6 +314,10 @@ if (bad) {
   console.log("  (default-src 'none') odrzuca takie żądanie w czasie działania, ale");
   console.log("  ŻĄDANIE ZOSTAŁO PODJĘTE — a to znaczy, że w kodzie jest ścieżka, która");
   console.log("  go podejmuje. #101: check-offline.js czyta listę nazw i tego nie widzi.");
+  console.log("");
+  console.log("  NETLOGI ZOSTAŁY na dysku, w " + path.relative(root, work) + " — po jednym");
+  console.log("  na scenariusz, z jego nazwą w nazwie pliku. To jest jedyny artefakt, który");
+  console.log("  odpowiada na pytanie o hosta i jego źródło, i dlatego nie jest kasowany.");
   process.exit(1);
 }
 console.log("\nOK   na wykonanych scenariuszach nie zaobserwowano żadnego żądania sieciowego");
