@@ -160,8 +160,27 @@ R.ok("PRZYNĘTA: przecinki poza .hostlist to nie lista hostów",
 R.ok("GRANICA: polski tekst wewnątrz <code> jest ZWOLNIONY",
      !/brak wsparcia/.test(shapes.out),
      "jeśli to czerwone, zwolnienie po elemencie przestało obowiązywać — popraw nagłówek");
-R.ok("czyli DOKŁADNIE trzy braki w tej fixturze",
-     /BEZ POKRYCIA: 3 RÓŻNYCH NAPISÓW/.test(shapes.out), shapes.out.split("\n")[2]);
+/* PRZYNALEŻNOŚĆ DO REJESTRU, NIE WZORZEC (#86, po klasyfikacji 83 napisów).
+   Wzorzec wymagał myślnika, żeby nie zwalniać etykiet pisanych wersalikami — i przez to
+   przepuszczał RANGE i TYPO, które są prawdziwymi kodami findingów. Przemianowanie ich
+   odpada: #26 wymaga stabilnych identyfikatorów, bo finding jest cytowany w zgłoszeniach.
+
+   Kody mają w tym repozytorium ŹRÓDŁO PRAWDY: DIAG_IDS w generatorze oraz wywołania
+   add("sev", "KOD", …) i tabele reguł { code: "KOD" } w walidatorze. Zwolnienie pyta więc
+   o CZŁONKOSTWO W REJESTRZE, a rejestr jest ODCZYTYWANY ZE ŹRÓDŁA — to nie jest lista
+   utrzymywana ręcznie i nie łamie zasady „kształt, nie lista": listy nie da się zapomnieć
+   zaktualizować, bo nie ma jej gdzie zapisać. Kod dopisany do narzędzia zwalnia się sam,
+   kod usunięty przestaje zwalniać w tym samym commicie. */
+R.ok("RANGE — kod findingu bez myślnika, ale W REJESTRZE -> zwolniony",
+     !/"RANGE"/.test(shapes.out), shapes.out.split("\n")[2]);
+R.ok("TYPO — jw.", !/"TYPO"/.test(shapes.out));
+/* PRZYNĘTA NA REJESTR: kształt kodu, ale nikt takiego kodu nie zgłasza. Bez tej asercji
+   zwolnienie mogłoby po cichu wrócić do wzorca i nikt by nie zauważył. */
+R.ok("PRZYNĘTA: kształt kodu, ale SPOZA rejestru -> NIE zwolniony",
+     /OUTSIDE-GROUPZ/.test(shapes.out), shapes.out.split("\n")[2]);
+
+R.ok("czyli DOKŁADNIE cztery braki w tej fixturze",
+     /BEZ POKRYCIA: 4 RÓŻNYCH NAPISÓW/.test(shapes.out), shapes.out.split("\n")[2]);
 
 var childRep = run("check-dictionary.js", ["tools/fixtures/report-child-text.json"]);
 R.ok("tekst wpisu BEZ treści dziecka jest POKRYTY",

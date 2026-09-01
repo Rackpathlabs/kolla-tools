@@ -1,9 +1,92 @@
 [
- { "tag": "SPAN", "cls": "f-code", "text": "OUTSIDE-GROUP",  "inData": false, "fromInput": false, "file": "d.html", "scenario": "kształty" },
- { "tag": "CODE", "cls": "",       "text": "name[01:10]",    "inData": false, "fromInput": false, "file": "d.html", "scenario": "kształty" },
- { "tag": "DIV",  "cls": "hostlist", "text": "ctrl01, ctrl02", "inData": false, "fromInput": false, "file": "d.html", "scenario": "kształty" },
- { "tag": "SPAN", "cls": "",       "text": "OUTSIDEGROUP",   "inData": false, "fromInput": false, "file": "d.html", "scenario": "kształty" },
- { "tag": "SPAN", "cls": "",       "text": "Deploy-Ready",   "inData": false, "fromInput": false, "file": "d.html", "scenario": "kształty" },
- { "tag": "DIV",  "cls": "notes",  "text": "hosts, groups",  "inData": false, "fromInput": false, "file": "d.html", "scenario": "kształty" },
- { "tag": "CODE", "cls": "",       "text": "brak wsparcia dla tej wersji", "inData": false, "fromInput": false, "file": "d.html", "scenario": "kształty" }
+ {
+  "tag": "SPAN",
+  "cls": "f-code",
+  "text": "OUTSIDE-GROUP",
+  "inData": false,
+  "fromInput": false,
+  "file": "d.html",
+  "scenario": "kształty"
+ },
+ {
+  "tag": "CODE",
+  "cls": "",
+  "text": "name[01:10]",
+  "inData": false,
+  "fromInput": false,
+  "file": "d.html",
+  "scenario": "kształty"
+ },
+ {
+  "tag": "DIV",
+  "cls": "hostlist",
+  "text": "ctrl01, ctrl02",
+  "inData": false,
+  "fromInput": false,
+  "file": "d.html",
+  "scenario": "kształty"
+ },
+ {
+  "tag": "SPAN",
+  "cls": "",
+  "text": "OUTSIDEGROUP",
+  "inData": false,
+  "fromInput": false,
+  "file": "d.html",
+  "scenario": "kształty"
+ },
+ {
+  "tag": "SPAN",
+  "cls": "",
+  "text": "Deploy-Ready",
+  "inData": false,
+  "fromInput": false,
+  "file": "d.html",
+  "scenario": "kształty"
+ },
+ {
+  "tag": "DIV",
+  "cls": "notes",
+  "text": "hosts, groups",
+  "inData": false,
+  "fromInput": false,
+  "file": "d.html",
+  "scenario": "kształty"
+ },
+ {
+  "tag": "CODE",
+  "cls": "",
+  "text": "brak wsparcia dla tej wersji",
+  "inData": false,
+  "fromInput": false,
+  "file": "d.html",
+  "scenario": "kształty"
+ },
+ {
+  "tag": "SPAN",
+  "cls": "f-code",
+  "text": "RANGE",
+  "inData": false,
+  "fromInput": false,
+  "file": "d.html",
+  "scenario": "kształty"
+ },
+ {
+  "tag": "SPAN",
+  "cls": "f-code",
+  "text": "TYPO",
+  "inData": false,
+  "fromInput": false,
+  "file": "d.html",
+  "scenario": "kształty"
+ },
+ {
+  "tag": "SPAN",
+  "cls": "f-code",
+  "text": "OUTSIDE-GROUPZ",
+  "inData": false,
+  "fromInput": false,
+  "file": "d.html",
+  "scenario": "kształty"
+ }
 ]
