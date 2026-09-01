@@ -212,7 +212,11 @@ var orphan = Object.keys(DICT).filter(function (k) { return !anchored[k]; });
 
    Deduplikacji po TREŚCI tu nie ma i mieć nie może: dwa klucze o identycznym tekście
    to dwa miejsca wymagające kotwicy, a zlanie ich w jedno ukrywałoby brakującą. */
-var ORPHAN_BASELINE = 123;
+/* 123 -> 121, obniżone 2026-09-01 w tym samym PR-ze, w którym spadł pomiar (#58, partia
+   rozgrzewkowa). Dwa klucze dostały kotwicę: hub.title na elemencie <title>, nav.tools
+   przez data-i18n-label na <nav>, który stał w markupie od początku. Obie formy już
+   istniały — te klucze nie były „składane w JS", tylko niezakotwiczone. */
+var ORPHAN_BASELINE = 121;
 var FULL_RUN = process.argv.length <= 2;
 
 console.log("podstawień z kluczem w słowniku: " + (ok + empty.length + drift.length) +

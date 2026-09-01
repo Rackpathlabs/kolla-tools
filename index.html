@@ -12,7 +12,7 @@
      frame-ancestors celowo pominięte: w znaczniku meta jest ignorowane przez
      przeglądarki, a GitHub Pages nie pozwala ustawić nagłówka HTTP. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
-<title>Rackpathlabs — Kolla-Ansible tools</title>
+<title data-i18n="hub.title">Rackpathlabs — Kolla-Ansible tools</title>
 <meta name="description" content="Two Kolla-Ansible tools: a globals.yml generator and an inventory validator. They run in your browser, offline, and upload nothing.">
 <style>
 /* == KOLLA-THEME BEGIN — generowane z theme.css, nie edytuj w miejscu == */
@@ -118,7 +118,7 @@ footer a{color:var(--muted)}
       </svg>
       <span>Rackpathlabs<small data-i18n="brand.sub">OpenStack tooling</small></span>
     </div>
-    <nav id="nav" aria-label="Tools">
+    <nav id="nav" data-i18n-label="nav.tools" aria-label="Tools">
       <a href="index.html" aria-current="page" data-i18n="nav.start">start</a>
       <a href="generator.html" data-i18n="nav.generator">globals.yml</a>
       <a href="validator.html" data-i18n="nav.validator">inventory validator</a>
@@ -542,14 +542,18 @@ footer a{color:var(--muted)}
   /* == KOLLA-I18N END == */
 
   function apply() {
-    document.title = T("hub.title");
+    /* hub.desc zostaje przypisaniem jawnym: jego ujściem jest atrybut content
+       elementu meta, a check-markup-dict.js zna cztery formy kotwicy i nie ma
+       wśród nich content. Piąta forma albo podłoga — ADR-004, działanie 4. */
     var d = document.querySelector('meta[name="description"]');
     if (d) d.setAttribute("content", T("hub.desc"));
-    var nav = document.getElementById("nav");
-    if (nav) nav.setAttribute("aria-label", T("nav.tools"));
     var nodes = document.querySelectorAll("[data-i18n]");
     for (var i = 0; i < nodes.length; i++) {
       nodes[i].innerHTML = T(nodes[i].getAttribute("data-i18n"));
+    }
+    var labels = document.querySelectorAll("[data-i18n-label]");
+    for (var j = 0; j < labels.length; j++) {
+      labels[j].setAttribute("aria-label", T(labels[j].getAttribute("data-i18n-label")));
     }
   }
 
