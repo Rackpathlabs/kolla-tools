@@ -497,14 +497,47 @@ R.ok("GRANICA check-offline.js: wywołania składane w czasie działania przecho
    strone i patrzy, co wyszlo. */
 function network(variant) { return run("check-network.js", ["--dir", "tools/fixtures/network/" + variant]); }
 
+/* DETAL asercji tej grupy. Do 2026-09-01 był to `out.split("\n").pop()`, a wyjście
+   strażnika ZAWSZE kończy się znakiem nowej linii — więc detal był pusty przy KAŻDYM
+   wyniku, zielonym i czerwonym. Asercja, która upada, nie umiała powiedzieć, co
+   zobaczyła; #128 opisuje przypadek, w którym to bolało naprawdę. */
+function netDetail(r) {
+  var f = r.out.split("\n").filter(function (l) { return /FAIL|PODEJRZENIE/.test(l); });
+  return f.length ? f[0] : r.out.trim().split("\n").pop();
+}
+
 var netClean = network("clean");
-R.ok("strona bez żądań -> zielone", netClean.code === 0, netClean.out.split("\n").pop());
+R.ok("strona bez żądań -> zielone", netClean.code === 0, netDetail(netClean));
 /* PRZYNETA: dokument WYMIENIA adres http i przypisuje go do zmiennej, ale nikt go nie
    pobiera. Straznik obserwuje SKUTEK — napis nie jest zadaniem. Gdyby liczyl tresc,
    bylby drugim check-offline.js, tyle ze wolniejszym. */
 R.ok("adres w treści i w zmiennej NIE jest żądaniem", !/example\.invalid/.test(netClean.out));
 
 var netDirty = network("dirty");
+/* (c) DETAL PRZY CZERWONYM MA COŚ NIEŚĆ. To jest ta sama klasa co „-> kod 2" bez linii
+   stderr: komunikat, który nie odróżnia jednej awarii od drugiej, wysyła czytelnika do
+   złego pliku. */
+R.ok("detal czerwonego przebiegu jest NIEPUSTY", netDetail(netDirty) !== "",
+     JSON.stringify(netDetail(netDirty)));
+R.ok("i nazywa host, do którego poszło żądanie",
+     /telemetry\.example\.invalid/.test(netDetail(netDirty)), netDetail(netDirty));
+
+/* (a) DOWÓD, KTÓRY ZNIKA PRZED OBEJRZENIEM, NIE JEST DOWODEM.
+   Strażnik kasował katalog roboczy BEZWARUNKOWO, zanim wypisał werdykt — więc netlog
+   nie istniał już w chwili, w której ktokolwiek mógłby do niego zajrzeć. #128 rozstrzygnięto
+   liczbą z nagłówka, bo netlogu nie było; następny rozjazd może nie mieć tak wygodnego
+   kształtu. Przy CZERWONYM netlog ma zostać na dysku, mieć nazwę scenariusza w ścieżce
+   i być WYMIENIONY w komunikacie — inaczej nikt go nie znajdzie. */
+var NETWORK_WORK = path.join(root, ".netcheck.tmp");
+R.ok("przy czerwonym netlog ZOSTAJE na dysku",
+     require("fs").existsSync(NETWORK_WORK), NETWORK_WORK);
+R.ok("i komunikat wymienia ścieżkę do niego",
+     /\.netcheck\.tmp/.test(netDirty.out), netDetail(netDirty));
+R.ok("i nazwa scenariusza jest w nazwie pliku, nie sam numer przebiegu",
+     require("fs").existsSync(NETWORK_WORK) &&
+     require("fs").readdirSync(NETWORK_WORK).some(function (f) { return /pixel/.test(f); }),
+     require("fs").existsSync(NETWORK_WORK)
+       ? require("fs").readdirSync(NETWORK_WORK).join(" ") : "katalogu nie ma");
 R.ok("new Image().src = https://… -> czerwone", netDirty.code === 1, kod(netDirty));
 R.ok("i nazywa HOSTA, do którego poszło żądanie",
      /telemetry\.example\.invalid/.test(netDirty.out), netDirty.out.split("\n")[2]);
