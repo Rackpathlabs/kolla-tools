@@ -102,6 +102,57 @@ R.ok("napis ze słownika z liczbą z przodu NIE jest brakiem",
 R.ok("krótki segment nie pokrywa przez zawieranie", /has 5 hosts/.test(dict.out));
 R.ok("normalizacja nie przepuszcza polskiego z liczbą", /5 błędów/.test(dict.out));
 
+/* ---- JEDNOSTKA PROGU: RÓŻNE NAPISY, NIE WYSTĄPIENIA (#86) ----
+
+   Wystąpienia skalują się z LICZBĄ SCENARIUSZY, nie z ilością tekstu. Zmierzone na
+   main przed tą zmianą: 530 wystąpień to 138 różnych napisów, jeden szablon
+   „inventory: line N" wnosi do progu 32 przy jednym napisie do przeniesienia,
+   a dwunasty scenariusz dołożył 41 wystąpień i ZERO nowych napisów.
+
+   Skutek jest gorszy niż nieporządna liczba: podniesienie progu wywołane samym
+   dodaniem scenariusza przechodzi regułę z #85 jako „rozszerzenie pokrycia", bo
+   strażnik formalnie zaczął widzieć więcej renderowań. Reguła jest przez to niepełna
+   i da się jej użyć w dobrej wierze do przepchnięcia podniesienia, które nic nie znaczy.
+
+   Test poprawności jednostki jest więc jeden i stoi niżej: DRUGI SCENARIUSZ NIOSĄCY
+   TEN SAM TEKST NIE MA PRAWA RUSZYĆ LICZBY. Fixtury różnią się wyłącznie tym. */
+function dictCount(out) {
+  var m = /BEZ POKRYCIA: (\d+) RÓŻNYCH NAPISÓW w (\d+) wystąpieniach/.exec(out);
+  return m ? { napisy: +m[1], wystapienia: +m[2] } : null;
+}
+var sc1 = run("check-dictionary.js", ["tools/fixtures/report-one-scenario.json"]);
+var sc2 = run("check-dictionary.js", ["tools/fixtures/report-two-scenarios.json"]);
+var c1 = dictCount(sc1.out), c2 = dictCount(sc2.out);
+
+R.ok("komunikat podaje OBIE liczby: napisy i wystąpienia", c1 !== null && c2 !== null,
+     sc1.out.split("\n")[1]);
+/* NAJWAŻNIEJSZA ASERCJA TEJ GRUPY. Bez niej pozostałe przeszłyby także wtedy, gdyby
+   ktoś tylko dopisał drugą liczbę do komunikatu, nie zmieniając jednostki progu. */
+R.ok("drugi scenariusz z TYM SAMYM tekstem NIE rusza liczby napisów",
+     c1 && c2 && c1.napisy === c2.napisy,
+     c1 && c2 ? c1.napisy + " -> " + c2.napisy : "brak liczb w komunikacie");
+/* KONTROLA DO POWYŻSZEJ: gdyby wystąpienia też nie urosły, fixtura nie dowodziłaby
+   niczego — obie liczby byłyby stałe, bo scenariusz nic nie wniósł. */
+R.ok("…choć wystąpień PRZYBYWA, więc fixtura naprawdę dokłada scenariusz",
+     c1 && c2 && c2.wystapienia > c1.wystapienia,
+     c1 && c2 ? c1.wystapienia + " -> " + c2.wystapienia : "—");
+/* NORMALIZACJA, zapisana jako asercja, a nie tylko jako zdanie przy stałej:
+   „inventory: line 2", „line 7" i „line 41" to JEDEN napis. Trzy wystąpienia
+   szablonu w drugiej fixturze mają dać jedną pozycję długu. */
+R.ok("ten sam szablon z inną liczbą to JEDEN napis", c2 && c2.napisy === 3,
+     c2 ? "napisów: " + c2.napisy : "—");
+
+/* PRÓG DOTYCZY NAPISÓW, NIE WYSTĄPIEŃ — i to jest sprawdzalne tylko wtedy, gdy próg
+   da się podstawić. Ta sama konstrukcja co --dir w snapshot.golden.js i z tego samego
+   powodu: dowód, że kontrola potrafi upaść, ma być TESTEM, nie czynnością wykonaną raz. */
+var thrOk = run("check-dictionary.js", ["tools/fixtures/report-two-scenarios.json", "--baseline", "3"]);
+R.ok("3 napisy w 7 wystąpieniach wobec progu 3 -> zielone (próg liczy NAPISY)",
+     thrOk.code === 0, kod(thrOk) + " — pod starą jednostką 7 > 3 byłoby czerwone");
+var thrBad = run("check-dictionary.js", ["tools/fixtures/report-two-scenarios.json", "--baseline", "2"]);
+R.ok("te same 3 napisy wobec progu 2 -> czerwone", thrBad.code === 1, kod(thrBad));
+R.ok("i FAIL mówi o napisach, nie o wystąpieniach",
+     /FAIL 3 różnych napisów wobec progu 2/.test(thrBad.out), thrBad.out.split("\n").pop());
+
 /* ---- BRAK ARTEFAKTU POPRZEDNIEGO KROKU ----
    check-dictionary.js nie renderuje niczego sam: mierzy raport, który produkuje
    check-rendered.js --texts. Gdy raportu nie ma, strażnik ma powiedzieć CZEGO nie ma
