@@ -273,10 +273,22 @@ exceptions.** A change that adds text outside the dictionary either gets to zero
 debt or does not land. This is the entire purpose of the threshold: existing debt is
 described by a number, and every new string goes through a key.
 
-> **This rule is incomplete until #86 lands.** `BASELINE` counts occurrences, not distinct
-> strings, so adding a scenario raises it without adding a single new string — a rise that
-> is neither coverage of a new class nor debt, and that passes the test below as
-> "coverage". Do not lean on this rule to justify a rise until the unit is fixed.
+**Both thresholds count distinct things, and that is what makes the two cases above
+exhaustive.** `BASELINE` counts distinct normalised strings — the key is the same string
+its coverage criterion compares, so whitespace, letter case and digits inside the text do
+not create a second item. `ORPHAN_BASELINE` counts dictionary keys and always did.
+
+This paragraph replaces an annotation that said the rule was incomplete, and the reason it
+could be removed is worth keeping. Until 2026-09-01 `BASELINE` counted **occurrences**,
+which scale with how many scenarios ran rather than with how much text is left: 530
+occurrences were 138 distinct strings, one template contributed 32 of them, and the twelfth
+scenario added 41 occurrences and zero strings. A rise caused by nothing but a new scenario
+was neither coverage of a new class nor debt, and it passed the test above as coverage —
+so the rule could be used in good faith to push through a rise that meant nothing. Changing
+the unit closed that without adding a third case: a new scenario cannot raise a count of
+distinct strings, because it brings no new string. Pinned by assertion, not by intention —
+two report fixtures differ only in a second scenario rendering the same text, and the
+string count is required to be identical across them.
 
 **In the long run the number may only fall.** Every allowed rise is a rise for a reason
 that is not debt, so the debt component itself never grows. When it drops, lower the
