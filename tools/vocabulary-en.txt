@@ -32,7 +32,6 @@
 # do zbioru zaakceptowanego zapisuje wade pomiaru jako fakt o produkcie.
 #
 # Zbior otwarty 2026-08-19 na main @ 9a45b4e: 1007 pozycji, zero polskich.
-
 # +3 przy #10, +11 przy #9 (etykiety widoku roznic) — kazde przeczytane: 1020 pozycji.
 a
 about
@@ -213,6 +212,7 @@ configured
 conflict
 conflicting
 constructs
+contain
 container
 containers
 contains
@@ -397,6 +397,7 @@ for
 force
 forever
 form
+format
 forwarding
 found
 four
@@ -554,6 +555,7 @@ live
 load
 loadbalancer
 loaded
+loads
 local
 locally
 lock
@@ -781,6 +783,7 @@ records
 redeclare
 redfish
 redundancy
+refuse
 registry
 rejected
 release
@@ -976,6 +979,7 @@ unchanged
 undefined
 under
 ungrouped
+unknown
 unlimited
 unmaintained
 unset
@@ -1002,6 +1006,7 @@ values
 var
 variable
 variables
+vars
 verify
 version
 view
@@ -1022,6 +1027,7 @@ web
 weeks
 were
 what
+when
 where
 whether
 which

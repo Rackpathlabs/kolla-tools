@@ -349,6 +349,21 @@
          #58 i nie robimy jej tutaj — dopisanie nowego długu i tak byłoby ruchem
          w przeciwną stronę niż to zgłoszenie. Mechanizm jest gotowy (wstawki {…}
          w t()), więc nie powstaje tu nic nowego poza dwoma kluczami. */
+      /* Sześć wpisów przeniesionych z literałów w kodzie 2026-09-01 — rejestr #77.
+         Żadnego z nich nie wykonywał ani jeden z trzynastu scenariuszy, więc nie
+         widział ich ani check-english.js, ani migawka, ani goldeny; znalazło je
+         czytanie. Od chwili wejścia do słownika obejmuje je statyczny przebieg po
+         WARTOŚCIACH słownika, niezależny od pokrycia (ADR-004, opcja B). */
+      "v.f.syntax.hint":           "Expected format: <code>[name]</code>, <code>[name:children]</code> or <code>[name:vars]</code>.",
+      "v.f.sectionKind":           "Unknown section type <code>{kind}</code>.",
+      "v.f.childrenFormat":        "Section <code>[{group}:children]</code> may contain only group names, one per line.",
+      "v.f.groupCycle.hint":       "Ansible will refuse an inventory like this when it loads it.",
+      "v.f.duplicateVar":          "Variable <code>{key}</code> is set twice in <code>[{group}:vars]</code>.",
+      /* Dwie wstawki, jeden klucz, ŻADNEGO wariantu liczebnika — i to jest
+         rozstrzygnięcie, nie przeoczenie. Po angielsku nie odmienia się tu nic:
+         „and 1 more" i „and 4 more" różnią się wyłącznie liczbą. Wariant liczebnika
+         byłby wpisem, który nigdy nie wybiera drugiej formy. */
+      "v.hostList.more":           "{shown} and {more} more",
       "v.f.hostNoKollaGroup":      "Host <code>{host}</code> is in no group that Kolla-Ansible deploys onto.",
       "v.f.hostNoKollaGroup.hint": "Its groups are {groups}, and Kolla-Ansible selects hosts by group name. No service will be deployed on this host.",
       "v.f.hostNoKollaGroup.none": "It belongs to no group beyond the implicit ones. No service will be deployed on this host.",
