@@ -64,12 +64,11 @@ v.c.net.same.hint  m  do migracji (#58)
 v.c.net.same.msg  m  do migracji (#58)
 v.c.storage.hint  m  do migracji (#58)
 v.c.storage.msg  m  do migracji (#58)
-v.empty  m  do migracji (#58)
+v.empty  a  element <p class=empty-state> tworzony przez JS; zakotwiczenie znaczyloby DOPISANIE markupu, nie przeniesienie klucza
 v.f.hostNoKollaGroup  m  do migracji (#58)
 v.f.hostNoKollaGroup.hint  m  do migracji (#58)
 v.f.hostNoKollaGroup.none  m  do migracji (#58)
-v.globals.loaded  m  do migracji (#58)
-v.globals.none  m  do migracji (#58)
+v.globals.loaded  a  kolejny STAN elementu #chip-globals; stanem poczatkowym jest v.globals.none i to tamten klucz ma kotwice
 v.q.aio.hint  m  do migracji (#58)
 v.q.aio.msg  m  do migracji (#58)
 v.q.ceph.msg  m  do migracji (#58)
@@ -85,7 +84,7 @@ v.r.removed  m  do migracji (#58)
 v.r.renamed  m  do migracji (#58)
 v.rel.planned  m  do migracji (#58)
 v.rel.since  m  do migracji (#58)
-v.releaseTo.none  m  do migracji (#58)
+v.releaseTo.none  a  element <option> tworzony przez JS; zakotwiczenie znaczyloby DOPISANIE markupu, nie przeniesienie klucza
 v.rep.absent  m  do migracji (#58)
 v.rep.both  m  do migracji (#58)
 v.rep.clean  m  do migracji (#58)
@@ -102,15 +101,13 @@ v.rep.topology  m  do migracji (#58)
 v.rs.development  m  do migracji (#58)
 v.rs.eol  m  do migracji (#58)
 v.rs.unmaintained  m  do migracji (#58)
-v.sample.bad  m  do migracji (#58)
-v.sample.ok  m  do migracji (#58)
-v.sev.error  m  do migracji (#58)
-v.sev.info  m  do migracji (#58)
-v.sev.warn  m  do migracji (#58)
-v.src.both  m  do migracji (#58)
-v.src.path  m  do migracji (#58)
-v.start  m  do migracji (#58)
-v.title  m  do migracji (#58)
+v.sample.bad  a  tresc przykladowego inventory wpisywana w pole wejscia; nie jest tekstem interfejsu w zadnym elemencie
+v.sample.ok  a  tresc przykladowego inventory wpisywana w pole wejscia; nie jest tekstem interfejsu w zadnym elemencie
+v.sev.error  a  etykieta wagi findingu; findingu nie ma, dopoki nie powstanie
+v.sev.info  a  etykieta wagi findingu; findingu nie ma, dopoki nie powstanie
+v.sev.warn  a  etykieta wagi findingu; findingu nie ma, dopoki nie powstanie
+v.src.both  a  etykieta zrodla findingu; findingu nie ma, dopoki nie powstanie
+v.src.path  a  etykieta zrodla findingu; findingu nie ma, dopoki nie powstanie
 v.topology.count  m  do migracji (#58)
 v.topology.group  m  do migracji (#58)
 v.topology.hosts  m  do migracji (#58)
@@ -122,9 +119,9 @@ v.u.gap.which1  m  do migracji (#58)
 v.u.gap.whichN  m  do migracji (#58)
 v.u.todo.renameGroup  m  do migracji (#58)
 v.u.todo.renameKey  m  do migracji (#58)
-v.verdict.clean  m  do migracji (#58)
-v.verdict.errors  m  do migracji (#58)
-v.verdict.warnings  m  do migracji (#58)
+v.verdict.clean  a  kolejny STAN elementu #verdict-txt; stanem poczatkowym jest v.start i to tamten klucz ma kotwice
+v.verdict.errors  a  kolejny STAN elementu #verdict-txt; stanem poczatkowym jest v.start i to tamten klucz ma kotwice
+v.verdict.warnings  a  kolejny STAN elementu #verdict-txt; stanem poczatkowym jest v.start i to tamten klucz ma kotwice
 v.x.kv01.hint  m  do migracji (#58)
 v.x.kv01.msg  m  do migracji (#58)
 v.x.kv07.hint  m  do migracji (#58)
