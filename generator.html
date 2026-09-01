@@ -948,6 +948,18 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
          widział ich ani check-english.js, ani migawka, ani goldeny; znalazło je
          czytanie. Od chwili wejścia do słownika obejmuje je statyczny przebieg po
          WARTOŚCIACH słownika, niezależny od pokrycia (ADR-004, opcja B). */
+      /* Rodzina PARSERA — przeniesione 2026-09-01 z literałów w kodzie walidatora (#58).
+         Wartości przepisane BAJT W BAJT z literałów; migawka piętnastu scenariuszy
+         potwierdza, że na ekranie nic się nie zmieniło. */
+      "v.f.syntax.malformed":      "Malformed section header: <code>{header}</code>.",
+      "v.f.syntax.emptyName":      "The section header has an empty group name.",
+      "v.f.outsideGroup":          "Entry <code>{entry}</code> appears before any group header.",
+      "v.f.outsideGroup.hint":     "Ansible puts it in <code>ungrouped</code>, so no Kolla role covers it.",
+      "v.f.groupVar":              "In <code>[{group}:vars]</code> the entry <code>{entry}</code> is not a variable assignment.",
+      "v.f.groupVar.hint":         "Ansible expects <code>key=value</code>, with no spaces around the equals sign.",
+      "v.f.range":                 "Pattern <code>{pattern}</code> is not a valid host range.",
+      "v.f.range.hint":            "Ansible expects <code>name[01:10]</code> or <code>name[a:f]</code>, optionally with a step " +
+                                   "(<code>[01:10:2]</code>). Both ends must be of the same kind, and with a leading zero also of the same length.",
       "v.f.syntax.hint":           "Expected format: <code>[name]</code>, <code>[name:children]</code> or <code>[name:vars]</code>.",
       "v.f.sectionKind":           "Unknown section type <code>{kind}</code>.",
       "v.f.childrenFormat":        "Section <code>[{group}:children]</code> may contain only group names, one per line.",
