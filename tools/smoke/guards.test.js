@@ -18,11 +18,20 @@ R.section("strażnicy na fixturach o znanej charakterystyce:");
 var root = path.join(__dirname, "..", "..");
 var NODE = process.env.NODE || process.execPath;
 
-function run(script, args) {
+function run(script, args, env) {
   var sh = /\.sh$/.test(script);
+  /* Nadpisania środowiska są potrzebne dokładnie jednej grupie asercji: tej, która
+     odbiera strażnikowi przeglądarkę. Zdarzenia „nie ma czym mierzyć" nie da się
+     wywołać inaczej — ścieżki kandydatów są bezwzględne i istnieją na tej maszynie. */
+  var e = process.env;
+  if (env) {
+    e = {};
+    Object.keys(process.env).forEach(function (k) { e[k] = process.env[k]; });
+    Object.keys(env).forEach(function (k) { e[k] = env[k]; });
+  }
   var r = cp.spawnSync(sh ? "bash" : NODE,
                        ["tools/" + script].concat(args || []),
-                       { cwd: root, encoding: "utf8" });
+                       { cwd: root, encoding: "utf8", env: e });
   /* Strumienie zostają połączone w out, bo asercje pytają o TREŚĆ i nie obchodzi ich,
      którym kanałem wyszła. err zostaje osobno wyłącznie dla kod(), niżej. */
   return { code: r.status, out: (r.stdout || "") + (r.stderr || ""), err: r.stderr || "" };
@@ -144,6 +153,76 @@ R.ok("brak argumentu -> ta sama awaria, ten sam kod 2", dictNoArg.code === 2,
 var snapNoRep = run("golden/snapshot.golden.js", [MISSING_REPORT]);
 R.ok("migawka na tym samym braku -> ten sam kod 2", snapNoRep.code === 2,
      kod(snapNoRep));
+
+/* ---- ten sam brak, drugi artefakt: wycięty blok <script> ----
+   Pięciu konsumentów czyta plik, który tools/run-tests.sh wycina z HTML-a funkcją
+   extract_script. Wewnątrz runnera ta funkcja przerywa cały przebieg, gdy wycinek
+   wyjdzie pusty, więc tam plik nigdy nie jest nieobecny — i to jest dokładnie zakres
+   tamtej ochrony. Plik testowy odpalony Z RĘKI, a robi się to przy każdej pracy nad
+   pojedynczym strażnikiem, nie ma jej wcale: dostaje ślad stosu z node:fs i kod 1,
+   czyli „zmierzyłem i jest naruszenie" o pomiarze, który się nie odbył.
+
+   Klauzula siedzi w testlib.loadTool, bo tam jest jedno czytanie dla całej piątki.
+   Asercje pytają każdego konsumenta OSOBNO: wspólna biblioteka to powód, dla którego
+   dziś odpowiadają tak samo, a nie gwarancja, że jutro któryś nie zacznie czytać
+   pliku sam. */
+var MISSING_SCRIPT = "tools/fixtures/script-missing.js";
+R.ok("fixtura nieobecności bloku <script> naprawdę nie istnieje",
+     !require("fs").existsSync(path.join(root, MISSING_SCRIPT)), MISSING_SCRIPT);
+
+var LOAD_TOOL = ["smoke/generator.test.js", "smoke/validator.test.js",
+                 "golden/generator.golden.js", "golden/roundtrip.golden.js",
+                 "golden/validator.golden.js"];
+var loadRuns = LOAD_TOOL.map(function (name) {
+  return { name: name, r: run(name, [MISSING_SCRIPT]) };
+});
+loadRuns.forEach(function (x) {
+  R.ok("brak wyciętego bloku -> kod 2: " + x.name, x.r.code === 2, kod(x.r));
+});
+
+var lt = loadRuns[0].r;
+R.ok("i NIE jest to ślad stosu z readFileSync",
+     !/ENOENT|node:fs|at Object\./.test(lt.out), lt.out.split("\n")[0]);
+R.ok("i nazywa plik, którego brakuje", /script-missing\.js/.test(lt.out),
+     lt.out.split("\n")[0]);
+R.ok("i nazywa PRODUCENTA: extract_script w tools/run-tests.sh",
+     /extract_script/.test(lt.out) && /run-tests\.sh/.test(lt.out),
+     lt.out.split("\n")[1]);
+R.ok("i mówi wprost, że kontrola nie jest pomijana po cichu",
+     /NIE jest pomijana po cichu/.test(lt.out), lt.out.split("\n")[2]);
+
+/* check-english.js czyta ten sam wycinek przez loadTool, ale ma DRUGIE wejście,
+   którego loadTool nie widzi: w trybie --fixture blok wycina sobie sam z HTML-a
+   i do loadTool z argumentem z wiersza poleceń nigdy nie dochodzi. Jedna klauzula
+   w bibliotece nie zamyka obu dróg, więc ten strażnik dostaje własną. */
+var engNoScript = run("check-english.js", [MISSING_SCRIPT, "validator.html", "validator"]);
+R.ok("check-english.js bez wycinka -> kod 2", engNoScript.code === 2, kod(engNoScript));
+
+var engNoHtml = run("check-english.js", ["--fixture", "tools/fixtures/nie-ma-fixtury.html"]);
+R.ok("check-english.js --fixture bez pliku -> kod 2", engNoHtml.code === 2, kod(engNoHtml));
+R.ok("i nazywa plik oraz mówi, że kontrola nie jest pomijana po cichu",
+     /nie-ma-fixtury\.html/.test(engNoHtml.out) &&
+     /NIE jest pomijana po cichu/.test(engNoHtml.out), engNoHtml.out.split("\n")[0]);
+
+/* ---- brak przeglądarki: JEDNO zdarzenie, jedna odpowiedź ----
+   check-rendered.js odpowiadał na nie kodem 2, check-network.js kodem 1 — a to jest
+   to samo zdarzenie widziane przez dwóch strażników, którzy szukają przeglądarki tą
+   samą funkcją z render-lib.js. Dwa kody na jedno zdarzenie znaczą, że czytelnik logu
+   musi wiedzieć, KTÓRY strażnik akurat mówi, zanim zrozumie, co powiedział.
+
+   Zdarzenie wywołujemy jawnym wskazaniem na nieistniejącą ścieżkę. Jawne wskazanie
+   jest rozstrzygające — patrz komentarz przy findChrome — więc to jest ta sama droga,
+   którą przejdzie człowiek z literówką w CHROME=, a nie atrapa zbudowana pod test. */
+var NO_CHROME = { CHROME: "/nie/ma/takiej/przegladarki" };
+var renderNoChrome = run("check-rendered.js", [], NO_CHROME);
+var netNoChrome = run("check-network.js", [], NO_CHROME);
+R.ok("check-rendered.js bez przeglądarki -> kod 2", renderNoChrome.code === 2,
+     kod(renderNoChrome));
+R.ok("check-network.js bez przeglądarki -> kod 2", netNoChrome.code === 2,
+     kod(netNoChrome));
+R.ok("oba strażniki dają TEN SAM kod na tym samym zdarzeniu",
+     renderNoChrome.code === netNoChrome.code,
+     "check-rendered.js " + kod(renderNoChrome) + " / check-network.js " + kod(netNoChrome));
 
 /* ---- dowód upadku WYJĄTKU, nie tylko kontroli ----
    Dowodziliśmy upadku kontroli wielokrotnie i ani razu upadku zwolnienia. Gdy
