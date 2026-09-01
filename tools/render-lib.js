@@ -134,7 +134,6 @@ var FILES = [
    Windows (WSL). Brak przeglądarki ma być JAWNYM błędem, nie cichym pominięciem
    — kontrola, która sama siebie wyłącza, gdy jest niewygodna, nie jest kontrolą. */
 var CANDIDATES = [
-  process.env.CHROME,
   "/usr/bin/google-chrome", "/usr/bin/google-chrome-stable",
   "/usr/bin/chromium", "/usr/bin/chromium-browser",
   "/mnt/c/Program Files/Google/Chrome/Application/chrome.exe",
@@ -144,7 +143,14 @@ var CANDIDATES = [
   "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
 ];
 
+/* Jawne wskazanie jest ROZSTRZYGAJĄCE, a nie pierwszym kandydatem z listy. CHROME
+   ustawione na ścieżkę, której nie ma, znaczy „brak przeglądarki" — nie „weź inną".
+   Cichy powrót do listy mierzył przeglądarkę, której nikt nie wskazał, a komunikat
+   „Ustaw CHROME=…" kłamał wtedy komuś, kto ją właśnie ustawił i miał w niej literówkę. */
 function findChrome() {
+  if (process.env.CHROME) {
+    return fs.existsSync(process.env.CHROME) ? process.env.CHROME : null;
+  }
   for (var i = 0; i < CANDIDATES.length; i++) {
     if (CANDIDATES[i] && fs.existsSync(CANDIDATES[i])) return CANDIDATES[i];
   }

@@ -115,7 +115,9 @@ move — are in [CLAUDE.md](CLAUDE.md).
 
 Code shared between tools lives in `matrix.js`, `globals-parser.js` and `theme.css`, and
 is pasted byte-identically into each file that needs it; CI fails if the copies drift.
-Tests need only Node.
+Most of the suite needs only Node, but the rendering and network sections drive headless
+Chrome — taken from `CHROME=` or from a standard install path — and without one the runner
+fails loudly on them instead of skipping them.
 
 The zero-dependency rule covers the product, not the tooling: nothing shipped to a user
 may pull in a library, but a CI script that never reaches the artefacts may (the upstream

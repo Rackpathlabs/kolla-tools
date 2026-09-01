@@ -115,9 +115,17 @@ var FLAGS = [
 function die(msg) { console.log("FAIL " + msg); process.exit(1); }
 
 var chrome = lib.findChrome();
+/* Kod 2, nie 1, i to jest ten sam kod, którym na TO SAMO zdarzenie odpowiada
+   check-rendered.js — obaj szukają przeglądarki jedną funkcją z render-lib.js. 1 znaczy
+   w tym runnerze „zmierzyłem i jest naruszenie"; brak przeglądarki nie jest naruszeniem
+   sieciowym, tylko brakiem pomiaru, i musi być odróżnialny bez czytania, który strażnik
+   akurat mówi. Dlatego NIE idzie przez die(): die() jest dla naruszeń. */
 if (!chrome) {
-  die("brak przeglądarki. Bez niej nie da się zaobserwować, co wyszło — " +
-      "a kontrola sieci NIE jest pomijana po cichu.");
+  console.error("FAIL brak przeglądarki do pomiaru żądań sieciowych. " +
+                "Ustaw CHROME=/ścieżka/do/chrome.");
+  console.error("     Bez niej nie da się zaobserwować, co wyszło — a kontrola sieci");
+  console.error("     NIE jest pomijana po cichu.");
+  process.exit(2);
 }
 console.log("przeglądarka: " + chrome);
 

@@ -234,6 +234,31 @@ if (FIXTURE) {
   mode = process.argv[4] || "validator";
 }
 
+/* OBA wejścia sprawdzone, zanim cokolwiek się wykona — a strażnik ma dwa i tylko jedno
+   z nich idzie przez testlib.loadTool. W trybie --fixture blok <script> wycinany jest
+   z HTML-a na miejscu, więc klauzula w bibliotece nie leży po drodze i brak pliku wracał
+   śladem stosu z node:fs. Klauzula w bibliotece to nie jest to samo co klauzula w tym
+   pliku, i różnicę widać dopiero, gdy się je wypisze osobno.
+
+   Kod 2, jak wszędzie tutaj: 1 znaczy „zmierzyłem i jest naruszenie", 2 znaczy
+   „nie zmierzyłem". */
+function brakWejscia(co, plik, skad) {
+  console.error("FAIL " + co + ": " + (plik || "(nie podano ścieżki)"));
+  console.error("     " + skad);
+  console.error("     Kontrola kompletności angielskiego NIE jest pomijana po cichu: bez");
+  console.error("     przedmiotu pomiaru zielone i czerwone znaczą dokładnie to samo.");
+  process.exit(2);
+}
+if (!FIXTURE && (!scriptPath || !fs.existsSync(scriptPath))) {
+  brakWejscia("brak wyciętego bloku <script>", scriptPath,
+              "Produkuje go extract_script w tools/run-tests.sh z pliku HTML narzędzia.");
+}
+if (!htmlPath || !fs.existsSync(htmlPath)) {
+  brakWejscia("brak pliku HTML narzędzia", htmlPath,
+              "To plik repozytorium (validator.html, generator.html, index.html) — " +
+              "sprawdź argument.");
+}
+
 lib.installDom();
 
 /* Fixtura jest samowystarczalna: blok <script> wycinamy z niej samej, żeby

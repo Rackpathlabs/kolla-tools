@@ -18,20 +18,45 @@ R.section("strażnicy na fixturach o znanej charakterystyce:");
 var root = path.join(__dirname, "..", "..");
 var NODE = process.env.NODE || process.execPath;
 
-function run(script, args) {
+function run(script, args, env) {
   var sh = /\.sh$/.test(script);
+  /* Nadpisania środowiska są potrzebne dokładnie jednej grupie asercji: tej, która
+     odbiera strażnikowi przeglądarkę. Zdarzenia „nie ma czym mierzyć" nie da się
+     wywołać inaczej — ścieżki kandydatów są bezwzględne i istnieją na tej maszynie. */
+  var e = process.env;
+  if (env) {
+    e = {};
+    Object.keys(process.env).forEach(function (k) { e[k] = process.env[k]; });
+    Object.keys(env).forEach(function (k) { e[k] = env[k]; });
+  }
   var r = cp.spawnSync(sh ? "bash" : NODE,
                        ["tools/" + script].concat(args || []),
-                       { cwd: root, encoding: "utf8" });
-  return { code: r.status, out: (r.stdout || "") + (r.stderr || "") };
+                       { cwd: root, encoding: "utf8", env: e });
+  /* Strumienie zostają połączone w out, bo asercje pytają o TREŚĆ i nie obchodzi ich,
+     którym kanałem wyszła. err zostaje osobno wyłącznie dla kod(), niżej. */
+  return { code: r.status, out: (r.stdout || "") + (r.stderr || ""), err: r.stderr || "" };
+}
+
+/* Komunikat „-> kod 2" nie odróżnia dwóch całkiem różnych zdarzeń: strażnik dał INNY
+   WYNIK niż oczekiwany, czy w ogóle NIE RUSZYŁ. Drugie ma w tym repozytorium własny kod
+   wyjścia (2) i własny komunikat na stderr — brak przeglądarki, brak raportu z
+   poprzedniego kroku. Bez tej linii oba FAIL-e wyglądają w logu identycznie i wysyłają
+   czytelnika do złego pliku: do strażnika, który akurat działa poprawnie, zamiast do
+   kroku, który nie dostarczył mu przedmiotu pomiaru.
+
+   Dopisywana jest PIERWSZA linia stderr, bo tam stoi zdanie „FAIL czego brakuje";
+   reszta to uzasadnienie, które w jednolinijkowym FAIL-u i tak by się nie zmieściło. */
+function kod(r) {
+  var first = String(r.err || "").split("\n")[0].trim();
+  return "kod " + r.code + (r.code === 2 && first ? " — " + first : "");
 }
 
 /* ---- check-literals: liczy ujścia tekstu ---- */
 var clean = run("check-literals.js", ["tools/fixtures/clean.js"]);
-R.ok("czysta fixtura -> zielone", clean.code === 0, "kod " + clean.code);
+R.ok("czysta fixtura -> zielone", clean.code === 0, kod(clean));
 
 var one = run("check-literals.js", ["tools/fixtures/one-literal.js"]);
-R.ok("jeden literał -> czerwone", one.code === 1, "kod " + one.code);
+R.ok("jeden literał -> czerwone", one.code === 1, kod(one));
 R.ok("jeden literał -> DOKŁADNIE jedno trafienie",
      /ujściu tekstu[^,]*, 1 razy/.test(one.out), one.out.split("\n")[1]);
 
@@ -45,10 +70,10 @@ R.ok("wywołania T() nie są liczone jako naruszenia",
 
 /* ---- check-binary: bajt NUL ---- */
 var binClean = run("check-binary.sh", ["tools/fixtures/clean.js"]);
-R.ok("check-binary na czystym drzewie -> zielone", binClean.code === 0, "kod " + binClean.code);
+R.ok("check-binary na czystym drzewie -> zielone", binClean.code === 0, kod(binClean));
 
 var nul = run("check-binary.sh", ["tools/fixtures/has-nul.js"]);
-R.ok("fixtura z NUL-em -> czerwone", nul.code !== 0, "kod " + nul.code);
+R.ok("fixtura z NUL-em -> czerwone", nul.code !== 0, kod(nul));
 R.ok("i nazywa plik, w którym siedzi", /has-nul\.js/.test(nul.out),
      nul.out.split("\n").slice(-2).join(" | "));
 
@@ -77,6 +102,128 @@ R.ok("napis ze słownika z liczbą z przodu NIE jest brakiem",
 R.ok("krótki segment nie pokrywa przez zawieranie", /has 5 hosts/.test(dict.out));
 R.ok("normalizacja nie przepuszcza polskiego z liczbą", /5 błędów/.test(dict.out));
 
+/* ---- BRAK ARTEFAKTU POPRZEDNIEGO KROKU ----
+   check-dictionary.js nie renderuje niczego sam: mierzy raport, który produkuje
+   check-rendered.js --texts. Gdy raportu nie ma, strażnik ma powiedzieć CZEGO nie ma
+   i KTO to robi — a nie wysypać się śladem stosu na readFileSync, bo ślad stosu wysyła
+   czytelnika do wnętrza strażnika zamiast do kroku, który nie wyprodukował pliku.
+
+   Kod wyjścia jest tu OSOBNĄ informacją, nie ozdobą. 1 znaczy „zmierzyłem i nie
+   przeszło", 2 znaczy „nie zmierzyłem w ogóle" — to samo rozróżnienie, które
+   check-rendered.js robi już przy braku przeglądarki. Zlane w jedno, oba wyglądają
+   w logu CI identycznie, a to jest trzeci wariant pustego zielonego z
+   docs/PRINCIPLES.md widziany od strony czerwonej: kontrola pominięta wygląda jak
+   kontrola wykonana. */
+var MISSING_REPORT = "tools/fixtures/report-missing.json";
+/* Fixturą jest tu NIEOBECNOŚĆ pliku, więc jej przedmiot trzeba sprawdzić wprost:
+   gdyby ktoś kiedyś ten plik założył, poniższe asercje zaczęłyby mierzyć coś innego
+   i dalej byłyby zielone. */
+R.ok("fixtura nieobecności naprawdę nie istnieje",
+     !require("fs").existsSync(path.join(root, MISSING_REPORT)), MISSING_REPORT);
+
+var dictNoRep = run("check-dictionary.js", [MISSING_REPORT]);
+R.ok("brak raportu -> kod 2 („nie ruszyła\"), nie 1 i nie ślad stosu",
+     dictNoRep.code === 2, kod(dictNoRep));
+R.ok("i NIE jest to ślad stosu z readFileSync",
+     !/ENOENT|at Object\.|at Module/.test(dictNoRep.out),
+     dictNoRep.out.split("\n")[0]);
+R.ok("i nazywa plik, którego brakuje", /report-missing\.json/.test(dictNoRep.out),
+     dictNoRep.out.split("\n")[0]);
+R.ok("i nazywa PRODUCENTA raportu, czyli krok do naprawy",
+     /check-rendered\.js --texts/.test(dictNoRep.out), dictNoRep.out.split("\n")[1]);
+R.ok("i mówi wprost, że kontrola nie jest pomijana po cichu",
+     /NIE jest pomijana po cichu/.test(dictNoRep.out), dictNoRep.out.split("\n")[2]);
+/* Sam komunikat FAIL tego testu też jest przedmiotem pomiaru: gdyby niósł wyłącznie
+   „kod 2", czytelnik nie wiedziałby, czy strażnik dał inny wynik, czy nie ruszył. Bierzemy
+   PRAWDZIWY przebieg, nie atrapę — atrapa dowodziłaby czegoś o sobie. */
+R.ok("FAIL przy kodzie 2 niesie pierwszą linię stderr, nie samą liczbę",
+     /^kod 2 — FAIL brak raportu/.test(kod(dictNoRep)), kod(dictNoRep));
+R.ok("i tylko przy kodzie 2 — „inny wynik\" zostaje samą liczbą", kod(one) === "kod 1",
+     kod(one));
+/* Brak argumentu to ta sama awaria co brak pliku — jeden krok wcześniej. Osobno,
+   bo readFileSync(undefined) rzuca INNYM wyjątkiem niż ENOENT i naprawa jednej
+   ścieżki nie naprawia drugiej. */
+var dictNoArg = run("check-dictionary.js", []);
+R.ok("brak argumentu -> ta sama awaria, ten sam kod 2", dictNoArg.code === 2,
+     kod(dictNoArg));
+
+/* Migawka czyta TEN SAM plik i miała ten komunikat od początku — brakowało jej
+   wyłącznie kodu odróżniającego „nie ruszyła" od „nie przeszła". Asercja pilnuje,
+   żeby dwaj konsumenci jednego artefaktu nie rozjechali się z powrotem. */
+var snapNoRep = run("golden/snapshot.golden.js", [MISSING_REPORT]);
+R.ok("migawka na tym samym braku -> ten sam kod 2", snapNoRep.code === 2,
+     kod(snapNoRep));
+
+/* ---- ten sam brak, drugi artefakt: wycięty blok <script> ----
+   Pięciu konsumentów czyta plik, który tools/run-tests.sh wycina z HTML-a funkcją
+   extract_script. Wewnątrz runnera ta funkcja przerywa cały przebieg, gdy wycinek
+   wyjdzie pusty, więc tam plik nigdy nie jest nieobecny — i to jest dokładnie zakres
+   tamtej ochrony. Plik testowy odpalony Z RĘKI, a robi się to przy każdej pracy nad
+   pojedynczym strażnikiem, nie ma jej wcale: dostaje ślad stosu z node:fs i kod 1,
+   czyli „zmierzyłem i jest naruszenie" o pomiarze, który się nie odbył.
+
+   Klauzula siedzi w testlib.loadTool, bo tam jest jedno czytanie dla całej piątki.
+   Asercje pytają każdego konsumenta OSOBNO: wspólna biblioteka to powód, dla którego
+   dziś odpowiadają tak samo, a nie gwarancja, że jutro któryś nie zacznie czytać
+   pliku sam. */
+var MISSING_SCRIPT = "tools/fixtures/script-missing.js";
+R.ok("fixtura nieobecności bloku <script> naprawdę nie istnieje",
+     !require("fs").existsSync(path.join(root, MISSING_SCRIPT)), MISSING_SCRIPT);
+
+var LOAD_TOOL = ["smoke/generator.test.js", "smoke/validator.test.js",
+                 "golden/generator.golden.js", "golden/roundtrip.golden.js",
+                 "golden/validator.golden.js"];
+var loadRuns = LOAD_TOOL.map(function (name) {
+  return { name: name, r: run(name, [MISSING_SCRIPT]) };
+});
+loadRuns.forEach(function (x) {
+  R.ok("brak wyciętego bloku -> kod 2: " + x.name, x.r.code === 2, kod(x.r));
+});
+
+var lt = loadRuns[0].r;
+R.ok("i NIE jest to ślad stosu z readFileSync",
+     !/ENOENT|node:fs|at Object\./.test(lt.out), lt.out.split("\n")[0]);
+R.ok("i nazywa plik, którego brakuje", /script-missing\.js/.test(lt.out),
+     lt.out.split("\n")[0]);
+R.ok("i nazywa PRODUCENTA: extract_script w tools/run-tests.sh",
+     /extract_script/.test(lt.out) && /run-tests\.sh/.test(lt.out),
+     lt.out.split("\n")[1]);
+R.ok("i mówi wprost, że kontrola nie jest pomijana po cichu",
+     /NIE jest pomijana po cichu/.test(lt.out), lt.out.split("\n")[2]);
+
+/* check-english.js czyta ten sam wycinek przez loadTool, ale ma DRUGIE wejście,
+   którego loadTool nie widzi: w trybie --fixture blok wycina sobie sam z HTML-a
+   i do loadTool z argumentem z wiersza poleceń nigdy nie dochodzi. Jedna klauzula
+   w bibliotece nie zamyka obu dróg, więc ten strażnik dostaje własną. */
+var engNoScript = run("check-english.js", [MISSING_SCRIPT, "validator.html", "validator"]);
+R.ok("check-english.js bez wycinka -> kod 2", engNoScript.code === 2, kod(engNoScript));
+
+var engNoHtml = run("check-english.js", ["--fixture", "tools/fixtures/nie-ma-fixtury.html"]);
+R.ok("check-english.js --fixture bez pliku -> kod 2", engNoHtml.code === 2, kod(engNoHtml));
+R.ok("i nazywa plik oraz mówi, że kontrola nie jest pomijana po cichu",
+     /nie-ma-fixtury\.html/.test(engNoHtml.out) &&
+     /NIE jest pomijana po cichu/.test(engNoHtml.out), engNoHtml.out.split("\n")[0]);
+
+/* ---- brak przeglądarki: JEDNO zdarzenie, jedna odpowiedź ----
+   check-rendered.js odpowiadał na nie kodem 2, check-network.js kodem 1 — a to jest
+   to samo zdarzenie widziane przez dwóch strażników, którzy szukają przeglądarki tą
+   samą funkcją z render-lib.js. Dwa kody na jedno zdarzenie znaczą, że czytelnik logu
+   musi wiedzieć, KTÓRY strażnik akurat mówi, zanim zrozumie, co powiedział.
+
+   Zdarzenie wywołujemy jawnym wskazaniem na nieistniejącą ścieżkę. Jawne wskazanie
+   jest rozstrzygające — patrz komentarz przy findChrome — więc to jest ta sama droga,
+   którą przejdzie człowiek z literówką w CHROME=, a nie atrapa zbudowana pod test. */
+var NO_CHROME = { CHROME: "/nie/ma/takiej/przegladarki" };
+var renderNoChrome = run("check-rendered.js", [], NO_CHROME);
+var netNoChrome = run("check-network.js", [], NO_CHROME);
+R.ok("check-rendered.js bez przeglądarki -> kod 2", renderNoChrome.code === 2,
+     kod(renderNoChrome));
+R.ok("check-network.js bez przeglądarki -> kod 2", netNoChrome.code === 2,
+     kod(netNoChrome));
+R.ok("oba strażniki dają TEN SAM kod na tym samym zdarzeniu",
+     renderNoChrome.code === netNoChrome.code,
+     "check-rendered.js " + kod(renderNoChrome) + " / check-network.js " + kod(netNoChrome));
+
 /* ---- dowód upadku WYJĄTKU, nie tylko kontroli ----
    Dowodziliśmy upadku kontroli wielokrotnie i ani razu upadku zwolnienia. Gdy
    spróbowaliśmy pierwszy raz, okazało się martwe: odcisk obejmował podgląd pliku,
@@ -84,12 +231,12 @@ R.ok("normalizacja nie przepuszcza polskiego z liczbą", /5 błędów/.test(dict
    zapalała. Miało komentarz, przechodziło testy i zgodne liczby — nie było czego
    zauważyć. Ta asercja pilnuje, żeby zwolnienie dalej BYŁO POTRZEBNE. */
 var withEx = run("check-rendered.js", []);
-R.ok("ze zwolnieniem — pełny audyt zielony", withEx.code === 0, "kod " + withEx.code);
+R.ok("ze zwolnieniem — pełny audyt zielony", withEx.code === 0, kod(withEx));
 
 var noEx = run("check-rendered.js", ["--no-exemptions"]);
 R.ok("bez zwolnienia — scenariusz przełącznika upada",
      /pojedynczy przełącznik[\s\S]*nie zmienił NICZEGO/.test(noEx.out) && noEx.code !== 0,
-     "kod " + noEx.code);
+     kod(noEx));
 
 /* ---- check-english: trzynaście pozycji, na których raportował zero ----
    Fixtura NIE jest wymyślona: to te same napisy, które skan ręczny znalazł przed
@@ -100,7 +247,7 @@ R.ok("bez zwolnienia — scenariusz przełącznika upada",
    przeszedłby licznikowi, który zapala się na wszystkim — a taki licznik jest
    dokładnie tym, czym była lista słów funkcyjnych widziana od drugiej strony. */
 var engBad = run("check-english.js", ["--fixture", "tools/fixtures/english-thirteen.html"]);
-R.ok("trzynaście pozycji -> czerwone", engBad.code === 1, "kod " + engBad.code);
+R.ok("trzynaście pozycji -> czerwone", engBad.code === 1, kod(engBad));
 R.ok("i DOKŁADNIE 28 różnych polskich słów",
      /DO PRZECZYTANIA: 28$/m.test(engBad.out), engBad.out.split("\n")[0]);
 
@@ -152,7 +299,7 @@ R.ok("komplet dokumentów z sekcjami i odnośnikami -> zielone", docs("clean").c
    czyli PONAD progiem rozmiaru — kontrola rozmiaru przechodzi i lapie to wylacznie
    kontrola sekcji. Regula sciety do naglowka wazy prawie tyle, co regula z powodem. */
 var dh = docs("hollowed");
-R.ok("sekcja usunięta przy pliku wciąż dużym -> czerwone", dh.code === 1, "kod " + dh.code);
+R.ok("sekcja usunięta przy pliku wciąż dużym -> czerwone", dh.code === 1, kod(dh));
 R.ok("i nazywa BRAKUJĄCĄ sekcję, nie sam fakt różnicy",
      /brak sekcji "A ratchet threshold may only fall"/.test(dh.out), dh.out.split("\n")[0]);
 R.ok("a kontrola ROZMIARU tego nie złapała — plik jest nad progiem",
@@ -160,13 +307,13 @@ R.ok("a kontrola ROZMIARU tego nie złapała — plik jest nad progiem",
 
 /* UTRATA ODNOSNIKA: README zachowuje dwa z trzech. Nikt nie liczy odnosnikow. */
 var dl = docs("lost-link");
-R.ok("README traci jeden z trzech odnośników -> czerwone", dl.code === 1, "kod " + dl.code);
+R.ok("README traci jeden z trzech odnośników -> czerwone", dl.code === 1, kod(dl));
 R.ok("i mówi, którego brakuje", /brak odnośnika do CLAUDE\.md/.test(dl.out));
 
 /* WYDRAZENIE: dokument skrocony do samych naglowkow. Kontrola rozmiaru istnieje
    wlasnie po to i nigdy nie zostala pokazana, jak zapala. */
 var dg = docs("gutted");
-R.ok("dokument skrócony do nagłówków -> czerwone na rozmiarze", dg.code === 1, "kod " + dg.code);
+R.ok("dokument skrócony do nagłówków -> czerwone na rozmiarze", dg.code === 1, kod(dg));
 R.ok("i podaje liczbę bajtów oraz próg",
      /SCOPE\.md: 157 bajtów/.test(dg.out) && /próg 2000/.test(dg.out), dg.out.split("\n")[0]);
 
@@ -191,7 +338,7 @@ R.ok("kopia identyczna ze źródłem -> zielone", blocks("clean").code === 0,
 /* SPACJA NA KONCU LINII. To robi edytor przy zapisie i jest to ksztalt czynnosci
    ZAKAZANEJ przez zasady repo: edycja kopii w HTML zamiast zrodla. */
 var bt = blocks("trailing-space");
-R.ok("spacja na końcu linii w kopii -> czerwone", bt.code === 1, "kod " + bt.code);
+R.ok("spacja na końcu linii w kopii -> czerwone", bt.code === 1, kod(bt));
 R.ok("i mówi, z którym plikiem źródłowym się rozjechało",
      /rozjechał się z demo\.js/.test(bt.out), bt.out.split("\n")[0]);
 
@@ -228,7 +375,7 @@ R.ok("polityka zgodna, brak API sieciowych -> zielone", offline("clean").code ==
 /* (a) Bajtowo inna i semantycznie PRZEPUSZCZALNA: jedna dyrektywa wiecej. Tak wyglada
    edycja zrobiona po to, zeby „cos zadzialalo", a nie zlosliwa podmiana. */
 var oa = offline("bait-a-csp-permissive");
-R.ok("polityka z dodatkową dyrektywą (connect-src) -> czerwone", oa.code === 1, "kod " + oa.code);
+R.ok("polityka z dodatkową dyrektywą (connect-src) -> czerwone", oa.code === 1, kod(oa));
 R.ok("i pokazuje OBIE polityki, nie sam fakt różnicy",
      /oczekiwano:/.test(oa.out) && /connect-src https:/.test(oa.out));
 
@@ -237,7 +384,7 @@ R.ok("i pokazuje OBIE polityki, nie sam fakt różnicy",
    atrybutu JEST apostrofem, a polityka jest szeroko otwarta. Dzisiejszy wzorzec
    zapamietuje ogranicznik — to jest dokladnie ta poprawka, ktorej tamten nie mial. */
 var oa2 = offline("bait-a2-csp-single-quoted");
-R.ok("ogranicznik apostrofowy + polityka otwarta -> czerwone", oa2.code === 1, "kod " + oa2.code);
+R.ok("ogranicznik apostrofowy + polityka otwarta -> czerwone", oa2.code === 1, kod(oa2));
 R.ok("i wzorzec ODCZYTAŁ politykę, zamiast zgubić się na apostrofach",
      /default-src \*/.test(oa2.out), oa2.out.split("\n")[1]);
 
@@ -245,7 +392,7 @@ R.ok("i wzorzec ODCZYTAŁ politykę, zamiast zgubić się na apostrofach",
    ktorej nie da sie wykryc psuciem, bo popsucie rzeczy nieobecnej tez nie zapala lampki. */
 var oc = offline("bait-c-no-csp");
 R.ok("brak znacznika CSP -> czerwone, nie „nic do sprawdzenia\"",
-     oc.code === 1 && /brak znacznika meta/.test(oc.out), "kod " + oc.code);
+     oc.code === 1 && /brak znacznika meta/.test(oc.out), kod(oc));
 
 /* (b) GRANICA, nie dziura — i to jest rozstrzygniete, a nie odlozone. check-offline.js
    czyta ZRODLO i szuka szesciu nazw; wywolanie skladane w czasie dzialania nie wyglada
@@ -264,7 +411,7 @@ R.ok("brak znacznika CSP -> czerwone, nie „nic do sprawdzenia\"",
    granicy zapisanej. */
 var ob = offline("bait-b-runtime-network");
 R.ok("GRANICA check-offline.js: wywołania składane w czasie działania przechodzą (ADR-003, pokrywa check-network.js)",
-     ob.code === 0, "kod " + ob.code + " — jeśli to czerwone, zakres straznika sie zmienil; " +
+     ob.code === 0, kod(ob) + " — jeśli to czerwone, zakres straznika sie zmienil; " +
      "sprawdz ADR-003 i tools/check-network.js zanim uznasz to za poprawe");
 
 /* ---- zadania sieciowe na wykonanych scenariuszach ----
@@ -281,7 +428,7 @@ R.ok("strona bez żądań -> zielone", netClean.code === 0, netClean.out.split("
 R.ok("adres w treści i w zmiennej NIE jest żądaniem", !/example\.invalid/.test(netClean.out));
 
 var netDirty = network("dirty");
-R.ok("new Image().src = https://… -> czerwone", netDirty.code === 1, "kod " + netDirty.code);
+R.ok("new Image().src = https://… -> czerwone", netDirty.code === 1, kod(netDirty));
 R.ok("i nazywa HOSTA, do którego poszło żądanie",
      /telemetry\.example\.invalid/.test(netDirty.out), netDirty.out.split("\n")[2]);
 /* To jest DOKLADNIE ten przypadek, ktory przechodzi przez check-offline.js — para
@@ -301,7 +448,7 @@ var npmClean = npm("clean");
 R.ok("drzewo bez śladów npm -> zielone", npmClean.code === 0, npmClean.out.split("\n")[0]);
 
 var npmDirty = npm("dirty");
-R.ok("package.json w PODKATALOGU -> czerwone", npmDirty.code === 1, "kod " + npmDirty.code);
+R.ok("package.json w PODKATALOGU -> czerwone", npmDirty.code === 1, kod(npmDirty));
 R.ok("i node_modules w podkatalogu też", /sub\/node_modules\//.test(npmDirty.out), npmDirty.out);
 R.ok("i wskazuje ŚCIEŻKĘ, nie sam fakt", /tools\/package\.json/.test(npmDirty.out));
 
@@ -332,7 +479,7 @@ R.ok("każdy strażnik wpięty -> zielone", wClean.code === 0, wClean.out.split(
 R.ok("i wystarczy jedno ze ŹRÓDEŁ, nie oba", /wpiętych: 2/.test(wClean.out), wClean.out.split("\n")[0]);
 
 var wOrphan = wiring("guards-orphan", "runner-orphan.sh", "ci-orphan.yml", "fixtures-orphan.js");
-R.ok("strażnik poza buildem -> czerwone", wOrphan.code === 1, "kod " + wOrphan.code);
+R.ok("strażnik poza buildem -> czerwone", wOrphan.code === 1, kod(wOrphan));
 R.ok("i nazywa go", /check-sierota\.js/.test(wOrphan.out));
 /* PRZYNETA, ktora jest istota tej kontroli: nazwa pliku pada w KOMENTARZU runnera.
    Dokladnie taki akapit stoi dzis w ci.yml przy check-dictionary.js — wymienia go
@@ -349,13 +496,13 @@ R.ok("brak źródła -> czerwone, nie przejście",
    wtedy „nic nie sprawdzilem", czyli trzeci wariant pustego zielonego. */
 var wEmpty = run("check-wiring.js", ["--dir", "tools/fixtures", "--runner", W + "runner-clean.sh", "--ci", W + "ci-clean.yml"]);
 R.ok("katalog bez ani jednego strażnika -> czerwone, nie „wszystko wpięte\"",
-     wEmpty.code === 1 && /przedmiot pomiaru jest nieobecny/.test(wEmpty.out), "kod " + wEmpty.code);
+     wEmpty.code === 1 && /przedmiot pomiaru jest nieobecny/.test(wEmpty.out), kod(wEmpty));
 
 /* ---- drugi warunek: fixtura obok wpiecia ----
    „13 z 13 ma dowod upadku" trzymalo sie UWAGA, nie mechanizmem. Wymaganie ma ten sam
    ksztalt co wpiecie, wiec siedzi w tym samym strazniku. */
 var wNoFix = wiring("guards-clean", "runner-clean.sh", "ci-clean.yml", "fixtures-missing.js");
-R.ok("wpięty, ale BEZ fixtury -> czerwone", wNoFix.code === 1, "kod " + wNoFix.code);
+R.ok("wpięty, ale BEZ fixtury -> czerwone", wNoFix.code === 1, kod(wNoFix));
 R.ok("i nazywa strażnika bez dowodu upadku",
      /BEZ FIXTURY: 1/.test(wNoFix.out) && /check-b\.js/.test(wNoFix.out), wNoFix.out.split("\n")[0]);
 /* PRZYNETA, ktora zlapala PIERWSZA wersje tego warunku: nazwa straznika pada w prozie
@@ -388,12 +535,12 @@ var ckClean = ck(["--pr-body", F + "clean-pr.txt"]);
 R.ok("legalny „Fixes #NN\" jako cała linia -> zielone", ckClean.code === 0, ckClean.out.split("\n").pop());
 
 var ckNeg = ck(["--pr-body", F + "negated-pr.txt"]);
-R.ok("„Does not close #NN\" w środku zdania -> czerwone", ckNeg.code === 1, "kod " + ckNeg.code);
+R.ok("„Does not close #NN\" w środku zdania -> czerwone", ckNeg.code === 1, kod(ckNeg));
 R.ok("i wskazuje LINIĘ, nie tylko fakt", /--pr-body, linia 3:/.test(ckNeg.out), ckNeg.out.split("\n")[1]);
 
 /* PRAWDZIWY tekst, nie wymyslony: opis PR#42 pobrany z GitHuba bajtowo. */
 var ckReal = ck(["--pr-body", F + "real-pr42.txt"]);
-R.ok("prawdziwy opis PR#42 (ten, który zamknął #41) -> czerwone", ckReal.code === 1, "kod " + ckReal.code);
+R.ok("prawdziwy opis PR#42 (ten, który zamknął #41) -> czerwone", ckReal.code === 1, kod(ckReal));
 
 /* DRUGA POWIERZCHNIA. Straznik pilnujacy jednej i zostawiajacy druga otwarta jest
    gorszy od swojego braku, bo daje poczucie oslony. */
@@ -403,7 +550,7 @@ R.ok("i liczy OBA sąsiedztwa, także to z kropką na końcu",
      /z #NN: 2   naruszeń: 0/.test(ckCommitsOk.out), ckCommitsOk.out.split("\n")[1]);
 
 var ckCommitsBad = ck(["--commits", F + "midsentence-commits.txt"]);
-R.ok("commit ze słowem-kluczem w środku zdania -> czerwone", ckCommitsBad.code === 1, "kod " + ckCommitsBad.code);
+R.ok("commit ze słowem-kluczem w środku zdania -> czerwone", ckCommitsBad.code === 1, kod(ckCommitsBad));
 R.ok("i nazywa powierzchnię, na której zapalił", /--commits, linia/.test(ckCommitsBad.out));
 
 /* PRZYNETY. Kazda jest osobna awaria straznika za czulego — a straznik za czuly
@@ -417,7 +564,7 @@ R.ok("słowo-klucz i numer w jednej linii, ale NIESĄSIADUJĄCE, nie są trafien
 /* PUSTE WEJSCIE — punkt 2 rozstrzygniecia. Opis PR-a bywa null w payloadzie
    i nie ma prawa wywalic kroku bledem interpretera; ma przejsc, ale JAWNIE. */
 var ckEmptyPr = ck(["--pr-body", F + "empty-pr.txt"]);
-R.ok("pusty opis PR-a przechodzi", ckEmptyPr.code === 0, "kod " + ckEmptyPr.code);
+R.ok("pusty opis PR-a przechodzi", ckEmptyPr.code === 0, kod(ckEmptyPr));
 R.ok("ale mówi o tym wprost, zamiast milczeć",
      /wejście puste/.test(ckEmptyPr.out), ckEmptyPr.out.split("\n")[0]);
 
@@ -426,14 +573,14 @@ R.ok("ale mówi o tym wprost, zamiast milczeć",
 var ckEmptyCommits = ck(["--commits", F + "empty-commits.txt"]);
 R.ok("PUSTA lista commitów to awaria zakresu, nie czysty wynik",
      ckEmptyCommits.code === 1 && /Zakres git został policzony źle/.test(ckEmptyCommits.out),
-     "kod " + ckEmptyCommits.code);
+     kod(ckEmptyCommits));
 
 var ckMissing = ck(["--pr-body", F + "nie-ma-takiego.txt"]);
 R.ok("brakujący plik wejściowy -> czerwone, nie przejście",
-     ckMissing.code === 1 && /awaria pomiaru/.test(ckMissing.out), "kod " + ckMissing.code);
+     ckMissing.code === 1 && /awaria pomiaru/.test(ckMissing.out), kod(ckMissing));
 
 var ckBadArg = ck(["--body", F + "clean-pr.txt"]);
-R.ok("nieznany argument -> czerwone", ckBadArg.code === 1, "kod " + ckBadArg.code);
+R.ok("nieznany argument -> czerwone", ckBadArg.code === 1, kod(ckBadArg));
 R.ok("brak jakiejkolwiek powierzchni -> czerwone", ck([]).code === 1);
 
 /* TRZECIA POWIERZCHNIA: TYTUL PR-a, z INNA regula — zakaz blankietowy zamiast
@@ -445,13 +592,13 @@ R.ok("tytuł opisowy -> zielone", ckTitleOk.code === 0, ckTitleOk.out.split("\n"
 /* PRAWDZIWY tytul PR#52 — ten, ktory wszedl na main jako komunikat commita 0fd2f9e. */
 var ckTitleReal = ck(["--pr-title", F + "title-real-pr52.txt"]);
 R.ok("prawdziwy tytuł PR#52 (wszedł na main jako komunikat commita) -> czerwone",
-     ckTitleReal.code === 1, "kod " + ckTitleReal.code);
+     ckTitleReal.code === 1, kod(ckTitleReal));
 
 var ckTitleTrailer = ck(["--pr-title", F + "title-trailer.txt"]);
 var ckBodyTrailer  = ck(["--pr-body",  F + "title-trailer.txt"]);
 R.ok("legalny trailer W TYTULE -> czerwone mimo poprawnej formy", ckTitleTrailer.code === 1,
-     "kod " + ckTitleTrailer.code);
-R.ok("TEN SAM napis w OPISIE -> zielone", ckBodyTrailer.code === 0, "kod " + ckBodyTrailer.code);
+     kod(ckTitleTrailer));
+R.ok("TEN SAM napis w OPISIE -> zielone", ckBodyTrailer.code === 0, kod(ckBodyTrailer));
 /* Bez tej pary „inna regula" byloby zdaniem w komentarzu, a nie wlasciwoscia kodu. */
 R.ok("czyli reguła zależy od POWIERZCHNI, nie od kształtu napisu",
      ckTitleTrailer.code !== ckBodyTrailer.code);
@@ -463,7 +610,7 @@ R.ok("a przy naruszeniu w opisie NIE straszy regułą tytułu",
 /* PR bez tytulu nie istnieje — pusty plik znaczy, ze krok nie wyprodukowal wejscia. */
 var ckTitleEmpty = ck(["--pr-title", F + "empty-pr.txt"]);
 R.ok("PUSTY tytuł to awaria pomiaru, nie czysty wynik",
-     ckTitleEmpty.code === 1 && /tytuł jest PUSTY/.test(ckTitleEmpty.out), "kod " + ckTitleEmpty.code);
+     ckTitleEmpty.code === 1 && /tytuł jest PUSTY/.test(ckTitleEmpty.out), kod(ckTitleEmpty));
 
 /* ---- personalia z zamknietej listy skrotow ----
    TA SAMA POWIERZCHNIA co wyzej i INNE PYTANIE: tamten pyta o KSZTALT, ten o TRESC
@@ -480,7 +627,7 @@ var PN = "tools/fixtures/personal-names/";
 var PNH = ["--hashes", PN + "hashes.txt"];
 
 var pnDirty = pn(PNH.concat(["--commits", PN + "dirty-commits.txt"]));
-R.ok("napis z listy w środku zdania -> czerwone", pnDirty.code === 1, "kod " + pnDirty.code);
+R.ok("napis z listy w środku zdania -> czerwone", pnDirty.code === 1, kod(pnDirty));
 /* NAJWAZNIEJSZA ASERCJA W TYM BLOKU. Log CI jest publiczny; straznik wypisujacy
    znalezisko publikowalby to, czego broni — i bylby zartem z samego siebie. */
 R.ok("i NIE cytuje trafienia, tylko pozycję i skrót",
@@ -490,10 +637,10 @@ R.ok("i NIE cytuje trafienia, tylko pozycję i skrót",
 /* DWIE DROGI DOJSCIA DO TOKENU, KAZDA Z WLASNYM DOWODEM. Bez drugiej fixtury galaz
    adresowa bylaby kodem, ktorego nikt nigdy nie wykonal. */
 var pnMail = pn(PNH.concat(["--commits", PN + "dirty-email.txt"]));
-R.ok("napis z listy WEWNĄTRZ adresu pocztowego -> czerwone", pnMail.code === 1, "kod " + pnMail.code);
+R.ok("napis z listy WEWNĄTRZ adresu pocztowego -> czerwone", pnMail.code === 1, kod(pnMail));
 var pnMailWhole = pn(PNH.concat(["--commits", PN + "dirty-email-whole.txt"]));
 R.ok("CAŁY adres na liście -> czerwone, choć żadna jego część słowna na niej nie stoi",
-     pnMailWhole.code === 1, "kod " + pnMailWhole.code);
+     pnMailWhole.code === 1, kod(pnMailWhole));
 
 var pnClean = pn(PNH.concat(["--commits", PN + "clean-commits.txt"]));
 R.ok("ten sam komunikat bez napisu z listy -> zielone", pnClean.code === 0, pnClean.out.split("\n").pop());
@@ -502,24 +649,24 @@ R.ok("ten sam komunikat bez napisu z listy -> zielone", pnClean.code === 0, pnCl
    bylby MARTWY: rozbicie na czesci sprawia, ze skrot calosci nigdy nie pada. Lista,
    ktorej czesc nie moze zadzialac, wyglada na pokrycie, ktorego nie ma. */
 var pnHandle = pn(PNH.concat(["--commits", PN + "dirty-handle.txt"]));
-R.ok("login z myślnikiem jako CAŁY token -> czerwone", pnHandle.code === 1, "kod " + pnHandle.code);
+R.ok("login z myślnikiem jako CAŁY token -> czerwone", pnHandle.code === 1, kod(pnHandle));
 
 /* PRZYPIETA GRANICA, nie przeoczenie: dopasowujemy CALE tokeny. Dopasowanie po podciagu
    dawaloby falszywe alarmy na zwyklych slowach, a falszywy alarm w strazniku, ktory nie
    moze pokazac, co znalazl, jest nie do zdiagnozowania. */
 var pnSub = pn(PNH.concat(["--commits", PN + "clean-substring.txt"]));
 R.ok("GRANICA: napis z listy jako podciąg dłuższego słowa PRZECHODZI", pnSub.code === 0,
-     "kod " + pnSub.code + " — jeśli to czerwone, ktoś zmienił dopasowanie na podciągowe");
+     kod(pnSub) + " — jeśli to czerwone, ktoś zmienił dopasowanie na podciągowe");
 
 /* FAIL CLOSED NA SAMEJ LISCIE — klasa, ktorej pozostali straznicy nie maja, bo nie maja
    danych na zewnatrz. Lista krotsza, niz sie autorowi wydaje, jest cichym przejsciem. */
 var pnBroken = pn(["--hashes", PN + "broken-hashes.txt", "--commits", PN + "clean-commits.txt"]);
-R.ok("linia listy, która nie jest skrótem -> czerwone", pnBroken.code === 1, "kod " + pnBroken.code);
+R.ok("linia listy, która nie jest skrótem -> czerwone", pnBroken.code === 1, kod(pnBroken));
 var pnEmpty = pn(["--hashes", PN + "empty-hashes.txt", "--commits", PN + "clean-commits.txt"]);
 R.ok("PUSTA lista skrótów -> czerwone, nie „nic do sprawdzenia\"",
-     pnEmpty.code === 1 && /jest PUSTA/.test(pnEmpty.out), "kod " + pnEmpty.code);
+     pnEmpty.code === 1 && /jest PUSTA/.test(pnEmpty.out), kod(pnEmpty));
 var pnNoList = pn(["--hashes", PN + "nie-ma.txt", "--commits", PN + "clean-commits.txt"]);
-R.ok("brak pliku listy -> czerwone", pnNoList.code === 1, "kod " + pnNoList.code);
+R.ok("brak pliku listy -> czerwone", pnNoList.code === 1, kod(pnNoList));
 
 /* LISTA PRODUKCYJNA JEST ZYWA, a nie tylko poprawna skladniowo. Bez tej asercji plik
    tools/personal-names.sha256 moglby zostac oprozniony i wszystko zostaloby zielone,
@@ -535,13 +682,13 @@ var idClean = pn(["--identities", PN + "identities-clean.txt"]);
 R.ok("obie dozwolone tożsamości -> zielone", idClean.code === 0, idClean.out.split("\n").pop());
 
 var idBad = pn(["--identities", PN + "identities-foreign.txt"]);
-R.ok("trzecia tożsamość -> czerwone", idBad.code === 1, "kod " + idBad.code);
+R.ok("trzecia tożsamość -> czerwone", idBad.code === 1, kod(idBad));
 /* KSZTALT REALNEGO RYZYKA, nie podrecznikowego: swiezy klon bez `git config --local`
    commituje z loginu i nazwy hosta. To jest wlasnie ta tozsamosc, o ktorej nikt nie
    pomyslal — i lista ZAKAZOW nie mialaby jej skad znac. */
 var idHost = pn(["--identities", PN + "identities-hostname.txt"]);
 R.ok("login i nazwa hosta -> czerwone, choć nikt ich nie przewidział", idHost.code === 1,
-     "kod " + idHost.code);
+     kod(idHost));
 R.ok("i NIE cytuje tożsamości, tylko linię i skrót",
      /--identities, linia \d+, długość \d+/.test(idHost.out) &&
      /skrót [0-9a-f]{12}…/.test(idHost.out) && !/DESKTOP/.test(idHost.out),
@@ -553,7 +700,7 @@ R.ok("ale dozwolone wartości wypisuje wprost, bo są publiczne z definicji",
 
 var idEmpty = pn(["--identities", PN + "identities-empty.txt"]);
 R.ok("PUSTY zakres tożsamości -> czerwone, nie „nic do sprawdzenia\"",
-     idEmpty.code === 1 && /jest PUSTY/.test(idEmpty.out), "kod " + idEmpty.code);
+     idEmpty.code === 1 && /jest PUSTY/.test(idEmpty.out), kod(idEmpty));
 
 /* Komunikat sukcesu ma mowic o powierzchniach, ktore FAKTYCZNIE zbadano. */
 R.ok("„OK\" nie mówi o powierzchni, której nie podano",
@@ -568,7 +715,7 @@ var mdClean = run("check-markup-dict.js", ["tools/fixtures/markup-dict-clean.htm
 R.ok("markup zgodny ze słownikiem -> zielone", mdClean.code === 0, mdClean.out.split("\n")[0]);
 
 var mdBad = run("check-markup-dict.js", ["tools/fixtures/markup-dict-drift.html"]);
-R.ok("rozjazd albo pusty -> czerwone", mdBad.code === 1, "kod " + mdBad.code);
+R.ok("rozjazd albo pusty -> czerwone", mdBad.code === 1, kod(mdBad));
 /* DWIE KATEGORIE, NIE JEDNA. Pusty widać na ekranie bez JS; rozjazdu nie widać nigdzie,
    dopóki ktoś nie porówna. Licznik zliczający je razem nie umiałby powiedzieć, która
    awaria zaszła — a to jest cała informacja, jaką ten strażnik ma do przekazania. */
@@ -607,7 +754,7 @@ var applyClean = run("check-i18n-apply.js", ["tools/fixtures/i18n-apply-clean.ht
 R.ok("applier kompletny -> zielone", applyClean.code === 0, applyClean.out.split("\n")[0]);
 
 var applyBad = run("check-i18n-apply.js", ["tools/fixtures/i18n-apply-three-blank.html"]);
-R.ok("applier niepełny -> czerwone", applyBad.code === 1, "kod " + applyBad.code);
+R.ok("applier niepełny -> czerwone", applyBad.code === 1, kod(applyBad));
 R.ok("applier niepełny -> DOKŁADNIE trzy braki z ośmiu podstawień",
      /klucz bez tekstu na ekranie, 3 z 8 podstawień/.test(applyBad.out), applyBad.out.split("\n")[0]);
 /* Nazwa formy, nie tylko liczba: licznik trafiający w trójkę przypadkiem, na
@@ -643,10 +790,10 @@ function snap(report, extra) {
 }
 
 var snapSame = snap("same");
-R.ok("migawka zgodna -> zielone", snapSame.code === 0, "kod " + snapSame.code);
+R.ok("migawka zgodna -> zielone", snapSame.code === 0, kod(snapSame));
 
 var snapRm = snap("removed");
-R.ok("z migawki UBYWA napis -> czerwone", snapRm.code === 1, "kod " + snapRm.code);
+R.ok("z migawki UBYWA napis -> czerwone", snapRm.code === 1, kod(snapRm));
 R.ok("i diff wypisuje CO ubyło, nie samą liczbę",
      /- SPAN "required"/.test(snapRm.out), snapRm.out.split("\n")[0]);
 
@@ -669,7 +816,7 @@ var before = require("fs").readFileSync(path.join(root, SNAP, "demo--scenariusz.
 var snapRefuse = snap("removed", ["--update"]);
 var after = require("fs").readFileSync(path.join(root, SNAP, "demo--scenariusz.txt"), "utf8");
 R.ok("--update na UBYTKU odmawia", snapRefuse.code === 1 && /ODMOWA --update/.test(snapRefuse.out),
-     "kod " + snapRefuse.code);
+     kod(snapRefuse));
 R.ok("i wypisuje pozycję po pozycji, co miało zniknąć",
      /- SPAN "required"/.test(snapRefuse.out));
 R.ok("i NIE nadpisuje migawki mimo odmowy", before === after);
@@ -679,17 +826,17 @@ R.ok("i nazywa flagę, która jest osobną decyzją", /--accept-removals/.test(s
    odmowa stałaby się szumem i ktoś dopisałby --accept-removals do runnera. */
 var snapAddUpd = snap("added", ["--update"]);
 R.ok("--update na PRZYROŚCIE przechodzi bez odmowy",
-     snapAddUpd.code === 0 && !/ODMOWA/.test(snapAddUpd.out), "kod " + snapAddUpd.code);
+     snapAddUpd.code === 0 && !/ODMOWA/.test(snapAddUpd.out), kod(snapAddUpd));
 /* przywracamy fixturę, bo powyższy przebieg ją zapisał */
 require("fs").writeFileSync(path.join(root, SNAP, "demo--scenariusz.txt"), before);
 
 var snapUntagged = snap("untagged");
 R.ok("raport sprzed #67 (bez nazwy scenariusza) -> czerwone, nie cicha migawka undefined",
-     snapUntagged.code === 1 && /bez nazwy scenariusza/.test(snapUntagged.out), "kod " + snapUntagged.code);
+     snapUntagged.code === 1 && /bez nazwy scenariusza/.test(snapUntagged.out), kod(snapUntagged));
 
 var snapOrphan = snap("orphan");
 R.ok("scenariusz zniknął z raportu -> czerwone (ubytek największy z możliwych)",
-     snapOrphan.code === 1 && /scenariusza w raporcie NIE MA/.test(snapOrphan.out), "kod " + snapOrphan.code);
+     snapOrphan.code === 1 && /scenariusza w raporcie NIE MA/.test(snapOrphan.out), kod(snapOrphan));
 
 /* ---- przynęta: kontrprzykład reguły kształtu ----
    "Narzędzia" to aria-label: jednowyrazowy, więc reguła kształtu dla placeholderów

@@ -80,8 +80,35 @@ function installDom() {
   return nodes;
 }
 
-/* Wykonuje blok skryptu i zwraca wskazane wnętrzności IIFE. */
+/* Wykonuje blok skryptu i zwraca wskazane wnętrzności IIFE.
+ *
+ * Wycinek NIE JEST plikiem repozytorium: produkuje go extract_script w
+ * tools/run-tests.sh, wycinając blok <script> z generator.html, validator.html albo
+ * index.html. Pięciu konsumentów czyta go przez tę funkcję, więc klauzula stoi tutaj —
+ * jedno czytanie, jedno miejsce.
+ *
+ * Wewnątrz runnera extract_script przerywa przebieg, gdy wycinek wyjdzie pusty, więc
+ * tam ten plik nie bywa nieobecny. Ochrona kończy się na krawędzi runnera: plik testowy
+ * odpalony z ręki — a tak się z nimi pracuje — nie ma jej wcale i dostawał ślad stosu
+ * z node:fs, czyli nazwę wnętrza biblioteki zamiast nazwy kroku, który nie wyprodukował
+ * pliku.
+ *
+ * Kod 2, nie 1: 1 znaczy w tym runnerze „zmierzyłem i jest naruszenie", 2 znaczy
+ * „nie zmierzyłem". Zlane w jedno, kontrola pominięta czyta się jak wykonana. Ten sam
+ * kod niosą check-rendered.js i check-network.js przy braku przeglądarki oraz
+ * check-dictionary.js i snapshot.golden.js przy braku raportu o widocznym tekście. */
 function loadTool(scriptPath, names) {
+  if (!scriptPath || !fs.existsSync(scriptPath)) {
+    console.error("FAIL brak wyciętego bloku <script>: " +
+                  (scriptPath || "(nie podano ścieżki)"));
+    console.error("     Produkuje go extract_script w tools/run-tests.sh z pliku HTML " +
+                  "narzędzia.");
+    console.error("     Kontrola NIE jest pomijana po cichu: bez wycinka nie ma czego " +
+                  "wykonać, a test");
+    console.error("     bez przedmiotu wygląda dokładnie tak samo jak test, który " +
+                  "przeszedł.");
+    process.exit(2);
+  }
   var src = fs.readFileSync(scriptPath, "utf8");
   var at = src.lastIndexOf("})();");
   if (at === -1) throw new Error("nie znalazłem zamknięcia IIFE w " + scriptPath);
