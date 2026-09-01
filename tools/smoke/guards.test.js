@@ -202,6 +202,27 @@ R.ok("czyli DOKŁADNIE cztery braki w tej fixturze",
                   file to import"). To jest fałszywe zwolnienie, więc 11 jest za nisko.
    12 to najmniejszy próg, przy którym każde nowe pokrycie pochodzi ze słownika. Przynęta
    w fixturze trzyma dokładnie tamten aria-label, żeby obniżenie progu było czerwone. */
+/* ---- CZWARTA KATEGORIA DANYCH: komórka wartości w tabeli różnic (#86) ----
+   Widok różnic pokazuje, co stało w pliku użytkownika przed importem i co stoi teraz.
+   Treść tych komórek to WARTOŚCI Z JEGO PLIKU — „eth0", „bond0", „no" — a nie tekst
+   interfejsu. Kryterium pochodzenia ich nie widzi, bo są cytowane w cudzysłowach, więc
+   nie występują DOSŁOWNIE w tym, co wpisał.
+
+   Zwolnienie idzie po KLASIE KOMÓRKI, tak jak przy listach hostów: narzędzie samo oznacza
+   w markupie miejsce, w którym renderuje cudze dane. Klucz i nagłówek tabeli NIE są
+   zwolnione — one są tekstem interfejsu i mają się liczyć. */
+var diffCells = run("check-dictionary.js", ["tools/fixtures/report-diffcells.json"]);
+R.ok("komórka WAS -> zwolniona", !/"eth0"/.test(diffCells.out), diffCells.out.split("\n")[2]);
+R.ok("komórka IS -> zwolniona", !/"bond0"/.test(diffCells.out));
+/* PRZYNĘTA: komórka BEZ klasy to nie jest wartość z pliku i ma się liczyć. */
+R.ok("PRZYNĘTA: komórka bez klasy NIE jest zwolniona", /Nothing to compare yet/.test(diffCells.out));
+/* Kolumna klucza jest zwolniona, ale NIE przez tę kategorię — „network_interface" niesie
+   podkreślenie, więc łapie je reguła identyfikatora. Odnotowane, żeby zieleń tej fixtury
+   nie była czytana jako dowód, że kategoria komórek obejmuje kolumnę klucza. */
+R.ok("kolumna klucza zwolniona przez regułę IDENTYFIKATORA, nie przez tę kategorię",
+     !/network_interface/.test(diffCells.out) &&
+     /identyfikator: klucz, nazwa pliku/.test(diffCells.out), diffCells.out.split("\n")[4]);
+
 var ins = run("check-dictionary.js", ["tools/fixtures/report-insertions.json"]);
 R.ok("wpis ze wstawką, wyrenderowany z wartością -> POKRYTY",
      !/holds no host/.test(ins.out), ins.out.split("\n")[2]);
