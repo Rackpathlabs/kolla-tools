@@ -52,7 +52,8 @@ var FORMS = [
   { attr: "data-i18n",       sink: "treść elementu" },
   { attr: "data-i18n-ph",    sink: "placeholder" },
   { attr: "data-i18n-title", sink: "title" },
-  { attr: "data-i18n-label", sink: "aria-label" }
+  { attr: "data-i18n-label", sink: "aria-label" },
+  { attr: "data-i18n-content", sink: "content" }
 ];
 
 /* ---- minimalny element, który UMIE zapamiętać, co dostał ------------------- */
@@ -190,10 +191,12 @@ FILES.forEach(function (file) {
       if (!Object.prototype.hasOwnProperty.call(e._a, f.attr)) return;
       totalChecked++;
       subs++;
-      var got = f.attr === "data-i18n" ? e.innerHTML
-              : f.attr === "data-i18n-ph" ? e.getAttribute("placeholder")
-              : f.attr === "data-i18n-title" ? e.getAttribute("title")
-              : e.getAttribute("aria-label");
+      /* Ujście brane Z DEFINICJI FORMY, nie z drabinki. Drabinka kończyła się
+         gałęzią „w przeciwnym razie aria-label", więc każda forma dopisana do FORMS
+         czytała cudze ujście i raportowała je jako puste — dopisanie piątej formy
+         (data-i18n-content) trafiło w to od razu. Lista w jednym miejscu i drabinka
+         w drugim to dwie listy, z których jedna zawsze zostaje w tyle. */
+      var got = f.attr === "data-i18n" ? e.innerHTML : e.getAttribute(f.sink);
       if (blank(got)) {
         totalBlank++;
         bad.push({ line: e._line, key: e._a[f.attr], attr: f.attr, sink: f.sink,
