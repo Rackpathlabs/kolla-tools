@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>fixtura: kotwica na atrybucie content</title>
+<!-- PIATA FORMA KOTWICY, ADR-004 podklasa (b). Opis meta ma element w dokumencie
+     poczatkowym, wiec z kryterium ADR-004 NIE jest sierota z natury — brakowalo
+     wylacznie formy, ktora straznik potrafi przeczytac.
+
+     ROZJAZD, nie pusty: tresc atrybutu jest, jest angielska i JEST INNA niz wpis
+     slownika. To ten sam ksztalt co markup-dict-drift.html i z tego samego powodu —
+     rozjazdu nie widac nigdzie, dopoki ktos nie porowna dwoch napisow lezacych obok
+     siebie w plikach.
+
+     Dopoki data-i18n-content nie jest forma, straznik przechodzi obok tego atrybutu
+     i fixtura jest ZIELONA. O to chodzi: to jest jej stan czerwony. -->
+<meta name="description" data-i18n-content="hub.desc" content="Two Kolla-Ansible tools that run somewhere else entirely.">
+</head>
+<body>
+<!-- PRZYNETA: rowny wpis w formie, ktora juz istnieje. Straznik ma zglosic JEDNO
+     naruszenie, a nie zapalic sie na calym pliku. -->
+<span data-i18n="g.field.required">required</span>
+</body></html>
