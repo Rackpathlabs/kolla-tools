@@ -1,0 +1,5 @@
+[
+ { "tag": "P",    "cls": "", "text": "5 błędów",            "inData": false, "fromInput": false, "file": "demo.html", "scenario": "pierwszy" },
+ { "tag": "P",    "cls": "", "text": "has 5 hosts",         "inData": false, "fromInput": false, "file": "demo.html", "scenario": "pierwszy" },
+ { "tag": "SPAN", "cls": "", "text": "inventory: line 2",   "inData": false, "fromInput": false, "file": "demo.html", "scenario": "pierwszy" }
+]
