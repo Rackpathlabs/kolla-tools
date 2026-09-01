@@ -73,11 +73,21 @@ var update = process.argv.indexOf("--update") !== -1;
 var acceptRemovals = process.argv.indexOf("--accept-removals") !== -1;
 var R = lib.runner();
 
+/* Kod 2, nie 1: „nie ruszyła" to inna wiadomość niż „nie przeszła", a jedynka mówi
+   w tym pliku wyłącznie to drugie — że migawka się rozjechała. Ten sam kod nosi
+   check-rendered.js przy braku przeglądarki i check-dictionary.js przy braku tego
+   samego raportu, który czyta linijkę niżej ten plik. Trzej konsumenci jednego
+   artefaktu odpowiadają jednym kodem, bo opisują jedną awarię. */
 if (!reportPath || !fs.existsSync(reportPath)) {
-  console.log("  FAIL brak raportu z check-rendered.js --texts: " + reportPath);
-  console.log("       Migawka mierzy WYRENDEROWANĄ stronę; bez raportu nie ma czego porównać,");
-  console.log("       a pusty raport wygląda dokładnie tak samo jak wszystko pokryte.");
-  process.exit(1);
+  console.error("FAIL brak raportu z check-rendered.js --texts: " +
+                (reportPath || "(nie podano ścieżki)"));
+  console.error("     Produkuje go check-rendered.js --texts <plik>, krok wcześniej " +
+                "w tools/run-tests.sh.");
+  console.error("     Migawka NIE jest pomijana po cichu: mierzy WYRENDEROWANĄ stronę, " +
+                "więc bez raportu");
+  console.error("     nie ma czego porównać, a pusty raport wygląda dokładnie tak samo " +
+                "jak wszystko pokryte.");
+  process.exit(2);
 }
 if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 

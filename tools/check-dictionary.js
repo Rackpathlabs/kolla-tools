@@ -191,7 +191,32 @@ function excused(f) {
 }
 
 /* ---- pomiar ---------------------------------------------------------------- */
-var report = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+/* Ten strażnik nie renderuje niczego sam — mierzy raport z POPRZEDNIEGO kroku runnera.
+   Brak raportu jest więc awarią tamtego kroku, nie tego, i komunikat ma prowadzić tam:
+   nazywa plik, nazywa producenta i mówi, że kontrola nie odbyła się wcale.
+
+   Kod wyjścia 2, nie 1, i to jest cała różnica. 1 znaczy „zmierzyłem i próg został
+   przekroczony"; 2 znaczy „nie zmierzyłem". Zlane w jedno wyglądają w logu CI tak samo,
+   a wtedy pominięta kontrola czyta się jak wykonana — trzeci wariant pustego zielonego
+   z docs/PRINCIPLES.md, oglądany od strony czerwonej. check-rendered.js robi to samo
+   rozróżnienie tym samym kodem przy braku przeglądarki; tools/golden/snapshot.golden.js,
+   drugi konsument tego samego pliku, dostał je razem z tą zmianą.
+
+   Ślad stosu z readFileSync był gorszy niż nic: nazywał wnętrze strażnika i numer linii
+   w node:fs, czyli wysyłał czytelnika dokładnie tam, gdzie nic nie jest zepsute. */
+var reportPath = process.argv[2];
+if (!reportPath || !fs.existsSync(reportPath)) {
+  console.error("FAIL brak raportu o widocznym tekście: " +
+                (reportPath || "(nie podano ścieżki)"));
+  console.error("     Produkuje go check-rendered.js --texts <plik>, krok wcześniej " +
+                "w tools/run-tests.sh.");
+  console.error("     Kontrola pokrycia słownikiem NIE jest pomijana po cichu: bez " +
+                "korpusu nie ma czego");
+  console.error("     mierzyć, a pusty korpus wygląda dokładnie tak samo jak " +
+                "wszystko pokryte.");
+  process.exit(2);
+}
+var report = JSON.parse(fs.readFileSync(reportPath, "utf8"));
 var SEGS = corpus();
 var SHORT = 4;
 
