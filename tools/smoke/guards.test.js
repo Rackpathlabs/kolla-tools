@@ -131,6 +131,38 @@ function dictCount(out) {
    To nie jest dług tekstowy, tylko WADA MIERNIKA: 90 wystąpień w 20 różnych napisach na
    dzisiejszym main. Naprawa jest dołożeniem DRUGIEJ postaci każdego wpisu (bez treści
    dzieci), nie poluzowaniem kryterium — i fixtura pilnuje obu połówek naraz. */
+/* ---- TRZY KATEGORIE ZWALNIAJĄCE PO KSZTAŁCIE (#86) ----
+   Kod findingu nie jest zdaniem, nazwa hosta nie ma języka, a treść <code> to składnia
+   i wartości konfiguracji. To DANE, nie tekst interfejsu, i żadna z dzisiejszych kategorii
+   ich nie łapie: kody mają myślniki, więc nie przechodzą reguły identyfikatora, a listy
+   hostów nie występują DOSŁOWNIE w tym, co użytkownik wpisał, więc kryterium pochodzenia
+   ich nie widzi.
+
+   Zwolnienie idzie po KSZTAŁCIE, nie po liście napisów — lista rośnie o jeden przy każdym
+   czerwonym przebiegu, kształt nie. Fixtura pilnuje obu stron: trzy napisy mają być
+   zwolnione i cztery NIE, przy czym trzy z tych czterech to przynęty na dokładnie te
+   sposoby, w jakie taki wzorzec bywa za szeroki. */
+var shapes = run("check-dictionary.js", ["tools/fixtures/report-shapes.json"]);
+R.ok("kod findingu -> zwolniony", !/OUTSIDE-GROUP/.test(shapes.out), shapes.out.split("\n")[2]);
+R.ok("treść <code> -> zwolniona", !/name\[01:10\]/.test(shapes.out));
+R.ok("lista hostów w elemencie .hostlist -> zwolniona", !/ctrl01, ctrl02/.test(shapes.out));
+
+/* PRZYNĘTY. Każda jest osobnym sposobem, w jaki wzorzec kształtu bywa za szeroki. */
+R.ok("PRZYNĘTA: jedno słowo WIELKIMI literami to nie kod findingu — brak myślnika",
+     /OUTSIDEGROUP/.test(shapes.out), shapes.out.split("\n")[2]);
+R.ok("PRZYNĘTA: „Deploy-Ready\" to nie kod findingu — kody nie mają małych liter",
+     /Deploy-Ready/.test(shapes.out));
+R.ok("PRZYNĘTA: przecinki poza .hostlist to nie lista hostów",
+     /hosts, groups/.test(shapes.out));
+/* GRANICA, przypięta ŚWIADOMIE: polski tekst wewnątrz <code> przechodzi. Zwolnienie idzie
+   po elemencie, a element nie ma zdania o języku swojej treści. Ta asercja ma upaść, gdyby
+   ktoś kiedyś zaczął to łapać — wtedy granica się przesunęła i trzeba poprawić nagłówek. */
+R.ok("GRANICA: polski tekst wewnątrz <code> jest ZWOLNIONY",
+     !/brak wsparcia/.test(shapes.out),
+     "jeśli to czerwone, zwolnienie po elemencie przestało obowiązywać — popraw nagłówek");
+R.ok("czyli DOKŁADNIE trzy braki w tej fixturze",
+     /BEZ POKRYCIA: 3 RÓŻNYCH NAPISÓW/.test(shapes.out), shapes.out.split("\n")[2]);
+
 var childRep = run("check-dictionary.js", ["tools/fixtures/report-child-text.json"]);
 R.ok("tekst wpisu BEZ treści dziecka jest POKRYTY",
      !/Host is in no group/.test(childRep.out), childRep.out.split("\n")[1]);

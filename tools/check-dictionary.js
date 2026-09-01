@@ -191,7 +191,46 @@ var CATEGORIES = [
      „bez spacji" zwalniało przyciski „Clear" i odnośniki „start". Klucz, nazwa pliku
      i nazwa interfejsu niosą podkreślenie, kropkę albo ukośnik; słowo interfejsu nie. */
   { why: "identyfikator: klucz, nazwa pliku, nazwa interfejsu",
-    test: function (f) { return /^[A-Za-z_][\w./:-]*$/.test(f.text) && /[_./]/.test(f.text); } }
+    test: function (f) { return /^[A-Za-z_][\w./:-]*$/.test(f.text) && /[_./]/.test(f.text); } },
+
+  /* ---- TRZY KATEGORIE DANYCH, dodane 2026-09-01 (#86) ----
+     Zmierzone na main: 15 + 10 + 8 = 33 różne napisy liczone jako dług tekstowy, z których
+     żaden nie jest tekstem interfejsu. Kod findingu nie jest zdaniem, nazwa hosta nie ma
+     języka, a treść <code> to składnia i wartości konfiguracji. Żadna z kategorii wyżej
+     ich nie łapie: kody mają myślniki, więc nie przechodzą reguły identyfikatora, a lista
+     hostów sklejona przecinkami nie występuje DOSŁOWNIE w tym, co użytkownik wpisał, więc
+     kryterium pochodzenia jej nie widzi.
+
+     Wszystkie trzy idą po KSZTAŁCIE, nie po liście napisów — lista rośnie o jeden przy
+     każdym czerwonym przebiegu, kształt nie. */
+
+  /* KOD FINDINGU. Wielkie litery, cyfry i CO NAJMNIEJ JEDEN myślnik: OUTSIDE-GROUP,
+     UPGRADE-GROUP-RENAMED. Bez myślnika reguła zwalniałaby pojedyncze słowo pisane
+     wersalikami, a takie bywa etykietą interfejsu; z małymi literami zwalniałaby
+     „Deploy-Ready". Obie przynęty stoją w tools/fixtures/report-shapes.json. */
+  { why: "kod findingu: identyfikator reguły, nie proza",
+    test: function (f) { return /^[A-Z][A-Z0-9]*(-[A-Z0-9]+)+$/.test(f.text); } },
+
+  /* TREŚĆ <code>. Składnia i wartości konfiguracji: name[01:10], key=value, eth0.
+
+     GRANICA, NAZWANA TUTAJ, A NIE ODKRYTA PRZY AWARII: polski tekst wewnątrz <code>
+     PRZEJDZIE. Zwolnienie jest zdaniem o ELEMENCIE, a element nie ma zdania o języku
+     swojej treści — i to jest cena za to, że kryterium nie jest listą napisów. Przypięte
+     asercją, która upadnie, gdyby ktoś zaczął to łapać: wtedy granica się przesunęła
+     i ten akapit jest nieprawdziwy. */
+  { why: "treść <code>: składnia i wartości konfiguracji",
+    test: function (f) { return f.tag === "CODE"; } },
+
+  /* LISTA HOSTÓW. Zwalnia ELEMENT, nie wzorzec przecinków — „hosts, groups" jest zdaniem
+     interfejsu i ma pozostać liczone. Nazwa klasy jest tu kształtem: to narzędzie samo
+     oznacza w markupie miejsce, w którym renderuje dane użytkownika po obróbce.
+     docs/PRINCIPLES.md mówi, że napis jest danymi, gdy występuje DOSŁOWNIE w tym, co
+     wpisano — sklejka przecinkiem już nie występuje, i tę lukę ta kategoria zamyka
+     strukturą zamiast rozluźnianiem tamtej reguły. */
+  { why: "lista hostów: dane użytkownika po obróbce, w elemencie oznaczonym jako lista",
+    test: function (f) {
+      return /(^|\s)hostlist(\s|$)/.test(String(f.cls || ""));
+    } }
 
   /* Kategorii „brak liter" i „nazwa własna wydania" tu nie ma. Nie zwalniały ANI
      JEDNEGO napisu, więc nie mogły ani przejść, ani nie przejść — pusty wyjątek jest
@@ -249,7 +288,11 @@ report.forEach(function (f) {
   var t = String(f.text).replace(/\s+/g, " ").trim();
   if (!t) return;
   total++;
-  var cats = excused({ tag: f.tag, text: t, inData: f.inData, fromInput: f.fromInput });
+  /* cls DOCHODZI do zestawu pól przekazywanych kategoriom. Kategoria listy hostów pyta
+     o klasę elementu, a nie o kształt treści — i bez tego pola milczała, przechodząc
+     fixturę na zielono z powodu, którego nie było. Złapane fixturą przy wprowadzaniu. */
+  var cats = excused({ tag: f.tag, cls: f.cls, text: t,
+                       inData: f.inData, fromInput: f.fromInput });
   if (cats.length) {
     cats.forEach(function (c) { byCategory[c.why] = (byCategory[c.why] || 0) + 1; });
     if (cats.length > 1) overlap++;
@@ -407,7 +450,11 @@ report.forEach(function (f) {
    jednego równy klasie artefaktu zmierzonej w #86 — 20 różnych napisów, 90 wystąpień — bo
    naprawa dotyczy dokładnie jej i niczego więcej. To NIE jest spłata długu tekstowego:
    ani jeden napis nie został przeniesiony, poprawił się przyrząd. */
-var BASELINE = 118;
+/* 118 -> 83, obniżone 2026-09-01 razem z trzema kategoriami danych. Spadek 35, a klasy
+   zmierzone w #86 dawały 33 (15 kodów + 10 treści <code> + 8 list hostów) — dwa napisy
+   ponad to były w „reszcie" i mają ten sam kształt. Różnica jest wypisana, bo liczba bez
+   rozbicia nie jest pomiarem, tylko prośbą o zaufanie. */
+var BASELINE = 83;
 var bArg = process.argv.indexOf("--baseline");
 if (bArg !== -1) {
   var bVal = Number(process.argv[bArg + 1]);
