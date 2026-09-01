@@ -77,6 +77,51 @@ R.ok("napis ze słownika z liczbą z przodu NIE jest brakiem",
 R.ok("krótki segment nie pokrywa przez zawieranie", /has 5 hosts/.test(dict.out));
 R.ok("normalizacja nie przepuszcza polskiego z liczbą", /5 błędów/.test(dict.out));
 
+/* ---- BRAK ARTEFAKTU POPRZEDNIEGO KROKU ----
+   check-dictionary.js nie renderuje niczego sam: mierzy raport, który produkuje
+   check-rendered.js --texts. Gdy raportu nie ma, strażnik ma powiedzieć CZEGO nie ma
+   i KTO to robi — a nie wysypać się śladem stosu na readFileSync, bo ślad stosu wysyła
+   czytelnika do wnętrza strażnika zamiast do kroku, który nie wyprodukował pliku.
+
+   Kod wyjścia jest tu OSOBNĄ informacją, nie ozdobą. 1 znaczy „zmierzyłem i nie
+   przeszło", 2 znaczy „nie zmierzyłem w ogóle" — to samo rozróżnienie, które
+   check-rendered.js robi już przy braku przeglądarki. Zlane w jedno, oba wyglądają
+   w logu CI identycznie, a to jest trzeci wariant pustego zielonego z
+   docs/PRINCIPLES.md widziany od strony czerwonej: kontrola pominięta wygląda jak
+   kontrola wykonana. */
+var MISSING_REPORT = "tools/fixtures/report-missing.json";
+/* Fixturą jest tu NIEOBECNOŚĆ pliku, więc jej przedmiot trzeba sprawdzić wprost:
+   gdyby ktoś kiedyś ten plik założył, poniższe asercje zaczęłyby mierzyć coś innego
+   i dalej byłyby zielone. */
+R.ok("fixtura nieobecności naprawdę nie istnieje",
+     !require("fs").existsSync(path.join(root, MISSING_REPORT)), MISSING_REPORT);
+
+var dictNoRep = run("check-dictionary.js", [MISSING_REPORT]);
+R.ok("brak raportu -> kod 2 („nie ruszyła\"), nie 1 i nie ślad stosu",
+     dictNoRep.code === 2, "kod " + dictNoRep.code);
+R.ok("i NIE jest to ślad stosu z readFileSync",
+     !/ENOENT|at Object\.|at Module/.test(dictNoRep.out),
+     dictNoRep.out.split("\n")[0]);
+R.ok("i nazywa plik, którego brakuje", /report-missing\.json/.test(dictNoRep.out),
+     dictNoRep.out.split("\n")[0]);
+R.ok("i nazywa PRODUCENTA raportu, czyli krok do naprawy",
+     /check-rendered\.js --texts/.test(dictNoRep.out), dictNoRep.out.split("\n")[1]);
+R.ok("i mówi wprost, że kontrola nie jest pomijana po cichu",
+     /NIE jest pomijana po cichu/.test(dictNoRep.out), dictNoRep.out.split("\n")[2]);
+/* Brak argumentu to ta sama awaria co brak pliku — jeden krok wcześniej. Osobno,
+   bo readFileSync(undefined) rzuca INNYM wyjątkiem niż ENOENT i naprawa jednej
+   ścieżki nie naprawia drugiej. */
+var dictNoArg = run("check-dictionary.js", []);
+R.ok("brak argumentu -> ta sama awaria, ten sam kod 2", dictNoArg.code === 2,
+     "kod " + dictNoArg.code);
+
+/* Migawka czyta TEN SAM plik i miała ten komunikat od początku — brakowało jej
+   wyłącznie kodu odróżniającego „nie ruszyła" od „nie przeszła". Asercja pilnuje,
+   żeby dwaj konsumenci jednego artefaktu nie rozjechali się z powrotem. */
+var snapNoRep = run("golden/snapshot.golden.js", [MISSING_REPORT]);
+R.ok("migawka na tym samym braku -> ten sam kod 2", snapNoRep.code === 2,
+     "kod " + snapNoRep.code);
+
 /* ---- dowód upadku WYJĄTKU, nie tylko kontroli ----
    Dowodziliśmy upadku kontroli wielokrotnie i ani razu upadku zwolnienia. Gdy
    spróbowaliśmy pierwszy raz, okazało się martwe: odcisk obejmował podgląd pliku,
