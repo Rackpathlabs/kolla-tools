@@ -237,9 +237,11 @@ not the correctness.
 2. [x] Regardless of the decision: make the *"Zero zależności npm"* step's scope match its
        name — it checked the repository root only. Now `tools/check-npm.js`, whole tree,
        with two named exemptions for its own dirty fixture
-3. [ ] With D: `check-network.js` over the scenarios that already exist (#67), with a scope
+3. [x] With D: `check-network.js` over the scenarios that already exist (#67), with a scope
        sentence describing what it measures from the first version — behaviour on the paths
-       that ran, not "the tool does not reach the network"
+       that ran, not "the tool does not reach the network". Delivered in PR #108: the guard
+       exists, runs in `tools/run-tests.sh` and as its own CI step, has a fixture that proves
+       it fails, and carries that scope sentence in its header
 4. [x] With C: narrow #77's own promise in its issue and say plainly what is not
        checked (2026-09-01). The issue was retitled to name its remaining function —
        it collects dated evidence for the revisit condition below — moved to the
