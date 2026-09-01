@@ -1,0 +1,7 @@
+[
+ { "tag": "DIV", "cls": "f-msg", "text": "Group [control] holds no host.", "inData": false, "fromInput": false, "file": "d.html", "scenario": "wstawki" },
+ { "tag": "DIV", "cls": "f-hint", "text": "First occurrence: line 12. The repeated entry can override the host variables.", "inData": false, "fromInput": false, "file": "d.html", "scenario": "wstawki" },
+ { "tag": "SPAN", "cls": "", "text": "Field is required. And a hint glued on after it.", "inData": false, "fromInput": false, "file": "d.html", "scenario": "wstawki" },
+ { "tag": "ARIA-LABEL", "cls": "out", "text": "Preview of the generated globals.yml", "inData": false, "fromInput": false, "file": "d.html", "scenario": "wstawki" },
+ { "tag": "DIV", "cls": "f-msg", "text": "Grupa [control] nie ma ani jednego hosta.", "inData": false, "fromInput": false, "file": "d.html", "scenario": "wstawki" }
+]

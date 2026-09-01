@@ -184,6 +184,40 @@ R.ok("PRZYNĘTA: kształt kodu, ale SPOZA rejestru -> NIE zwolniony",
 R.ok("czyli DOKŁADNIE cztery braki w tej fixturze",
      /BEZ POKRYCIA: 4 RÓŻNYCH NAPISÓW/.test(shapes.out), shapes.out.split("\n")[2]);
 
+/* ---- DRUGA ODSŁONA TEJ SAMEJ POMYŁKI MIERNIKA: WSTAWKI (#86, ADR-002) ----
+   #135 naprawił przypadek, w którym ekran nie widzi treści DZIECKA. Ten sam błąd ma drugą
+   przyczynę: wpis ze wstawką `{…}` jest cięty na segmenty, a ekran pokazuje CAŁOŚĆ
+   z podstawioną wartością — napis dłuższy od każdego segmentu, więc kryterium „napis
+   z ekranu mieści się w segmencie" nie ma prawa go dopasować. Do tego komunikat bywa
+   sklejany z podpowiedzią i wtedy jest dłuższy od CAŁEGO wpisu.
+
+   Kryterium dochodzi więc w drugą stronę: DOSTATECZNIE DŁUGI segment słownika mieszczący
+   się w napisie z ekranu też jest pokryciem.
+
+   PRÓG 12 ZNAKÓW JEST ZMIERZONY, NIE DOBRANY. Na main 2026-09-01, po kolei:
+     próg 25..30  BASELINE 25 — plateau, segmenty robiące robotę są długie
+     próg 12      BASELINE 21 — cztery napisy więcej, każdy sprawdzony: wszystkie ze słownika
+     próg 11      BASELINE 19 — i tu wchodzą DWA aria-label, które KLUCZA NIE MAJĄ
+                  („Preview of the generated globals.yml", „Contents of the globals.yml
+                  file to import"). To jest fałszywe zwolnienie, więc 11 jest za nisko.
+   12 to najmniejszy próg, przy którym każde nowe pokrycie pochodzi ze słownika. Przynęta
+   w fixturze trzyma dokładnie tamten aria-label, żeby obniżenie progu było czerwone. */
+var ins = run("check-dictionary.js", ["tools/fixtures/report-insertions.json"]);
+R.ok("wpis ze wstawką, wyrenderowany z wartością -> POKRYTY",
+     !/holds no host/.test(ins.out), ins.out.split("\n")[2]);
+R.ok("wpis ze wstawką liczbową -> POKRYTY", !/First occurrence/.test(ins.out));
+R.ok("komunikat SKLEJONY z podpowiedzią -> POKRYTY", !/glued on after it/.test(ins.out));
+/* PRZYNĘTA NA PRÓG: napis BEZ klucza, zawierający krótki angielski fragment ze słownika.
+   Przy progu 11 zostałby zwolniony — ta asercja jest jedynym miejscem, w którym widać,
+   że próg nie jest okrągłą liczbą. */
+R.ok("PRZYNĘTA: aria-label BEZ klucza -> dalej BEZ POKRYCIA",
+     /Preview of the generated/.test(ins.out),
+     "jeśli to zielone, próg zjechał poniżej 12 i zwalnia tekst bez klucza");
+R.ok("i polski napis o tym samym kształcie -> dalej BEZ POKRYCIA",
+     /nie ma ani jednego hosta/.test(ins.out));
+R.ok("czyli DOKŁADNIE dwa braki w tej fixturze",
+     /BEZ POKRYCIA: 2 RÓŻNYCH NAPISÓW/.test(ins.out), ins.out.split("\n")[2]);
+
 var childRep = run("check-dictionary.js", ["tools/fixtures/report-child-text.json"]);
 R.ok("tekst wpisu BEZ treści dziecka jest POKRYTY",
      !/Host is in no group/.test(childRep.out), childRep.out.split("\n")[1]);
