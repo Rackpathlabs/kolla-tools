@@ -32,24 +32,24 @@ n.warning  a  wariant liczebnika: fragment podstawiany w inny napis, wlasnego el
 sev.error  a  etykieta wagi findingu; findingu nie ma, dopoki nie powstanie
 sev.info  a  etykieta wagi findingu; findingu nie ma, dopoki nie powstanie
 sev.warn  a  etykieta wagi findingu; findingu nie ma, dopoki nie powstanie
-t.copied  m  do migracji (#58)
-t.copyFailed  m  do migracji (#58)
-t.defaults.restored  m  do migracji (#58)
-t.download.blocked  m  do migracji (#58)
-t.download.handed  m  do migracji (#58)
-t.export.blocked  m  do migracji (#58)
-t.file.failed  m  do migracji (#58)
-t.file.read  m  do migracji (#58)
-t.globals.cleared  m  do migracji (#58)
-t.globals.loaded  m  do migracji (#58)
-t.import.dropped  m  do migracji (#58)
-t.import.empty  m  do migracji (#58)
-t.import.loaded  m  do migracji (#58)
-t.parser.unsupported  m  do migracji (#58)
-t.report.copied  m  do migracji (#58)
-t.report.copyFailed  m  do migracji (#58)
-t.sample.bad  m  do migracji (#58)
-t.sample.ok  m  do migracji (#58)
+t.copied  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
+t.copyFailed  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
+t.defaults.restored  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
+t.download.blocked  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
+t.download.handed  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
+t.export.blocked  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
+t.file.failed  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
+t.file.read  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
+t.globals.cleared  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
+t.globals.loaded  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
+t.import.dropped  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
+t.import.empty  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
+t.import.loaded  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
+t.parser.unsupported  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
+t.report.copied  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
+t.report.copyFailed  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
+t.sample.bad  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
+t.sample.ok  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
 v.c.ctlcmp.escalated  m  do migracji (#58)
 v.c.ctlcmp.hint  m  do migracji (#58)
 v.c.ctlcmp.msg  m  do migracji (#58)
