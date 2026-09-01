@@ -51,7 +51,30 @@ function norm(t) {
 
 var EMPTY_SEGMENTS = 0;
 
-function corpus() {
+/* DWIE POSTACI KAŻDEGO WPISU, bo ekran ma dwie i jedna z nich była niewidzialna.
+
+   Jednostką po stronie ekranu jest WŁASNY TEKST ELEMENTU — treść elementów-dzieci do niego
+   nie wchodzi (uzasadnienie w nagłówku). Wpis „Host <code>{host}</code> is in no group…"
+   ma więc na ekranie postać „Host is in no group…", jeden napis, i NIE pojawia się w niej
+   ani „host", ani nic z wnętrza <code>.
+
+   Korpus zamieniał znacznik na spację i zostawiał treść dziecka, przez co ten sam wpis dawał
+   segmenty „Host " oraz „ is in no group…", a napis z ekranu był dłuższy od obu. Zmierzone
+   na main 2026-09-01: 90 wystąpień w 20 różnych napisach raportowanych jako niepokryte,
+   mimo że pochodziły ze słownika. ADR-002 przewidywał, że klasa zniknie sama przy opcji B;
+   nie zniknęła i nie mogła, bo to wada MIERNIKA, nie stan tekstu.
+
+   KEEP  treść dzieci zostaje — postać, w której element nie ma dzieci albo ma je puste
+   DROP  treść dzieci znika razem ze znacznikiem — postać „własny tekst elementu"
+
+   To jest DOŁOŻENIE, nie podmiana: wpis bez dzieci pokrywa dalej przez postać KEEP,
+   a poluzowaniem nie jest, bo obie postaci pochodzą z tego samego wpisu słownika i żaden
+   napis spoza słownika nie staje się przez to pokryty. Fixtura report-child-text.json
+   pilnuje wszystkich trzech zdań naraz. */
+var KEEP = /<[^>]+>/g;
+var DROP = /<[^>]+>[^<]*<\/[^>]+>|<[^>]+>/g;
+
+function corpus(stripTags) {
   var s = fs.readFileSync(path.join(root, "i18n.js"), "utf8");
   var segs = [], m;
   var re = /"[\w.]+"\s*:\s*((?:"(?:[^"\\]|\\.)*"\s*\+?\s*)+)/g;
@@ -63,7 +86,7 @@ function corpus() {
        a najczestsze to "the", "and", "a", "is". Zdanie ze slownika nie mialo
        wtedy prawa sie dopasowac do niczego — kryterium bylo o wiele ZA OSTRE,
        dokladnie odwrotnie, niz podejrzewalismy po skoku liczby segmentow. */
-    joined.replace(/<[^>]+>/g, " ").split(/\{[^}]*\}|\|/).forEach(function (seg) {
+    joined.replace(stripTags, " ").split(/\{[^}]*\}|\|/).forEach(function (seg) {
       seg = seg.replace(/\\"/g, '"').replace(/\s+/g, " ").trim();
       /* Pusty segment to ta sama pusta igla, wchodzaca DRUGA DROGA: nie
          z normalizacji napisu z ekranu, tylko z budowy korpusu. Wpis zlozony
@@ -217,7 +240,8 @@ if (!reportPath || !fs.existsSync(reportPath)) {
   process.exit(2);
 }
 var report = JSON.parse(fs.readFileSync(reportPath, "utf8"));
-var SEGS = corpus();
+var SEGS = corpus(KEEP);
+var SEGS_OWN = corpus(DROP);
 var SHORT = 4;
 
 var total = 0, ok = 0, overlap = 0, byCategory = {}, miss = [], missShort = 0;
@@ -235,6 +259,9 @@ report.forEach(function (f) {
   var low = norm(t);
   for (var i = 0; i < SEGS.length; i++) {
     if (wordsIn(SEGS[i], low)) { ok++; return; }
+  }
+  for (var j = 0; j < SEGS_OWN.length; j++) {
+    if (wordsIn(SEGS_OWN[j], low)) { ok++; return; }
   }
   if (t.length < SHORT) missShort++;
   miss.push(f);
@@ -376,7 +403,11 @@ report.forEach(function (f) {
    Podstawialny z wiersza poleceń, żeby dało się pokazać, że kontrola potrafi upaść —
    ta sama konstrukcja co --dir w snapshot.golden.js i z tego samego powodu: dowód
    ma być testem, a nie czynnością wykonaną raz w dniu, w którym próg powstawał. */
-var BASELINE = 138;
+/* 138 -> 118, obniżone 2026-09-01 w tym samym PR-ze, w którym spadł pomiar. Spadek co do
+   jednego równy klasie artefaktu zmierzonej w #86 — 20 różnych napisów, 90 wystąpień — bo
+   naprawa dotyczy dokładnie jej i niczego więcej. To NIE jest spłata długu tekstowego:
+   ani jeden napis nie został przeniesiony, poprawił się przyrząd. */
+var BASELINE = 118;
 var bArg = process.argv.indexOf("--baseline");
 if (bArg !== -1) {
   var bVal = Number(process.argv[bArg + 1]);
@@ -393,8 +424,8 @@ var missKeys = Object.create(null);
 miss.forEach(function (f) { missKeys[norm(String(f.text))] = true; });
 var missStrings = Object.keys(missKeys).length;
 
-console.log("segmentów w słowniku: " + SEGS.length +
-            "   pustych odfiltrowanych: " + EMPTY_SEGMENTS);
+console.log("segmentów w słowniku: " + SEGS.length + " z treścią dzieci, " +
+            SEGS_OWN.length + " bez niej   pustych odfiltrowanych: " + EMPTY_SEGMENTS);
 console.log("widocznych napisów:   " + total + "   ze słownika lub wyjątku: " + ok);
 /* OBIE LICZBY, zawsze, i to nie jest ozdoba. Kto pamięta „530" i zobaczy samo „138",
    przeczyta to jako czterokrotny spadek długu zamiast jako zmianę jednostki. */
