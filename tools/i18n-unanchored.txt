@@ -32,6 +32,7 @@ g.rule.kv06.ackNote  a  metadane reguly wstrzykiwane w finding; findingu nie ma,
 g.rule.kv06.why  a  metadane reguly wstrzykiwane w finding; findingu nie ma, dopoki nie powstanie
 g.rule.kv10.why  a  metadane reguly wstrzykiwane w finding; findingu nie ma, dopoki nie powstanie
 g.rule.kv13.why  a  metadane reguly wstrzykiwane w finding; findingu nie ma, dopoki nie powstanie
+g.title.exportBlocked  a  podpowiedz przycisku ustawiana warunkowo w JS; w dokumencie poczatkowym tego tekstu nie ma
 g.verdict.blocked  a  kolejny STAN elementu #status-txt; jego stanem poczatkowym jest g.verdict.pending i to tamten klucz ma kotwice
 g.verdict.clean  a  kolejny STAN elementu #status-txt; jego stanem poczatkowym jest g.verdict.pending i to tamten klucz ma kotwice
 g.verdict.warn  a  kolejny STAN elementu #status-txt; jego stanem poczatkowym jest g.verdict.pending i to tamten klucz ma kotwice

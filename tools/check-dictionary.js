@@ -45,8 +45,22 @@ var root = path.join(__dirname, "..");
    "5 bledow" normalizuje sie do "bledow", ktorego w slowniku nie ma, wiec dalej jest
    niepokryte. Fixtura pilnuje obu polowek naraz, wiec poluzowanie kryterium nie jest
    wyjsciem — jedynym wyjsciem jest zrobic to poprawnie. */
+/* ENCJE HTML DEKODUJEMY. Przeglądarka pokazuje „→", a w markupie i w słowniku stoi
+   „&rarr;" — porównanie bez dekodowania mówi o zapisie, a nie o tym, co widać, czyli
+   dokładnie o czym ten strażnik nie ma mówić. Lista jest krótka i zamknięta świadomie:
+   obejmuje encje, które w tym repozytorium występują, a nie wszystkie istniejące —
+   nowa encja w tekście da czerwone i zostanie tu dopisana razem z przypadkiem. */
+function unentity(t) {
+  return String(t)
+    .replace(/&rarr;/g, "\u2192").replace(/&larr;/g, "\u2190")
+    .replace(/&ldquo;/g, "\u201c").replace(/&rdquo;/g, "\u201d")
+    .replace(/&nbsp;/g, " ").replace(/&#10;/g, "\n")
+    .replace(/&quot;/g, "\"").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
+}
+
 function norm(t) {
-  return String(t).replace(/[0-9]+/g, " ").replace(/\s+/g, " ").trim().toLowerCase();
+  return unentity(t).replace(/[0-9]+/g, " ").replace(/\s+/g, " ").trim().toLowerCase();
 }
 
 var EMPTY_SEGMENTS = 0;
@@ -625,7 +639,11 @@ report.forEach(function (f) {
    dwadzieścia dwa napisy pochodziły ze słownika i miernik nie umiał ich dopasować, bo
    wstawka tnie wpis na segmenty, a ekran pokazuje całość. */
 /* 21 -> 18, obniżone 2026-09-01 czwartą kategorią danych: wartości w tabeli różnic. */
-var BASELINE = 18;
+/* 18 -> 11, obniżone 2026-09-01: pięć atrybutów generatora dostało klucze, a oba
+   strażniki porównujące ekran ze słownikiem dekodują teraz encje HTML. Encje były
+   trzecim wariantem tej samej pomyłki co #135 i #145: porównywaliśmy ZAPIS zamiast tego,
+   co widać — „&rarr;" w słowniku wobec „→" na ekranie. */
+var BASELINE = 11;
 var bArg = process.argv.indexOf("--baseline");
 if (bArg !== -1) {
   var bVal = Number(process.argv[bArg + 1]);

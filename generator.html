@@ -266,7 +266,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
             rewriting it — comments, key order and entries the generator does not know stay untouched.
           </p>
           <textarea id="import_src" rows="3" spellcheck="false" autocapitalize="off"
+            data-i18n-label="g.aria.importSrc"
             aria-label="Contents of the globals.yml file to import"
+            data-i18n-ph="g.ph.importSrc"
             placeholder="---&#10;kolla_base_distro: &quot;rocky&quot;&#10;…"></textarea>
           <div class="btn-row" style="margin-top:10px">
             <button type="button" class="small" id="btn-import" data-i18n="g.btn.import">Load from the field</button>
@@ -368,7 +370,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
           <div class="field">
             <label for="int_fqdn">kolla_internal_fqdn</label>
-            <input type="text" id="int_fqdn" spellcheck="false" placeholder="VIP address by default"
+            <input type="text" id="int_fqdn" spellcheck="false" data-i18n-ph="g.ph.intFqdn" placeholder="VIP address by default"
                    aria-describedby="h-int_fqdn" maxlength="64">
             <p class="hint" id="h-int_fqdn" data-i18n="g.hint.intFqdn">Name of the internal endpoints in the service catalogue.</p>
           </div>
@@ -547,7 +549,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           <button type="button" class="primary" id="btn-download" aria-describedby="status-txt" data-i18n="g.btn.download">Download globals.yml</button>
         </div>
         <p class="hint diffnote" id="view-note" data-i18n="g.view.note" hidden>Showing only the keys whose value differs from this tool's initial values — the state this form starts in. This is <strong>not</strong> a comparison against kolla-ansible defaults: this tool does not know them, so a key missing here may still differ from upstream.</p>
-        <pre class="yaml" id="out" tabindex="0" aria-label="Preview of the generated globals.yml"></pre>
+        <pre class="yaml" id="out" tabindex="0" data-i18n-label="g.aria.out" aria-label="Preview of the generated globals.yml"></pre>
       </div>
 
       <div class="panel" id="diffpanel" style="margin-top:18px" hidden>
@@ -1005,6 +1007,26 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
          Rodzina jest większa niż to, co widać w progu: w generator.html stoi 48 literałów
          msg:/hint:, a scenariusze renderują 8 z nich. Przeniesione są te renderowane;
          liczba i powód stoją w #58, żeby reszta była planem, a nie zapomnieniem. */
+      /* Atrybuty generatora — przeniesione 2026-09-01 (#58), po jednym zdaniu o każdym.
+
+         g.ph.intFqdn      podpowiedź w polu, nie przykład wartości: mówi, co się stanie
+                           przy pustym polu, więc jest tekstem interfejsu i idzie do słownika
+                           mimo reguły zwalniającej jednowyrazowe placeholdery.
+         g.ph.importSrc    przykład pliku do wklejenia. Jest to treść cudzego pliku, więc
+                           kusi, żeby uznać ją za dane — ale walidator ma dokładnie ten sam
+                           przypadek pod kluczem v.editor.placeholder od początku, a dwa
+                           identyczne przypadki rozstrzygnięte różnie to gorsza odpowiedź
+                           niż jedna, którą da się obronić.
+         g.aria.importSrc  etykieta czytana na głos. aria-* z definicji standardu OPISUJE
+                           interfejs i nigdy nie niesie przykładowej wartości.
+         g.aria.out        jw.
+         g.title.exportBlocked  podpowiedź przycisku, ustawiana WARUNKOWO w JS — więc klucz
+                           bez kotwicy, bo w dokumencie początkowym tego tekstu nie ma. */
+      "g.ph.intFqdn":              "VIP address by default",
+      "g.ph.importSrc":            "---\nkolla_base_distro: \"rocky\"\n…",
+      "g.aria.importSrc":          "Contents of the globals.yml file to import",
+      "g.aria.out":                "Preview of the generated globals.yml",
+      "g.title.exportBlocked":     "Fix the configuration errors to export the file",
       "g.d.ifaceRequired":         "Field {field} is required.",
       "g.d.extDirect":             "<code>neutron_external_interface</code> (<code>{iface}</code>) is the same interface as <code>{role}</code>.",
       "g.d.extShared":             "<code>neutron_external_interface</code> (<code>{iface}</code>) shares a base device with <code>{role}</code> (<code>{device}</code>).",
@@ -3010,7 +3032,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     hasErrors = errors > 0;
     btnDownload.disabled = hasErrors;
     btnCopy.disabled = hasErrors;
-    var blockedTitle = hasErrors ? "Fix the configuration errors to export the file" : "";
+    var blockedTitle = hasErrors ? T("g.title.exportBlocked") : "";
     btnDownload.title = blockedTitle;
     btnCopy.title = blockedTitle;
 

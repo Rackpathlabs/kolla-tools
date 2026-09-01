@@ -294,6 +294,7 @@ disable
 discard
 distributed
 distribution
+distro
 do
 document
 does
@@ -835,6 +836,7 @@ right
 ring
 risk
 risks
+rocky
 role
 roles
 rolling
