@@ -615,7 +615,7 @@ R.ok("i jest to PODEJRZENIE TŁA, nie zwykłe naruszenie",
      /PODEJRZENIE TŁA/.test(netShared.out), netDetail(netShared));
 R.ok("i komunikat niesie host, liczbę scenariuszy i brak w kontrolnych",
      /shared-block\.example\.invalid/.test(netShared.out) &&
-     /wszystkich 2 scenariuszach/.test(netShared.out) &&
+     /WSZYSTKICH 2 scenariuszach/.test(netShared.out) &&
      /ŻADNYM z 3 przebiegów kontrolnych/.test(netShared.out), netDetail(netShared));
 R.ok("new Image().src = https://… -> czerwone", netDirty.code === 1, kod(netDirty));
 R.ok("i nazywa HOSTA, do którego poszło żądanie",

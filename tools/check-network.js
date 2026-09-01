@@ -291,21 +291,49 @@ results.forEach(function (r) {
 
 if (everywhere.length) {
   console.log("");
-  console.log("PODEJRZENIE TŁA (nie liczone jako naruszenie): " + everywhere.join(", "));
+  console.log("FAIL PODEJRZENIE TŁA: " + everywhere.join(", "));
   console.log("  Każdy z tych hostów wystąpił we WSZYSTKICH " + results.length +
               " scenariuszach i w ŻADNYM z " + CONTROL_RUNS + " przebiegów kontrolnych.");
-  console.log("  Ścieżka w kodzie trafiłaby do scenariuszy, które jej dotykają, a nie do");
-  console.log("  wszystkich naraz — to wygląda na własne żądanie przeglądarki, którego tło");
-  console.log("  nie złapało (#128). ROZSTRZYGNIĘCIE: obejrzyj netlog przebiegu kontrolnego");
-  console.log("  i scenariusza w " + path.relative(root, work) + " — jeśli host jest tylko");
-  console.log("  w scenariuszu i nie wskazuje go żaden zasób strony, to tło; jeśli wskazuje");
-  console.log("  go zasób, to naruszenie i ta reguła właśnie je przepuściła.");
+  console.log("  Dwie rzeczy mają ten kształt i tylko jedna z nich jest niegroźna:");
+  console.log("    ŻĄDANIE Z BLOKU WSPÓŁDZIELONEGO — matrix.js i globals-parser.js są");
+  console.log("      wklejane do wszystkich plików, więc ich żądanie trafia wszędzie naraz.");
+  console.log("      To jest NARUSZENIE i to jest powód, dla którego ten wynik jest czerwony.");
+  console.log("    WŁASNE ŻĄDANIE PRZEGLĄDARKI, którego przebieg kontrolny nie złapał.");
+  console.log("  ROZSTRZYGNIĘCIE: netlogi zostały w " + path.relative(root, work) + ".");
+  console.log("  Jeśli host wskazuje zasób strony albo wywołanie w kodzie — to naruszenie.");
+  console.log("  Jeśli nie wskazuje go nic ze strony — to tło, i wtedy trzeba je dopisać.");
 }
+
+/* PODEJRZENIE JEST CZERWONE, i to ODWRACA rozstrzygnięcie z PR #134.
+
+   Tamten PR uczynił z tego wynik zielony z blokiem informacyjnym i nazwał koszt przy
+   regule. Koszt okazał się nie do przyjęcia: matrix.js i globals-parser.js są wklejane
+   bajt w bajt do wszystkich trzech plików, więc żądanie z bloku współdzielonego trafia
+   do każdego scenariusza i do żadnego przebiegu kontrolnego — czyli DOKŁADNIE w kształt,
+   który tamta reguła zwalniała. To nie jest przypadek brzegowy, tylko domyślny kształt
+   kodu współdzielonego w tym repozytorium, i zieleń przy nim wpuszczała z powrotem klasę
+   #101, dla której ten strażnik powstał. Fixtura tools/fixtures/network/shared trzyma
+   ten kształt: dwie strony, jeden blok, jedno żądanie.
+
+   ROZRÓŻNIENIE ZOSTAJE, ZIELONY WERDYKT NIE. Przy naruszeniu wiadomo, że to kod; przy
+   podejrzeniu trzeba rozstrzygnąć, czy to kod, czy przeglądarka — i to jest inny
+   komunikat, a nie inny kod wyjścia. */
+var suspicionIsRed = everywhere.length > 0;
 
 /* Katalog roboczy kasujemy TYLKO przy zielonym. Dowód, który znika przed obejrzeniem,
    nie jest dowodem — #128 rozstrzygnięto liczbą z nagłówka, bo netlogu już nie było. */
-if (!bad && !everywhere.length) {
+if (!bad && !suspicionIsRed) {
   fs.rmSync(work, { recursive: true, force: true });
+}
+
+if (suspicionIsRed && !bad) {
+  console.log("");
+  console.log("Werdykt CZERWONY na samym podejrzeniu, bez ani jednego pewnego naruszenia.");
+  console.log("  Zieleń tutaj wpuszczałaby klasę #101: blok współdzielony jest wklejany do");
+  console.log("  wszystkich plików, więc jego żądanie ma dokładnie ten kształt. Rozstrzygnij");
+  console.log("  po netlogach — zostały na dysku — i albo usuń ścieżkę z kodu, albo dopisz");
+  console.log("  host do tła, jeśli okaże się własnym żądaniem przeglądarki.");
+  process.exit(1);
 }
 
 if (bad) {
