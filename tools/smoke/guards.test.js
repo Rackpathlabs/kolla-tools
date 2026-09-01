@@ -120,6 +120,29 @@ function dictCount(out) {
   var m = /BEZ POKRYCIA: (\d+) RÓŻNYCH NAPISÓW w (\d+) wystąpieniach/.exec(out);
   return m ? { napisy: +m[1], wystapienia: +m[2] } : null;
 }
+/* ---- ARTEFAKT POMIARU: EKRAN NIE WIDZI TREŚCI DZIECKA (#86, ADR-002 „Weryfikacja po fakcie") ----
+
+   Jednostką po stronie ekranu jest WŁASNY TEKST ELEMENTU — treść elementów-dzieci do niego
+   nie wchodzi. Korpus po stronie słownika zamieniał znacznik na spację, ale treść dziecka
+   ZOSTAWIAŁ. Wpis „Host <code>{host}</code> is in no group…" dawał więc segmenty „Host "
+   i „ is in no group…", a ekran pokazywał jeden napis dłuższy od obu — i wpis pochodzący
+   ze słownika był raportowany jako niepokryty.
+
+   To nie jest dług tekstowy, tylko WADA MIERNIKA: 90 wystąpień w 20 różnych napisach na
+   dzisiejszym main. Naprawa jest dołożeniem DRUGIEJ postaci każdego wpisu (bez treści
+   dzieci), nie poluzowaniem kryterium — i fixtura pilnuje obu połówek naraz. */
+var childRep = run("check-dictionary.js", ["tools/fixtures/report-child-text.json"]);
+R.ok("tekst wpisu BEZ treści dziecka jest POKRYTY",
+     !/Host is in no group/.test(childRep.out), childRep.out.split("\n")[1]);
+/* Druga postać jest DOŁOŻONA, nie podmieniona: wpis bez dzieci ma dalej pokrywać. */
+R.ok("wpis bez dzieci w ogóle -> dalej pokryty",
+     !/The input has changed/.test(childRep.out));
+/* I to nie jest poluzowanie: polski napis o tym samym kształcie ma dalej NIE być pokryty. */
+R.ok("polski napis o tym samym kształcie -> dalej BEZ POKRYCIA",
+     /nie wdraża/.test(childRep.out), childRep.out.split("\n")[1]);
+R.ok("czyli DOKŁADNIE jeden brak w tej fixturze",
+     /BEZ POKRYCIA: 1 RÓŻNYCH NAPISÓW/.test(childRep.out), childRep.out.split("\n")[1]);
+
 var sc1 = run("check-dictionary.js", ["tools/fixtures/report-one-scenario.json"]);
 var sc2 = run("check-dictionary.js", ["tools/fixtures/report-two-scenarios.json"]);
 var c1 = dictCount(sc1.out), c2 = dictCount(sc2.out);

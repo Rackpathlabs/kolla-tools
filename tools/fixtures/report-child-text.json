@@ -1,0 +1,5 @@
+[
+ { "tag": "DIV", "cls": "f-msg", "text": "Host is in no group that Kolla-Ansible deploys onto.", "inData": false, "fromInput": false, "file": "demo.html", "scenario": "artefakt" },
+ { "tag": "P", "cls": "stale", "text": "The input has changed since this result was produced.", "inData": false, "fromInput": false, "file": "demo.html", "scenario": "artefakt" },
+ { "tag": "DIV", "cls": "f-msg", "text": "Host jest w grupie, na którą nikt nie wdraża.", "inData": false, "fromInput": false, "file": "demo.html", "scenario": "artefakt" }
+]
