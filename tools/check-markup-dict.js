@@ -105,8 +105,22 @@ var FORMS = [
 var ATTR_SINK = { "data-i18n-ph": "placeholder", "data-i18n-title": "title",
                   "data-i18n-label": "aria-label", "data-i18n-content": "content" };
 
+/* ENCJE HTML DEKODUJEMY. Przeglądarka pokazuje „→", a w markupie i w słowniku stoi
+   „&rarr;" — porównanie bez dekodowania mówi o zapisie, a nie o tym, co widać, czyli
+   dokładnie o czym ten strażnik nie ma mówić. Lista jest krótka i zamknięta świadomie:
+   obejmuje encje, które w tym repozytorium występują, a nie wszystkie istniejące —
+   nowa encja w tekście da czerwone i zostanie tu dopisana razem z przypadkiem. */
+function unentity(t) {
+  return String(t)
+    .replace(/&rarr;/g, "\u2192").replace(/&larr;/g, "\u2190")
+    .replace(/&ldquo;/g, "\u201c").replace(/&rdquo;/g, "\u201d")
+    .replace(/&nbsp;/g, " ").replace(/&#10;/g, "\n")
+    .replace(/&quot;/g, "\"").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
+}
+
 /* Reguła 1. */
-function norm(s) { return String(s).replace(/\s+/g, " ").trim(); }
+function norm(s) { return unentity(s).replace(/\s+/g, " ").trim(); }
 
 /* SEKWENCJE UCIECZKI DEKODUJEMY, i to nie jest szczegół.
    Pierwsza wersja rozwijała wyłącznie \\" i przez to wpis niosący \\n dawała jako

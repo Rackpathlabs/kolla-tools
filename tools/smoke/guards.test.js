@@ -201,7 +201,11 @@ R.ok("czyli DOKŁADNIE cztery braki w tej fixturze",
                   („Preview of the generated globals.yml", „Contents of the globals.yml
                   file to import"). To jest fałszywe zwolnienie, więc 11 jest za nisko.
    12 to najmniejszy próg, przy którym każde nowe pokrycie pochodzi ze słownika. Przynęta
-   w fixturze trzyma dokładnie tamten aria-label, żeby obniżenie progu było czerwone. */
+   Przynętą było najpierw tamto aria-label. Po tym, jak dostało klucz (#58), przestało
+   bronić progu — i fixtura zgłosiła to sama, bo asercja zzieleniała. Zastąpione zdaniem
+   BEZ klucza, niosącym segment „analyse now" długości 11: przy progu 12 nie pokrywa,
+   przy 11 pokryłoby, więc obniżenie progu jest czerwone niezależnie od tego, co migracja
+   dopisze do słownika. */
 /* ---- CZWARTA KATEGORIA DANYCH: komórka wartości w tabeli różnic (#86) ----
    Widok różnic pokazuje, co stało w pliku użytkownika przed importem i co stoi teraz.
    Treść tych komórek to WARTOŚCI Z JEGO PLIKU — „eth0", „bond0", „no" — a nie tekst
@@ -231,8 +235,8 @@ R.ok("komunikat SKLEJONY z podpowiedzią -> POKRYTY", !/glued on after it/.test(
 /* PRZYNĘTA NA PRÓG: napis BEZ klucza, zawierający krótki angielski fragment ze słownika.
    Przy progu 11 zostałby zwolniony — ta asercja jest jedynym miejscem, w którym widać,
    że próg nie jest okrągłą liczbą. */
-R.ok("PRZYNĘTA: aria-label BEZ klucza -> dalej BEZ POKRYCIA",
-     /Preview of the generated/.test(ins.out),
+R.ok("PRZYNĘTA: zdanie BEZ klucza, niosące 11-znakowy segment ze słownika",
+     /Please Analyse now/.test(ins.out),
      "jeśli to zielone, próg zjechał poniżej 12 i zwalnia tekst bez klucza");
 R.ok("i polski napis o tym samym kształcie -> dalej BEZ POKRYCIA",
      /nie ma ani jednego hosta/.test(ins.out));
