@@ -206,6 +206,26 @@ footer a{color:var(--muted)}
       /* Opis meta generatora. Do 2026-09-01 stał w markupie jako literał poza
          słownikiem — jedyny wpis rejestru #77, którego żaden scenariusz nie mógł
          osiągnąć, bo opisu meta nie renderuje strona, tylko wyszukiwarka. */
+      /* Piętnaście wpisów przeniesionych 2026-09-01 z markupu generatora, w którym
+         stały BEZ ŻADNEGO KLUCZA — check-markup-dict.js ich nie widział, bo pilnuje
+         zgodności tam, gdzie klucz JEST, a check-i18n.js nie miał czego porównać.
+         Wartości wzięte z markupu, nie przepisane: migracja przenosi tekst, nie
+         zmienia go, a migawka piętnastu scenariuszy potwierdza to bajtowo. */
+      "g.h1":                      "<code>globals.yml</code> generator for Kolla-Ansible",
+      "g.lede":                    "Fill in the deployment parameters — the file assembles live on the right. Settings are saved locally in the browser; nothing leaves this machine.",
+      "g.import.hint":             "Paste or drop a <code>globals.yml</code>. The form fills with the values from the file, and from then on the export <strong>edits the original</strong> instead of rewriting it — comments, key order and entries the generator does not know stay untouched.",
+      "g.btn.import":              "Load from the field",
+      "g.btn.importFile":          "Load a file…",
+      "g.btn.importClear":         "Discard the import",
+      "g.hint.ml2":                "ML2 backend. OVN and openvswitch are mutually exclusive.",
+      "g.ack.hint":                "Some rules describe a risk the file alone cannot settle. An acknowledgment does not silence the finding — it lowers it to information and records the decision as a comment in the generated file.",
+      "g.ack.kv05":                "the shared link has headroom and QoS",
+      "g.ack.kv06":                "migration has its own network outside Kolla",
+      "g.toggle.comments":         "Explanatory comments",
+      "g.btn.reset":               "Restore defaults",
+      "g.out.fname":               "/etc/kolla/globals.yml",
+      "g.btn.download":            "Download globals.yml",
+      "g.footer":                  "Rackpathlabs — OpenStack tools. A single HTML file, no external dependencies, works offline.",
       "g.desc":                "Generator for a Kolla-Ansible globals.yml: base image, release matrix, interface assignment. Runs offline, with no external dependencies.",
       "hub.h1":                "Two tools for Kolla-Ansible",
       "hub.lede":              "One writes <code>globals.yml</code> and keeps it free of configuration that passes a deployment and breaks weeks later. The other reads a <em>multinode</em> inventory and looks for what reading it will not show you: quorum, role collocation, group names retired in your release.",

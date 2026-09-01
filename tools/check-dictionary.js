@@ -541,7 +541,11 @@ report.forEach(function (f) {
 /* 83 -> 81, obniżone 2026-09-01 razem ze zmianą kategorii kodów na przynależność do
    rejestru. Spadek to dokładnie RANGE i TYPO — jednowyrazowe kody, których poprzedni
    wzorzec nie mógł objąć, bo wymagał myślnika. */
-var BASELINE = 81;
+/* 81 -> 65, obniżone 2026-09-01 partią migracyjną #58: piętnaście napisów stojących
+   w markupie generatora BEZ ŻADNEGO KLUCZA dostało klucz i kotwicę. Spadek 16, o jeden
+   większy niż liczba kotwic — „edits the original" siedzi w <strong> wewnątrz wpisu
+   g.import.hint i pokrywa się teraz przez postać korpusu z treścią dzieci. */
+var BASELINE = 65;
 var bArg = process.argv.indexOf("--baseline");
 if (bArg !== -1) {
   var bVal = Number(process.argv[bArg + 1]);
