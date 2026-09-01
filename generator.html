@@ -245,8 +245,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 </header>
 
 <main class="wrap" id="main">
-  <h1><code>globals.yml</code> generator for Kolla-Ansible</h1>
-  <p class="lede">
+  <h1 data-i18n="g.h1"><code>globals.yml</code> generator for Kolla-Ansible</h1>
+  <p class="lede" data-i18n="g.lede">
     Fill in the deployment parameters — the file assembles live on the right. Settings are
     saved locally in the browser; nothing leaves this machine.
   </p>
@@ -260,7 +260,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
         <fieldset>
           <legend data-i18n="g.h.import">Import an existing file</legend>
-          <p class="hint" style="margin:0 0 10px">
+          <p class="hint" style="margin:0 0 10px" data-i18n="g.import.hint">
             Paste or drop a <code>globals.yml</code>. The form fills with the values from the
             file, and from then on the export <strong>edits the original</strong> instead of
             rewriting it — comments, key order and entries the generator does not know stay untouched.
@@ -269,9 +269,9 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
             aria-label="Contents of the globals.yml file to import"
             placeholder="---&#10;kolla_base_distro: &quot;rocky&quot;&#10;…"></textarea>
           <div class="btn-row" style="margin-top:10px">
-            <button type="button" class="small" id="btn-import">Load from the field</button>
-            <button type="button" class="small ghost" id="btn-import-file">Load a file…</button>
-            <button type="button" class="small ghost" id="btn-import-clear" disabled>Discard the import</button>
+            <button type="button" class="small" id="btn-import" data-i18n="g.btn.import">Load from the field</button>
+            <button type="button" class="small ghost" id="btn-import-file" data-i18n="g.btn.importFile">Load a file…</button>
+            <button type="button" class="small ghost" id="btn-import-clear" disabled data-i18n="g.btn.importClear">Discard the import</button>
             <input type="file" id="import_file" accept=".yml,.yaml,.txt,text/plain" class="sr" aria-hidden="true" tabindex="-1">
           </div>
         </fieldset>
@@ -406,7 +406,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
               <option value="ovn">ovn</option>
               <option value="openvswitch">openvswitch</option>
             </select>
-            <p class="hint" id="h-ml2">ML2 backend. OVN and openvswitch are mutually exclusive.</p>
+            <p class="hint" id="h-ml2" data-i18n="g.hint.ml2">ML2 backend. OVN and openvswitch are mutually exclusive.</p>
           </div>
 
           <div class="field">
@@ -500,19 +500,19 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
         <fieldset>
           <legend data-i18n="g.h.decisions">Deliberate decisions</legend>
-          <p class="hint" style="margin:0 0 10px">
+          <p class="hint" style="margin:0 0 10px" data-i18n="g.ack.hint">
             Some rules describe a risk the file alone cannot settle. An acknowledgment does
             not silence the finding — it lowers it to information and records the decision as
             a comment in the generated file.
           </p>
           <label class="toggle" for="ack_link">
             <input type="checkbox" id="ack_link">
-            <span class="t-txt"><span class="t-name">the shared link has headroom and QoS</span>
+            <span class="t-txt"><span class="t-name" data-i18n="g.ack.kv05">the shared link has headroom and QoS</span>
               <span class="t-desc" data-i18n="g.toggle.d15">Measured bandwidth headroom and switch-side queueing for storage and migration traffic.</span></span>
           </label>
           <label class="toggle" for="ack_migration">
             <input type="checkbox" id="ack_migration">
-            <span class="t-txt"><span class="t-name">migration has its own network outside Kolla</span>
+            <span class="t-txt"><span class="t-name" data-i18n="g.ack.kv06">migration has its own network outside Kolla</span>
               <span class="t-desc" data-i18n="g.toggle.d16">A dedicated migration VLAN configured through <code>live_migration_inbound_addr</code> in a nova-compute override.</span></span>
           </label>
         </fieldset>
@@ -521,11 +521,11 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           <legend data-i18n="g.h.output">Output</legend>
           <label class="toggle" for="t_comments">
             <input type="checkbox" id="t_comments" checked>
-            <span class="t-txt"><span class="t-name">Explanatory comments</span>
+            <span class="t-txt"><span class="t-name" data-i18n="g.toggle.comments">Explanatory comments</span>
               <span class="t-desc" data-i18n="g.toggle.d17">Section headers and deployment notes that follow from the chosen configuration.</span></span>
           </label>
           <div class="btn-row" style="margin-top:14px">
-            <button type="button" class="ghost" id="btn-reset">Restore defaults</button>
+            <button type="button" class="ghost" id="btn-reset" data-i18n="g.btn.reset">Restore defaults</button>
           </div>
         </fieldset>
 
@@ -536,7 +536,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     <div>
       <div class="panel">
         <div class="out-head">
-          <span class="fname">/etc/kolla/globals.yml</span>
+          <span class="fname" data-i18n="g.out.fname">/etc/kolla/globals.yml</span>
           <span class="mode" id="out-mode" hidden>original + edits</span>
           <span class="viewsel" role="radiogroup" data-i18n-label="g.view.group" aria-label="Output view">
             <label><input type="radio" name="outview" id="view-full" checked><span data-i18n="g.view.full">full file</span></label>
@@ -544,7 +544,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
           </span>
           <span class="sp"></span>
           <button type="button" id="btn-copy" aria-describedby="status-txt">Copy</button>
-          <button type="button" class="primary" id="btn-download" aria-describedby="status-txt">Download globals.yml</button>
+          <button type="button" class="primary" id="btn-download" aria-describedby="status-txt" data-i18n="g.btn.download">Download globals.yml</button>
         </div>
         <p class="hint diffnote" id="view-note" data-i18n="g.view.note" hidden>Showing only the keys whose value differs from this tool's initial values — the state this form starts in. This is <strong>not</strong> a comparison against kolla-ansible defaults: this tool does not know them, so a key missing here may still differ from upstream.</p>
         <pre class="yaml" id="out" tabindex="0" aria-label="Preview of the generated globals.yml"></pre>
@@ -578,7 +578,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
 
   </div>
 
-  <footer>
+  <footer data-i18n="g.footer">
     Rackpathlabs — OpenStack tools. A single HTML file, no external dependencies, works offline.
   </footer>
 </main>
@@ -622,6 +622,26 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       /* Opis meta generatora. Do 2026-09-01 stał w markupie jako literał poza
          słownikiem — jedyny wpis rejestru #77, którego żaden scenariusz nie mógł
          osiągnąć, bo opisu meta nie renderuje strona, tylko wyszukiwarka. */
+      /* Piętnaście wpisów przeniesionych 2026-09-01 z markupu generatora, w którym
+         stały BEZ ŻADNEGO KLUCZA — check-markup-dict.js ich nie widział, bo pilnuje
+         zgodności tam, gdzie klucz JEST, a check-i18n.js nie miał czego porównać.
+         Wartości wzięte z markupu, nie przepisane: migracja przenosi tekst, nie
+         zmienia go, a migawka piętnastu scenariuszy potwierdza to bajtowo. */
+      "g.h1":                      "<code>globals.yml</code> generator for Kolla-Ansible",
+      "g.lede":                    "Fill in the deployment parameters — the file assembles live on the right. Settings are saved locally in the browser; nothing leaves this machine.",
+      "g.import.hint":             "Paste or drop a <code>globals.yml</code>. The form fills with the values from the file, and from then on the export <strong>edits the original</strong> instead of rewriting it — comments, key order and entries the generator does not know stay untouched.",
+      "g.btn.import":              "Load from the field",
+      "g.btn.importFile":          "Load a file…",
+      "g.btn.importClear":         "Discard the import",
+      "g.hint.ml2":                "ML2 backend. OVN and openvswitch are mutually exclusive.",
+      "g.ack.hint":                "Some rules describe a risk the file alone cannot settle. An acknowledgment does not silence the finding — it lowers it to information and records the decision as a comment in the generated file.",
+      "g.ack.kv05":                "the shared link has headroom and QoS",
+      "g.ack.kv06":                "migration has its own network outside Kolla",
+      "g.toggle.comments":         "Explanatory comments",
+      "g.btn.reset":               "Restore defaults",
+      "g.out.fname":               "/etc/kolla/globals.yml",
+      "g.btn.download":            "Download globals.yml",
+      "g.footer":                  "Rackpathlabs — OpenStack tools. A single HTML file, no external dependencies, works offline.",
       "g.desc":                "Generator for a Kolla-Ansible globals.yml: base image, release matrix, interface assignment. Runs offline, with no external dependencies.",
       "hub.h1":                "Two tools for Kolla-Ansible",
       "hub.lede":              "One writes <code>globals.yml</code> and keeps it free of configuration that passes a deployment and breaks weeks later. The other reads a <em>multinode</em> inventory and looks for what reading it will not show you: quorum, role collocation, group names retired in your release.",
