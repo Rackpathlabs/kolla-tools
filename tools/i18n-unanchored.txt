@@ -85,19 +85,19 @@ v.r.renamed  m  do migracji (#58)
 v.rel.planned  m  do migracji (#58)
 v.rel.since  m  do migracji (#58)
 v.releaseTo.none  a  element <option> tworzony przez JS; zakotwiczenie znaczyloby DOPISANIE markupu, nie przeniesienie klucza
-v.rep.absent  m  do migracji (#58)
-v.rep.both  m  do migracji (#58)
-v.rep.clean  m  do migracji (#58)
-v.rep.globalsNo  m  do migracji (#58)
-v.rep.globalsYes  m  do migracji (#58)
-v.rep.hosts  m  do migracji (#58)
-v.rep.path  m  do migracji (#58)
-v.rep.refLine  m  do migracji (#58)
-v.rep.refMissing  m  do migracji (#58)
-v.rep.release  m  do migracji (#58)
-v.rep.result  m  do migracji (#58)
-v.rep.title  m  do migracji (#58)
-v.rep.topology  m  do migracji (#58)
+v.rep.absent  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopoki nie ma wyniku
+v.rep.both  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopoki nie ma wyniku
+v.rep.clean  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopoki nie ma wyniku
+v.rep.globalsNo  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopoki nie ma wyniku
+v.rep.globalsYes  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopoki nie ma wyniku
+v.rep.hosts  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopoki nie ma wyniku
+v.rep.path  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopoki nie ma wyniku
+v.rep.refLine  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopoki nie ma wyniku
+v.rep.refMissing  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopoki nie ma wyniku
+v.rep.release  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopoki nie ma wyniku
+v.rep.result  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopoki nie ma wyniku
+v.rep.title  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopoki nie ma wyniku
+v.rep.topology  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopoki nie ma wyniku
 v.rs.development  m  do migracji (#58)
 v.rs.eol  m  do migracji (#58)
 v.rs.unmaintained  m  do migracji (#58)
@@ -108,12 +108,12 @@ v.sev.info  a  etykieta wagi findingu; findingu nie ma, dopoki nie powstanie
 v.sev.warn  a  etykieta wagi findingu; findingu nie ma, dopoki nie powstanie
 v.src.both  a  etykieta zrodla findingu; findingu nie ma, dopoki nie powstanie
 v.src.path  a  etykieta zrodla findingu; findingu nie ma, dopoki nie powstanie
-v.topology.count  m  do migracji (#58)
-v.topology.group  m  do migracji (#58)
-v.topology.hosts  m  do migracji (#58)
-v.topology.missing  m  do migracji (#58)
-v.topology.required  m  do migracji (#58)
-v.topology.subgroups  m  do migracji (#58)
+v.topology.count  a  komorka albo naglowek tabeli topologii budowanej per wiersz; tabeli nie ma w dokumencie poczatkowym
+v.topology.group  a  komorka albo naglowek tabeli topologii budowanej per wiersz; tabeli nie ma w dokumencie poczatkowym
+v.topology.hosts  a  komorka albo naglowek tabeli topologii budowanej per wiersz; tabeli nie ma w dokumencie poczatkowym
+v.topology.missing  a  komorka albo naglowek tabeli topologii budowanej per wiersz; tabeli nie ma w dokumencie poczatkowym
+v.topology.required  a  komorka albo naglowek tabeli topologii budowanej per wiersz; tabeli nie ma w dokumencie poczatkowym
+v.topology.subgroups  a  komorka albo naglowek tabeli topologii budowanej per wiersz; tabeli nie ma w dokumencie poczatkowym
 v.u.gap.hint  m  do migracji (#58)
 v.u.gap.which1  m  do migracji (#58)
 v.u.gap.whichN  m  do migracji (#58)
