@@ -1366,6 +1366,18 @@ Paste the contents of your multinode file, or drag it here."
          widział ich ani check-english.js, ani migawka, ani goldeny; znalazło je
          czytanie. Od chwili wejścia do słownika obejmuje je statyczny przebieg po
          WARTOŚCIACH słownika, niezależny od pokrycia (ADR-004, opcja B). */
+      /* Rodzina PARSERA — przeniesione 2026-09-01 z literałów w kodzie walidatora (#58).
+         Wartości przepisane BAJT W BAJT z literałów; migawka piętnastu scenariuszy
+         potwierdza, że na ekranie nic się nie zmieniło. */
+      "v.f.syntax.malformed":      "Malformed section header: <code>{header}</code>.",
+      "v.f.syntax.emptyName":      "The section header has an empty group name.",
+      "v.f.outsideGroup":          "Entry <code>{entry}</code> appears before any group header.",
+      "v.f.outsideGroup.hint":     "Ansible puts it in <code>ungrouped</code>, so no Kolla role covers it.",
+      "v.f.groupVar":              "In <code>[{group}:vars]</code> the entry <code>{entry}</code> is not a variable assignment.",
+      "v.f.groupVar.hint":         "Ansible expects <code>key=value</code>, with no spaces around the equals sign.",
+      "v.f.range":                 "Pattern <code>{pattern}</code> is not a valid host range.",
+      "v.f.range.hint":            "Ansible expects <code>name[01:10]</code> or <code>name[a:f]</code>, optionally with a step " +
+                                   "(<code>[01:10:2]</code>). Both ends must be of the same kind, and with a leading zero also of the same length.",
       "v.f.syntax.hint":           "Expected format: <code>[name]</code>, <code>[name:children]</code> or <code>[name:vars]</code>.",
       "v.f.sectionKind":           "Unknown section type <code>{kind}</code>.",
       "v.f.childrenFormat":        "Section <code>[{group}:children]</code> may contain only group names, one per line.",
@@ -1593,14 +1605,14 @@ Paste the contents of your multinode file, or drag it here."
       if (body.charAt(0) === "[") {
         var hm = /^\[([^\[\]]*)\]$/.exec(body);
         if (!hm) {
-          add("error", "SYNTAX", "Malformed section header: <code>" + esc(body) + "</code>.", lineNo,
+          add("error", "SYNTAX", T("v.f.syntax.malformed", { header: esc(body) }), lineNo,
               T("v.f.syntax.hint"));
           current = null;
           continue;
         }
         var inner = hm[1].trim();
         if (!inner) {
-          add("error", "SYNTAX", "The section header has an empty group name.", lineNo);
+          add("error", "SYNTAX", T("v.f.syntax.emptyName"), lineNo);
           current = null;
           continue;
         }
@@ -1635,8 +1647,8 @@ Paste the contents of your multinode file, or drag it here."
 
       /* ---- wpis poza sekcją ---- */
       if (!current) {
-        add("error", "OUTSIDE-GROUP", "Entry <code>" + esc(body.split(/\s+/)[0]) + "</code> appears before any group header.",
-            lineNo, "Ansible puts it in <code>ungrouped</code>, so no Kolla role covers it.");
+        add("error", "OUTSIDE-GROUP", T("v.f.outsideGroup", { entry: esc(body.split(/\s+/)[0]) }),
+            lineNo, T("v.f.outsideGroup.hint"));
         continue;
       }
 
@@ -1651,9 +1663,8 @@ Paste the contents of your multinode file, or drag it here."
           if (veq < 1) {
             if (!varsReported) {
               varsReported = true;
-              add("error", "GROUP-VAR", "In <code>[" + esc(current.group) + ":vars]</code> the entry <code>" +
-                  esc(body) + "</code> is not a variable assignment.", lineNo,
-                  "Ansible expects <code>key=value</code>, with no spaces around the equals sign.");
+              add("error", "GROUP-VAR", T("v.f.groupVar", { group: esc(current.group), entry: esc(body) }),
+                  lineNo, T("v.f.groupVar.hint"));
             }
             continue;
           }
@@ -1694,9 +1705,8 @@ Paste the contents of your multinode file, or drag it here."
       if (head.indexOf("[") !== -1 || head.indexOf("]") !== -1) {
         names = expandPattern(head, MAX_RANGE);
         if (!names) {
-          add("error", "RANGE", "Pattern <code>" + esc(head) + "</code> is not a valid host range.", lineNo,
-              "Ansible expects <code>name[01:10]</code> or <code>name[a:f]</code>, optionally with a step " +
-              "(<code>[01:10:2]</code>). Both ends must be of the same kind, and with a leading zero also of the same length.");
+          add("error", "RANGE", T("v.f.range", { pattern: esc(head) }), lineNo,
+              T("v.f.range.hint"));
           names = [];
         }
       }

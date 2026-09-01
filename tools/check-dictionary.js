@@ -545,7 +545,10 @@ report.forEach(function (f) {
    w markupie generatora BEZ ŻADNEGO KLUCZA dostało klucz i kotwicę. Spadek 16, o jeden
    większy niż liczba kotwic — „edits the original" siedzi w <strong> wewnątrz wpisu
    g.import.hint i pokrywa się teraz przez postać korpusu z treścią dzieci. */
-var BASELINE = 65;
+/* 65 -> 60, partia #58: rodzina PARSERA walidatora, osiem kluczy z pięciu wywołań.
+   Spadek 5, nie 8 — trzy z ośmiu wpisów nie renderują się w żadnym z trzynastu
+   scenariuszy, więc nigdy nie były w tej liczbie. */
+var BASELINE = 60;
 var bArg = process.argv.indexOf("--baseline");
 if (bArg !== -1) {
   var bVal = Number(process.argv[bArg + 1]);
