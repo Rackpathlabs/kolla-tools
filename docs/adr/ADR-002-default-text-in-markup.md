@@ -330,6 +330,33 @@ wygląda dokładnie tak samo, więc miernik nie miał na co zareagować.
 Błąd był w zdaniu o mierniku, nie w decyzji. Opcja B zrobiła to, co obiecywała:
 awaria z #59 przestała być możliwa zamiast być pilnowana.
 
+### Dopisane 2026-09-01: artefakt miał DWIE przyczyny i obie były wadą miernika
+
+Zdanie wyżej — „błąd był w zdaniu o mierniku, nie w decyzji" — okazało się prawdziwe
+dosłowniej, niż je napisano. Artefakt nie tylko nie zniknął sam; okazał się w całości
+**wadą pomiaru**, i to w dwóch odsłonach, każda naprawiona osobno:
+
+**Pierwsza (PR #135): ekran nie widzi treści DZIECKA.** Jednostką po stronie ekranu jest
+własny tekst elementu, a korpus zostawiał treść elementów-dzieci. Wpis
+`Host <code>{host}</code> is in no group…` dawał segmenty `Host ` i ` is in no group…`,
+a ekran pokazywał jeden napis dłuższy od obu. Naprawa: każdy wpis wchodzi do korpusu
+w dwóch postaciach, z treścią dzieci i bez niej. `BASELINE` 138 → 118, czyli **dokładnie
+20 różnych napisów** — tyle, ile ten dokument podał wyżej jako rozmiar artefaktu.
+
+**Druga (PR #145): wpis ze WSTAWKĄ jest dłuższy na ekranie niż każdy jego segment.**
+Wpis jest cięty po `{…}`, a ekran pokazuje całość z podstawioną wartością; gdy komunikat
+jest jeszcze sklejany z podpowiedzią reguły, bywa dłuższy od całego wpisu. Naprawa:
+dopasowanie dopuszczone w drugą stronę — dostatecznie długi segment mieszczący się
+w napisie z ekranu też jest pokryciem, z progiem 12 znaków wybranym pomiarem, nie okrągłością.
+`BASELINE` 43 → 21.
+
+**Wniosek dla tego dokumentu, i to jest jedyne, co warto z tego zapamiętać.** Przewidywanie
+„artefakt zniknie sam" było błędne co do MECHANIZMU, a nie co do wielkości: artefakt
+faktycznie nie był długiem tekstowym i faktycznie miał zniknąć — tylko nie przez zmianę
+źródła, lecz przez naprawę przyrządu, który mierzył co innego, niż deklarował. Między
+przewidywaniem a jego spełnieniem stanęły trzy tygodnie i dwa strażniki, bo nikt nie
+sprawdził, CZY MIERNIK UMIE ZOBACZYĆ to, czego decyzja dotyczyła.
+
 ### Co się sprawdziło
 
 **Warunek kolejności utrzymany.** Strażnik równości powstał **czerwony** — 108 pustych
