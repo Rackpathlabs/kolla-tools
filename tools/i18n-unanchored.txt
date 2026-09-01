@@ -14,16 +14,16 @@
 #           albo na a z powodem.
 #
 # Format:  <klucz>  <kod>  <powod>
-g.diff.absent  m  do migracji (#58)
-g.rule.kv05.ackNote  m  do migracji (#58)
-g.rule.kv05.why  m  do migracji (#58)
-g.rule.kv06.ackNote  m  do migracji (#58)
-g.rule.kv06.why  m  do migracji (#58)
-g.rule.kv10.why  m  do migracji (#58)
-g.rule.kv13.why  m  do migracji (#58)
-g.verdict.blocked  m  do migracji (#58)
-g.verdict.clean  m  do migracji (#58)
-g.verdict.warn  m  do migracji (#58)
+g.diff.absent  a  komorka tabeli roznic budowana per wiersz; tabeli nie ma, dopoki nie ma czego porownac
+g.rule.kv05.ackNote  a  metadane reguly wstrzykiwane w finding; findingu nie ma, dopoki nie powstanie
+g.rule.kv05.why  a  metadane reguly wstrzykiwane w finding; findingu nie ma, dopoki nie powstanie
+g.rule.kv06.ackNote  a  metadane reguly wstrzykiwane w finding; findingu nie ma, dopoki nie powstanie
+g.rule.kv06.why  a  metadane reguly wstrzykiwane w finding; findingu nie ma, dopoki nie powstanie
+g.rule.kv10.why  a  metadane reguly wstrzykiwane w finding; findingu nie ma, dopoki nie powstanie
+g.rule.kv13.why  a  metadane reguly wstrzykiwane w finding; findingu nie ma, dopoki nie powstanie
+g.verdict.blocked  a  kolejny STAN elementu #status-txt; jego stanem poczatkowym jest g.verdict.pending i to tamten klucz ma kotwice
+g.verdict.clean  a  kolejny STAN elementu #status-txt; jego stanem poczatkowym jest g.verdict.pending i to tamten klucz ma kotwice
+g.verdict.warn  a  kolejny STAN elementu #status-txt; jego stanem poczatkowym jest g.verdict.pending i to tamten klucz ma kotwice
 n.computeNode  a  wariant liczebnika: fragment podstawiany w inny napis, wlasnego elementu nie ma nigdy
 n.error  a  wariant liczebnika: fragment podstawiany w inny napis, wlasnego elementu nie ma nigdy
 n.host  a  wariant liczebnika: fragment podstawiany w inny napis, wlasnego elementu nie ma nigdy
