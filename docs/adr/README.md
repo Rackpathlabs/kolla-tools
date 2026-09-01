@@ -32,6 +32,7 @@ omission.
 | [ADR-001](ADR-001-combined-audit-mode.md) | validator as one tool with an optional second file, not a separate `audit.html` | Accepted, 2026-08-10 |
 | [ADR-002](ADR-002-default-text-in-markup.md) | default English text in the markup, overwritten by the applier | Accepted, 2026-08-19 |
 | [ADR-003](ADR-003-js-tokens-vs-zero-npm.md) | real JavaScript tokens against the zero-dependency rule | Accepted, 2026-08-20 |
+| [ADR-004](ADR-004-anchoring-strings-composed-in-js.md) | a key whose text has no element in the initial document is not anchored; the floor is a readable list of markings, not a number | Accepted, 2026-09-01 |
 
 ADR-001 and ADR-002 were written before the practice of committing these and lived as
 local `.tmp` files that `.gitignore` excludes — one copy, one disk. They were moved here

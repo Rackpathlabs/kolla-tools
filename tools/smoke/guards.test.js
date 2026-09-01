@@ -327,6 +327,32 @@ R.ok("nazwa znacznika w wpisie słownika NIE jest słowem interfejsu",
 R.ok("identyfikator rozcięty na granicy liter daje angielskie słowa",
      !/^octavia$/m.test(engBad.out) && !/^network$/m.test(engBad.out));
 
+/* ---- WŁASNOŚĆ, OD KTÓREJ ZALEŻY OPCJA B W ADR-004 ----
+   Para wyżej dowodzi, że strażnik odróżnia języki. To jest zdanie węższe i osobne:
+   wartość słownika jest czytana także wtedy, gdy klucz NIE MA KOTWICY w markupie
+   i NIE RENDERUJE GO ŻADEN SCENARIUSZ.
+
+   Bez tego zdania #58 nie ma prawa zostawić 123 kluczy bez kotwicy: cała zapłata za
+   „nie kotwiczymy tego, czego nie widać w dokumencie" to właśnie ta ścieżka. Zmierzone
+   przy pisaniu ADR-004 — strażnik już ją miał, nikt jej nie zapisał, a gwarancja
+   niezapisana jest gwarancją, którą ktoś usuwa przy refaktorze, mając wszystko zielone.
+
+   Markup fixtury jest CAŁY po angielsku i nie ma w nim ani jednego atrybutu data-i18n,
+   więc czerwone może pochodzić wyłącznie ze słownika. */
+var engOrphan = run("check-english.js", ["--fixture", "tools/fixtures/english-dict-orphan.html"]);
+R.ok("wartość słownika przy kluczu BEZ KOTWICY i bez scenariusza -> czerwone",
+     engOrphan.code === 1, kod(engOrphan));
+R.ok("i DOKŁADNIE trzy słowa do przeczytania, nie „coś jest nie tak\"",
+     /DO PRZECZYTANIA: 3$/m.test(engOrphan.out), engOrphan.out.split("\n")[0]);
+/* Komunikat MA nazywać klucz. Słowo bez klucza jest nie do naprawienia w słowniku
+   liczącym 231 pozycji — a to jest strażnik, który ma być też narzędziem roboczym. */
+R.ok("i komunikat nazywa KLUCZ, nie samo słowo",
+     /dictionary key v\.stale\.run/.test(engOrphan.out), engOrphan.out.split("\n")[2]);
+/* PRZYNĘTA: drugi wpis fixtury jest poprawny i ma ten sam kształt. Bez niej czerwone
+   mówiłoby, że strażnik czyta słownik — nie, że go ocenia. */
+R.ok("angielski wpis o tym samym kształcie NIE jest naruszeniem",
+     !/v\.stale\.bar/.test(engOrphan.out));
+
 var engOk = run("check-english.js", ["--fixture", "tools/fixtures/english-clean.html"]);
 R.ok("te same kształty po angielsku -> zielone", engOk.code === 0, engOk.out.split("\n")[0]);
 R.ok("i zero do przeczytania", /DO PRZECZYTANIA: 0$/m.test(engOk.out), engOk.out.split("\n")[0]);
