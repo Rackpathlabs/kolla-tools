@@ -11,6 +11,11 @@
 <button data-i18n-title="k.title"></button>
 <span data-i18n-label="k.label"></span>
 
+<!-- PIATA FORMA, ADR-004 podklasa (b). Element stoi w dokumencie poczatkowym, wiec
+     opis meta nie jest sierota z natury — brakowalo tylko formy. Tu w <span>, bo ta
+     fixtura sprawdza APPLIER, a nie miejsce, w ktorym atrybut wypada. -->
+<span data-i18n-content="k.content"></span>
+
 <!-- PRZYNĘTA 1: wartość "0" JEST tekstem. Licznik pytający o fałszywość
      (if (!text)) uzna ją za brak i zgłosi naruszenie, którego nie ma. -->
 <span data-i18n="k.zero"></span>
@@ -28,7 +33,8 @@
 (function () {
   var DICT = {
     "k.head": "Heading", "k.body": "Body text", "k.ph": "Placeholder",
-    "k.title": "Title", "k.label": "Label", "k.zero": "0"
+    "k.title": "Title", "k.label": "Label", "k.zero": "0",
+    "k.content": "Meta description"
   };
   function T(k) { return DICT[k] === undefined ? "[[" + k + "]]" : DICT[k]; }
 
@@ -40,6 +46,8 @@
   for (i = 0; i < nodes.length; i++) nodes[i].setAttribute("title", T(nodes[i].getAttribute("data-i18n-title")));
   nodes = document.querySelectorAll("[data-i18n-label]");
   for (i = 0; i < nodes.length; i++) nodes[i].setAttribute("aria-label", T(nodes[i].getAttribute("data-i18n-label")));
+  nodes = document.querySelectorAll("[data-i18n-content]");
+  for (i = 0; i < nodes.length; i++) nodes[i].setAttribute("content", T(nodes[i].getAttribute("data-i18n-content")));
 })();
 </script>
 </body>

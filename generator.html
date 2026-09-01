@@ -13,7 +13,7 @@
      przeglądarki, a GitHub Pages nie pozwala ustawić nagłówka HTTP. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
 <title>Rackpathlabs — generator globals.yml (Kolla-Ansible)</title>
-<meta name="description" content="Generator for a Kolla-Ansible globals.yml: base image, release matrix, interface assignment. Runs offline, with no external dependencies.">
+<meta name="description" data-i18n-content="g.desc" content="Generator for a Kolla-Ansible globals.yml: base image, release matrix, interface assignment. Runs offline, with no external dependencies.">
 <style>
 /* == KOLLA-THEME BEGIN — generowane z theme.css, nie edytuj w miejscu == */
 :root{
@@ -619,6 +619,10 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       /* --- hub --- */
       "hub.title":             "Rackpathlabs — Kolla-Ansible tools",
       "hub.desc":              "Two Kolla-Ansible tools: a globals.yml generator and an inventory validator. They run in your browser, offline, and upload nothing.",
+      /* Opis meta generatora. Do 2026-09-01 stał w markupie jako literał poza
+         słownikiem — jedyny wpis rejestru #77, którego żaden scenariusz nie mógł
+         osiągnąć, bo opisu meta nie renderuje strona, tylko wyszukiwarka. */
+      "g.desc":                "Generator for a Kolla-Ansible globals.yml: base image, release matrix, interface assignment. Runs offline, with no external dependencies.",
       "hub.h1":                "Two tools for Kolla-Ansible",
       "hub.lede":              "One writes <code>globals.yml</code> and keeps it free of configuration that passes a deployment and breaks weeks later. The other reads a <em>multinode</em> inventory and looks for what reading it will not show you: quorum, role collocation, group names retired in your release.",
       "hub.forWhom":           "For people who deploy and run OpenStack with Kolla — from a single-node lab to a multinode installation with HA.",
@@ -3298,6 +3302,10 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     for (i = 0; i < nodes.length; i++) nodes[i].setAttribute("title", T(nodes[i].getAttribute("data-i18n-title")));
     nodes = document.querySelectorAll("[data-i18n-label]");
     for (i = 0; i < nodes.length; i++) nodes[i].setAttribute("aria-label", T(nodes[i].getAttribute("data-i18n-label")));
+    var metas = document.querySelectorAll("[data-i18n-content]");
+    for (var c = 0; c < metas.length; c++) {
+      metas[c].setAttribute("content", T(metas[c].getAttribute("data-i18n-content")));
+    }
   }
 
   /* ------------------------------------------------------------------ */

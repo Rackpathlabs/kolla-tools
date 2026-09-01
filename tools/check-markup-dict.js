@@ -80,10 +80,14 @@ var FORMS = [
   { attr: "data-i18n",       sink: "treść elementu" },
   { attr: "data-i18n-ph",    sink: "placeholder" },
   { attr: "data-i18n-title", sink: "title" },
-  { attr: "data-i18n-label", sink: "aria-label" }
+  { attr: "data-i18n-label", sink: "aria-label" },
+  /* PIĄTA FORMA (ADR-004, podklasa (b)). Opis meta ma element w dokumencie początkowym,
+     więc brakowało wyłącznie formy — a klucz naprawialny bez formy wygląda jak sierota
+     z natury i tak właśnie parkuje się lukę narzędzia jako fizykę. */
+  { attr: "data-i18n-content", sink: "content" }
 ];
 var ATTR_SINK = { "data-i18n-ph": "placeholder", "data-i18n-title": "title",
-                  "data-i18n-label": "aria-label" };
+                  "data-i18n-label": "aria-label", "data-i18n-content": "content" };
 
 /* Reguła 1. */
 function norm(s) { return String(s).replace(/\s+/g, " ").trim(); }
@@ -215,8 +219,12 @@ var orphan = Object.keys(DICT).filter(function (k) { return !anchored[k]; });
 /* 123 -> 121, obniżone 2026-09-01 w tym samym PR-ze, w którym spadł pomiar (#58, partia
    rozgrzewkowa). Dwa klucze dostały kotwicę: hub.title na elemencie <title>, nav.tools
    przez data-i18n-label na <nav>, który stał w markupie od początku. Obie formy już
-   istniały — te klucze nie były „składane w JS", tylko niezakotwiczone. */
-var ORPHAN_BASELINE = 121;
+   istniały — te klucze nie były „składane w JS", tylko niezakotwiczone.
+
+   121 -> 119, obniżone tego samego dnia razem z piątą formą kotwicy: hub.desc i v.desc
+   kotwiczą się na atrybucie content elementu meta. g.desc jest kluczem NOWYM i od razu
+   zakotwiczonym, więc nie wnosi sieroty. */
+var ORPHAN_BASELINE = 119;
 var FULL_RUN = process.argv.length <= 2;
 
 console.log("podstawień z kluczem w słowniku: " + (ok + empty.length + drift.length) +

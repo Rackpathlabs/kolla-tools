@@ -829,6 +829,32 @@ R.ok("„OK\" nie mówi o powierzchni, której nie podano",
    dwa napisy leżące obok siebie w plikach. Powstała czerwona przed migracją — 108
    pustych elementów — więc dowód, że umie upaść, jest tu utrwalony fixturą, a nie
    wspomnieniem z dnia, w którym powstawała. */
+/* ---- PIĄTA FORMA KOTWICY: atrybut content (ADR-004, podklasa (b)) ----
+   Opis meta MA element w dokumencie początkowym, więc z kryterium ADR-004 nie jest
+   sierotą z natury — brakowało wyłącznie formy, którą strażnik potrafi przeczytać.
+   To odróżnia lukę narzędzia od fizyki, a bez tego rozróżnienia klucz naprawialny
+   parkuje się jako trwały.
+
+   Klasa jest wzięta z rejestru #77: generator.html:16 był jedynym wpisem, którego
+   ŻADEN scenariusz nie mógł osiągnąć, bo opisu meta nie renderuje strona, tylko
+   wyszukiwarka i podgląd linku. Kotwica jest jedynym mechanizmem, który go dosięga —
+   porównuje dwa napisy leżące obok siebie w plikach i nie uruchamia niczego. */
+var mdContent = run("check-markup-dict.js", ["tools/fixtures/markup-dict-content.html"]);
+R.ok("rozjazd na atrybucie content -> czerwone", mdContent.code === 1, kod(mdContent));
+R.ok("i DOKŁADNIE jeden rozjazd, nie zapalenie się na całym pliku",
+     /ROZJAZDÓW: 1\b/.test(mdContent.out), mdContent.out.split("\n")[0]);
+R.ok("i pokazuje OBIE strony, słownik i markup",
+     /słownik: "Two Kolla-Ansible tools: a globals/.test(mdContent.out) &&
+     /markup:  "Two Kolla-Ansible tools that run somewhere else/.test(mdContent.out),
+     mdContent.out.split("\n")[2]);
+/* Applier musi tę formę UMIEĆ, inaczej kotwica jest zapisem, którego nikt nie wykonuje:
+   markup zgadzałby się ze słownikiem, a atrybut na stronie zostawałby nietknięty.
+   Mierzone LICZBĄ podstawień, nie obecnością napisu w logu: forma nieznana strażnikowi
+   nie jest ujściem, więc nie doliczy się — i to jest jedyna różnica, którą widać. */
+var apContent = run("check-i18n-apply.js", ["tools/fixtures/i18n-apply-clean.html"]);
+R.ok("i check-i18n-apply.js LICZY tę formę jako ujście tekstu",
+     /9 podstawień \(na 8 elementach\)/.test(apContent.out), apContent.out.split("\n")[0]);
+
 var mdClean = run("check-markup-dict.js", ["tools/fixtures/markup-dict-clean.html"]);
 R.ok("markup zgodny ze słownikiem -> zielone", mdClean.code === 0, mdClean.out.split("\n")[0]);
 
