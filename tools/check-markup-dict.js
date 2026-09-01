@@ -204,6 +204,14 @@ var orphan = Object.keys(DICT).filter(function (k) { return !anchored[k]; });
 /* Ta sama zasada zmiany co przy BASELINE w check-dictionary.js: podniesienie wolno
    wyłącznie wtedy, gdy strażnik zaczął WIDZIEĆ więcej, nigdy gdy PRZYBYŁO tekstu.
    Pełna wersja w CLAUDE.md, sekcja „A ratchet threshold may only fall". */
+/* JEDNOSTKA, sprawdzona przy #86 i zapisana, żeby nie trzeba było jej wyprowadzać
+   z kodu: to KLUCZE SŁOWNIKA, `Object.keys(DICT)`, więc liczba jest z definicji
+   liczbą RÓŻNYCH pozycji i nie zależy od scenariuszy — ten strażnik w ogóle nie
+   czyta raportu z przeglądarki. Wada, którą #86 opisało dla BASELINE, nigdy tego
+   progu nie dotyczyła i dlatego 123 zostaje bez przeliczenia.
+
+   Deduplikacji po TREŚCI tu nie ma i mieć nie może: dwa klucze o identycznym tekście
+   to dwa miejsca wymagające kotwicy, a zlanie ich w jedno ukrywałoby brakującą. */
 var ORPHAN_BASELINE = 123;
 var FULL_RUN = process.argv.length <= 2;
 

@@ -335,36 +335,103 @@ report.forEach(function (f) {
    był rozbity i każdy dało się obronić, a ciąg i tak czyta się jak próg, który
    podąża za kodem zamiast go ograniczać.
 
-   ZASADA JEST NIEPEŁNA DOPÓKI NIE WEJDZIE #86. Ta liczba to WYSTĄPIENIA, nie różne
-   napisy: 530 wystąpień to 138 napisów. Dodanie scenariusza podnosi ją, nie dodając
-   ani jednego nowego napisu, a jeden szablon użyty 32 razy rusza nią o 32. Takie
-   podniesienie nie jest ani pokryciem nowej klasy tekstu, ani długiem — i przejdzie
-   powyższy test jako „pokrycie". Nie opieraj się na tej zasadzie przy uzasadnianiu
-   podniesienia, dopóki jednostka nie jest naprawiona.
+   ---------------------------------------------------------------------------
+   JEDNOSTKĄ TEGO PROGU SĄ RÓŻNE NAPISY, NIE WYSTĄPIENIA (#86, zmienione 2026-09-01).
+
+   Do tej zmiany próg liczył wystąpienia, a wystąpienia skalują się z LICZBĄ
+   SCENARIUSZY, nie z ilością tekstu. Zmierzone na main tuż przed zmianą, na tym
+   samym raporcie:
+
+       530 wystąpień  =  138 różnych napisów
+       jeden szablon „inventory: line N": 32 wystąpienia, 1 napis
+       dwunasty scenariusz: +41 wystąpień, +0 napisów
+
+   To nie była nieporządna liczba, tylko dziura w zasadzie powyżej: podniesienie
+   wywołane samym dodaniem scenariusza przechodziło test jako „pokrycie nowej klasy
+   tekstu", bo strażnik formalnie zaczynał widzieć więcej renderowań. Przy różnych
+   napisach ten ruch nie istnieje — nowy scenariusz nie wnosi nowego napisu — więc
+   zasada wraca do dwóch przypadków i zaczyna być prawdziwa.
+
+   NORMALIZACJA, czyli co znaczy „ten sam napis". Kluczem jest wynik norm():
+
+       białe znaki   ciągi zwijane do jednej spacji, końce obcinane
+       wielkość liter  ignorowana
+       liczby        USUWANE — „inventory: line 2" i „line 41" to JEDEN napis
+
+   To NIE jest osobna definicja dobrana pod próg: to dokładnie ten napis, który
+   strażnik porównuje ze słownikiem. Dwie pozycje, których kryterium pokrycia nie
+   umie odróżnić, są jedną pozycją długu — i jedną poprawką, bo do słownika idzie
+   jeden wpis z wstawką, nie czterdzieści.
+
+   Usunięcie liczb jest tu decyzją, nie skutkiem ubocznym, i ma swój koszt: „5 hosts"
+   i „7 hosts" byłyby jednym napisem także wtedy, gdyby były dwoma osobnymi wpisami.
+   Koszt jest przyjęty, bo idzie w stronę zaniżania długu o pozycje, które i tak
+   pokrywa jeden wpis ze wstawką, a odwrotny wybór przywracałby dokładnie tę
+   zależność od scenariuszy, którą ta zmiana usuwa.
    =========================================================================== */
-var BASELINE = 530;
+/* 138, zmierzone 2026-09-01 na main @ fec3d18 — ta sama liczba, którą #86 podaje jako
+   138 różnych napisów w 530 wystąpieniach. Próg NIE został przeliczony ani zaokrąglony:
+   to odczyt z tego samego przebiegu, na którym stało 530.
+
+   Podstawialny z wiersza poleceń, żeby dało się pokazać, że kontrola potrafi upaść —
+   ta sama konstrukcja co --dir w snapshot.golden.js i z tego samego powodu: dowód
+   ma być testem, a nie czynnością wykonaną raz w dniu, w którym próg powstawał. */
+var BASELINE = 138;
+var bArg = process.argv.indexOf("--baseline");
+if (bArg !== -1) {
+  var bVal = Number(process.argv[bArg + 1]);
+  if (!isFinite(bVal) || bVal < 0) {
+    console.error("FAIL --baseline wymaga liczby nieujemnej, dostałem " +
+                  JSON.stringify(process.argv[bArg + 1]) + ".");
+    process.exit(2);
+  }
+  BASELINE = bVal;
+}
+
+/* Różne napisy liczone po tym samym kluczu, którym mierzone jest pokrycie. */
+var missKeys = Object.create(null);
+miss.forEach(function (f) { missKeys[norm(String(f.text))] = true; });
+var missStrings = Object.keys(missKeys).length;
 
 console.log("segmentów w słowniku: " + SEGS.length +
             "   pustych odfiltrowanych: " + EMPTY_SEGMENTS);
-console.log("widocznych napisów:   " + total + "   ze słownika lub wyjątku: " + ok +
-            "   BEZ POKRYCIA: " + miss.length +
-            "   (w tym krótsze niż " + SHORT + " znaki: " + missShort + ")");
+console.log("widocznych napisów:   " + total + "   ze słownika lub wyjątku: " + ok);
+/* OBIE LICZBY, zawsze, i to nie jest ozdoba. Kto pamięta „530" i zobaczy samo „138",
+   przeczyta to jako czterokrotny spadek długu zamiast jako zmianę jednostki. */
+console.log("BEZ POKRYCIA: " + missStrings + " RÓŻNYCH NAPISÓW w " + miss.length +
+            " wystąpieniach   (w tym krótsze niż " + SHORT + " znaki: " + missShort +
+            " wystąpień)");
+console.log("PRÓG DOTYCZY NAPISÓW, nie wystąpień — jednostka zmieniona 2026-09-01 (#86), " +
+            "bo wystąpienia liczyły scenariusze, a nie tekst");
 console.log("napisów pasujących do WIĘCEJ NIŻ JEDNEJ kategorii: " + overlap +
             "   (sumy poniżej nakładają się i nie zsumują się do liczby zwolnionych)");
 Object.keys(byCategory).forEach(function (k) {
   console.log("  wyjątek: " + byCategory[k] + "  " + k);
 });
-miss.slice(0, 30).forEach(function (f) {
-  console.log("  BEZ POKRYCIA  <" + f.tag.toLowerCase() +
-              (f.cls ? " class=\"" + String(f.cls).slice(0, 22) + "\"" : "") + ">  " +
-              JSON.stringify(String(f.text).slice(0, 78)));
+/* Lista też idzie po NAPISACH, z liczbą wystąpień obok. Trzydzieści wystąpień jednego
+   szablonu wypełniało tę listę i wypychało z niej trzydzieści różnych pozycji do
+   przeniesienia — czyli lista robocza pokazywała najmniej tam, gdzie było najwięcej
+   do zrobienia. Jednostka listy musi być jednostką progu, inaczej czyta się je razem
+   i wychodzi z tego trzecia liczba. */
+var missByKey = Object.create(null);
+miss.forEach(function (f) {
+  var k = norm(String(f.text));
+  if (!missByKey[k]) missByKey[k] = { n: 0, f: f };
+  missByKey[k].n++;
 });
-if (miss.length > 30) console.log("  ... i " + (miss.length - 30) + " dalszych");
-if (miss.length > BASELINE) {
-  console.log("\nFAIL " + miss.length + " wystąpień wobec progu " + BASELINE +
+var missList = Object.keys(missByKey).map(function (k) { return missByKey[k]; })
+                     .sort(function (a, b) { return b.n - a.n; });
+missList.slice(0, 30).forEach(function (e) {
+  console.log("  BEZ POKRYCIA  x" + e.n + "  <" + e.f.tag.toLowerCase() +
+              (e.f.cls ? " class=\"" + String(e.f.cls).slice(0, 22) + "\"" : "") + ">  " +
+              JSON.stringify(String(e.f.text).slice(0, 78)));
+});
+if (missList.length > 30) console.log("  ... i " + (missList.length - 30) + " dalszych napisów");
+if (missStrings > BASELINE) {
+  console.log("\nFAIL " + missStrings + " różnych napisów wobec progu " + BASELINE +
               " — nowy tekst musi iść przez słownik.");
   process.exit(1);
 }
-console.log("\nOK   " + miss.length + " wystąpień, próg " + BASELINE + " nieprzekroczony" +
-            (miss.length < BASELINE ? "  (dług zmalał — obniż próg w tym pliku)" : ""));
+console.log("\nOK   " + missStrings + " różnych napisów, próg " + BASELINE + " nieprzekroczony" +
+            (missStrings < BASELINE ? "  (dług zmalał — obniż próg w tym pliku)" : ""));
 process.exit(0);
