@@ -1,0 +1,6 @@
+[
+ { "tag": "TD", "cls": "was", "text": "\"eth0\"", "inData": false, "fromInput": false, "file": "d.html", "scenario": "różnice" },
+ { "tag": "TD", "cls": "is",  "text": "\"bond0\"", "inData": false, "fromInput": false, "file": "d.html", "scenario": "różnice" },
+ { "tag": "TD", "cls": "k",   "text": "network_interface", "inData": false, "fromInput": false, "file": "d.html", "scenario": "różnice" },
+ { "tag": "TD", "cls": "",    "text": "Nothing to compare yet.", "inData": false, "fromInput": false, "file": "d.html", "scenario": "różnice" }
+]
