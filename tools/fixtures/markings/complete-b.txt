@@ -1,0 +1,5 @@
+# Obie oznaczone kodem b z numerem zgloszenia. Przechodzi, ale ma byc POLICZONE
+# OSOBNO: b ma zniknac, a ma zostac, a liczba, ktora ich nie odroznia, nie mowi,
+# czy cokolwiek zostalo naprawione.
+x.orphan1  b#123  brakuje formy kotwicy
+x.orphan2  b#123  brakuje formy kotwicy

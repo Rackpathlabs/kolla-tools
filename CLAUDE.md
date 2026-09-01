@@ -252,15 +252,19 @@ copied into an issue that outlives it.
 
 ## A ratchet threshold may only fall
 
-Two guards hold a number that existing debt is measured against, and both are ratchets:
+**One guard holds such a number**, and it is a ratchet:
 
 | threshold | file | what it counts |
 |---|---|---|
-| `BASELINE` | `tools/check-dictionary.js` | visible strings not covered by the dictionary |
-| `ORPHAN_BASELINE` | `tools/check-markup-dict.js` | dictionary keys with no anchor in the markup |
+| `BASELINE` | `tools/check-dictionary.js` | distinct visible strings not covered by the dictionary |
 
-The rule below applies to both. Naming one of two identical mechanisms invites the other
-to drift.
+There were two. `ORPHAN_BASELINE` in `tools/check-markup-dict.js` was removed on 2026-09-01
+by ADR-004 and replaced by something a ratchet rule cannot express: **the set of dictionary
+keys that have no anchor and no marking must be empty.** A single number could not tell a
+key that will never have an anchor from one nobody had moved yet, so the honest state and
+neglect looked identical in it. What stands in its place is `tools/i18n-unanchored.txt` —
+one line per key, with a reason code — which a person can read and disagree with. There is
+no threshold there to raise, and this section does not govern it.
 
 **Raising a threshold because the guard started seeing a NEW CLASS of text is allowed.**
 A new scenario, a new sink, a widened collection scope — the debt did not grow, the
@@ -276,7 +280,7 @@ described by a number, and every new string goes through a key.
 **Both thresholds count distinct things, and that is what makes the two cases above
 exhaustive.** `BASELINE` counts distinct normalised strings — the key is the same string
 its coverage criterion compares, so whitespace, letter case and digits inside the text do
-not create a second item. `ORPHAN_BASELINE` counts dictionary keys and always did.
+not create a second item. This is the only threshold this section still governs.
 
 This paragraph replaces an annotation that said the rule was incomplete, and the reason it
 could be removed is worth keeping. Until 2026-09-01 `BASELINE` counted **occurrences**,

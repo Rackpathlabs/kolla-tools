@@ -1,0 +1,3 @@
+# Obie sieroty oznaczone kodem a. Zbior "bez kotwicy i bez oznaczenia" jest PUSTY.
+x.orphan1  a  etykieta tresci, ktora jeszcze nie istnieje
+x.orphan2  a  etykieta tresci, ktora jeszcze nie istnieje
