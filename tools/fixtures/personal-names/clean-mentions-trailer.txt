@@ -1,0 +1,4 @@
+Ban the authorship trailer in commit messages
+
+A Co-authored-by line names a person, which is what this repository does not publish.
+The rule is a shape rule: it does not care which address stands after the colon.

@@ -50,6 +50,12 @@
  *     poza drzewem i poza zakresem builda. Granica nazwana, żeby zieleń tego pliku
  *     nie była czytana jako „w repozytorium nie ma personaliów".
  *
+ *   TRAILERÓW POZA `Co-authored-by`. `Signed-off-by`, `Reviewed-by` i reszta rodziny
+ *     NIE są objęte — powód przy samym wzorcu, w ciele pliku.
+ *   WZMIANKI O TRAILERZE W ŚRODKU ZDANIA. Reguła jest kotwiczona do początku linii,
+ *     świadomie: o zakazie trzeba móc pisać, a strażnik, o którym nie da się napisać,
+ *     zostanie osłabiony przy pierwszej próbie opisania go.
+ *
  *   POWIERZCHNI SPOZA PODANYCH. Sprawdza to, co dostanie w argumentach, i nic więcej.
  *     Zwłaszcza NIE sprawdza pól author/committer commita — te bierze git z konfiguracji,
  *     nie autor z klawiatury, i pilnuje ich reguła w CLAUDE.md razem z konfiguracją
@@ -74,11 +80,12 @@
  * przy zepsutym wejściu mówi „ok", to #63 jeszcze raz.
  *
  * ============================================================================
- * DWA MECHANIZMY W JEDNYM PLIKU, I TO NIE JEST NIEKONSEKWENCJA — TO JEDYNY POWÓD,
+ * TRZY MECHANIZMY W JEDNYM PLIKU, I TO NIE JEST NIEKONSEKWENCJA — TO JEDYNY POWÓD,
  * DLA KTÓREGO POLA METADANYCH DA SIĘ OBRONIĆ LEPIEJ NIŻ TREŚĆ.
  *
  *   TREŚĆ (komunikat, tytuł, opis)     LISTA ZAKAZÓW, po skrótach.
  *   POLA author / committer            LISTA POZWOLEŃ, po jawnych napisach.
+ *   TRAILER AUTORSTWA                  KSZTAŁT, bez względu na treść.
  *
  * Różnica nie jest wygodą implementacji, tylko własnością zbiorów, i za rok nie będzie
  * oczywista, więc stoi tutaj wprost.
@@ -93,6 +100,20 @@
  * DLA TREŚCI TO NIEMOŻLIWE, bo zbiór zakazanych to cała ludzkość, a zbiór dozwolonych
  * to cały język. Nie ma czego wyliczyć po żadnej ze stron, więc zostaje lista zakazów
  * z jej znaną granicą — opisaną wyżej i nieudawaną.
+ *
+ * TRZECI MECHANIZM JEST KONTROLĄ KSZTAŁTU I TO WYMAGA ZDANIA, BO NAGŁÓWEK NIŻEJ
+ * ARGUMENTUJE, ŻE KSZTAŁT MIESZKA GDZIE INDZIEJ. Linia `Co-authored-by:` jest
+ * naruszeniem NIEZALEŻNIE od tego, kogo wymienia — adres bywa czyjś, bywa usługi, bywa
+ * `noreply`. Lista zakazów nie może jej złapać z definicji, bo pyta „czy ten napis jest
+ * na liście", a tu odpowiedź „nie" nic nie zmienia. Zmierzone przed napisaniem tej
+ * reguły: trailer z adresem spoza listy przechodził przez OBU strażników powierzchni
+ * na zielono, a ochrona istniała wyłącznie jako proza w CLAUDE.md.
+ *
+ * Ten plik jest zorganizowany wokół PRZEDMIOTU — tożsamości — a nie wokół mechanizmu,
+ * i trzeci mechanizm nie łamie podziału opisanego niżej. Tamten podział mówi, dlaczego
+ * NIE jest to dopisek do check-closing-keyword.js: tamten plik ma inny PRZEDMIOT
+ * (odnośniki do zgłoszeń), a nie inny mechanizm. Gdyby porządkować po mechanizmie,
+ * lista pozwoleń dla author/committer musiałaby wyprowadzić się stąd pierwsza.
  *
  * DLACZEGO LISTA POZWOLEŃ MOŻE STAĆ JAWNYM NAPISEM, skoro lista zakazów nie może.
  * Warunek konstrukcyjny dotyczy napisów CHRONIONYCH. Tożsamość projektowa nie jest
@@ -215,7 +236,15 @@ for (var i = 2; i < process.argv.length; i += 2) {
 if (!surfaces.length && !identityFiles.length) die("nie podano żadnej powierzchni do sprawdzenia");
 
 var H = loadHashes(hashFile);
-var violations = 0, tokens = 0;
+/* Wyłącznie `Co-authored-by`. GRANICA NAZWANA, ŻEBY NIE BYŁA DOMYSŁEM: `Signed-off-by`,
+   `Reviewed-by` i reszta rodziny NIE są tu objęte. Nie dlatego, że są mile widziane —
+   dlatego, że nikt ich w tym repozytorium nie pisał, a wzorzec obejmujący konstrukcje,
+   których nikt nie widział, jest listą zgadywaną. Ta sama pomyłka co lista sześciu nazw
+   API w check-offline.js, tylko po drugiej stronie. Dopisanie kolejnej ma być decyzją
+   z fixturą, a nie alternatywą doklejoną do wyrażenia. */
+var TRAILER = /^[ \t]*co-authored-by[ \t]*:/i;
+
+var violations = 0, tokens = 0, trailers = 0;
 
 surfaces.forEach(function (s) {
   var text;
@@ -242,6 +271,17 @@ surfaces.forEach(function (s) {
   }
 
   text.split("\n").forEach(function (line, idx) {
+    /* KSZTAŁT, nie treść: liczy się konstrukcja, nie to, kogo wymienia. Kotwica na
+       początku linii, bo trailerem jest linia, a nie napis — inaczej nie dałoby się
+       o tej regule NAPISAĆ, a napisana jest w CLAUDE.md, w opisie tego PR-a i w tym
+       komentarzu. Nie cytujemy linii: adres po dwukropku bywa czyjś. */
+    if (TRAILER.test(line)) {
+      trailers++;
+      console.log("");
+      console.log("  " + s.flag + ", linia " + (idx + 1) +
+                  ": TRAILER PRZYPISUJĄCY AUTORSTWO, długość " + line.trim().length);
+      console.log("      (linii NIE cytuję — log CI jest publiczny)");
+    }
     [WORD, EMAIL, HANDLE].forEach(function (re) {
       re.lastIndex = 0;
       var m;
@@ -291,6 +331,9 @@ identityFiles.forEach(function (file) {
 console.log("");
 console.log("tokenów zbadanych: " + tokens + "   skrótów na liście: " + H.count +
             "   trafień: " + violations);
+if (surfaces.length) {
+  console.log("trailerów autorstwa: " + trailers);
+}
 if (identityFiles.length) {
   console.log("tożsamości zbadanych: " + identLines + "   dozwolonych wartości: " +
               ALLOWED_IDENTITIES.length + "   spoza listy: " + identBad);
@@ -315,6 +358,23 @@ if (identBad) {
   console.log("  „Commits carry the project identity, never a person\".");
 }
 
+if (trailers) {
+  console.log("");
+  console.log("FAIL trailer przypisujący autorstwo, " + trailers + " raz(y).");
+  console.log("");
+  console.log("  Jest to reguła KSZTAŁTU: linia zaczynająca się od `Co-authored-by:` jest");
+  console.log("  naruszeniem NIEZALEŻNIE od adresu po dwukropku. Commity tego repozytorium");
+  console.log("  mówią o pracy, nie o tym, kto ją wykonał — CLAUDE.md, sekcja");
+  console.log("  „Commits carry the project identity, never a person\".");
+  console.log("");
+  console.log("  Jeżeli trailer dopisuje narzędzie, wyłącz to w konfiguracji, a nie ręcznie");
+  console.log("  przy każdym commicie: .claude/settings.json niesie \"includeCoAuthoredBy\": false");
+  console.log("  i jest wersjonowany właśnie po to, żeby obowiązywał w każdym klonie.");
+  console.log("");
+  console.log("  Wzmianka o trailerze w ŚRODKU zdania nie jest trailerem i przechodzi —");
+  console.log("  reguła jest kotwiczona do początku linii, żeby dało się o niej pisać.");
+}
+
 if (violations) {
   console.log("");
   console.log("FAIL napis z listy chronionej w treści PR-a albo commita, " +
@@ -330,12 +390,13 @@ if (violations) {
   process.exit(1);
 }
 
-if (identBad) process.exit(1);
+if (trailers || identBad) process.exit(1);
 
 /* Komunikat sukcesu wymienia to, co FAKTYCZNIE zbadano. „OK" mówiące o powierzchniach,
    których nie podano, jest zieloną odpowiedzią na niezadane pytanie — a to jest ta sama
    klasa co zdanie szersze niż dowód, tylko na wyjściu zamiast w nagłówku. */
 var done = [];
 if (surfaces.length) done.push("żaden napis z listy nie wystąpił w treści");
+if (surfaces.length) done.push("żadna linia nie jest trailerem autorstwa");
 if (identityFiles.length) done.push("każda tożsamość jest na liście pozwoleń");
 console.log("OK   " + done.join("; ") + ".");

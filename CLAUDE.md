@@ -131,13 +131,30 @@ has to be run by hand because there is nowhere in a git repository to put it.
   the branch, which is cheap, and no history that anyone has cited is touched. The entry
   step above is the only thing that acts *before* the commit, and it is a two-line command
   somebody has to remember to run.
-- The message half is enforced on pull requests by `tools/check-personal-names.js`, and
-  its scope is narrower than this section's title: it catches occurrences of strings on a
-  **closed list of hashes**, and does not detect personal data in general. A name nobody
-  put on the list passes without a trace. That is a content check over a list — the same
-  class as the six API names in `check-offline.js` — and unlike that case, no
-  effect-measuring alternative exists, because whether a string is somebody's name is a
-  question about the world.
+- The message half is enforced on pull requests by `tools/check-personal-names.js`, in two
+  different ways, and only one of them is a list.
+
+  **The list.** It catches occurrences of strings on a **closed list of hashes**, and does
+  not detect personal data in general. A name nobody put on the list passes without a
+  trace. That is a content check over a list — the same class as the six API names in
+  `check-offline.js` — and unlike that case, no effect-measuring alternative exists,
+  because whether a string is somebody's name is a question about the world.
+
+  **The shape.** A line beginning `Co-authored-by:` is refused on all three surfaces
+  regardless of the address after the colon, which is the part a list can never reach: the
+  address is sometimes a person, sometimes a service, sometimes `noreply`, and what they
+  share is the construction. Measured on 2026-09-01, before the rule existed: such a line
+  passed both surface guards green, so this paragraph described an enforcement that was
+  prose. A mention of the trailer inside a sentence is not a trailer — the rule is anchored
+  to the start of a line, deliberately, so that it can be written about, as it is here.
+  `Signed-off-by` and the rest of that family are **not** covered; the reason stands beside
+  the pattern in the guard.
+
+  **And before either of them**, `.claude/settings.json` carries `"includeCoAuthoredBy":
+  false`, versioned so it holds in every clone. That file could not exist until
+  2026-09-01, because `.gitignore` excluded the whole of `.claude/` — the tool's shared
+  half along with its local one. Configuration stops the trailer being written; the guard
+  catches it when something writes it anyway.
 
 The guard holds hashes rather than strings, and its failure message names a position and
 twelve hex characters rather than the match. A file listing the protected names would

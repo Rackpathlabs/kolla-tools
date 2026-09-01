@@ -1,6 +1,11 @@
-# Konfiguracja lokalna asystenta — zawiera dane procesu i osób.
-# Musi pozostać poza repozytorium publikowanym na GitHub Pages.
-.claude/
+# Konfiguracja asystenta. Narzędzie dzieli ten katalog na dwie części i tylko jedna
+# jest lokalna: settings.json jest WSPÓŁDZIELONY i ma być wersjonowany, a
+# settings.local.json niesie stan tej maszyny i tego użytkownika.
+#
+# Do 2026-09-01 stał tu wykluczony CAŁY katalog, przez co ochrona na poziomie
+# repozytorium — na przykład wyłączenie trailera autorstwa — nie mogła się scommitować.
+# Reguła istniała w CLAUDE.md jako proza i nie miała gdzie zamieszkać.
+.claude/settings.local.json
 
 # Pliki robocze
 *.log
