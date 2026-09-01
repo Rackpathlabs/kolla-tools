@@ -1,0 +1,2 @@
+# x.orphan2 NIE MA tu linii. Cale kryterium ADR-004 w jednym braku.
+x.orphan1  a  etykieta tresci, ktora jeszcze nie istnieje

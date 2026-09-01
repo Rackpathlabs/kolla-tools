@@ -839,6 +839,54 @@ R.ok("„OK\" nie mówi o powierzchni, której nie podano",
    ŻADEN scenariusz nie mógł osiągnąć, bo opisu meta nie renderuje strona, tylko
    wyszukiwarka i podgląd linku. Kotwica jest jedynym mechanizmem, który go dosięga —
    porównuje dwa napisy leżące obok siebie w plikach i nie uruchamia niczego. */
+/* ---- LISTA OZNACZEŃ ZAMIAST PROGU (ADR-004, Accepted) ----
+   ORPHAN_BASELINE była jedną liczbą i nie umiała odróżnić klucza, który kotwicy NIGDY
+   nie będzie miał, od takiego, którego nikt jeszcze nie przeniósł. Każdy był anonimowym
+   długiem, a stan uczciwy — „ten klucz nigdy nie dostanie kotwicy, oto powód" — wyglądał
+   identycznie jak zaniedbanie.
+
+   Kryterium jest teraz ZBIOREM PUSTYM: klucz bez kotwicy i bez oznaczenia wywala build.
+   Progu nie da się podnieść, bo nie ma progu; jest lista, którą człowiek czyta i z którą
+   może się nie zgodzić.
+
+   Fixtura ma WŁASNY słownik na trzy klucze. Na prawdziwych 232 nie da się pokazać, że
+   zbiór jest pusty albo że nie jest — widać tylko, że jest duży. */
+var MK = "tools/fixtures/markings/";
+function mark(file) {
+  return run("check-markup-dict.js", [MK + "anchors.html", "--dict", MK + "dict.js",
+                                      "--markings", MK + file]);
+}
+var mkMissing = mark("missing.txt");
+R.ok("klucz bez kotwicy i BEZ oznaczenia -> czerwone", mkMissing.code === 1, kod(mkMissing));
+R.ok("i nazywa DOKŁADNIE ten klucz, nie liczbę",
+     /x\.orphan2/.test(mkMissing.out) && !/x\.orphan1/.test(mkMissing.out),
+     mkMissing.out.split("\n").pop());
+
+var mkA = mark("complete-a.txt");
+R.ok("wszystkie sieroty oznaczone kodem a -> zielone", mkA.code === 0,
+     kod(mkA) + " " + mkA.out.split("\n").pop());
+
+/* (b) MA ZNIKNĄĆ, (a) ma zostać. Licznik, który ich nie rozdziela, nie odpowiada na
+   jedyne pytanie, które ta lista ma obsłużyć: czy cokolwiek zostało naprawione. */
+var mkB = mark("complete-b.txt");
+R.ok("wszystkie oznaczone kodem b -> zielone", mkB.code === 0, kod(mkB));
+R.ok("ale b jest LICZONE OSOBNO od a", /tymczasowych \(b\): 2/.test(mkB.out),
+     mkB.out.split("\n").filter(function (l) { return /b\)/.test(l); })[0]);
+R.ok("…a przy samym a ta liczba jest zerem", /tymczasowych \(b\): 0/.test(mkA.out),
+     mkA.out.split("\n").filter(function (l) { return /b\)/.test(l); })[0]);
+
+/* Oznaczenie tymczasowe bez adresu jest oznaczeniem trwałym, które udaje tymczasowe. */
+var mkNoIssue = mark("b-without-issue.txt");
+R.ok("kod b BEZ numeru zgłoszenia -> czerwone", mkNoIssue.code === 1, kod(mkNoIssue));
+
+/* Lista, której nikt nie sprząta, po roku opisuje repozytorium sprzed roku — i wtedy
+   pusty zbiór nie znaczy już nic. */
+var mkStale = mark("stale.txt");
+R.ok("oznaczenie klucza, który JEST zakotwiczony -> czerwone", mkStale.code === 1,
+     kod(mkStale));
+R.ok("i nazywa nieaktualną linię", /x\.anchored/.test(mkStale.out),
+     mkStale.out.split("\n").pop());
+
 var mdContent = run("check-markup-dict.js", ["tools/fixtures/markup-dict-content.html"]);
 R.ok("rozjazd na atrybucie content -> czerwone", mdContent.code === 1, kod(mdContent));
 R.ok("i DOKŁADNIE jeden rozjazd, nie zapalenie się na całym pliku",

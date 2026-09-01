@@ -1,0 +1,4 @@
+# Kod b BEZ numeru zgloszenia. Oznaczenie tymczasowe bez adresu jest oznaczeniem
+# trwalym, ktore udaje tymczasowe.
+x.orphan1  b  brakuje formy kotwicy
+x.orphan2  a  etykieta tresci, ktora jeszcze nie istnieje

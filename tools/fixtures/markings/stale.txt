@@ -1,0 +1,5 @@
+# Oznaczenie klucza, ktory JEST zakotwiczony. Lista, ktorej nikt nie sprzata,
+# po roku opisuje repozytorium sprzed roku — i wtedy pusty zbior nie znaczy nic.
+x.orphan1  a  etykieta tresci, ktora jeszcze nie istnieje
+x.orphan2  a  etykieta tresci, ktora jeszcze nie istnieje
+x.anchored  a  ten klucz ma kotwice
