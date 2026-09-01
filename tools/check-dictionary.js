@@ -171,6 +171,33 @@ function corpus(stripTags) {
    sie krotkie segmenty, zeby przestaly byc grozne. "Clear" dalej pokrywa napis
    "Clear", ale "has" przestaje pokrywac "has 5 hosts". */
 var MIN_CONTAIN = 4;
+
+/* DRUGI KIERUNEK DOPASOWANIA, i drugi powód, dla którego ekran nie zgadza się ze słownikiem.
+
+   #135 naprawił przypadek, w którym ekran nie widzi treści DZIECKA. Ten sam błąd ma drugą
+   przyczynę: wpis ze wstawką `{…}` jest cięty NA SEGMENTY, a ekran pokazuje CAŁOŚĆ
+   z podstawioną wartością. Napis z ekranu jest wtedy DŁUŻSZY od każdego segmentu, więc
+   kryterium „napis z ekranu mieści się w segmencie" nie ma jak go dopasować. A gdy komunikat
+   jest sklejany z podpowiedzią reguły, bywa dłuższy od całego wpisu.
+
+   Dopuszczamy więc dopasowanie w drugą stronę: SEGMENT MIEŚCI SIĘ W NAPISIE. To rozluźnienie
+   i dlatego ma próg — bez niego dowolne trzyliterowe słowo ze słownika zwalniałoby całe
+   zdania, czego to repozytorium raz już doświadczyło przy segmentach z pojedynczych słów.
+
+   PRÓG 12 ZNAKÓW JEST ZMIERZONY. Na main 2026-09-01, próg po progu:
+
+       25..30   BASELINE 25   plateau — segmenty robiące robotę są długie
+       12       BASELINE 21   cztery napisy więcej, każdy sprawdzony ręcznie: ze słownika
+       11       BASELINE 19   i tutaj wchodzą DWA aria-label, które KLUCZA NIE MAJĄ
+
+   Przy 11 zwalniają się „Preview of the generated globals.yml" i „Contents of the globals.yml
+   file to import" — tekst, którego nikt nie przeniósł do słownika. To jest fałszywe
+   zwolnienie, więc 11 jest za nisko, a 12 jest najmniejszym progiem, przy którym każde nowe
+   pokrycie pochodzi ze słownika. Liczba nie jest okrągła, bo nie jest wybrana.
+
+   Przynęta w tools/fixtures/report-insertions.json trzyma dokładnie tamten aria-label:
+   obniżenie progu robi ją czerwoną. */
+var MIN_INSIDE = 12;
 function wordsIn(hay, needle) {
   /* Pusta igla zawiesza petle NA ZAWSZE: hay.indexOf("", i + 1) przycina sie
      do dlugosci siana i nigdy nie zwraca -1. Igla robi sie pusta po normalizacji
@@ -180,9 +207,18 @@ function wordsIn(hay, needle) {
   if (hay.length < MIN_CONTAIN) return hay === needle;
   var i = hay.indexOf(needle);
   while (i !== -1) {
-    var before = i === 0 || /[^\wąćęłńóśźż]/i.test(hay[i - 1]);
+    /* Granica słowa jest wymagana TYLKO tam, gdzie igła zaczyna się (kończy) znakiem
+       słowa. Wpis „Group <code>[{group}]</code> holds no host." daje segment zaczynający
+       się od „]", a na ekranie stoi „…[control] holds no host." — znak przed nawiasem
+       jest literą, więc warunek bezwarunkowy odrzucał dopasowanie, choć nie ma tu żadnego
+       sklejonego słowa. Granica ma bronić przed „has" w „has 5 hosts", a nie przed
+       interpunkcją. */
+    var needWordStart = /[\wąćęłńóśźż]/i.test(needle[0]);
+    var needWordEnd = /[\wąćęłńóśźż]/i.test(needle[needle.length - 1]);
+    var before = !needWordStart || i === 0 || /[^\wąćęłńóśźż]/i.test(hay[i - 1]);
     var afterAt = i + needle.length;
-    var after = afterAt === hay.length || /[^\wąćęłńóśźż]/i.test(hay[afterAt]);
+    var after = !needWordEnd || afterAt === hay.length ||
+                /[^\wąćęłńóśźż]/i.test(hay[afterAt]);
     if (before && after) return true;
     i = hay.indexOf(needle, i + 1);
   }
@@ -390,6 +426,14 @@ report.forEach(function (f) {
   for (var j = 0; j < SEGS_OWN.length; j++) {
     if (wordsIn(SEGS_OWN[j], low)) { ok++; return; }
   }
+  /* I W DRUGĄ STRONĘ: dostatecznie długi segment słownika MIESZCZĄCY SIĘ w napisie
+     z ekranu też jest pokryciem — patrz MIN_INSIDE. */
+  for (var k = 0; k < SEGS.length; k++) {
+    if (SEGS[k].length >= MIN_INSIDE && wordsIn(low, SEGS[k])) { ok++; return; }
+  }
+  for (var q = 0; q < SEGS_OWN.length; q++) {
+    if (SEGS_OWN[q].length >= MIN_INSIDE && wordsIn(low, SEGS_OWN[q])) { ok++; return; }
+  }
   if (t.length < SHORT) missShort++;
   miss.push(f);
 });
@@ -562,7 +606,11 @@ report.forEach(function (f) {
    jest na ekranie SKLEJANYCH z podpowiedzią reguły (lintHint), więc napis widoczny jest
    dłuższy od wpisu słownika i miernik go nie dopasowuje. Ta sama klasa, co artefakt
    naprawiony w #135, tylko przyczyną są wstawki i konkatenacja — następna pozycja. */
-var BASELINE = 43;
+/* 43 -> 21, obniżone 2026-09-01 razem z drugim kierunkiem dopasowania (#86, ADR-002,
+   druga odsłona pomyłki naprawionej w #135). Znowu ani jeden napis nie został przeniesiony:
+   dwadzieścia dwa napisy pochodziły ze słownika i miernik nie umiał ich dopasować, bo
+   wstawka tnie wpis na segmenty, a ekran pokazuje całość. */
+var BASELINE = 21;
 var bArg = process.argv.indexOf("--baseline");
 if (bArg !== -1) {
   var bVal = Number(process.argv[bArg + 1]);
