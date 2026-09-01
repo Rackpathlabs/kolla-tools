@@ -417,6 +417,7 @@ generator
 get
 gets
 github
+give
 gives
 globals
 goes
@@ -465,6 +466,7 @@ i
 identical
 if
 ignore
+ignored
 ignores
 ilo
 image

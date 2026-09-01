@@ -548,7 +548,10 @@ report.forEach(function (f) {
 /* 65 -> 60, partia #58: rodzina PARSERA walidatora, osiem kluczy z pięciu wywołań.
    Spadek 5, nie 8 — trzy z ośmiu wpisów nie renderują się w żadnym z trzynastu
    scenariuszy, więc nigdy nie były w tej liczbie. */
-var BASELINE = 60;
+/* 60 -> 55, partia #58: rodzina STRUKTURY walidatora, dziesięć kluczy z pięciu wywołań.
+   Znowu spadek o połowę liczby kluczy — pięć wpisów nie renderuje się w żadnym
+   scenariuszu i nigdy nie było w tej liczbie. */
+var BASELINE = 55;
 var bArg = process.argv.indexOf("--baseline");
 if (bArg !== -1) {
   var bVal = Number(process.argv[bArg + 1]);
