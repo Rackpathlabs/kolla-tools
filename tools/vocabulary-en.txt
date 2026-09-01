@@ -54,6 +54,7 @@ after
 again
 against
 agent
+agents
 alarm
 alive
 all
@@ -242,6 +243,7 @@ crosses
 ctrl
 current
 currently
+custom
 cycles
 dalmatian
 dashboard
@@ -281,6 +283,7 @@ dev
 development
 device
 devices
+dhcp
 dies
 differ
 differences
@@ -380,6 +383,7 @@ fill
 fills
 finding
 finds
+fine
 finished
 fip
 first
@@ -436,6 +440,7 @@ hangs
 happen
 happens
 haproxy
+hardware
 has
 hashes
 have
@@ -524,6 +529,7 @@ kind
 know
 kolla
 kv
+l
 lab
 lacp
 lands
@@ -562,6 +568,7 @@ local
 locally
 lock
 log
+long
 longer
 look
 looks
@@ -607,6 +614,7 @@ member
 membership
 memory
 met
+metadata
 metric
 metrics
 mid
@@ -786,6 +794,7 @@ records
 redeclare
 redfish
 redundancy
+reference
 refuse
 registry
 rejected
@@ -891,6 +900,7 @@ south
 spaces
 specifically
 spelling
+split
 spreads
 sslerror
 stable

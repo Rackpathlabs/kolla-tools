@@ -551,7 +551,10 @@ report.forEach(function (f) {
 /* 60 -> 55, partia #58: rodzina STRUKTURY walidatora, dziesięć kluczy z pięciu wywołań.
    Znowu spadek o połowę liczby kluczy — pięć wpisów nie renderuje się w żadnym
    scenariuszu i nigdy nie było w tej liczbie. */
-var BASELINE = 55;
+/* 55 -> 46, partia #58: rodzina GRUP WYMAGANYCH i NAZW, dwanaście kluczy z czterech
+   wywołań. Spadek 9 — pięć wariantów podpowiedzi o pustej grupie wymaganej renderuje się
+   w scenariuszach, reszta nie. */
+var BASELINE = 46;
 var bArg = process.argv.indexOf("--baseline");
 if (bArg !== -1) {
   var bVal = Number(process.argv[bArg + 1]);
