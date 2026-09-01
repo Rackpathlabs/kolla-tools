@@ -143,7 +143,9 @@ function dictCount(out) {
    zwolnione i cztery NIE, przy czym trzy z tych czterech to przynęty na dokładnie te
    sposoby, w jakie taki wzorzec bywa za szeroki. */
 var shapes = run("check-dictionary.js", ["tools/fixtures/report-shapes.json"]);
-R.ok("kod findingu -> zwolniony", !/OUTSIDE-GROUP/.test(shapes.out), shapes.out.split("\n")[2]);
+/* Cudzysłowy w igle są konieczne: przynęta „OUTSIDE-GROUPZ" zawiera „OUTSIDE-GROUP"
+   jako podciąg, więc wzorzec bez granic mówiłby o niej, a nie o kodzie z rejestru. */
+R.ok("kod findingu -> zwolniony", !/"OUTSIDE-GROUP"/.test(shapes.out), shapes.out.split("\n")[2]);
 R.ok("treść <code> -> zwolniona", !/name\[01:10\]/.test(shapes.out));
 R.ok("lista hostów w elemencie .hostlist -> zwolniona", !/ctrl01, ctrl02/.test(shapes.out));
 

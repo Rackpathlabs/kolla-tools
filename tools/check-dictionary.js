@@ -51,6 +51,71 @@ function norm(t) {
 
 var EMPTY_SEGMENTS = 0;
 
+/* ---- rejestr kodów findingów, czytany ze źródła ---------------------------- */
+/* Czytamy PLIKI NARZĘDZI, nie osobną listę — patrz uzasadnienie przy kategorii niżej.
+   Gdy któregoś pliku nie ma (fixtura uruchamiana poza drzewem), rejestr jest po prostu
+   uboższy; nie jest to awaria pomiaru, bo kategoria tylko ZWALNIA i jej milczenie
+   przesuwa wynik w stronę ostrzejszą, a nie łagodniejszą. */
+function codeRegistry() {
+  var out = Object.create(null);
+  ["generator.html", "validator.html", "index.html"].forEach(function (file) {
+    var p = path.join(root, file), src;
+    try { src = fs.readFileSync(p, "utf8"); } catch (e) { return; }
+    var pats = [
+      /* Pierwszy argument bywa ZMIENNĄ — add(sev, "MISSING-GROUP", …) — więc wzorzec nie
+         może wymagać literału wagi. Wymaga natomiast, żeby drugi argument był literałem,
+         bo to on jest kodem. */
+      /\badd\(\s*[^,()]+,\s*"([A-Z][A-Z0-9-]*)"/g,
+      /\bcode:\s*"([A-Z][A-Z0-9-]*)"/g,
+      /\bid:\s*"([A-Z][A-Z0-9-]*)"/g,
+      /"([A-Z][A-Z0-9-]*)"\s*:\s*"/g,
+      /* PIĄTE ŹRÓDŁO: literał WERSALIKAMI Z MYŚLNIKIEM, gdziekolwiek w źródle narzędzia.
+         Potrzebne, bo dwa kody nie istnieją w źródle jako całość — powstają jako
+         `base + "-RETIRED"` — a ich BAZA („UPGRADE-GROUP", „UPGRADE-KEY") jest zwykłym
+         literałem przypisanym do zmiennej i żaden z czterech wzorców wyżej jej nie widzi.
+
+         Sprawdzone przed dopisaniem, a nie założone: ten wzorzec zbiera ze wszystkich
+         trzech plików 108 napisów i WSZYSTKIE są kodami findingów albo identyfikatorami
+         reguł. Ani jeden nie jest tekstem interfejsu — narzędzie nie pisze literałów
+         wersalikami z myślnikiem do niczego innego. Gdyby kiedyś zaczęło, ta kategoria
+         zwolniłaby tekst i przynęta w fixturze tego nie złapie, bo przynęta pilnuje
+         napisu SPOZA źródła. Zapisane jako granica, nie jako przeoczenie. */
+      /"([A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+)"/g
+    ];
+    var diag = src.indexOf("DIAG_IDS");
+    pats.forEach(function (re, i) {
+      /* Czwarty wzorzec — klucz obiektu — jest ZAWĘŻONY DO BLOKU DIAG_IDS, bo poza nim
+         „KLUCZ": "wartość" trafia też w zwykły słownik i zwalniałby cokolwiek pisanego
+         wersalikami. Zakres kategorii ma być wąski tam, gdzie wzorzec jest szeroki. */
+      var hay = i === 3 ? (diag === -1 ? "" : src.slice(diag, diag + 6000)) : src;
+      var m;
+      re.lastIndex = 0;
+      while ((m = re.exec(hay))) out[m[1]] = true;
+    });
+  });
+  return out;
+}
+var CODES = codeRegistry();
+
+/* KOD SKŁADANY Z BAZY. Dwa kody nie istnieją w źródle jako całe napisy, bo powstają
+   w czasie działania: `base + "-RETIRED"`, gdzie base to "UPGRADE-GROUP" albo
+   "UPGRADE-KEY". Rejestr czytany ze źródła nie może ich zobaczyć — z konstrukcji, nie
+   z niedopatrzenia. Zwalniamy więc także napis, którego PRZEDROSTEK ograniczony myślnikiem
+   jest członkiem rejestru.
+
+   To NIE poszerza kategorii na przypadkowe napisy: podział idzie po myślnikach, więc
+   „OUTSIDE-GROUPZ" ma przedrostki „OUTSIDE" i „OUTSIDE-GROUPZ", z których żaden nie jest
+   w rejestrze — a „OUTSIDE-GROUP" jest, ale nim nie jest. Przynęta w fixturze pilnuje
+   dokładnie tej różnicy. */
+function inRegistry(t) {
+  if (CODES[t] === true) return true;
+  var parts = String(t).split("-");
+  for (var i = 1; i < parts.length; i++) {
+    if (CODES[parts.slice(0, i).join("-")] === true) return true;
+  }
+  return false;
+}
+
 /* DWIE POSTACI KAŻDEGO WPISU, bo ekran ma dwie i jedna z nich była niewidzialna.
 
    Jednostką po stronie ekranu jest WŁASNY TEKST ELEMENTU — treść elementów-dzieci do niego
@@ -204,12 +269,31 @@ var CATEGORIES = [
      Wszystkie trzy idą po KSZTAŁCIE, nie po liście napisów — lista rośnie o jeden przy
      każdym czerwonym przebiegu, kształt nie. */
 
-  /* KOD FINDINGU. Wielkie litery, cyfry i CO NAJMNIEJ JEDEN myślnik: OUTSIDE-GROUP,
-     UPGRADE-GROUP-RENAMED. Bez myślnika reguła zwalniałaby pojedyncze słowo pisane
-     wersalikami, a takie bywa etykietą interfejsu; z małymi literami zwalniałaby
-     „Deploy-Ready". Obie przynęty stoją w tools/fixtures/report-shapes.json. */
-  { why: "kod findingu: identyfikator reguły, nie proza",
-    test: function (f) { return /^[A-Z][A-Z0-9]*(-[A-Z0-9]+)+$/.test(f.text); } },
+  /* KOD FINDINGU — przez PRZYNALEŻNOŚĆ DO REJESTRU, nie przez wzorzec.
+
+     Pierwsza wersja pytała o kształt: wielkie litery i co najmniej jeden myślnik. Myślnik
+     był tam po to, żeby nie zwalniać pojedynczego słowa pisanego wersalikami — i przez to
+     przepuszczała RANGE oraz TYPO, które są prawdziwymi kodami findingów. Przemianowanie
+     ich odpada: #26 wymaga stabilnych identyfikatorów, bo kod findingu jest tym, co ludzie
+     cytują w zgłoszeniach.
+
+     DLACZEGO TO NIE JEST ZŁAMANIE ZASADY „KSZTAŁT, NIE LISTA". Zasada jest o listach
+     UTRZYMYWANYCH RĘCZNIE — takich, które rosną o jeden przy każdym czerwonym przebiegu
+     i starzeją się w ciszy, bo nikt nie pamięta ich zaktualizować. Ta lista nie istnieje
+     jako plik: jest ODCZYTYWANA ZE ŹRÓDŁA PRAWDY przy każdym przebiegu. Kod dopisany do
+     narzędzia zwalnia się sam, kod usunięty przestaje zwalniać w tym samym commicie,
+     a napisu nie da się do niej dopisać inaczej niż zgłaszając nim finding.
+
+     Trzy konstrukcje, bo tyle ich jest w kodzie i żadna nie jest ważniejsza od pozostałych:
+       DIAG_IDS: { "KOD": "opis" }        generator, tabela identyfikatorów
+       add("error", "KOD", …)             walidator, zgłoszenie findingu
+       { sev: …, code: "KOD" }            walidator, tabele rodzin reguł
+       { id: "KOD", level: …}             generator, diagnostyka
+
+     PRZYNĘTA pilnująca, żeby to nie wróciło po cichu do wzorca: napis o kształcie kodu,
+     ale spoza rejestru, ma NIE być zwolniony (tools/fixtures/report-shapes.json). */
+  { why: "kod findingu: identyfikator z rejestru narzędzia, nie proza",
+    test: function (f) { return inRegistry(f.text); } },
 
   /* TREŚĆ <code>. Składnia i wartości konfiguracji: name[01:10], key=value, eth0.
 
@@ -454,7 +538,10 @@ report.forEach(function (f) {
    zmierzone w #86 dawały 33 (15 kodów + 10 treści <code> + 8 list hostów) — dwa napisy
    ponad to były w „reszcie" i mają ten sam kształt. Różnica jest wypisana, bo liczba bez
    rozbicia nie jest pomiarem, tylko prośbą o zaufanie. */
-var BASELINE = 83;
+/* 83 -> 81, obniżone 2026-09-01 razem ze zmianą kategorii kodów na przynależność do
+   rejestru. Spadek to dokładnie RANGE i TYPO — jednowyrazowe kody, których poprzedni
+   wzorzec nie mógł objąć, bo wymagał myślnika. */
+var BASELINE = 81;
 var bArg = process.argv.indexOf("--baseline");
 if (bArg !== -1) {
   var bVal = Number(process.argv[bArg + 1]);
