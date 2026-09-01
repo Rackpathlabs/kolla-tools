@@ -557,7 +557,12 @@ report.forEach(function (f) {
 /* 46 -> 45, partia #58: rodzina STATUSU WYDANIA. Jeden klucz — reszta tej rodziny to
    40 pol `note:` w matrix.js, ktore sa danymi ze zrodla zewnetrznego i swiadomie NIE ida
    do slownika; powod stoi przy wpisie w i18n.js i w #58. */
-var BASELINE = 45;
+/* 45 -> 43, partia #58: diagnostyka generatora, dziewięć kluczy z dziewięciu wywołań.
+   Spadek TYLKO 2, i to jest informacja, a nie rozczarowanie: siedem z tych komunikatów
+   jest na ekranie SKLEJANYCH z podpowiedzią reguły (lintHint), więc napis widoczny jest
+   dłuższy od wpisu słownika i miernik go nie dopasowuje. Ta sama klasa, co artefakt
+   naprawiony w #135, tylko przyczyną są wstawki i konkatenacja — następna pozycja. */
+var BASELINE = 43;
 var bArg = process.argv.indexOf("--baseline");
 if (bArg !== -1) {
   var bVal = Number(process.argv[bArg + 1]);

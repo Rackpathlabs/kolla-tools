@@ -1001,6 +1001,29 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
          słownika oznaczałoby, że tekst opisujący cudze wydanie jest utrzymywany po naszej
          stronie i rozjeżdża się przy każdej regeneracji macierzy. Klasa jest opisana
          w #58; z tych 40 tylko 2 renderuje jakikolwiek scenariusz. */
+      /* Diagnostyka GENERATORA — przeniesione 2026-09-01 z literałów (#58).
+         Rodzina jest większa niż to, co widać w progu: w generator.html stoi 48 literałów
+         msg:/hint:, a scenariusze renderują 8 z nich. Przeniesione są te renderowane;
+         liczba i powód stoją w #58, żeby reszta była planem, a nie zapomnieniem. */
+      "g.d.ifaceRequired":         "Field {field} is required.",
+      "g.d.extDirect":             "<code>neutron_external_interface</code> (<code>{iface}</code>) is the same interface as <code>{role}</code>.",
+      "g.d.extShared":             "<code>neutron_external_interface</code> (<code>{iface}</code>) shares a base device with <code>{role}</code> (<code>{device}</code>).",
+      "g.d.ampProviderOff":        "<code>octavia_amp_network</code> of type <code>vlan</code> requires <code>enable_neutron_provider_networks</code>.",
+      "g.d.ampPhysnet":            "<code>{physnet}</code> does not follow from the external interface list — available: {available}. " +
+                                   "One external interface cannot map two physical networks.",
+      "g.d.ampFlat":               "An amphora network of type <code>flat</code> also rests on a provider network — " +
+                                   "check that <code>enable_neutron_provider_networks</code> matches the design.",
+      "g.d.tlsNoCa":               "<code>kolla_enable_tls_internal</code> without <code>kolla_copy_ca_into_containers</code> " +
+                                   "and without Let's Encrypt: the containers will not trust a private CA. At Keystone " +
+                                   "bootstrap, or on the first call between services, every log fills at once with " +
+                                   "<code>SSLError: certificate verify failed</code>. It looks like a Keystone " +
+                                   "failure; it is a trust store failure.",
+      "g.d.fqdnIdentical":         "<code>kolla_internal_fqdn</code> and <code>kolla_external_fqdn</code> are identical. " +
+                                   "The internal and public endpoints in the service catalogue then point at the same " +
+                                   "place: traffic between services leaves through the external VIP, and admin " +
+                                   "endpoints become reachable from the public network. An audit usually finds this, " +
+                                   "not an outage.",
+      "g.d.dependency":            "<code>{what}</code> requires {needs}.",
       "v.f.release.hint":          "Group names are checked against this release.",
       "v.f.syntax.hint":           "Expected format: <code>[name]</code>, <code>[name:children]</code> or <code>[name:vars]</code>.",
       "v.f.sectionKind":           "Unknown section type <code>{kind}</code>.",
@@ -2185,7 +2208,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
   function checkIface(name, label, d) {
     var tag = "<code>" + label + "</code>";
     if (!name) {
-      d.push({ id: "IFACE-REQUIRED", level: "error", field: label, msg: "Field " + tag + " is required." });
+      d.push({ id: "IFACE-REQUIRED", level: "error", field: label, msg: T("g.d.ifaceRequired", { field: tag }) });
       return;
     }
     if (name.length > 15) {
@@ -2259,14 +2282,12 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
         if (ext === p[1]) {
           d.push({ id: "KV-10-EXTERNAL-DIRECT",
             level: lintSev("KV-10", "direct", s), field: R["KV-10"].field,
-            msg: "<code>neutron_external_interface</code> (<code>" + esc(ext) + "</code>) is the " +
-                 "same interface as <code>" + p[0] + "</code>. " + lintHint("KV-10", s)
+            msg: T("g.d.extDirect", { iface: esc(ext), role: p[0] }) + " " + lintHint("KV-10", s)
           });
         } else if (baseDev(p[1]) === ext || baseDev(ext) === p[1]) {
           d.push({ id: "KV-10-EXTERNAL-SHARED",
             level: lintSev("KV-10", "shared", s), field: R["KV-10"].field,
-            msg: "<code>neutron_external_interface</code> (<code>" + esc(ext) + "</code>) shares a " +
-                 "base device with <code>" + p[0] + "</code> (<code>" + esc(p[1]) + "</code>). " +
+            msg: T("g.d.extShared", { iface: esc(ext), role: p[0], device: esc(p[1]) }) + " " +
                  lintHint("KV-10", s)
           });
         }
@@ -2279,24 +2300,21 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       if (!s.t_provider) {
         d.push({ id: "KV-13-AMP-PROVIDER-OFF",
           level: lintSev("KV-13", "missing", s), field: "amp_net",
-          msg: "<code>octavia_amp_network</code> of type <code>vlan</code> requires " +
-               "<code>enable_neutron_provider_networks</code>. " + lintHint("KV-13", s)
+          msg: T("g.d.ampProviderOff") + " " + lintHint("KV-13", s)
         });
       }
       if (nets.indexOf(s.physnet) === -1) {
         d.push({ id: "KV-13-AMP-PHYSNET",
           level: lintSev("KV-13", "missing", s), field: R["KV-13"].field,
-          msg: "<code>" + esc(s.physnet) + "</code> does not follow from the external interface " +
-               "list — available: " + (nets.length ? "<code>" + nets.join("</code>, <code>") + "</code>" : "none") +
-               ". One external interface cannot map two physical networks. " +
-               lintHint("KV-13", s)
+          msg: T("g.d.ampPhysnet", { physnet: esc(s.physnet),
+                 available: nets.length ? "<code>" + nets.join("</code>, <code>") + "</code>" : "none" }) +
+               " " + lintHint("KV-13", s)
         });
       }
     } else if (s.t_octavia && s.amp_net === "flat") {
       d.push({ id: "KV-13-AMP-FLAT",
         level: "info", field: "amp_net",
-        msg: "An amphora network of type <code>flat</code> also rests on a provider network — " +
-             "check that <code>enable_neutron_provider_networks</code> matches the design."
+        msg: T("g.d.ampFlat")
       });
     }
 
@@ -2304,21 +2322,13 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
     if (s.t_tls_int && !s.t_copy_ca && !s.t_letsencrypt) {
       d.push({ id: "KV-14-TLS-CA",
         level: lintSev("KV-14", "ca", s), field: null,
-        msg: "<code>kolla_enable_tls_internal</code> without <code>kolla_copy_ca_into_containers</code> " +
-             "and without Let's Encrypt: the containers will not trust a private CA. At Keystone " +
-             "bootstrap, or on the first call between services, every log fills at once with " +
-             "<code>SSLError: certificate verify failed</code>. It looks like a Keystone " +
-             "failure; it is a trust store failure."
+        msg: T("g.d.tlsNoCa")
       });
     }
     if (s.int_fqdn && s.ext_fqdn && s.int_fqdn === s.ext_fqdn) {
       d.push({ id: "KV-14-FQDN-IDENTICAL",
         level: lintSev("KV-14", "fqdn", s), field: "ext_fqdn",
-        msg: "<code>kolla_internal_fqdn</code> and <code>kolla_external_fqdn</code> are identical. " +
-             "The internal and public endpoints in the service catalogue then point at the same " +
-             "place: traffic between services leaves through the external VIP, and admin " +
-             "endpoints become reachable from the public network. An audit usually finds this, " +
-             "not an outage."
+        msg: T("g.d.fqdnIdentical")
       });
     }
     if (!s.int_fqdn && !s.ext_fqdn && s.vip && s.ext_vip && s.vip !== s.ext_vip) {
@@ -2357,8 +2367,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       if (!r[0]) return;
       d.push({ id: r[4],
         level: lintSev("ZALEZNOSC", "missing", s), field: null,
-        msg: "<code>" + r[1] + "</code> requires " +
-             (r[2].indexOf("enable_") === 0 ? "<code>" + r[2] + "</code>" : r[2]) + ". " + r[3]
+        msg: T("g.d.dependency", { what: r[1],
+               needs: r[2].indexOf("enable_") === 0 ? "<code>" + r[2] + "</code>" : r[2] }) + " " + r[3]
       });
     });
   }

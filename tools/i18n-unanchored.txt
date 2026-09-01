@@ -16,6 +16,15 @@
 #           wyjsc, a nie zostac.
 #
 # Format:  <klucz>  <kod>  <powod>
+g.d.ampFlat  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
+g.d.ampPhysnet  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
+g.d.ampProviderOff  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
+g.d.dependency  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
+g.d.extDirect  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
+g.d.extShared  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
+g.d.fqdnIdentical  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
+g.d.ifaceRequired  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
+g.d.tlsNoCa  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
 g.diff.absent  a  komorka tabeli roznic budowana per wiersz; tabeli nie ma, dopoki nie ma czego porownac
 g.rule.kv05.ackNote  a  metadane reguly wstrzykiwane w finding; findingu nie ma, dopoki nie powstanie
 g.rule.kv05.why  a  metadane reguly wstrzykiwane w finding; findingu nie ma, dopoki nie powstanie

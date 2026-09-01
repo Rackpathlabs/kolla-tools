@@ -427,6 +427,29 @@
          słownika oznaczałoby, że tekst opisujący cudze wydanie jest utrzymywany po naszej
          stronie i rozjeżdża się przy każdej regeneracji macierzy. Klasa jest opisana
          w #58; z tych 40 tylko 2 renderuje jakikolwiek scenariusz. */
+      /* Diagnostyka GENERATORA — przeniesione 2026-09-01 z literałów (#58).
+         Rodzina jest większa niż to, co widać w progu: w generator.html stoi 48 literałów
+         msg:/hint:, a scenariusze renderują 8 z nich. Przeniesione są te renderowane;
+         liczba i powód stoją w #58, żeby reszta była planem, a nie zapomnieniem. */
+      "g.d.ifaceRequired":         "Field {field} is required.",
+      "g.d.extDirect":             "<code>neutron_external_interface</code> (<code>{iface}</code>) is the same interface as <code>{role}</code>.",
+      "g.d.extShared":             "<code>neutron_external_interface</code> (<code>{iface}</code>) shares a base device with <code>{role}</code> (<code>{device}</code>).",
+      "g.d.ampProviderOff":        "<code>octavia_amp_network</code> of type <code>vlan</code> requires <code>enable_neutron_provider_networks</code>.",
+      "g.d.ampPhysnet":            "<code>{physnet}</code> does not follow from the external interface list — available: {available}. " +
+                                   "One external interface cannot map two physical networks.",
+      "g.d.ampFlat":               "An amphora network of type <code>flat</code> also rests on a provider network — " +
+                                   "check that <code>enable_neutron_provider_networks</code> matches the design.",
+      "g.d.tlsNoCa":               "<code>kolla_enable_tls_internal</code> without <code>kolla_copy_ca_into_containers</code> " +
+                                   "and without Let's Encrypt: the containers will not trust a private CA. At Keystone " +
+                                   "bootstrap, or on the first call between services, every log fills at once with " +
+                                   "<code>SSLError: certificate verify failed</code>. It looks like a Keystone " +
+                                   "failure; it is a trust store failure.",
+      "g.d.fqdnIdentical":         "<code>kolla_internal_fqdn</code> and <code>kolla_external_fqdn</code> are identical. " +
+                                   "The internal and public endpoints in the service catalogue then point at the same " +
+                                   "place: traffic between services leaves through the external VIP, and admin " +
+                                   "endpoints become reachable from the public network. An audit usually finds this, " +
+                                   "not an outage.",
+      "g.d.dependency":            "<code>{what}</code> requires {needs}.",
       "v.f.release.hint":          "Group names are checked against this release.",
       "v.f.syntax.hint":           "Expected format: <code>[name]</code>, <code>[name:children]</code> or <code>[name:vars]</code>.",
       "v.f.sectionKind":           "Unknown section type <code>{kind}</code>.",
