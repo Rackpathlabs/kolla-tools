@@ -61,6 +61,30 @@
  * z przyciskiem „zaakceptuj wszystko" nie jest bramą przeglądu.
  * ============================================================================
  *
+ * ============================================================================
+ * ZAKRES, ZAWĘŻONY 2026-09-01 (ADR-003, opcja C). Zdanie otwierające ten nagłówek
+ * mówi o KOMPLETNOŚCI i jest za szerokie. Ten strażnik mierzy tekst padający na
+ * ŚCIEŻKACH, KTÓRYMI PRZEJEDZIE — trzynaście scenariuszy plus słownik. Literał
+ * na ścieżce, której żaden scenariusz nie wykonuje, jest dla niego niewidoczny,
+ * i NIE jest to wada do naprawienia w tym pliku.
+ *
+ * Strażnika ŹRÓDŁOWEGO — czytającego literały zamiast wykonania — NIE MA i nie
+ * jest planowany. ADR-003 rozstrzygnął to jako opcję C: własny tokenizer
+ * JavaScriptu ma tryb awarii „cicha zła liczba", a to repozytorium wyprodukowało
+ * już trzy takie, w tym dwie w skanerach pisanych dokładnie do tego zadania.
+ * Przy rewizji wchodzi opcja B — zależność wyłącznie dla tools/ — nigdy A.
+ *
+ * Co zostaje niesprawdzone, powiedziane wprost, żeby nie wynikało z milczenia:
+ * polski literał na ścieżce spoza scenariuszy nie jest widziany ani tutaj, ani
+ * przez check-dictionary.js, ani przez migawkę, ani przez goldeny. Jedyną obroną
+ * jest czytanie diffu z tym pytaniem — obrona PROCEDURALNA, nie mechaniczna.
+ *
+ * Zmierzone 2026-09-01, przy tym strażniku ZIELONYM: siedem polskich napisów
+ * dociera do użytkownika — sześć w validator.html, jeden w opisie meta
+ * generator.html. Znalezione czytaniem. Rejestr tych znalezisk prowadzi #77
+ * i to on decyduje o rewizji ADR-003.
+ * ============================================================================
+ *
  * Przy porażce wypisuje CO i GDZIE, nie samą liczbę — dzięki temu jest
  * jednocześnie bramką i narzędziem roboczym.
  *

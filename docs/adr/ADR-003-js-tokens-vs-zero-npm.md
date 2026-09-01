@@ -240,7 +240,14 @@ not the correctness.
 3. [ ] With D: `check-network.js` over the scenarios that already exist (#67), with a scope
        sentence describing what it measures from the first version — behaviour on the paths
        that ran, not "the tool does not reach the network"
-4. [ ] With C: narrow #77's own promise in its issue and say plainly what is not checked
+4. [x] With C: narrow #77's own promise in its issue and say plainly what is not
+       checked (2026-09-01). The issue was retitled to name its remaining function —
+       it collects dated evidence for the revisit condition below — moved to the
+       `backlog — poza wydaniami` milestone, and its two superseded measurement
+       tables marked as such. `tools/check-english.js` carries the narrowed scope in
+       its own header; `SCOPE.md` was checked and deliberately left alone, because it
+       makes no claim about interface language and a paragraph about one would be an
+       item in a document whose name does not describe it
 5. [ ] Not now, but if B ever returns: the exception is written down as applying to `tools/`
        alone, and the artifact guarantee is restated in the same commit
 6. [ ] Revisit if a source-level defect reaches users, if the netlog flag or format is
