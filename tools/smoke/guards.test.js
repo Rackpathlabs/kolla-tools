@@ -775,6 +775,22 @@ R.ok("licznik słów domyka się na obu fixturach",
 function docs(variant) {
   return run("check-docs.sh", ["--root", "tools/fixtures/docs/" + variant]);
 }
+/* Piąta fixtura: procedura ręczna wypatroszona. Dokument, którego nic nie egzekwuje, jest
+   jedyną rzeczą w tym katalogu, której zniknięcia nie widać nigdzie indziej — więc dowód,
+   że strażnik to złapie, musi być testem. */
+var manualGone = run("check-docs.sh", ["--root", "tools/fixtures/docs/no-manual"]);
+R.ok("brak procedury ręcznej -> czerwone", manualGone.code === 1, kod(manualGone));
+R.ok("i mówi, którego pliku brakuje",
+     /docs\/MANUAL-CHECKS\.md: brak pliku/.test(manualGone.out),
+     manualGone.out.split("\n").filter(function (l) { return /MANUAL/.test(l); })[0]);
+
+var manualThin = run("check-docs.sh", ["--root", "tools/fixtures/docs/thin-manual"]);
+R.ok("procedura bez zdania „to nie jest strażnik” -> czerwone", manualThin.code === 1,
+     kod(manualThin));
+R.ok("i nazywa brakujący fragment, nie samą liczbę bajtów",
+     /brak fragmentu "This is a procedure, not a guard"/.test(manualThin.out),
+     manualThin.out.split("\n").filter(function (l) { return /MANUAL/.test(l); })[0]);
+
 R.ok("komplet dokumentów z sekcjami i odnośnikami -> zielone", docs("clean").code === 0,
      docs("clean").out.split("\n").pop());
 
