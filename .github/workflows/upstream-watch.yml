@@ -10,6 +10,18 @@ on:
     - cron: "17 6 * * 1"
   workflow_dispatch:
 
+# JEDEN PRZEBIEG NARAZ. Cron i workflow_dispatch mogą się nałożyć, a wtedy oba przebiegi
+# szukają swojego zgłoszenia, oba nic nie znajdują i oba je zakładają — objaw identyczny
+# jak przy filtrze `--state open` (#90). Dwie przyczyny o jednym objawie muszą być zamknięte
+# razem, inaczej duplikat po naprawie filtru czyta się jako „naprawa nie zadziałała".
+#
+# cancel-in-progress: false, nie true. Przebieg przerwany w połowie zostawia wypchniętą
+# gałąź bez zgłoszenia, które mówi, co z nią zrobić — czyli ciszę w miejscu, w którym ma
+# być raport. Kolejkowanie kosztuje minuty raz w tygodniu.
+concurrency:
+  group: upstream-watch
+  cancel-in-progress: false
+
 # pull-requests: świadomie BRAK. Repozytorium ma wyłączone "Allow GitHub Actions
 # to create and approve pull requests", a GitHub wiąże tworzenie i zatwierdzanie
 # w jednym przełączniku — nie da się dać samego tworzenia. Bramką ma być człowiek,
@@ -28,6 +40,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # TOŻSAMOŚĆ ZGŁOSZEŃ WATCHERA LEŻY W ETYKIETACH, więc etykiety muszą istnieć zanim
+      # cokolwiek ich poszuka. Zakładane tutaj, a nie ręcznie w interfejsie, z tego samego
+      # powodu, dla którego `.claude/settings.json` jest wersjonowany: mechanizm, który
+      # zależy od kroku wykonanego kiedyś przez człowieka, w świeżym klonie nie istnieje.
+      #
+      # --force jest idempotentne: aktualizuje istniejącą etykietę zamiast się wywalić.
+      - name: Etykiety tożsamości watchera
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh label create watcher:release-notes --color BFD4F2 --force \
+            --description "Zgłoszenie prowadzone przez upstream-watch: kandydaci z release notes"
+          gh label create watcher:drift --color BFD4F2 --force \
+            --description "Zgłoszenie prowadzone przez upstream-watch: rozjazd macierzy"
+          gh label create watcher:series --color BFD4F2 --force \
+            --description "Zgłoszenie prowadzone przez upstream-watch: nowa seria do przeglądu"
 
       - uses: actions/setup-node@v4
         with:
@@ -143,13 +172,32 @@ jobs:
           # Wcięcie z bloku YAML-a trzeba zdjąć — inaczej wszystko byłoby blokiem kodu.
           sed -i 's/^          //' /tmp/issue-body.md
 
-          # patrz komentarz o gh issue list niżej — to samo dotyczy tego tytułu
-          NUM="$(gh issue list --state open --limit 200 --json number,title \
-                   --jq ".[] | select(.title == \"$TITLE\") | .number" | head -1)"
-          if [ -n "$NUM" ]; then
-            gh issue edit "$NUM" --body-file /tmp/issue-body.md
+          # TOŻSAMOŚĆ PO ETYKIECIE, ale PODMIOTEM jest GAŁĄŹ, nie temat (#90).
+          #
+          # Ten sam wzorzec co w bloku not wydania — etykieta plus `--state all`, przez
+          # listowanie — z jedną różnicą, którą trzeba wypisać, bo inaczej wygląda na
+          # niekonsekwencję: tam jedno zgłoszenie żyje wiecznie, tutaj każda gałąź jest
+          # osobnym podmiotem. Nadpisanie treści zgłoszenia o gałęzi A komendą dla gałęzi B
+          # skasowałoby jedyny ślad tego, co zrobić z A.
+          #
+          # Gdy poprzednie zgłoszenie watchera dotyczy INNEJ gałęzi, zakładamy nowe
+          # Z ODWOŁANIEM do tamtego — to jest druga z dwóch dozwolonych odpowiedzi
+          # z kryterium 2 w #90, wybrana świadomie, a nie z przeoczenia.
+          PREV="$(gh issue list --state all --label watcher:drift --limit 200 \
+                    --json number,title --jq '.[0] | "\(.number)\t\(.title)"')"
+          PNUM="${PREV%%$'\t'*}"; PTITLE="${PREV#*$'\t'}"
+          if [ -n "$PNUM" ] && [ "$PTITLE" = "$TITLE" ]; then
+            # Ta sama gałąź: to jest to samo zgłoszenie, niezależnie od stanu.
+            STATE="$(gh issue view "$PNUM" --json state --jq .state)"
+            if [ "$STATE" = "CLOSED" ]; then
+              gh issue reopen "$PNUM" --comment "Otworzone ponownie przez \`upstream-watch\`: gałąź \`$BR\` nadal czeka na PR-a."
+            fi
+            gh issue edit "$PNUM" --body-file /tmp/issue-body.md
           else
-            gh issue create --title "$TITLE" --label "area:repo,p2" \
+            if [ -n "$PNUM" ]; then
+              printf '\n---\n\nPoprzednie zgłoszenie watchera o rozjeździe: #%s (inna gałąź, więc osobny podmiot — nie nadpisujemy go).\n' "$PNUM" >> /tmp/issue-body.md
+            fi
+            gh issue create --title "$TITLE" --label "watcher:drift,area:repo,p2" \
               --body-file /tmp/issue-body.md
           fi
 
@@ -173,6 +221,18 @@ jobs:
           TITLE="Upstream release notes: candidates for the matrix"
           BODY="$(printf 'Noty wydania nowe w najświeższej serii, wymieniające nazwę, którą zna `matrix.js`. Słowa kluczowe pochodzą z macierzy, nie z listy w kodzie.\n\n**Cytaty są surowe.** Skrypt nie przypisuje `kind` ani `sev` — to wymaga przeczytania noty ze zrozumieniem, a zgadnięta klasyfikacja trafiłaby do reguł, o których ktoś potem założy, że ktoś je sprawdził.\n\n```\n%s\n```\n\n_Treść tego zgłoszenia jest nadpisywana przy każdym przebiegu._\n' "$(cat /tmp/notes.txt)")"
 
+          # TOŻSAMOŚĆ PO ETYKIECIE, NIE PO TYTULE I STANIE (#90).
+          #
+          # Do 2026-09-02 blok szukał `--state open` i dokładnego tytułu. Zamknięcie tematu
+          # sprawiało, że przy najbliższym przebiegu nie znajdował nic i zakładał duplikat —
+          # a przebieg kończył się sukcesem, więc nikt tego nie widział. Trzy kopie w tym
+          # repozytorium (#41, #43, #45), każda 27 sekund po zamknięciu poprzedniej.
+          #
+          # Tytuł plus stan nie jest tożsamością: pierwsze jest tekstem dla ludzi i będzie
+          # redagowane, drugie zmienia człowiek w toku normalnej pracy. Etykieta przeżywa
+          # oba i jest widoczna w interfejsie — widać, które zgłoszenie należy do watchera,
+          # i widać, gdy ktoś ją zdejmie.
+          #
           # NIE UŻYWAJ `gh issue list --search "... in:title"` DO SZUKANIA PO TYTULE.
           # Zawodzi z dwóch NIEZALEŻNYCH powodów, więc naprawienie jednego nie
           # wystarczy i obie awarie wyglądają tak samo: "nie znaleziono".
@@ -182,12 +242,24 @@ jobs:
           #      zgłoszeń. Nawet poprawne zapytanie nie widzi świeżego wpisu.
           # Skutek w produkcji: przebieg założył drugą kopię tego samego zgłoszenia.
           # Zwykła lista plus dokładne porównanie tytułu nie ma żadnej z tych cech.
-          NUM="$(gh issue list --state open --limit 200 --json number,title \
-                   --jq ".[] | select(.title == \"$TITLE\") | .number" | head -1)"
+          # --state all, bo stan NIE jest częścią tożsamości. Filtr przez listowanie
+          # z etykietą, nigdy przez wyszukiwarkę — powody wyżej.
+          FOUND="$(gh issue list --state all --label watcher:release-notes --limit 200 \
+                     --json number,state --jq '.[0] | "\(.number) \(.state)"')"
+          NUM="${FOUND%% *}"; STATE="${FOUND##* }"
           if [ -n "$NUM" ]; then
+            # SEMANTYKA TRAFIENIA W ZGŁOSZENIE ZAMKNIĘTE JEST JAWNA (#90, kryterium 2).
+            # Ciche `gh issue edit` na zamkniętym zgłoszeniu jest TĄ SAMĄ awarią co duplikat,
+            # tylko cichszą: raport powstaje, jest aktualny i jest niewidoczny — nie pojawia
+            # się na liście, nie generuje powiadomienia i wygląda jak zgłoszenie, którym ktoś
+            # się zajął. Duplikat przynajmniej widać.
+            if [ "$STATE" = "CLOSED" ]; then
+              gh issue reopen "$NUM" --comment "Otworzone ponownie przez \`upstream-watch\`: skaner not wydania znalazł kandydatów po tym, jak zgłoszenie zamknięto. Treść poniżej jest nadpisywana przy każdym przebiegu; jeśli temat jest naprawdę zamknięty, zdejmij etykietę \`watcher:release-notes\` — wtedy watcher założy nowe zgłoszenie zamiast wracać do tego."
+            fi
             gh issue edit "$NUM" --body "$BODY"
           else
-            gh issue create --title "$TITLE" --label "area:repo,p3" --body "$BODY"
+            gh issue create --title "$TITLE" \
+              --label "watcher:release-notes,area:repo,p3" --body "$BODY"
           fi
 
       # Klasa 2: nowa seria oraz cokolwiek dotykającego semantyki reguł. Skrypt
@@ -205,10 +277,19 @@ jobs:
           # Tytuł niesie nazwę serii, więc cotygodniowy przebieg nie zakłada
           # dziesiątego zgłoszenia o tym samym, dopóki nikt się nim nie zajmie.
           TITLE="Upstream: new OpenStack series $SERIES needs a ruleset review"
-          if gh issue list --state all --limit 200 --json title \
+          # Ten sam wzorzec tożsamości co w dwóch blokach wyżej: etykieta plus `--state all`,
+          # przez listowanie. Etykieta odpowiada na pytanie „czy to zgłoszenie watchera",
+          # tytuł na pytanie „której serii dotyczy" — bo tu podmiotem jest SERIA i nowa seria
+          # ma dostać własne zgłoszenie.
+          #
+          # GRANICA, nazwana zamiast przemilczanej: przeredagowanie tytułu przez człowieka
+          # sprawi, że watcher założy dla tej serii drugie zgłoszenie. Etykieta zawęża
+          # listę, więc duplikat będzie widoczny pod nią od razu — a nie osieroci wszystkich
+          # pozostałych, bo tożsamość pozostałych nie zależy od tego tytułu.
+          if gh issue list --state all --label watcher:series --limit 200 --json title \
                --jq ".[] | select(.title == \"$TITLE\")" | grep -q .; then
             echo "zgłoszenie dla $SERIES już istnieje"; exit 0
           fi
           gh issue create --title "$TITLE" \
-            --label "area:repo,p2" \
+            --label "watcher:series,area:repo,p2" \
             --body "$(printf 'Watcher wykrył serię obecną w upstreamie, a nieobecną w macierzy.\n\n```\n%s\n```\n\nSzkieletowy wiersz może dopisać automat, ale **katalog deprecacji zostaje dla człowieka**: `deprecationsCatalogued: false` znaczy „nie wiemy", a nie „nic się nie zmieniło", więc tryb aktualizacji zgłosi jawną lukę zamiast milczeć.\n\nDo przejrzenia przy okazji:\n\n- [ ] `deprecated[]` z release notes nowej serii\n- [ ] `keys{}` — nowe flagi i zmiany wartości domyślnych\n- [ ] `baseDistros` i `hostOs` z support matrix (RST, świadomie nieautomatyzowane)\n- [ ] `kolla` — seria kolla-ansible odpowiadająca wydaniu\n' "$(cat /tmp/report.txt)")"
