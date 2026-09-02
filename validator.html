@@ -205,7 +205,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       </svg>
       <span>Rackpathlabs<small data-i18n="brand.sub">OpenStack tooling</small></span>
     </div>
-    <nav id="nav" aria-label="Tools">
+    <nav id="nav" data-i18n-label="nav.tools" aria-label="Tools">
       <a href="index.html" data-i18n="nav.start">start</a>
       <a href="generator.html" data-i18n="nav.generator">globals.yml</a>
       <a href="validator.html" aria-current="page" data-i18n="nav.validator">inventory validator</a>
@@ -3363,23 +3363,29 @@ Paste the contents of your multinode file, or drag it here."
   /* Teksty stałe interfejsu biorą się ze znaczników data-i18n; teksty zależne od
      danych powstają w run() i renderach, więc po przełączeniu wystarczy je
      przeliczyć od nowa. */
-  function applyI18n() {
-    var nav = document.getElementById("nav");
-    if (nav) nav.setAttribute("aria-label", T("nav.tools"));
+/* == KOLLA-I18N-APPLY BEGIN — generowane z i18n-apply.js, nie edytuj w miejscu == */
+  /* Forma = atrybut niosący klucz plus UJŚCIE, do którego trafia tekst. `null` znaczy
+     treść elementu; wszystko inne to nazwa atrybutu. Dopisanie formy to jedna linia. */
+  var I18N_FORMS = [
+    { attr: "data-i18n",         sink: null },
+    { attr: "data-i18n-ph",      sink: "placeholder" },
+    { attr: "data-i18n-title",   sink: "title" },
+    { attr: "data-i18n-label",   sink: "aria-label" },
+    { attr: "data-i18n-content", sink: "content" }
+  ];
 
-    var nodes = document.querySelectorAll("[data-i18n]");
-    for (var i = 0; i < nodes.length; i++) nodes[i].innerHTML = T(nodes[i].getAttribute("data-i18n"));
-    nodes = document.querySelectorAll("[data-i18n-ph]");
-    for (i = 0; i < nodes.length; i++) nodes[i].setAttribute("placeholder", T(nodes[i].getAttribute("data-i18n-ph")));
-    nodes = document.querySelectorAll("[data-i18n-title]");
-    for (i = 0; i < nodes.length; i++) nodes[i].setAttribute("title", T(nodes[i].getAttribute("data-i18n-title")));
-    nodes = document.querySelectorAll("[data-i18n-label]");
-    for (i = 0; i < nodes.length; i++) nodes[i].setAttribute("aria-label", T(nodes[i].getAttribute("data-i18n-label")));
-    var metas = document.querySelectorAll("[data-i18n-content]");
-    for (var c = 0; c < metas.length; c++) {
-      metas[c].setAttribute("content", T(metas[c].getAttribute("data-i18n-content")));
+  function applyI18n() {
+    for (var f = 0; f < I18N_FORMS.length; f++) {
+      var form = I18N_FORMS[f];
+      var nodes = document.querySelectorAll("[" + form.attr + "]");
+      for (var i = 0; i < nodes.length; i++) {
+        var text = T(nodes[i].getAttribute(form.attr));
+        if (form.sink === null) nodes[i].innerHTML = text;
+        else nodes[i].setAttribute(form.sink, text);
+      }
     }
   }
+/* == KOLLA-I18N-APPLY END == */
 
 
   /* ---- start ---- */

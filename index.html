@@ -709,23 +709,32 @@ footer a{color:var(--muted)}
   var T = I18N.t;
   /* == KOLLA-I18N END == */
 
-  function apply() {
-    var nodes = document.querySelectorAll("[data-i18n]");
-    for (var i = 0; i < nodes.length; i++) {
-      nodes[i].innerHTML = T(nodes[i].getAttribute("data-i18n"));
-    }
-    var labels = document.querySelectorAll("[data-i18n-label]");
-    for (var j = 0; j < labels.length; j++) {
-      labels[j].setAttribute("aria-label", T(labels[j].getAttribute("data-i18n-label")));
-    }
-    var metas = document.querySelectorAll("[data-i18n-content]");
-    for (var c = 0; c < metas.length; c++) {
-      metas[c].setAttribute("content", T(metas[c].getAttribute("data-i18n-content")));
+/* == KOLLA-I18N-APPLY BEGIN — generowane z i18n-apply.js, nie edytuj w miejscu == */
+  /* Forma = atrybut niosący klucz plus UJŚCIE, do którego trafia tekst. `null` znaczy
+     treść elementu; wszystko inne to nazwa atrybutu. Dopisanie formy to jedna linia. */
+  var I18N_FORMS = [
+    { attr: "data-i18n",         sink: null },
+    { attr: "data-i18n-ph",      sink: "placeholder" },
+    { attr: "data-i18n-title",   sink: "title" },
+    { attr: "data-i18n-label",   sink: "aria-label" },
+    { attr: "data-i18n-content", sink: "content" }
+  ];
+
+  function applyI18n() {
+    for (var f = 0; f < I18N_FORMS.length; f++) {
+      var form = I18N_FORMS[f];
+      var nodes = document.querySelectorAll("[" + form.attr + "]");
+      for (var i = 0; i < nodes.length; i++) {
+        var text = T(nodes[i].getAttribute(form.attr));
+        if (form.sink === null) nodes[i].innerHTML = text;
+        else nodes[i].setAttribute(form.sink, text);
+      }
     }
   }
+/* == KOLLA-I18N-APPLY END == */
 
 
-  apply();
+  applyI18n();
 })();
 </script>
 </body>
