@@ -63,6 +63,7 @@
  * Użycie:
  *     node tools/check-a11y.js
  *     node tools/check-a11y.js --file validator.html      # jeden plik
+ *     node tools/check-a11y.js --theme tools/fixtures/theme/one.css   # inny arkusz
  */
 
 var fs = require("fs");
@@ -194,17 +195,74 @@ function audit(chrome, file) {
   return JSON.parse(m[1]);
 }
 
-var chrome = lib.findChrome();
-if (!chrome) {
+/* OBA MOTYWY, nie jeden. Motyw jasny wszedł razem z pomiarem (#16), a nie z obietnicą:
+   jego wartości nie są odwróceniem ciemnych, bo odwrócenie kanałów daje kontrast, który
+   wygląda na policzony i nie jest. Zestawy czytamy z tych samych bloków, w których żyją —
+   `:root{…}` to ciemny, `:root[data-theme="light"]{…}` to jasny. */
+var THEMES = {};
+(function () {
+  /* Ścieżka podmienialna argumentem, żeby dowód, że kontrola potrafi upaść, był TESTEM,
+     a nie czynnością wykonaną raz w dniu, w którym powstawała. */
+  var tArg = process.argv.indexOf("--theme");
+  var themeFile = tArg !== -1 ? path.resolve(process.argv[tArg + 1])
+                              : path.join(root, "theme.css");
+  var css;
+  try {
+    css = fs.readFileSync(themeFile, "utf8");
+  } catch (e) {
+    console.error("BŁĄD: nie mogę odczytać " + themeFile + " — " + e.message);
+    console.error("     Kontrast liczy się z tokenów; bez pliku nie ma czego policzyć,");
+    console.error("     a pominięta kontrola wygląda tak samo jak kontrola, która przeszła.");
+    process.exit(2);
+  }
+  function tokensOf(block) {
+    var out = {}, re = /--([a-z0-9-]+)\s*:\s*(#[0-9a-fA-F]{3,8})/g, m;
+    while ((m = re.exec(block))) out[m[1]] = m[2];
+    return out;
+  }
+  function blockAfter(marker) {
+    var i = css.indexOf(marker);
+    if (i === -1) return "";
+    var open = css.indexOf("{", i);
+    var close = css.indexOf("}", open);
+    return css.slice(open, close);
+  }
+  var dark = tokensOf(blockAfter("\n:root{"));
+  var light = tokensOf(blockAfter('[data-theme="light"]'));
+  /* Kod 2, nie 1 ani 0. Brak drugiego zestawu nie znaczy „drugi motyw jest w porządku"
+     — znaczy, że nie było czego zmierzyć. Gdyby scalenie niżej pobrało wtedy same
+     wartości ciemne, strażnik wypisałby dwie identyczne linie i nazwał je dwoma
+     motywami: zieleń przy NIEOBECNYM przedmiocie, dokładnie ta klasa awarii, którą
+     ten katalog strażników już raz zapłacił. */
+  if (!Object.keys(light).length) {
+    console.error("BŁĄD: " + themeFile + " nie ma bloku :root[data-theme=\"light\"].");
+    console.error("     Drugi zestaw tokenów NIE ZOSTAŁ zmierzony — to nie to samo,");
+    console.error("     co zmierzony i poprawny.");
+    process.exit(2);
+  }
+  /* Jasny dziedziczy to, czego sam nie nadpisuje — tak jak w kaskadzie. */
+  var merged = {};
+  Object.keys(dark).forEach(function (k) { merged[k] = dark[k]; });
+  Object.keys(light).forEach(function (k) { merged[k] = light[k]; });
+  THEMES = { ciemny: dark, jasny: merged };
+})();
+
+/* Kontrast liczy się z pliku, a nazwy i etykiety wymagają przeglądarki. Rozdzielenie
+   jest po to, żeby fixtura arkusza kosztowała odczyt pliku, a nie trzy przebiegi
+   Chrome'a — i żeby brak drugiego zestawu tokenów był widoczny PRZED nimi. */
+var contrastOnly = process.argv.indexOf("--contrast-only") !== -1;
+
+var chrome = contrastOnly ? null : lib.findChrome();
+if (!chrome && !contrastOnly) {
   console.error("FAIL brak przeglądarki do pomiaru dostępności. Ustaw CHROME=/ścieżka/do/chrome.");
   console.error("     Kontrola dostępności NIE jest pomijana po cichu: bez przeglądarki");
   console.error("     nie ma wyrenderowanej strony, a nazwa dostępna jest jej własnością.");
   process.exit(2);
 }
-console.log("przeglądarka: " + chrome);
+if (!contrastOnly) console.log("przeglądarka: " + chrome);
 
 var bad = 0;
-PAGES.forEach(function (file) {
+(contrastOnly ? [] : PAGES).forEach(function (file) {
   var r = audit(chrome, file);
   var n = r.names.length + r.labels.length + r.headings.length;
   if (!n) { console.log("OK   " + file + " — nazwy, etykiety i poziomy nagłówków w porządku"); return; }
@@ -230,12 +288,6 @@ PAGES.forEach(function (file) {
  * PRÓG 4.5:1 to WCAG 2.1 AA dla tekstu zwykłego. Tekst duży ma niższy próg (3:1), ale
  * rozmiar zależy od reguły CSS, nie od tokenu — więc stosujemy próg ostrzejszy dla
  * wszystkiego. Pomyłka idzie w stronę zawyżonego wymagania, nie zaniżonego. */
-var TOKENS = {};
-(function () {
-  var css = fs.readFileSync(path.join(root, "theme.css"), "utf8");
-  var re = /--([a-z0-9-]+)\s*:\s*(#[0-9a-fA-F]{3,8})/g, m;
-  while ((m = re.exec(css))) TOKENS[m[1]] = m[2];
-})();
 
 function channel(v) {
   var c = v / 255;
@@ -255,37 +307,70 @@ function ratio(a, b) {
 
 /* Pary FAKTYCZNIE występujące w arkuszach, sprawdzone gripem po `color:var(--x)`
    obok `background:var(--y)`. Nie każda kombinacja tokenów jest parą. */
+/* Pary są parami FAKTYCZNIE WYSTĘPUJĄCYMI na ekranie, nie iloczynem kartezjańskim
+   tokenów. Iloczyn dałby setki liczb, z których większość opisuje zestawienie, którego
+   żadna reguła nie tworzy — a strażnik, który każe naprawiać nieistniejące, zostaje
+   wyłączony przy pierwszej niewygodzie.
+
+   Druga połowa listy weszła z #16 razem z tokenami, które nazwała: dopóki kolor siedział
+   w regule jako `#0c1116`, nie było czego wpisać do pary, więc tekst edytora, numeracja
+   linii i podświetlenie składni nie były mierzone WCALE. To nie jest zaostrzenie progu,
+   tylko poszerzenie przedmiotu — ta sama klasa, co nowy scenariusz w innym mierniku. */
 var PAIRS = [
   ["fg", "bg"], ["muted", "bg"], ["dim", "bg"],
   ["fg", "panel"], ["muted", "panel"], ["dim", "panel"],
   ["fg", "panel-2"], ["muted", "panel-2"],
   ["blue", "bg"], ["blue", "panel"],
   ["accent", "panel"], ["accent", "bg"],
-  ["amber", "panel"], ["red", "panel"]
+  ["amber", "panel"], ["red", "panel"],
+  /* pola wejściowe i edytor */
+  ["fg", "sunken"], ["code-fg", "sunken"], ["gutter-fg", "gutter-bg"],
+  /* podświetlenie składni na tle edytora */
+  ["syn-c", "sunken"], ["syn-k", "sunken"], ["syn-p", "sunken"], ["syn-v", "sunken"],
+  /* tekst pomocniczy i plakietki */
+  ["fg-soft", "panel"], ["fg-soft", "bg"], ["muted", "chip"], ["dim", "chip-2"],
+  ["knob", "track"],
+  /* przyciski i stany */
+  ["on-accent", "accent-dim"], ["fg", "hover"], ["accent", "chip"],
+  ["blue-hover", "panel"], ["amber", "warn-bg"], ["red", "err-bg"]
 ];
 var AA = 4.5;
 var lowContrast = [];
-PAIRS.forEach(function (p) {
-  var fg = TOKENS[p[0]], bg = TOKENS[p[1]];
-  if (!fg || !bg) { lowContrast.push("brak tokenu: --" + p[0] + " / --" + p[1]); return; }
-  var r = ratio(fg, bg);
-  if (r < AA) {
-    lowContrast.push("--" + p[0] + " na --" + p[1] + ": " + r.toFixed(2) + ":1  (próg " + AA + ")");
-  }
+Object.keys(THEMES).forEach(function (theme) {
+  var TOK = THEMES[theme];
+  PAIRS.forEach(function (p) {
+    var fg = TOK[p[0]], bg = TOK[p[1]];
+    if (!fg || !bg) {
+      lowContrast.push(theme + ": brak tokenu --" + p[0] + " / --" + p[1]); return;
+    }
+    var r = ratio(fg, bg);
+    if (r < AA) {
+      lowContrast.push(theme + ": --" + p[0] + " na --" + p[1] + " = " + r.toFixed(2) +
+                       ":1  (próg " + AA + ")");
+    }
+  });
 });
 console.log("");
 /* Najgorsza para wypisana ZAWSZE, także gdy przechodzi. Zieleń bez liczby nie mówi,
    czy motyw ma zapas, czy stoi o setną nad progiem — a to jest cała różnica między
    „sprawdzone" a „bezpieczne przy najbliższej zmianie koloru". */
-var worst = null;
-PAIRS.forEach(function (p) {
-  if (!TOKENS[p[0]] || !TOKENS[p[1]]) return;
-  var r = ratio(TOKENS[p[0]], TOKENS[p[1]]);
-  if (!worst || r < worst.r) worst = { r: r, name: "--" + p[0] + " na --" + p[1] };
+var worstPer = {};
+Object.keys(THEMES).forEach(function (theme) {
+  var TOK = THEMES[theme];
+  PAIRS.forEach(function (p) {
+    if (!TOK[p[0]] || !TOK[p[1]]) return;
+    var r = ratio(TOK[p[0]], TOK[p[1]]);
+    if (!worstPer[theme] || r < worstPer[theme].r) {
+      worstPer[theme] = { r: r, name: "--" + p[0] + " na --" + p[1] };
+    }
+  });
 });
-console.log("kontrast: " + PAIRS.length + " par z theme.css sprawdzonych wobec WCAG AA " +
-            AA + ":1   poniżej progu: " + lowContrast.length +
-            (worst ? "   najgorsza: " + worst.name + " = " + worst.r.toFixed(2) + ":1" : ""));
+console.log("kontrast: " + PAIRS.length + " par x " + Object.keys(THEMES).length +
+            " motywy wobec WCAG AA " + AA + ":1   poniżej progu: " + lowContrast.length);
+Object.keys(worstPer).forEach(function (theme) {
+  console.log("  najgorsza para, motyw " + theme + ": " + worstPer[theme].name +
+              " = " + worstPer[theme].r.toFixed(2) + ":1");
+});
 lowContrast.forEach(function (x) { console.log("  ZA NISKI KONTRAST  " + x); });
 bad += lowContrast.length;
 
