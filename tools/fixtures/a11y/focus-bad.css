@@ -1,0 +1,4 @@
+/* Fixtura pierscienia fokusu. Jedno naruszenie i jedna przyneta, oraz brak
+   :focus-visible w pliku pierwszym — czyli drugie zdanie tego kryterium. */
+button:focus{outline:none}
+input:focus{outline:none;box-shadow:0 0 0 3px #3ddc97}

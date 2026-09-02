@@ -113,6 +113,12 @@ check has to stand — are in [docs/PRINCIPLES.md](docs/PRINCIPLES.md). The oper
 rules for making a change — git and review hygiene, and which thresholds a change may
 move — are in [CLAUDE.md](CLAUDE.md).
 
+Two checks cannot be automated and are written out as a ten-minute keyboard pass in
+[docs/MANUAL-CHECKS.md](docs/MANUAL-CHECKS.md): whether the tools can actually be traversed
+with Tab, and whether anything traps focus. `tools/check-a11y.js` proves the construction
+that makes traversal possible, which is a different sentence — a script cannot produce a
+trusted keyboard event, so it cannot press Tab.
+
 Code shared between tools lives in `matrix.js`, `globals-parser.js` and `theme.css`, and
 is pasted byte-identically into each file that needs it; CI fails if the copies drift.
 Most of the suite needs only Node, but the rendering and network sections drive headless

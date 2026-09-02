@@ -1,0 +1,57 @@
+<!doctype html>
+<!-- Fixtura konstrukcji obsługi klawiaturą: po jednym naruszeniu na kryterium i przynęta
+     przy każdym. Przynęty są tu ważniejsze od naruszeń — kryterium za szerokie oskarża
+     kod zbudowany dobrze, a wtedy zostaje wyłączone przy pierwszej niewygodzie. -->
+<html lang="en"><head><meta charset="utf-8"><title>fixture</title>
+<style>
+:root{ --fg:#e6edf3; --bg:#0e1318 }
+body{background:var(--bg);color:var(--fg);font:14px sans-serif}
+.klikacz{cursor:pointer}
+.przyneta-kontener{cursor:default}
+</style></head>
+<body>
+<h1>keyboard fixture</h1>
+
+<!-- (a) NARUSZENIE: div z nasluchem, wyglada na klikalny, fokusu nie przyjmuje -->
+<div id="klik-div" class="klikacz">udaje przycisk</div>
+
+<!-- (a) NARUSZENIE: onclick w markupie na elemencie niefokusowalnym -->
+<span id="klik-inline" onclick="void 0">tez udaje</span>
+
+<!-- (a) PRZYNETA: delegacja — nasluch na kontenerze, cele sa przyciskami -->
+<ul id="delegacja" class="przyneta-kontener">
+  <li><button type="button" id="cel-1">prawdziwy cel</button></li>
+</ul>
+
+<!-- (a) PRZYNETA: kontener z nasluchem, w ktorym nic nie wyglada na klikalne -->
+<ul id="pusty-kontener" class="przyneta-kontener"><li>tylko zdanie zachety</li></ul>
+
+<!-- (b) NARUSZENIE: dodatni tabindex przestawia kolejnosc globalnie -->
+<button type="button" id="tab-dodatni" tabindex="3">wyprzedza wszystkich</button>
+
+<!-- (b) NARUSZENIE: -1 na elemencie widocznym, czyli w drzewie dostepnosci -->
+<a href="#x" id="tab-minus" tabindex="-1">mysz tak, Tab nie</a>
+
+<!-- (b) PRZYNETA: -1 na elemencie zdjetym z drzewa — znany wzorzec ukrytego pola pliku -->
+<span aria-hidden="true"><input type="file" id="tab-ukryty" tabindex="-1" aria-label="hidden file input"></span>
+
+<!-- (d) NARUSZENIE: kontener diagnostyki bez aria-live -->
+<ul id="diag"><li>finding, o ktorym nikt sie nie dowie</li></ul>
+
+<!-- (e) NARUSZENIE: pole niepoprawne opisane wylacznie wlasna podpowiedzia -->
+<label for="pole-zle">pole zle</label>
+<input id="pole-zle" aria-invalid="true" aria-describedby="h-pole-zle">
+<p id="h-pole-zle">podpowiedz, ktora stoi tu zawsze</p>
+
+<!-- (e) PRZYNETA: pole niepoprawne z opisem niosacym tresc findingu -->
+<label for="pole-ok">pole ok</label>
+<input id="pole-ok" aria-invalid="true" aria-describedby="h-pole-ok f-pole-ok">
+<p id="h-pole-ok">podpowiedz</p>
+<p id="f-pole-ok">this value is required</p>
+
+<script>
+document.getElementById("klik-div").addEventListener("click", function () {});
+document.getElementById("delegacja").addEventListener("click", function () {});
+document.getElementById("pusty-kontener").addEventListener("click", function () {});
+</script>
+</body></html>

@@ -1,0 +1,28 @@
+# Working rules
+
+Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. 
+
+## Never write a closing keyword next to an issue number
+
+Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. 
+
+## A ratchet threshold may only fall
+
+Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. 
+
+## A milestone's name describes what is in it
+
+Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. 
+
+**The defect that produced this rule.** Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. 
+## Commits carry the project identity, never a person
+
+Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika.
+
+## A citation carries the evidence; the SHA is an aid
+
+Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika.
+
+## A guard's criterion never rides in a commit that changes the product
+
+Zapis pomiaru jedzie z commitem, kryterium strażnika nie. Nieegzekwowana.
