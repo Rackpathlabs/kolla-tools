@@ -183,6 +183,24 @@ var axeSmieci = run("axe-report.js", ["tools/fixtures/axe/uciety.json", "--rc", 
 R.ok("uszkodzony JSON -> też „nie odbył się”", /Audyt się nie odbył/.test(axeSmieci.out),
      axeSmieci.out.split("\n")[0]);
 
+/* Drugi kandydat. Narzędzie raz zapisuje plik, a raz wypisuje wynik na standardowe wyjście
+   — zmierzone na przebiegu 33618502648, gdzie kod wyjścia był zerowy, stderr puste, a pliku
+   nie było. Gadanina przed JSON-em jest częścią tej samej sytuacji. */
+var axeDrugi = run("axe-report.js",
+                   ["tools/fixtures/axe/nie-ma-takiego.json", "tools/fixtures/axe/z-gadanina.txt",
+                    "--rc", "0"]);
+R.ok("drugi kandydat jest czytany, gdy pierwszego nie ma",
+     /Znalezisk axe-core: \*\*1\*\*/.test(axeDrugi.out), axeDrugi.out.split("\n")[0]);
+R.ok("gadanina przed JSON-em nie przeszkadza", !/Audyt się nie odbył/.test(axeDrugi.out));
+
+var axeNic = run("axe-report.js",
+                 ["tools/fixtures/axe/nie-ma-takiego.json", "tools/fixtures/axe/tez-nie-ma.txt",
+                  "--rc", "0"]);
+R.ok("gdy żaden kandydat nie da się przeczytać -> „nie odbył się”",
+     /Audyt się nie odbył/.test(axeNic.out), axeNic.out.split("\n")[0]);
+R.ok("i wymienia OBA sprawdzone miejsca, żeby było gdzie szukać",
+     /nie-ma-takiego\.json.*tez-nie-ma\.txt/.test(axeNic.out));
+
 /* ---- check-print: co naprawdę wychodzi z drukarki ---- */
 /* Trzy uruchomienia Chrome'a na jednostronicowej fixturze. Strażnik niesie WŁASNĄ kontrolę
    w każdym przebiegu — wariant z unieważnionym blokiem druku — więc dowód, że potrafi

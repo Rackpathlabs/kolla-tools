@@ -97,6 +97,11 @@ jobs:
             http://127.0.0.1:8123/validator.html \
             --save /tmp/axe.json --stdout > /tmp/axe.stdout 2>/tmp/axe.stderr
           echo "rc=$?" >> "$GITHUB_OUTPUT"
+          # Co naprawdę powstało — do logu, żeby następna awaria dała się rozstrzygnąć bez
+          # zgadywania. Przebieg 33618502648 wyszedł z kodem 0, pustym stderr i bez pliku
+          # wskazanego przez --save; bez tego listingu nie było czego obejrzeć.
+          ls -la /tmp/axe.json /tmp/axe.stdout 2>&1 | head -5
+          head -3 /tmp/axe.stdout 2>/dev/null || true
           tail -20 /tmp/axe.stderr || true
 
       # PRZEBIEG, KTÓRY SIĘ NIE ODBYŁ, MA WYGLĄDAĆ INACZEJ NIŻ PRZEBIEG BEZ ZNALEZISK.
@@ -117,7 +122,10 @@ jobs:
         run: |
           set -euo pipefail
           TITLE="Dostępność: cotygodniowy audyt axe-core"
-          BODY="$(node tools/axe-report.js /tmp/axe.json \
+          # DWA KANDYDATY, bo @axe-core/cli raz zapisuje plik, a raz wypisuje wynik na
+          # standardowe wyjście — zależnie od wersji i przełączników. Pierwszy, z którego
+          # da się przeczytać JSON, wygrywa; jeśli żaden, raport mówi „nie odbył się".
+          BODY="$(node tools/axe-report.js /tmp/axe.json /tmp/axe.stdout \
                     --rc "$RC" --stderr /tmp/axe.stderr \
                     --run "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}")"
 
