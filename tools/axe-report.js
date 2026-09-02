@@ -1,0 +1,107 @@
+/* Raport z audytu axe-core → treść zgłoszenia. Czytany przez .github/workflows/a11y-audit.yml.
+ *
+ * DLACZEGO W DRZEWIE, A NIE W WORKFLOW. Skrypt wklejony w krok YAML-a jest kodem, którego
+ * nikt nie uruchomi lokalnie i którego nie pokrywa żaden test — a ten akurat odpowiada za
+ * ROZRÓŻNIENIE, które jest w tym repozytorium najważniejsze: „przebieg się nie odbył" musi
+ * wyglądać inaczej niż „przebieg nie znalazł nic". Zerwana sieć, zmiana nazwy paczki albo
+ * padnięty chromedriver dałyby inaczej zgłoszenie „brak znalezisk", czyli najgorszy możliwy
+ * wynik: taki, który wygląda jak dobra wiadomość. To jest ten sam kod 2, co u strażników,
+ * tylko wypisany prozą do zgłoszenia.
+ *
+ * AXE NIE JEST BRAMKĄ i ten plik o tym pisze w każdym raporcie. Zestaw reguł cudzej paczki
+ * zmienia się między wydaniami; kryterium bramkujące na nim oparte znaczy, że aktualizacja
+ * u kogoś innego wywala build tutaj bez jednej zmiany w tym repozytorium. Wtedy dzieje się
+ * rzecz gorsza od czerwonego builda: ktoś przypina wersję i przestaje ją podnosić.
+ * Bramką zostają tools/check-a11y.js i tools/check-print.js — kryteria pierwszej ręki.
+ *
+ * Użycie:
+ *     node tools/axe-report.js <raport.json> [--rc N] [--stderr plik] [--run URL]
+ *
+ * Zawsze kod 0: to jest generator tekstu, nie kontrola. Czerwień, gdyby tu była, zamieniłaby
+ * audytora w bramkę tylnymi drzwiami.
+ */
+
+var fs = require("fs");
+
+function arg(name) {
+  var i = process.argv.indexOf(name);
+  return i !== -1 ? process.argv[i + 1] : null;
+}
+
+var plik = process.argv[2];
+var rc = arg("--rc") || "?";
+var errPlik = arg("--stderr");
+var run = arg("--run");
+var stopka = run ? "\nPrzebieg: " + run + "\n" : "";
+
+function nieOdbylSie(powod) {
+  var err = "";
+  if (errPlik) {
+    try { err = fs.readFileSync(errPlik, "utf8").split("\n").slice(-20).join("\n"); }
+    catch (e) { err = "(nie ma czego pokazać)"; }
+  }
+  return "**Audyt się nie odbył.** " + powod + " Kod wyjścia `npx`: `" + rc + "`.\n" +
+    "\n" +
+    "To NIE znaczy, że znalezisk nie ma — znaczy, że nikt ich nie szukał. Zgłoszenie\n" +
+    "powstaje właśnie po to, żeby te dwie sytuacje nie wyglądały tak samo: przebieg,\n" +
+    "który się nie odbył, i przebieg czysty.\n" +
+    "\n" +
+    "Ostatnie linie stderr:\n\n```\n" + (err.trim() || "(brak)") + "\n```\n" + stopka;
+}
+
+var surowe;
+try {
+  surowe = fs.readFileSync(plik, "utf8");
+} catch (e) {
+  process.stdout.write(nieOdbylSie("Raport `" + plik + "` nie powstał."));
+  process.exit(0);
+}
+var dane;
+try {
+  dane = JSON.parse(surowe);
+} catch (e) {
+  process.stdout.write(nieOdbylSie("Raport `" + plik + "` nie jest poprawnym JSON-em."));
+  process.exit(0);
+}
+
+var strony = Array.isArray(dane) ? dane : [dane];
+if (!strony.length) {
+  process.stdout.write(nieOdbylSie("Raport nie zawiera ani jednej strony."));
+  process.exit(0);
+}
+
+var razem = 0, sekcje = [];
+strony.forEach(function (p) {
+  var url = p.url || "(bez adresu)";
+  var v = p.violations || [];
+  v.forEach(function (r) { razem += (r.nodes || []).length; });
+  sekcje.push("### " + url + "\n");
+  if (!v.length) { sekcje.push("Bez znalezisk.\n"); return; }
+  sekcje.push("| reguła | waga | wystąpień | opis |");
+  sekcje.push("|---|---|---|---|");
+  v.forEach(function (r) {
+    sekcje.push("| `" + (r.id || "?") + "` | " + (r.impact || "?") + " | " +
+                (r.nodes || []).length + " | " +
+                String(r.help || "").split("|").join("\\|") + " |");
+  });
+  sekcje.push("");
+});
+
+process.stdout.write(
+  "Znalezisk axe-core: **" + razem + "** na " + strony.length + " stronach. " +
+  "Treść nadpisywana przy każdym przebiegu.\n" +
+  "\n" +
+  "**To jest audyt, nie bramka.** Nic tu nie blokuje builda i nic nie musi zostać naprawione\n" +
+  "w ciągu tygodnia. Znalezisko jest kandydatem do przeglądu przez człowieka: część reguł\n" +
+  "axe opisuje wzorce, które w tym interfejsie są świadomą decyzją, a część opisuje\n" +
+  "prawdziwe wady. Rozstrzyga czytelnik, nie liczba.\n" +
+  "\n" +
+  "Kryteria bramkujące żyją w `tools/check-a11y.js` i `tools/check-print.js` i są zmienialne\n" +
+  "wyłącznie stąd — po to, żeby wydanie cudzej paczki nie mogło wywalić builda bez jednej\n" +
+  "zmiany w tym repozytorium.\n" +
+  "\n" +
+  "**Czego ten audyt NIE widzi**, żeby cisza nie uchodziła za pokrycie: motyw jest jeden —\n" +
+  "ten, w którym strona otwiera się bez zapisanego wyboru. Kontrast w OBU motywach liczy\n" +
+  "`tools/check-a11y.js`, arytmetyką WCAG, z tokenów.\n" +
+  "\n" + sekcje.join("\n") + stopka);
+process.exit(0);
