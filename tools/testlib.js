@@ -129,6 +129,15 @@ function installDom() {
     removeEventListener: function () {}
   };
   global.getComputedStyle = global.window.getComputedStyle;
+  /* Adres i historia. Generator czyta `location.hash` przy starcie (#15), a bez tych
+     dwóch samo wczytanie narzędzia rzuca wyjątkiem — test ma sprawdzać reguły, nie
+     przewracać się na szkielecie strony.
+
+     ZNACZONE, bo pusty fragment jest odpowiedzią NIEODRÓŻNIALNĄ od poprawnej: „nie ma
+     linku" i „nie wiem, czy jest link" wyglądają tu tak samo. Test, który chce fragment,
+     ustawia go sam — i wtedy odpowiedź przestaje pochodzić z niewiedzy stuba. */
+  global.location = mark({ hash: "", href: "file:///generator.html", protocol: "file:" });
+  global.history = { replaceState: function (a, b, url) { global.location.hash = url || ""; } };
   global.navigator = {};
   /* Walidator rejestruje setInterval na oznaczanie nieaktualności wyniku. Pod
      Node'em ZAWSZE go zaślepiamy, także gdy prawdziwy istnieje: żywy zegar trzyma
