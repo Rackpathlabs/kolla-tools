@@ -38,6 +38,7 @@ about
 above
 absence
 absent
+accept
 acknowledged
 acknowledging
 acknowledgment
@@ -79,6 +80,7 @@ answer
 antelope
 any
 anyone
+anything
 api
 appear
 appears
@@ -127,6 +129,7 @@ bfd
 binds
 block
 blocked
+blocks
 bmc
 bond
 bookworm
@@ -152,6 +155,7 @@ by
 c
 ca
 call
+calls
 can
 candidate
 cannot
@@ -166,6 +170,7 @@ ceph
 cephadm
 certificate
 certificates
+change
 changed
 changes
 changing
@@ -179,6 +184,7 @@ children
 choice
 chosen
 cinder
+circumstances
 classic
 clean
 clear
@@ -213,6 +219,7 @@ configured
 conflict
 conflicting
 constructs
+contact
 contain
 container
 containers
@@ -338,6 +345,7 @@ error
 errors
 escalation
 etc
+etcd
 evacuate
 evacuates
 evacuating
@@ -434,6 +442,7 @@ guest
 gw
 ha
 hacluster
+half
 handed
 handle
 hang
@@ -668,6 +677,7 @@ not
 note
 notes
 nothing
+noting
 nova
 now
 nowhere
@@ -718,6 +728,7 @@ parameters
 parent
 parser
 part
+partition
 parts
 pass
 passes
@@ -729,6 +740,7 @@ pattern
 pending
 people
 per
+persist
 physical
 pick
 picks
@@ -759,6 +771,7 @@ prometheus
 provider
 public
 publishes
+publishing
 pushes
 puts
 qemu
@@ -804,6 +817,7 @@ releases
 remain
 remote
 remotes
+remove
 removed
 rename
 renamed
@@ -818,6 +832,7 @@ requires
 resembles
 reserve
 resource
+resources
 restart
 restore
 restored
