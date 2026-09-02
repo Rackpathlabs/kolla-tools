@@ -78,6 +78,12 @@ echo
 echo "== spójność bloków współdzielonych =="
 bash tools/check-blocks.sh || rc=1
 
+# Czy reguła w ogóle sięga po token motywu. check-a11y.js liczy, czy token ma kontrast;
+# ten pyta, czy reguła bierze udział w podmianie. Dopiero dwa razem są pełnym zdaniem.
+echo
+echo "== kolory poza blokiem motywu =="
+"$NODE" tools/check-theme-tokens.js || rc=1
+
 echo
 echo "== składnia =="
 extract_script generator.html .gen.test.tmp.js

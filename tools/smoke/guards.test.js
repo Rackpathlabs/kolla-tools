@@ -113,8 +113,54 @@ R.ok("PRZYNĘTA: powrót w górę o dwa poziomy jest legalny", !/h3 -> h2/.test(
 /* Kontrast liczony jest z tokenów i wypisywany ZAWSZE — także gdy przechodzi. Zieleń
    bez liczby nie mówi, czy motyw ma zapas, czy stoi o setną nad progiem. */
 R.ok("kontrast wypisuje NAJGORSZĄ parę, nie samo „zero poniżej progu”",
-     /najgorsza: --[a-z0-9-]+ na --[a-z0-9-]+ = \d+\.\d+:1/.test(a11yBad.out),
-     a11yBad.out.split("\n").filter(function (l) { return /kontrast/.test(l); })[0]);
+     /najgorsza para, motyw ciemny: --[a-z0-9-]+ na --[a-z0-9-]+ = \d+\.\d+:1/.test(a11yBad.out),
+     a11yBad.out.split("\n").filter(function (l) { return /najgorsza/.test(l); })[0]);
+
+/* OBA MOTYWY (#16). Jasny wchodzi z pomiarem, nie z obietnicą, więc trzy zdania muszą
+   dać się pokazać na fixturze: że najgorsza para jest wypisywana PER MOTYW, że brak
+   drugiego zestawu to „nie zmierzyłem" (kod 2), a nie cisza, i że upadek w drugim
+   zestawie nazywa motyw — inaczej dwa zestawy raportowałyby się jak jeden. */
+R.ok("najgorsza para osobno dla motywu jasnego",
+     /najgorsza para, motyw jasny: --[a-z0-9-]+ na --[a-z0-9-]+ = \d+\.\d+:1/.test(a11yBad.out),
+     a11yBad.out.split("\n").filter(function (l) { return /jasny/.test(l); })[0]);
+
+var oneP = run("check-a11y.js", ["--contrast-only", "--theme",
+                                 "tools/fixtures/theme/one-palette.css"]);
+R.ok("arkusz z jednym zestawem tokenów -> kod 2, nie zieleń", oneP.code === 2, kod(oneP));
+R.ok("i mówi, że drugi zestaw NIE ZOSTAŁ zmierzony",
+     /NIE ZOSTAŁ zmierzony/.test(oneP.err), oneP.err.split("\n")[0]);
+
+var lowL = run("check-a11y.js", ["--contrast-only", "--theme",
+                                 "tools/fixtures/theme/low-light.css"]);
+R.ok("zbyt niski kontrast w drugim zestawie -> czerwone", lowL.code === 1, kod(lowL));
+R.ok("i naruszenie nazywa MOTYW, nie samą parę",
+     /ZA NISKI KONTRAST\s+jasny: --fg na --bg/.test(lowL.out),
+     lowL.out.split("\n").filter(function (l) { return /ZA NISKI/.test(l); })[0]);
+R.ok("PRZYNĘTA: zestaw ciemny tej fixtury przechodzi",
+     !/ZA NISKI KONTRAST\s+ciemny: --/.test(lowL.out));
+
+/* ---- check-theme-tokens: czy reguła w ogóle sięga po token ---- */
+var themeOk = run("check-theme-tokens.js", ["index.html", "generator.html", "validator.html"]);
+R.ok("trzy pliki narzędzi -> każda reguła sięga po token", themeOk.code === 0, kod(themeOk));
+
+var themeBad = run("check-theme-tokens.js", ["tools/fixtures/theme/literal.html"]);
+R.ok("kolor nieprzezroczysty poza blokiem motywu -> czerwone", themeBad.code === 1,
+     kod(themeBad));
+R.ok("DOKŁADNIE jedno trafienie, czyli przynęty nie wpadły",
+     /kolory nieprzezroczyste poza KOLLA-THEME: 1\b/.test(themeBad.out),
+     themeBad.out.split("\n").filter(function (l) { return /poza KOLLA-THEME/.test(l); })[0]);
+R.ok("i wskazuje pozycję, a nie samą liczbę", /literal\.html:\d+\s+#131a21/.test(themeBad.out));
+R.ok("PRZYNĘTA: nakładka rgba() kompozytuje się z tłem, więc nie jest trafieniem",
+     themeBad.out.indexOf("przyneta-alfa") === -1 && !/rgba\(/.test(themeBad.out));
+R.ok("PRZYNĘTA: zapis ośmiocyfrowy niesie alfę i podlega temu samemu zwolnieniu",
+     themeBad.out.indexOf("#131a2180") === -1);
+R.ok("PRZYNĘTA: definicja tokenu wewnątrz bloku motywu nie jest trafieniem",
+     !/#0e1318|#e6edf3|#26313c/.test(themeBad.out));
+R.ok("PRZYNĘTA: atrybut SVG w markupie jest poza zakresem",
+     themeBad.out.indexOf("#3ddc97") === -1);
+
+var themeGone = run("check-theme-tokens.js", ["tools/fixtures/theme/nie-ma-takiego.html"]);
+R.ok("brak pliku -> kod 2 („nie zmierzyłem”), nie 1", themeGone.code === 2, kod(themeGone));
 
 /* ---- check-literals: liczy ujścia tekstu ---- */
 var clean = run("check-literals.js", ["tools/fixtures/clean.js"]);

@@ -1,0 +1,10 @@
+/* Fixtura: dwa warianty jasne, które się rozjechały. Czysty CSS wymusza powtórzenie
+   listy — ten plik pokazuje, co się dzieje, gdy powtórzenie przestaje być kopią.
+   Rozjazd jest na JEDNYM tokenie i to jedno ma zostać zgłoszone. */
+/* == KOLLA-THEME BEGIN == */
+:root{ --bg:#0e1318; --fg:#e6edf3 }
+:root[data-theme="light"]{ --bg:#f6f8fa; --fg:#1c2128 }
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){ --bg:#ffffff; --fg:#1c2128 }
+}
+/* == KOLLA-THEME END == */
