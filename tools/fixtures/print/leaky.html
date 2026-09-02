@@ -1,0 +1,48 @@
+<!doctype html>
+<!-- Fixtura: strona z blokiem druku, który NIE dosięga własnych reguł.
+     Ciemna paleta w `:root`, blok `@media print` podmienia tylko dwa tokeny z czterech,
+     więc na papier przecieka --panel i --fg. Sterowanie jest ukryte poprawnie, żeby
+     czerwone było jedno i dało się powiedzieć, które.
+
+     `var stan = "system";` niżej jest tym, co check-print.js podmienia, żeby wymusić
+     motyw ekranowy — fixtura musi mieć ten sam kształt co produkt, bo inaczej sprawdzałaby
+     inną drogę niż ta, która działa naprawdę. -->
+<html lang="en"><head><meta charset="utf-8"><title>fixture</title>
+<style>
+:root{
+  --bg:#0e1318; --panel:#151b22; --fg:#e6edf3; --line:#26313c; --muted:#8b98a5;
+}
+:root[data-theme="light"]{
+  --bg:#f6f8fa; --panel:#ffffff; --fg:#1c2128; --line:#d0d7de; --muted:#57606a;
+}
+@media print{
+  :root,
+  :root:not([data-theme]),
+  :root[data-theme="light"],
+  :root[data-theme="dark"]{
+    --bg:#ffffff; --line:#9aa4ae; --fg:#000000;
+  }
+  nav, button{ display:none !important }
+}
+body{background:var(--bg);color:var(--fg);font:14px sans-serif;margin:0}
+.karta{background:var(--panel);border:1px solid var(--line);padding:20px;margin:20px}
+.szary{color:var(--muted)}
+nav a{color:var(--fg)}
+</style>
+<script>
+var stan = "system";
+document.addEventListener("DOMContentLoaded", function () {
+  if (stan !== "system") document.documentElement.setAttribute("data-theme", stan);
+});
+</script>
+</head>
+<body>
+<nav><a href="#a">nawigacja, ktora ma zniknac na papierze</a></nav>
+<button type="button">przycisk, ktory ma zniknac na papierze</button>
+<div class="karta">
+  <p>Tresc, ktora ma zostac na papierze i ma byc czarna.</p>
+  <p class="szary">Ten akapit uzywa tokenu --muted, ktorego blok druku NIE podmienia,
+  wiec na papier wychodzi wartosc z ciemnej palety. To jest przeciek, ktory strazniк
+  ma nazwac po imieniu tokenu.</p>
+</div>
+</body></html>

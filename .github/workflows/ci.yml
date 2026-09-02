@@ -177,6 +177,14 @@ jobs:
       - name: "Dostępność: pierwsze przejście"
         run: node tools/check-a11y.js
 
+      # WYDRUK (#16). Jedyne wyjście, na które nikt nie patrzy codziennie, więc jego awaria
+      # żyje najdłużej — a od motywu jasnego jest ich dwa razy więcej do popsucia. Mierzone
+      # na PDF-ie z --print-to-pdf, rozpakowanym zlibem z Node'a: zero zależności npm.
+      # Osobny krok, bo trzy wydruki na stronę to najdroższa sekcja z przeglądarką i jej
+      # czerwień ma być widoczna bez czytania całego zestawu.
+      - name: "Wydruk: kolory i sterowanie na papierze"
+        run: node tools/check-print.js
+
       - name: Żądania sieciowe na wykonanych scenariuszach
         run: node tools/check-network.js
 

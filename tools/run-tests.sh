@@ -157,6 +157,12 @@ echo
 echo "== dostępność: nazwy, etykiety, poziomy nagłówków, kontrast =="
 "$NODE" tools/check-a11y.js || rc=1
 
+# Czwarta sekcja z przeglądarką. Wydruk jest jedynym wyjściem, na które nikt nie patrzy
+# codziennie, więc jego awaria żyje najdłużej. Mierzone na PDF-ie, nie na deklaracji CSS.
+echo
+echo "== wydruk: kolory i sterowanie na papierze =="
+"$NODE" tools/check-print.js || rc=1
+
 echo
 echo "== żądania sieciowe na wykonanych scenariuszach =="
 "$NODE" tools/check-network.js || rc=1
