@@ -12,6 +12,46 @@
 
 var fs = require("fs");
 
+/* ---- ZNACZNIK ODPOWIEDZI, KTÓREJ STUB NIE UMIE UDZIELIĆ (#68) ---------------
+ *
+ * Stub nie odpowiadał „nie wiem"; odpowiadał „nic nie znalazłem", a to jest odpowiedź
+ * NIEODRÓŻNIALNA OD POPRAWNEGO WYNIKU. Kontrola napisana odruchowo —
+ * `document.querySelectorAll("[data-i18n]")`, pętla, „OK, wszystkie klucze produkują
+ * tekst" — zapala się na zielono po sprawdzeniu ZERA pozycji. Na generator.html
+ * z commita, w którym pięćdziesiąt podstawień renderowało się pusto, dałaby to samo
+ * zielone. To jest #59 przeniesione do oprzyrządowania, czyli tam, gdzie nikt się go
+ * nie spodziewa, bo od instrumentu oczekuje się prawdy o przedmiocie.
+ *
+ * DLACZEGO ZNACZNIK, A NIE WYJĄTEK. Wyjątek byłby uczciwszy i tak radzi sobie loadTool
+ * niżej — ale `querySelectorAll` woła SAM PRODUKT: applier data-i18n* wykonuje się przy
+ * każdym wczytaniu narzędzia. Rzucanie zabiłoby check-english.js, oba testy dymne i trzy
+ * goldeny, czyli wszystko, co ładuje narzędzie. Znacznik daje to samo rozróżnienie bez
+ * tego kosztu: pusta lista dalej zachowuje się jak pusta lista, ale DA SIĘ ZAPYTAĆ, czy
+ * jest pomiarem, czy niewiedzą.
+ *
+ * DLACZEGO NIE KOMENTARZ W NAGŁÓWKU. Bo odruchem jest napisać `querySelectorAll`
+ * i spojrzeć na wynik, a nie przeczytać nagłówek pliku, który się `require`'uje.
+ * To repozytorium ma tę mechanikę zapisaną gdzie indziej: martwy wyjątek z uzasadnieniem
+ * jest groźniejszy od martwego bez niego, bo uzasadnienie jest tym, co powstrzymuje
+ * przed sprawdzeniem.
+ *
+ * Znacznik jest NIEWYLICZALNY, więc nie zmienia niczego, co iteruje po tablicy albo
+ * po kluczach obiektu. */
+var STUBBED = "stubbed";
+
+function mark(x) {
+  if (x && typeof x === "object") {
+    Object.defineProperty(x, STUBBED, { value: true, enumerable: false, configurable: true });
+  }
+  return x;
+}
+
+/* Publiczne pytanie: czy ta odpowiedź pochodzi z niewiedzy stuba? Kontrola, która pyta
+   DOM o cokolwiek, może się teraz dowiedzieć, że nie dostała pomiaru. */
+function stubbed(x) {
+  return !!(x && typeof x === "object" && x[STUBBED] === true);
+}
+
 function stubNode(id) {
   return {
     id: id, value: "", checked: false, innerHTML: "", textContent: "",
@@ -32,7 +72,9 @@ function stubNode(id) {
     listensTo: function (ev) { return !!(this._ev && this._ev[ev]); },
     appendChild: function () {},
     removeChild: function () {}, click: function () {}, select: function () {},
-    querySelector: function () { return null; }
+    /* Pusta lista i brak elementu są tu ZNACZONE — patrz nagłówek. */
+    querySelector: function () { return null; },
+    querySelectorAll: function () { return mark([]); }
   };
 }
 
@@ -42,19 +84,26 @@ function installDom() {
      samo wczytanie narzędzia rzuca wyjątkiem — a test ma sprawdzać reguły,
      nie przewracać się na szkielecie strony. */
   global.document = {
-    getElementById: function (id) { return nodes[id] || (nodes[id] = stubNode(id)); },
+    /* getElementById NIGDY nie zwraca null — tworzy węzeł na żądanie, więc literówka
+       w id po cichu produkuje działający stub. Węzeł WYCZAROWANY jest znaczony, więc
+       kontrola pytająca „czy ten element istnieje" może odróżnić element od wymówki. */
+    getElementById: function (id) { return nodes[id] || (nodes[id] = mark(stubNode(id))); },
     createElement: function () { return stubNode("tmp"); },
     addEventListener: function (ev) { (this._ev || (this._ev = {}))[ev] = true; },
     listensTo: function (ev) { return !!(this._ev && this._ev[ev]); },
     body: stubNode("body"),
     documentElement: stubNode("html"),
     querySelector: function () { return null; },
-    querySelectorAll: function () { return []; },
+    querySelectorAll: function () { return mark([]); },
     execCommand: function () { return true; }
   };
   global.window = {
     isSecureContext: false,
-    getComputedStyle: function () { return { lineHeight: "21px", fontSize: "13px" }; },
+    /* Dwie prawdopodobne liczby to dokładnie ten mechanizm, który wyprodukował w tym
+       repozytorium sondę paska nieaktualności: pytanie o układ graficzny, na które
+       odpowiada stała. Wartości zostają, bo produkt je parsuje — ale odpowiedź jest
+       znaczona, więc da się zapytać, czy to pomiar. */
+    getComputedStyle: function () { return mark({ lineHeight: "21px", fontSize: "13px" }); },
     /* Walidator nasłuchuje pageshow, żeby złapać powrót z bfcache. */
     addEventListener: function (ev) { (this._ev || (this._ev = {}))[ev] = true; },
     listensTo: function (ev) { return !!(this._ev && this._ev[ev]); },
@@ -139,4 +188,5 @@ function runner() {
   };
 }
 
-module.exports = { installDom: installDom, loadTool: loadTool, runner: runner };
+module.exports = { installDom: installDom, loadTool: loadTool, runner: runner,
+                   stubbed: stubbed };

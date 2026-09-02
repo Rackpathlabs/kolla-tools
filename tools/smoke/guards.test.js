@@ -51,6 +51,35 @@ function kod(r) {
   return "kod " + r.code + (r.code === 2 && first ? " — " + first : "");
 }
 
+/* ---- STUB DOM ODPOWIADA ROZPOZNAWALNIE, NIE PRAWDOPODOBNIE (#68) ----
+   `querySelectorAll` zwracał pustą tablicę, czyli odpowiedź NIEODRÓŻNIALNĄ od poprawnego
+   wyniku. Kontrola napisana odruchowo — znajdź elementy, przejedź pętlą, wypisz „OK" —
+   zapala się zielono po sprawdzeniu ZERA pozycji, a na pliku z pięćdziesięcioma pustymi
+   podstawieniami dałaby to samo zielone.
+
+   TYCH ASERCJI NIE DAŁO SIĘ NAPISAĆ PRZED NAPRAWĄ. Nie z braku pomysłu: pusta tablica
+   i pusta tablica są tym samym obiektem pod każdym pytaniem, jakie da się zadać, więc nie
+   istniało wyrażenie odróżniające „nic nie znalazłem" od „nie umiem odpowiedzieć". Znacznik
+   jest tym wyrażeniem. */
+var testlib = require("../testlib.js");
+testlib.installDom();
+R.ok("pusta lista z querySelectorAll jest ROZPOZNAWALNA jako odpowiedź stuba",
+     testlib.stubbed(global.document.querySelectorAll("[data-i18n]")),
+     "stub odpowiada pustą listą nieodróżnialną od pomiaru");
+/* PRZYNĘTA: znacznik ma dotyczyć odpowiedzi stuba, a nie wszystkiego, co jest tablicą. */
+R.ok("PRZYNĘTA: zwykła pusta tablica NIE jest znaczona", !testlib.stubbed([]));
+/* getElementById nigdy nie zwraca null — węzeł WYCZAROWANY jest znaczony, więc literówka
+   w id przestaje po cichu produkować działający element. */
+R.ok("węzeł wyczarowany przez getElementById jest znaczony",
+     testlib.stubbed(global.document.getElementById("takiego-id-nie-ma")));
+/* Odpowiedź o układzie graficznym to stała, nie pomiar — i teraz to widać. */
+R.ok("getComputedStyle zwraca odpowiedź znaczoną, nie wiarygodną liczbę",
+     testlib.stubbed(global.getComputedStyle({})));
+/* Znacznik jest NIEWYLICZALNY: nic, co iteruje po tablicy, nie zmienia zachowania. */
+R.ok("znacznik nie zmienia długości ani iteracji",
+     global.document.querySelectorAll("x").length === 0 &&
+     Object.keys(global.document.querySelectorAll("x")).length === 0);
+
 /* ---- check-literals: liczy ujścia tekstu ---- */
 var clean = run("check-literals.js", ["tools/fixtures/clean.js"]);
 R.ok("czysta fixtura -> zielone", clean.code === 0, kod(clean));
