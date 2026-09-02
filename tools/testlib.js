@@ -1,9 +1,17 @@
 /* Wspólna obsługa testów obu narzędzi. Nie trafia do przeglądarki — tylko Node.
  *
- * Narzędzia są pojedynczymi plikami HTML z jednym blokiem <script> zamkniętym
- * w IIFE. Test wykonuje ten blok w Node na minimalnym stubie DOM i sięga do jego
- * wnętrza przez hak wstrzykiwany tuż przed zamknięciem IIFE. Pliki źródłowe
- * zostają nietknięte — nie ma w nich ani jednej linii istniejącej dla testów.
+ * Narzędzia są pojedynczymi plikami HTML, a cała warstwa reguł mieści się w jednym
+ * bloku <script> zamkniętym w IIFE na końcu <body>. Test wykonuje ten blok w Node na
+ * minimalnym stubie DOM i sięga do jego wnętrza przez hak wstrzykiwany tuż przed
+ * zamknięciem IIFE. Pliki źródłowe zostają nietknięte — nie ma w nich ani jednej linii
+ * istniejącej dla testów.
+ *
+ * OD #16 BLOK NIE JEST JEDYNY: w <head> stoi drugi, kilkunastolinijkowy, który nakłada
+ * wybrany motyw PRZED pierwszym malowaniem — na dole strony byłoby już po nim. Wycinanie
+ * w tools/run-tests.sh skleja wszystkie bloki w kolejności wystąpienia, więc hak nadal
+ * trafia w ostatnie `})();`, czyli w IIFE narzędzia. Zdanie „jeden blok" zostało tu
+ * poprawione, a nie usunięte, bo to ono tłumaczy, dlaczego hak szuka OSTATNIEGO
+ * zamknięcia, a nie pierwszego.
  *
  * Zero zależności npm. Świadomie nie ma tu jsdom ani Playwrighta: instalacja
  * czegokolwiek z npm jest w tym repozytorium zakazana, a warstwa, która niesie
@@ -68,8 +76,19 @@ function stubNode(id) {
     /* Zapamiętujemy, CO zostało podpięte. Bez tego test wyzwalaczy sprawdzałby
        tylko, że wywołanie addEventListener nie rzuca — czyli nic. Issue #38 wzięło
        się z brakującego wyzwalacza, więc asercja musi umieć go nie znaleźć. */
-    addEventListener: function (ev) { (this._ev || (this._ev = {}))[ev] = true; },
+    addEventListener: function (ev, fn) {
+      (this._ev || (this._ev = {}))[ev] = true;
+      (this._h || (this._h = {}))[ev] = fn;
+    },
     listensTo: function (ev) { return !!(this._ev && this._ev[ev]); },
+    /* Wyzwolenie podpiętej obsługi. Bez tego test umie sprawdzić WYŁĄCZNIE, że coś
+       zostało podpięte — a to jest zdanie o rejestracji, nie o zachowaniu. Przełącznik
+       motywu ma sens dopiero wtedy, gdy da się go kliknąć trzy razy i zobaczyć, że
+       wraca do punktu wyjścia. */
+    fire: function (ev) {
+      if (this._h && this._h[ev]) this._h[ev].call(this, { type: ev });
+      return this;
+    },
     appendChild: function () {},
     removeChild: function () {}, click: function () {}, select: function () {},
     /* Pusta lista i brak elementu są tu ZNACZONE — patrz nagłówek. */
