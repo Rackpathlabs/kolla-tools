@@ -114,6 +114,23 @@ var FLAGS = [
 
 function die(msg) { console.log("FAIL " + msg); process.exit(1); }
 
+/* SZEW DLA FIXTURY. Wyciąganie hostów z netlogu jest tą częścią, w której leżał defekt
+   z #128 — i jedyną, której nie da się pokazać bez przeglądarki, bo netlog produkuje
+   Chrome. Podany plik jest więc czytany i wypisany, bez uruchamiania czegokolwiek:
+   fixtura tools/fixtures/netlog/one-request.json to PRAWDZIWY, przycięty netlog z jednym
+   żądaniem w `events` i prawdziwym wpisem csp.withgoogle.com w `polledData`. */
+var explain = process.argv.indexOf("--explain-netlog");
+if (explain !== -1) {
+  var hosts = hostsFrom(path.resolve(root, process.argv[explain + 1] || ""));
+  if (hosts === null) {
+    console.log("FAIL nie mogę przeczytać netlogu: " + process.argv[explain + 1]);
+    process.exit(1);
+  }
+  Object.keys(hosts).sort().forEach(function (h) { console.log("HOST " + h + " x" + hosts[h]); });
+  console.log("hostów: " + Object.keys(hosts).length);
+  process.exit(0);
+}
+
 var chrome = lib.findChrome();
 /* Kod 2, nie 1, i to jest ten sam kod, którym na TO SAMO zdarzenie odpowiada
    check-rendered.js — obaj szukają przeglądarki jedną funkcją z render-lib.js. 1 znaczy

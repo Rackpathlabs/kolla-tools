@@ -670,6 +670,29 @@ function netDetail(r) {
   return f.length ? f[0] : r.out.trim().split("\n").pop();
 }
 
+/* ---- SKĄD BIORĄ SIĘ HOSTY: ZE ZDARZEŃ, NIE Z GREPA PO PLIKU (#128) ----
+   Strażnik wyciągał hosty wyrażeniem po CAŁYM pliku netlogu, a netlog ma dwie części:
+   `events` (co się wydarzyło) i `polledData` (zrzut STANU, dopisywany na końcu).
+   `csp.withgoogle.com` NIGDY nie był żądaniem — stoi wyłącznie w rejestrze punktów
+   Reporting API zebranym z nagłówków `report-to:`, z własnymi licznikami mówiącymi
+   `reports: 0, uploads: 0` — i mimo to trafiał do wyniku, raz na jakiś czas, zależnie od
+   tego, co zdążyło dojść przed zamknięciem logu. Stąd cały flake z #128.
+
+   To był pomiar REPREZENTACJI w strażniku zbudowanym po to, żeby mierzyć SKUTEK.
+
+   Fixtura jest PRAWDZIWA, tylko przycięta: cztery zdarzenia prawdziwego żądania z fixtury
+   `dirty` i prawdziwy fragment `polledData` z wpisem csp.withgoogle.com. */
+var NL = "tools/fixtures/netlog/one-request.json";
+var netlog = run("check-network.js", ["--explain-netlog", NL]);
+R.ok("żądanie ze ZDARZEŃ jest widziane", /HOST telemetry\.example\.invalid/.test(netlog.out),
+     netlog.out.split("\n")[0]);
+/* NAJWAŻNIEJSZA W TEJ GRUPIE. Wpis obecny WYŁĄCZNIE w polledData nie jest żądaniem
+   i nie ma prawa się pojawić — niezależnie od tego, co zdążyło dojść. */
+R.ok("wpis obecny TYLKO w polledData NIE jest raportowany",
+     !/csp\.withgoogle\.com/.test(netlog.out), netlog.out.split("\n")[0]);
+R.ok("czyli DOKŁADNIE jeden host z tego netlogu", /hostów: 1$/m.test(netlog.out),
+     netlog.out.split("\n").pop());
+
 var netClean = network("clean");
 R.ok("strona bez żądań -> zielone", netClean.code === 0, netDetail(netClean));
 /* PRZYNETA: dokument WYMIENIA adres http i przypisuje go do zmiennej, ale nikt go nie
