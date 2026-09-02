@@ -95,6 +95,12 @@ echo
 echo "== generator =="
 "$NODE" tools/smoke/generator.test.js .gen.test.tmp.js || rc=1
 
+# Zachowanie, nie kod: trzy stany i ich kolejność. Wycinek generatora niesie oba bloki
+# <script>, więc przełącznik z <head> jest w nim razem z resztą narzędzia.
+echo
+echo "== przełącznik motywu =="
+"$NODE" tools/smoke/theme.test.js .gen.test.tmp.js || rc=1
+
 echo
 echo "== walidator =="
 "$NODE" tools/smoke/validator.test.js .val.test.tmp.js || rc=1

@@ -16,15 +16,106 @@
 <meta name="description" data-i18n-content="g.desc" content="Generator for a Kolla-Ansible globals.yml: base image, release matrix, interface assignment. Runs offline, with no external dependencies.">
 <style>
 /* == KOLLA-THEME BEGIN — generowane z theme.css, nie edytuj w miejscu == */
+/* DWA ZESTAWY TOKENÓW, JEDEN ZESTAW NAZW. Reguły niżej i w trzech plikach HTML nie wiedzą,
+   który motyw obowiązuje — sięgają po --bg i --fg jak dotąd. Motyw zmienia WARTOŚCI,
+   nigdy nazwy, bo inaczej każda reguła musiałaby znać oba warianty i rozjazd między nimi
+   byłby niewidoczny do czasu, aż ktoś przełączy.
+
+   CIEMNY JEST DOMYŚLNY, i to nie jest preferencja: taki był ten motyw od pierwszej wersji,
+   a domyślność odwrotna zmieniłaby wygląd wszystkim, którzy nic nie wybrali. Jasny wchodzi
+   dla tych, którzy o niego proszą — systemem albo przełącznikiem.
+
+   TRZY STANY, NIE DWA. `data-theme` na <html> ma wartość "dark" albo "light" wyłącznie
+   wtedy, gdy człowiek WYBRAŁ; jego brak znaczy „idź za systemem" i jest stanem osobnym od
+   obu wyborów. Bez tego trzeciego stanu nie da się wrócić do preferencji systemu po
+   jednorazowym kliknięciu — a to jest właśnie ten przypadek, w którym przełącznik zaczyna
+   walczyć z ustawieniem systemowym. */
 :root{
-  --bg:#0e1318; --panel:#151b22; --panel-2:#1b232c; --line:#26313c;
-  --fg:#e6edf3; --muted:#8b98a5; --dim:#87939f;
-  --accent:#3ddc97; --accent-dim:#1f7f58;
-  --blue:#5aa9ff; --amber:#e8b339; --red:#ef6a6a;
+  --bg:#0e1318; --panel:#151b22; --panel-2:#1b232c; --line:#26313c; --line-soft:#1e2731;
+  --fg:#e6edf3; --fg-soft:#cbd5dd; --muted:#8b98a5; --dim:#87939f;
+  --accent:#3ddc97; --accent-dim:#1f7f58; --accent-line:#2a9c6c; --accent-hover:#248f63;
+  --on-accent:#eafff5; --knob-on:#3ddc97;
+  --blue:#5aa9ff; --blue-line:#274058; --blue-hover:#8cc4ff;
+  --amber:#e8b339; --red:#ef6a6a;
+  --hdr-top:#131a21; --sunken:#0c1116; --code-fg:#d6e2ec;
+  --chip:#222b34; --chip-2:#1d2630; --track:#2a343f; --knob:#9aa7b4;
+  --hover:#232d38; --hover-line:#33404d;
+  --err-line:#5c2b2b; --err-bg:#241618;
+  --warn-line:#5a4a1e; --warn-bg:#221d12; --alert-line:#8a5b1e;
+  --gutter-fg:#75828f; --gutter-bg:#0a0e12;
+  --syn-c:#7c8b99; --syn-k:#7fd6ff; --syn-p:#8895a2; --syn-v:#e7c07b;
+  --ring:rgba(61,220,151,.14);
   --mono:ui-monospace,SFMono-Regular,"JetBrains Mono","Cascadia Mono",Consolas,"Liberation Mono",monospace;
   --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   --r:8px;
 }
+
+/* Wartości jasne policzone pod ten sam próg co ciemne: WCAG AA 4.5:1 dla każdej pary
+   faktycznie używanej. Nie są odwróceniem ciemnych — odwrócenie kanałów daje kontrast,
+   który wygląda na policzony i nie jest. tools/check-a11y.js liczy OBA zestawy. */
+:root[data-theme="light"]{
+  --bg:#f6f8fa; --panel:#ffffff; --panel-2:#eef1f4; --line:#d0d7de; --line-soft:#e1e6ea;
+  --fg:#1c2128; --fg-soft:#2f3742; --muted:#57606a; --dim:#5b6570;
+  --accent:#0f6b45; --accent-dim:#0f6b45; --accent-line:#0b5637; --accent-hover:#0b5637;
+  --on-accent:#ffffff; --knob-on:#ffffff;
+  --blue:#0a58ca; --blue-line:#a8c7f0; --blue-hover:#0a58ca;
+  --amber:#8a5a00; --red:#b42318;
+  --hdr-top:#ffffff; --sunken:#f6f8fa; --code-fg:#24292f;
+  --chip:#e3e8ed; --chip-2:#eef1f4; --track:#cbd3da; --knob:#41484f;
+  --hover:#e8ecf0; --hover-line:#b7c0c9;
+  --err-line:#e0a49c; --err-bg:#fdeceb;
+  --warn-line:#d9c184; --warn-bg:#fdf6e3; --alert-line:#b07d20;
+  --gutter-fg:#5c6672; --gutter-bg:#eef1f4;
+  --syn-c:#57606a; --syn-k:#0a58ca; --syn-p:#5c6672; --syn-v:#7a4f00;
+  --ring:rgba(15,107,69,.18);
+}
+
+/* Brak data-theme = idź za systemem. Reguła stoi PO wariancie jawnym i jest od niego
+   słabsza specyficznością, więc wybór człowieka wygrywa z ustawieniem systemu — a nie
+   odwrotnie, co byłoby przełącznikiem, który nie przełącza. */
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#f6f8fa; --panel:#ffffff; --panel-2:#eef1f4; --line:#d0d7de; --line-soft:#e1e6ea;
+    --fg:#1c2128; --fg-soft:#2f3742; --muted:#57606a; --dim:#5b6570;
+    --accent:#0f6b45; --accent-dim:#0f6b45; --accent-line:#0b5637; --accent-hover:#0b5637;
+    --on-accent:#ffffff; --knob-on:#ffffff;
+    --blue:#0a58ca; --blue-line:#a8c7f0; --blue-hover:#0a58ca;
+    --amber:#8a5a00; --red:#b42318;
+    --hdr-top:#ffffff; --sunken:#f6f8fa; --code-fg:#24292f;
+    --chip:#e3e8ed; --chip-2:#eef1f4; --track:#cbd3da; --knob:#41484f;
+    --hover:#e8ecf0; --hover-line:#b7c0c9;
+    --err-line:#e0a49c; --err-bg:#fdeceb;
+    --warn-line:#d9c184; --warn-bg:#fdf6e3; --alert-line:#b07d20;
+    --gutter-fg:#5c6672; --gutter-bg:#eef1f4;
+    --syn-c:#57606a; --syn-k:#0a58ca; --syn-p:#5c6672; --syn-v:#7a4f00;
+    --ring:rgba(15,107,69,.18);
+  }
+}
+
+/* PRZEŁĄCZNIK MOTYWU — jedyna reguła interfejsu w tym pliku, i to nie przez wyjątek.
+   Ten przycisk jest identyczny we wszystkich trzech narzędziach i należy do motywu tak
+   samo jak tokeny, więc leży tam, gdzie motyw. Trzymany w trzech arkuszach z osobna
+   rozjechałby się przy pierwszej poprawce w jednym z nich, a rozjazd trzech kopii CSS-a
+   nie jest widoczny dla żadnego strażnika — bo każda kopia z osobna jest poprawna.
+
+   IKONA NIESIE STAN, ETYKIETA GO NAZYWA. `data-stan` ustawia JS, a reguły niżej wybierają
+   jedną z trzech ikon; nazwa dostępna idzie osobno, przez aria-label ze słownika, bo ikona
+   nie jest tekstem i czytnik ekranu nie ma z niej czego przeczytać. */
+.theme-btn{
+  display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;
+  padding:0;background:var(--panel-2);color:var(--muted);border:1px solid var(--line);
+  border-radius:var(--r);cursor:pointer
+}
+.theme-btn:hover{background:var(--hover);border-color:var(--hover-line);color:var(--fg)}
+.theme-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.theme-btn svg{
+  width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round
+}
+.theme-btn [data-ikona]{display:none}
+.theme-btn[data-stan="system"] [data-ikona="system"]{display:inline}
+.theme-btn[data-stan="light"] [data-ikona="light"]{display:inline}
+.theme-btn[data-stan="dark"] [data-ikona="dark"]{display:inline}
 
 /* Atrybut hidden MUSI ukrywać.
    Arkusz przeglądarki daje [hidden]{display:none}, ale to reguła o najniższym
@@ -45,7 +136,7 @@ a{color:var(--blue)}
 .wrap{max-width:1320px;margin:0 auto;padding:0 20px 64px}
 
 /* ---------- header ---------- */
-header{border-bottom:1px solid var(--line);background:linear-gradient(180deg,#131a21,#0e1318)}
+header{border-bottom:1px solid var(--line);background:linear-gradient(180deg,var(--hdr-top),var(--bg))}
 .hdr{max-width:1320px;margin:0 auto;padding:18px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:11px;font-weight:650;letter-spacing:.2px}
 .logo{width:26px;height:26px;flex:0 0 26px}
@@ -94,24 +185,24 @@ label .req{
 }
 .hint{font-size:12px;color:var(--dim);margin-top:5px;line-height:1.45}
 input[type=text],select{
-  width:100%;padding:8px 10px;background:#0c1116;color:var(--fg);
+  width:100%;padding:8px 10px;background:var(--sunken);color:var(--fg);
   border:1px solid var(--line);border-radius:var(--r);font:14px/1.4 var(--mono);
   transition:border-color .12s,box-shadow .12s
 }
 select{font-family:var(--sans);font-size:14px;cursor:pointer}
 input:focus,select:focus,button:focus-visible,a:focus-visible{
-  outline:none;border-color:var(--accent-dim);box-shadow:0 0 0 3px rgba(61,220,151,.14)
+  outline:none;border-color:var(--accent-dim);box-shadow:0 0 0 3px var(--ring)
 }
 input[aria-invalid="true"]{border-color:var(--red);box-shadow:0 0 0 3px rgba(239,106,106,.10)}
 textarea{
-  width:100%;padding:8px 10px;background:#0c1116;color:var(--fg);resize:vertical;
+  width:100%;padding:8px 10px;background:var(--sunken);color:var(--fg);resize:vertical;
   border:1px solid var(--line);border-radius:var(--r);font:12.5px/1.5 var(--mono)
 }
-textarea:focus{outline:none;border-color:var(--accent-dim);box-shadow:0 0 0 3px rgba(61,220,151,.14)}
+textarea:focus{outline:none;border-color:var(--accent-dim);box-shadow:0 0 0 3px var(--ring)}
 textarea.drag{border-color:var(--accent-dim);border-style:dashed}
 .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 button.small{font-size:12.5px;padding:5px 10px}
-.mode{font:11px/1.8 var(--mono);font-weight:700;letter-spacing:.5px;padding:0 8px;border-radius:5px;background:#222b34;color:var(--accent)}
+.mode{font:11px/1.8 var(--mono);font-weight:700;letter-spacing:.5px;padding:0 8px;border-radius:5px;background:var(--chip);color:var(--accent)}
 input.warn-field{border-color:var(--amber)}
 
 /* toggles */
@@ -122,15 +213,15 @@ input.warn-field{border-color:var(--amber)}
 .toggle:hover{background:var(--panel-2)}
 .toggle input{
   appearance:none;-webkit-appearance:none;margin:2px 0 0;flex:0 0 34px;width:34px;height:19px;
-  background:#2a343f;border-radius:11px;position:relative;cursor:pointer;transition:background .15s
+  background:var(--track);border-radius:11px;position:relative;cursor:pointer;transition:background .15s
 }
 .toggle input::after{
   content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;
-  background:#9aa7b4;transition:transform .15s,background .15s
+  background:var(--knob);transition:transform .15s,background .15s
 }
 .toggle input:checked{background:var(--accent-dim)}
-.toggle input:checked::after{transform:translateX(15px);background:var(--accent)}
-.toggle input:focus-visible{box-shadow:0 0 0 3px rgba(61,220,151,.16)}
+.toggle input:checked::after{transform:translateX(15px);background:var(--knob-on)}
+.toggle input:focus-visible{box-shadow:0 0 0 3px var(--ring)}
 .toggle .t-txt{min-width:0}
 .toggle .t-name{font:13.5px/1.35 var(--mono);color:var(--fg)}
 .toggle .t-desc{font-size:12px;color:var(--dim);margin-top:2px}
@@ -141,10 +232,10 @@ button{
   border:1px solid var(--line);border-radius:var(--r);padding:7px 14px;cursor:pointer;
   transition:background .12s,border-color .12s,color .12s
 }
-button:hover:not(:disabled){background:#232d38;border-color:#33404d}
+button:hover:not(:disabled){background:var(--hover);border-color:var(--hover-line)}
 button:disabled{opacity:.45;cursor:not-allowed}
-button.primary{background:var(--accent-dim);border-color:#2a9c6c;color:#eafff5}
-button.primary:hover:not(:disabled){background:#248f63;border-color:#3ddc97}
+button.primary{background:var(--accent-dim);border-color:var(--accent-line);color:var(--on-accent)}
+button.primary:hover:not(:disabled){background:var(--accent-hover);border-color:var(--accent)}
 button.ghost{background:transparent}
 .btn-row{display:flex;gap:8px;flex-wrap:wrap}
 
@@ -164,7 +255,7 @@ pre.yaml{
   padding:1px 9px;cursor:pointer;color:var(--dim);background:transparent}
 .viewsel input{position:absolute;opacity:0;width:0;height:0}
 .viewsel input:checked+span{color:var(--accent)}
-.viewsel label:has(input:checked){background:#222b34}
+.viewsel label:has(input:checked){background:var(--chip)}
 .viewsel input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
 /* Zestawienie obok siebie: klucz, wartość początkowa, wartość w tym pliku. */
 table.difftab{width:100%;border-collapse:collapse;font:12px/1.7 var(--mono)}
@@ -178,13 +269,13 @@ table.difftab td.none{color:var(--dim);font-style:italic}
 .diffnote{padding:8px 12px;border-bottom:1px solid var(--line)}
 .row{display:block;white-space:pre;padding:0 16px 0 0}
 .row .no{
-  display:inline-block;width:44px;padding-right:14px;text-align:right;color:#5f6d7a;
+  display:inline-block;width:44px;padding-right:14px;text-align:right;color:var(--gutter-fg);
   user-select:none;-webkit-user-select:none
 }
-.c{color:#7c8b99;font-style:italic}
-.k{color:#7fd6ff}
-.p{color:#8895a2}
-.v{color:#e7c07b}
+.c{color:var(--syn-c);font-style:italic}
+.k{color:var(--syn-k)}
+.p{color:var(--syn-p)}
+.v{color:var(--syn-v)}
 .s{color:var(--accent)}
 
 /* ---------- diagnostics ---------- */
@@ -193,13 +284,13 @@ table.difftab td.none{color:var(--dim);font-style:italic}
   font-size:13.5px;border:1px solid var(--line);background:var(--panel-2)
 }
 .status .dot{width:8px;height:8px;border-radius:50%;flex:0 0 8px;background:var(--accent)}
-.status.has-err{border-color:#5c2b2b;background:#241618}
+.status.has-err{border-color:var(--err-line);background:var(--err-bg)}
 .status.has-err .dot{background:var(--red)}
-.status.has-warn{border-color:#5a4a1e;background:#221d12}
+.status.has-warn{border-color:var(--warn-line);background:var(--warn-bg)}
 .status.has-warn .dot{background:var(--amber)}
 ul.diag{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:7px}
 ul.diag:empty{margin:0}
-ul.diag li{display:flex;gap:9px;font-size:13px;line-height:1.45;color:#cbd5dd}
+ul.diag li{display:flex;gap:9px;font-size:13px;line-height:1.45;color:var(--fg-soft)}
 .sev{
   flex:0 0 auto;font:10.5px/1.65 var(--mono);font-weight:700;letter-spacing:.6px;
   padding:0 6px;border-radius:4px;text-transform:uppercase;height:18px;margin-top:1px
@@ -207,7 +298,7 @@ ul.diag li{display:flex;gap:9px;font-size:13px;line-height:1.45;color:#cbd5dd}
 .sev.error{background:rgba(239,106,106,.14);color:var(--red)}
 .sev.warn{background:rgba(232,179,57,.14);color:var(--amber)}
 .sev.info{background:rgba(90,169,255,.13);color:var(--blue)}
-code{font:12.5px var(--mono);background:#0c1116;border:1px solid var(--line);border-radius:4px;padding:1px 5px;color:#d6e2ec}
+code{font:12.5px var(--mono);background:var(--sunken);border:1px solid var(--line);border-radius:4px;padding:1px 5px;color:var(--code-fg)}
 
 .toast{
   position:fixed;left:50%;bottom:26px;transform:translate(-50%,14px);
@@ -216,10 +307,59 @@ code{font:12.5px var(--mono);background:#0c1116;border:1px solid var(--line);bor
   opacity:0;pointer-events:none;transition:opacity .16s,transform .16s;z-index:50
 }
 .toast.on{opacity:1;transform:translate(-50%,0)}
-.toast.alert{border-color:#8a5b1e}
+.toast.alert{border-color:var(--alert-line)}
 
 footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:var(--dim);font-size:12.5px}
 </style>
+<script>
+/* == KOLLA-THEME-SWITCH BEGIN — generowane z theme-switch.js, nie edytuj w miejscu == */
+var KOLLA_THEME = (function () {
+  var KEY = "kolla.theme";
+  var CYKL = ["system", "light", "dark"];
+  /* Klucze wypisane dosłownie, po jednym na stan. Złożenie ich w locie ("nav.theme." +
+     stan) byłoby krótsze i NIEWIDOCZNE dla tools/check-i18n.js, który szuka nazwy klucza
+     w źródle — martwy klucz przestałby być wykrywalny. Ten sam powód stoi przy
+     v.f.requiredEmpty w walidatorze. */
+  var ETYKIETA = {
+    system: "nav.theme.system",
+    light:  "nav.theme.light",
+    dark:   "nav.theme.dark"
+  };
+  var stan = "system";
+
+  try {
+    var zapis = localStorage.getItem(KEY);
+    if (zapis === "light" || zapis === "dark" || zapis === "system") stan = zapis;
+  } catch (e) { /* pamięć niedostępna: zostajemy przy ustawieniu systemu */ }
+
+  function naloz() {
+    if (stan === "system") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", stan);
+  }
+  naloz();
+
+  return {
+    stan: function () { return stan; },
+    /* T jest podawane z zewnątrz, bo w <head> słownika jeszcze nie ma. */
+    init: function (T) {
+      var btn = document.getElementById("theme-btn");
+      if (!btn) return;
+      function opisz() {
+        btn.setAttribute("data-stan", stan);
+        btn.setAttribute("aria-label", T(ETYKIETA[stan]));
+      }
+      opisz();
+      btn.addEventListener("click", function () {
+        stan = CYKL[(CYKL.indexOf(stan) + 1) % CYKL.length];
+        naloz();
+        opisz();
+        try { localStorage.setItem(KEY, stan); } catch (e) { /* jw. */ }
+      });
+    }
+  };
+})();
+/* == KOLLA-THEME-SWITCH END == */
+</script>
 </head>
 <body>
 
@@ -241,6 +381,14 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       <a href="generator.html" aria-current="page">globals.yml</a>
       <a href="validator.html">inventory validator</a>
     </nav>
+    <button type="button" id="theme-btn" class="theme-btn" data-stan="system"
+            aria-label="Theme: following the system setting">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <g data-ikona="system"><rect x="3" y="4.5" width="18" height="13" rx="1.6"/><path d="M8.5 20.5h7"/></g>
+        <g data-ikona="light"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4"/></g>
+        <g data-ikona="dark"><path d="M20 14.2A8.2 8.2 0 0 1 9.8 4 8.4 8.4 0 1 0 20 14.2Z"/></g>
+      </svg>
+    </button>
   </div>
 </header>
 
@@ -616,6 +764,14 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
       "nav.validator":         "inventory validator",
       "nav.tools":             "Tools",
       "nav.skip":              "Skip to content",
+
+      /* Przełącznik motywu. Nazwa dostępna mówi, co OBOWIĄZUJE, a nie co się stanie po
+         kliknięciu: ikona pokazuje stan tylko widzącym, więc bez tego czytnik ekranu nie
+         miałby skąd wziąć bieżącego ustawienia. Trzy klucze, bo trzy stany — „za systemem"
+         jest osobnym stanem, nie brakiem wyboru. */
+      "nav.theme.system":      "Theme: following the system setting",
+      "nav.theme.light":       "Theme: light",
+      "nav.theme.dark":        "Theme: dark",
       "brand.sub":             "OpenStack tooling",
 
       /* --- hub --- */
@@ -3495,6 +3651,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:v
   viewDiff.addEventListener("change", function () { showDiff = true; renderView(); });
 
   applyI18n();
+  KOLLA_THEME.init(T);
   populateFromMatrix();
   applyState(load() || DEFAULTS);
   refresh();
