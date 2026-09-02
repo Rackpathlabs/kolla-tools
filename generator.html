@@ -117,6 +117,66 @@
 .theme-btn[data-stan="light"] [data-ikona="light"]{display:inline}
 .theme-btn[data-stan="dark"] [data-ikona="dark"]{display:inline}
 
+/* DRUK. Trzeci zestaw wartości tych samych tokenów — i to jest cała konstrukcja arkusza
+   druku, a nie jego wstęp. Migracja z #16 wymusiła, żeby KAŻDA reguła sięgała po token
+   (pilnuje tego tools/check-theme-tokens.js), więc podmiana wartości tutaj przemalowuje
+   całą stronę i nie ma reguły, która by tego nie zauważyła. Bez tamtej migracji ten blok
+   musiałby wyliczyć sześćdziesiąt pięć selektorów i przy pierwszym nowym kolorze zostałby
+   w tyle — po cichu, bo druk to jedyne wyjście, na które nikt nie patrzy codziennie.
+
+   CZTERY SELEKTORY W JEDNEJ REGULE, I CZWARTY WYGLĄDA NA ZBĘDNY. `:root:not([data-theme])`
+   opisuje ten sam stan co samo `:root` — i jest tu dlatego, że opisuje go z TĄ SAMĄ
+   SPECYFICZNOŚCIĄ co reguła, z którą musi wygrać. Ustawienie systemowe mieszka na
+   `:root:not([data-theme="dark"])` wewnątrz `@media (prefers-color-scheme: light)`, czyli
+   0,1,1; samo `:root` to 0,0,1 i przegrywa NIEZALEŻNIE OD KOLEJNOŚCI, bo specyficzność
+   rozstrzyga wcześniej. Specyficzność listy selektorów liczy się osobno dla każdej pozycji,
+   więc dopisanie trzech dłuższych nie podnosi tej pierwszej.
+
+   ZMIERZONE, NIE PRZEWIDZIANE. Pierwsza wersja tego bloku miała trzy selektory i wydruk
+   wychodził w kolorach motywu JASNEGO — nie druku. Widać to było wyłącznie w PDF-ie:
+   #0a58ca i #0f6b45 zamiast #0a3f95 i #0a5236, czyli różnica, której okiem nikt by nie
+   nazwał, a która znaczy, że cały ten blok nie działał.
+
+   BIEL JEST PEŁNA, nie „prawie". Papier nie ma tła: kolor tła strony to farba. */
+@media print{
+  :root,
+  :root:not([data-theme]),
+  :root[data-theme="light"],
+  :root[data-theme="dark"]{
+    --bg:#ffffff; --panel:#ffffff; --panel-2:#ffffff; --line:#9aa4ae; --line-soft:#c4ccd3;
+    --fg:#000000; --fg-soft:#1a1a1a; --muted:#3a3a3a; --dim:#3a3a3a;
+    --accent:#0a5236; --accent-dim:#0a5236; --accent-line:#0a5236; --accent-hover:#0a5236;
+    --on-accent:#ffffff; --knob-on:#ffffff;
+    --blue:#0a3f95; --blue-line:#9aa4ae; --blue-hover:#0a3f95;
+    --amber:#6b4400; --red:#8c1710;
+    --hdr-top:#ffffff; --sunken:#ffffff; --code-fg:#000000;
+    --chip:#ffffff; --chip-2:#ffffff; --track:#ffffff; --knob:#3a3a3a;
+    --hover:#ffffff; --hover-line:#9aa4ae;
+    --err-line:#8c1710; --err-bg:#ffffff;
+    --warn-line:#6b4400; --warn-bg:#ffffff; --alert-line:#6b4400;
+    --gutter-fg:#3a3a3a; --gutter-bg:#ffffff;
+    --syn-c:#3a3a3a; --syn-k:#0a3f95; --syn-p:#3a3a3a; --syn-v:#6b4400;
+    --ring:transparent;
+  }
+
+  /* Sterowanie nie jest treścią. Na papierze przycisk nie da się nacisnąć, a nawigacja
+     prowadzi do stron, których czytelnik nie ma — obie zajmują miejsce i sugerują, że
+     wydruk jest interaktywny. */
+  .skip, nav, .theme-btn, .toast, button, .viewsel{ display:none !important }
+
+  /* Papier nie przewija. Każdy kontener z własną wysokością albo własnym przewijaniem
+     obcina treść dokładnie tam, gdzie na ekranie zaczyna się pasek przewijania — i wydruk
+     wygląda na kompletny. Reguła jest napisana na WŁASNOŚĆ, nie na listę nazw klas, bo
+     lista starzeje się przy każdym nowym widoku. */
+  pre, textarea, .editor, .body, .panel{
+    max-height:none !important; height:auto !important; overflow:visible !important
+  }
+  body{ background:#ffffff }
+  .panel{ border:1px solid var(--line); break-inside:auto }
+  .cols{ display:block }
+  a[href]{ text-decoration:underline }
+}
+
 /* Atrybut hidden MUSI ukrywać.
    Arkusz przeglądarki daje [hidden]{display:none}, ale to reguła o najniższym
    pierwszeństwie — dowolna autorska klasa z własnym display ją unieważnia, bez
@@ -318,6 +378,13 @@ code{font:12.5px var(--mono);background:var(--sunken);border:1px solid var(--lin
 }
 
 footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:var(--dim);font-size:12.5px}
+@media print{
+  /* Podgląd pliku ma się rozwinąć w całości: to on jest przedmiotem wydruku, a jego
+     wysokość na ekranie jest ograniczona wysokością okna. */
+  pre.yaml{ max-height:none; min-height:0; border:1px solid var(--line) }
+  .row{ white-space:pre-wrap }
+  #diffpanel, ul.diag{ break-inside:avoid }
+}
 </style>
 <script>
 /* == KOLLA-THEME-SWITCH BEGIN — generowane z theme-switch.js, nie edytuj w miejscu == */
