@@ -87,6 +87,26 @@ export in the same class as the comment the generator writes into your `globals.
 leaves the browser, and where it goes afterwards is outside anything this tool can promise.
 Nothing is uploaded; the file is built in the page and handed to your download folder.
 
+**What a shareable link carries.** The generator can put its settings into the address bar,
+after the `#`, so that a configuration can be sent to somebody else. A fragment is the one
+part of a URL a browser does **not** put in a request, so this stays inside the promise of
+zero network — but that promise was never the whole of the question, and stating only it
+would be the misleading half.
+
+A fragment goes where links go. It lands in browser history, in the clipboard, in whatever
+chat window or ticket the link is pasted into, and in the logs and search indexes of every
+system that handles it afterwards. Those systems do not treat the part after the `#` as
+private, because nothing tells them to. So the threat model of a shared link is not the one
+this page opens with: not transmitted is a fact about the browser, and a link is a fact
+about wherever it ends up.
+
+What travels is **settings only, never file contents**. The deployment parameters — VIP
+address, interface names, FQDNs, which services are switched on — describe an installation
+you may not want described in a ticket that outlives it. A pasted `globals.yml` and a loaded
+inventory are NOT encoded and never enter the address bar. The link is offered on request
+and not written as you type, because a URL that fills itself in is one that gets copied by
+accident.
+
 ## Where certainty ends
 
 Some checks are certain, and some are inferences. The tools distinguish between the two,
