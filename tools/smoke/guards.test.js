@@ -91,7 +91,11 @@ R.ok("znacznik nie zmienia długości ani iteracji",
    z `aria-hidden="true"` — i była to wada KRYTERIUM, nie interfejsu. Element zdjęty
    z drzewa dostępności nazwy nie potrzebuje. Złapane dlatego, że pomiar poszedł PRZED
    jakąkolwiek naprawą, i dlatego przynęta na to stoi w fixturze. */
-var a11yBad = run("check-a11y.js", ["--file", "tools/fixtures/a11y/broken.html"]);
+/* --focus-files celowo wskazuje fixturę zieloną: przebieg na fixturze ma mierzyć TĘ
+   fixturę, a nie doliczać pozycji z arkuszy produktu. Bez tego liczba „dokładnie cztery"
+   przestaje mówić o przedmiocie i zaczyna mówić o stanie repozytorium. */
+var a11yBad = run("check-a11y.js", ["--file", "tools/fixtures/a11y/broken.html",
+                                    "--focus-files", "tools/fixtures/a11y/focus-ok.css"]);
 R.ok("fixtura z trzema naruszeniami -> czerwone", a11yBad.code === 1, kod(a11yBad));
 R.ok("przycisk bez ŹRÓDŁA NAZWY -> zgłoszony", /bez ŹRÓDŁA NAZWY\s+button#bez-nazwy/.test(a11yBad.out),
      a11yBad.out.split("\n")[1]);
@@ -158,6 +162,60 @@ R.ok("PRZYNĘTA: definicja tokenu wewnątrz bloku motywu nie jest trafieniem",
      !/#0e1318|#e6edf3|#26313c/.test(themeBad.out));
 R.ok("PRZYNĘTA: atrybut SVG w markupie jest poza zakresem",
      themeBad.out.indexOf("#3ddc97") === -1);
+
+/* ---- check-a11y, konstrukcja obsługi klawiaturą (#17) ---- */
+/* Sześć naruszeń i pięć przynęt na jednej fixturze. Przynęty są tu ważniejsze od naruszeń:
+   kryterium za szerokie oskarża kod zbudowany dobrze, a wtedy zostaje wyłączone przy
+   pierwszej niewygodzie — i to jest historia #63, nie hipoteza. */
+var kbd = run("check-a11y.js", ["--file", "tools/fixtures/a11y/keyboard.html",
+                                "--focus-files", "tools/fixtures/a11y/focus-ok.css"]);
+R.ok("fixtura konstrukcji klawiaturowej -> czerwone", kbd.code === 1, kod(kbd));
+R.ok("div z nasłuchem i kursorem wskazującym -> zgłoszony",
+     /KLIK BEZ FOKUSU\s+div#klik-div/.test(kbd.out), kbd.out.split("\n")[1]);
+R.ok("onclick w markupie na elemencie niefokusowalnym -> zgłoszony",
+     /KLIK BEZ FOKUSU\s+span#klik-inline\s+\(onclick w markupie\)/.test(kbd.out));
+R.ok("dodatni tabindex -> zgłoszony",
+     /KOLEJNOŚĆ TABULACJI\s+tabindex=3 \(dodatni\)\s+button#tab-dodatni/.test(kbd.out));
+R.ok("tabindex=-1 na elemencie w drzewie -> zgłoszony",
+     /KOLEJNOŚĆ TABULACJI\s+tabindex=-1 na elemencie W DRZEWIE\s+a#tab-minus/.test(kbd.out));
+R.ok("kontener diagnostyki bez aria-live -> zgłoszony",
+     /REGION NIEŻYWY\s+#diag/.test(kbd.out));
+R.ok("pole niepoprawne opisane samą podpowiedzią -> zgłoszone",
+     /POLE BEZ OPISU BŁĘDU\s+input#pole-zle/.test(kbd.out));
+R.ok("czyli DOKŁADNIE sześć pozycji", /Razem 6 pozycji/.test(kbd.out),
+     kbd.out.split("\n").filter(function (l) { return /Razem/.test(l); })[0]);
+
+/* PRZYNĘTY. Każda to konstrukcja poprawna, którą kryterium napisane szerzej by oskarżyło. */
+R.ok("PRZYNĘTA: delegacja z przyciskami w środku nie jest naruszeniem",
+     kbd.out.indexOf("#delegacja") === -1);
+R.ok("PRZYNĘTA: kontener, w którym nic nie wygląda na klikalne, nie jest naruszeniem",
+     kbd.out.indexOf("#pusty-kontener") === -1);
+R.ok("PRZYNĘTA: tabindex=-1 na elemencie zdjętym z drzewa jest legalny",
+     kbd.out.indexOf("tab-ukryty") === -1);
+R.ok("PRZYNĘTA: pole niepoprawne z opisem niosącym finding nie jest zgłaszane",
+     kbd.out.indexOf("pole-ok") === -1);
+R.ok("PRZYNĘTA: przycisk-cel wewnątrz delegacji nie jest zgłaszany",
+     kbd.out.indexOf("cel-1") === -1);
+
+/* Pierścień fokusu czytany z arkuszy — osobne wejście, bez przeglądarki. */
+var fbad = run("check-a11y.js", ["--contrast-only", "--focus-files",
+                                 "tools/fixtures/a11y/focus-bad.css"]);
+R.ok("obrys zdjęty bez zamiennika -> czerwone", fbad.code === 1, kod(fbad));
+R.ok("i wskazuje LINIĘ w pliku, nie samą nazwę pliku",
+     /focus-bad\.css:3\s+button:focus\{outline:none\}/.test(fbad.out),
+     fbad.out.split("\n")[1]);
+R.ok("brak :focus-visible w arkuszu wiodącym też jest zgłaszany",
+     /nie zna :focus-visible/.test(fbad.out));
+R.ok("PRZYNĘTA: outline:none z box-shadow to poprawny zamiennik",
+     !/input:focus/.test(fbad.out));
+/* Komentarz wymieniający :focus-visible jest zdaniem O regule, nie regułą. Ta fixtura
+   ma taki komentarz właśnie po to — bez usuwania komentarzy przechodziła. */
+R.ok("PRZYNĘTA: :focus-visible w KOMENTARZU nie liczy się jako reguła",
+     /nie zna :focus-visible/.test(fbad.out));
+
+var fok = run("check-a11y.js", ["--contrast-only", "--focus-files",
+                                "tools/fixtures/a11y/focus-ok.css"]);
+R.ok("arkusz z pierścieniem i zamiennikami -> zielone", fok.code === 0, kod(fok));
 
 /* ---- axe-report: „nie odbył się" musi wyglądać inaczej niż „nic nie znalazł" ---- */
 /* To NIE jest strażnik i nie ma go w tools/check-*. Jest tu, bo odpowiada za jedyne
