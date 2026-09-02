@@ -367,6 +367,11 @@ var DRIVE = [
   {}, {distro:"zzz"}, {release:""}, {release:"a b!"}, {release:"stable/master"},
   {release:"victoria"}, {release:"20.1"}, {release:"stable/2019.2"}, {release:"2026.2"},
   {release:"2024.1"}, {release:"2026.1",distro:"centos"},
+  /* 2026.2 zdjęło centosa (nota wydania), więc ta para przestała być hipotetyczna:
+     distro jest na liście DISTROS i nie ma go na baseDistros wydania. Do wczoraj
+     ta pozycja stała w UNREACHED z powodem „żadne wydanie nie odrzuca dziś obrazu
+     z DISTROS" — powód przestał być prawdziwy razem ze zmianą danych. */
+  {release:"2026.2",distro:"centos"},
   {vip:""}, {vip:"999.1.1.1"}, {vip:"127.0.0.1"}, {vip:"169.254.1.1"}, {vip:"10.0.0.0"},
   {vip:"10.0.0.255"}, {vip:"192.0.2.5"}, {vip:"100.70.0.5"}, {vip:"8.8.8.8"},
   {ext_if:""}, {net_if:""}, {net_if:"averyveryverylongifname0"}, {net_if:"10.0.0.1"},
@@ -409,14 +414,14 @@ var UNREACHED = {
   /* Zależy od ŚRODOWISKA, nie od stanu formularza: przeglądarka blokująca
      localStorage. Żadna konfiguracja tego nie ustawia i nie ma jak. */
   "STORAGE-UNAVAILABLE":      "warunek środowiskowy (storageOk), nie stan",
-  /* NIEOSIĄGALNE PRZY DZISIEJSZEJ MACIERZY, nie martwe. Reguła zapala się, gdy
-     distro jest na liście DISTROS, ale nie na liście baseDistros wydania — a dziś
-     każde wydanie w macierzy dopuszcza wszystkie cztery obrazy. Sprawdzone wprost:
-     iteracja po wszystkich parach (wydanie × distro) daje zero trafień. Reguła
-     odżyje w dniu, w którym upstream przestanie publikować obraz dla wydania.
-     Zapisane, bo „nieosiągalne przy tych danych" to co innego niż „martwe", a bez
-     tego zdania następny czytelnik usunąłby ją jako zbędną. */
-  "DISTRO-NOT-IN-RELEASE":    "żadne wydanie w macierzy nie odrzuca dziś obrazu z DISTROS"
+  /* DISTRO-NOT-IN-RELEASE stało tu do 2026-09-02 z powodem „żadne wydanie w macierzy
+     nie odrzuca dziś obrazu z DISTROS", policzonym iteracją po wszystkich parach
+     (wydanie × distro) i dającym wtedy zero trafień. Zdjęcie centosa z 2026.2 dało
+     pierwsze trafienie, więc reguła jest osiągalna i ma własną pozycję w DRIVE.
+
+     Zostawione jako zdanie, a nie skasowane bez śladu: wpis mówił „nieosiągalne przy
+     tych danych", nie „martwe", i to rozróżnienie właśnie się opłaciło — reguła odżyła
+     przy zmianie danych, dokładnie tak, jak przewidywał. */
 };
 
 var unreached = Object.keys(T.DIAG_IDS).filter(function (i) { return !fired[i]; }).sort();
