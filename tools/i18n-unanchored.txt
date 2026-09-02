@@ -82,6 +82,11 @@ v.c.net.same.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.c.storage.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
 v.c.storage.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.empty  a  element <p class=empty-state> tworzony przez JS; zakotwiczenie znaczyloby DOPISANIE markupu, nie przeniesienie klucza
+v.exp.colCode  a  naglowek kolumny w eksporcie Markdown; tabeli nie ma w dokumencie poczatkowym
+v.exp.colSev  a  jw.
+v.exp.colWhat  a  jw.
+v.exp.colWhere  a  jw.
+v.exp.tally  a  podsumowanie w eksporcie Markdown; eksportu nie ma, dopoki nie powstanie
 v.f.childrenFormat  a  komunikat findingu CHILDREN-FORMAT; findingu nie ma, dopoki nie powstanie
 v.f.conflictingVar  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.f.conflictingVar.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie

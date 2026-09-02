@@ -527,6 +527,7 @@ its
 itself
 jammy
 joining
+json
 keepalived
 keeps
 kept
@@ -607,6 +608,7 @@ many
 map
 mapped
 mariadb
+markdown
 marks
 masakari
 mask
@@ -888,6 +890,7 @@ settle
 settles
 settling
 several
+severity
 share
 shared
 shares
