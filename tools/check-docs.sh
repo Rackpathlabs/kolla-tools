@@ -67,6 +67,33 @@ else
   fi
 fi
 
+# PROCEDURA RĘCZNA JEST W TYM KATALOGU JEDYNĄ RZECZĄ, KTÓREJ NIC NIE EGZEKWUJE, i właśnie
+# dlatego trzyma ją tu strażnik. Zniknięcie strażnika widać w wynikach; zniknięcie procedury
+# nie widać nigdzie — nie ma czerwonego, nie ma powiadomienia, nie ma nawet luki w liczbie.
+# Ten warunek nie sprawdza, czy ktoś ją wykonał, i nie umie: sprawdza, że da się ją wykonać,
+# bo istnieje i niesie kroki. To dwie różne gwarancje i tylko pierwsza z nich tu jest.
+if [ ! -f docs/MANUAL-CHECKS.md ]; then
+  echo "FAIL docs/MANUAL-CHECKS.md: brak pliku"; rc=1
+else
+  n=$(wc -c < docs/MANUAL-CHECKS.md)
+  if [ "$n" -lt 2000 ]; then
+    echo "FAIL docs/MANUAL-CHECKS.md: $n bajtów — procedura wygląda na wypatroszoną (próg 2000)"; rc=1
+  else
+    echo "OK   docs/MANUAL-CHECKS.md ($n B)"
+  fi
+  # Trzy zdania, których brak zamieniłby procedurę w listę życzeń: że nie jest strażnikiem,
+  # dlaczego pomiar maszynowy tu nie sięga, i gdzie zapisać wykonanie.
+  for want in "This is a procedure, not a guard" \
+              "is not a trusted" \
+              "## Last run"; do
+    if grep -qF "$want" docs/MANUAL-CHECKS.md; then
+      echo "OK   procedura: $want"
+    else
+      echo "FAIL docs/MANUAL-CHECKS.md: brak fragmentu \"$want\""; rc=1
+    fi
+  done
+fi
+
 # CLAUDE.md niesie zakazy, nie opisy — a zakaz, który da się usunąć bez śladu w review,
 # jest zakazem na jedną iterację. Objęty tym samym strażnikiem i z tego samego powodu,
 # który stoi wyżej przy PRINCIPLES.md: rozdzielenie, po którym połowa treści przestaje
