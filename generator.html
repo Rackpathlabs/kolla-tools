@@ -1470,7 +1470,15 @@ var KOLLA_THEME = (function () {
       {
         id: "2026.2", name: "Hibiscus", kolla: null, status: "development",
         released: null, expected: "2026-09-30", endsOn: null,
-        baseDistros: null, unpublished: [], hostOs: [],
+        /* CentOS ZDJĘTY, nie „brak danych". Nota wydania 2026.2 mówi wprost, że wsparcie
+           dla CentOS Stream 10 zostało porzucone — więc lista jest tu WIEDZĄ, a nie
+           zgadywaniem, i null przestał być poprawną wartością. Trzy pozostałe są tymi,
+           które wydanie 2026.1 dopuszczało obok centosa.
+
+           hostOs zostaje puste. Nota nazywa jeden porzucony system, a nie wylicza tych,
+           które zostały; wpisanie ich z pamięci byłoby dokładnie tym, czego watcher
+           odmawia — klasyfikacją zgadniętą, po której ktoś przyjmie, że ktoś sprawdził. */
+        baseDistros: ["debian", "rocky", "ubuntu"], unpublished: [], hostOs: [],
         defaults: {},
         deprecationsCatalogued: false,
         deprecated: []
