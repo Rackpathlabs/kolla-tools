@@ -1,0 +1,124 @@
+name: a11y-audit
+
+# AUDYTOR, NIE BRAMKA — i to jest cała różnica wobec ci.yml.
+#
+# axe-core jest cudzą paczką, a jej zestaw reguł zmienia się między wydaniami. Kryterium
+# bramkujące oparte na takim zestawie znaczy, że aktualizacja u kogoś innego może wywalić
+# build tutaj, bez jednej zmiany w tym repozytorium — i wtedy dzieje się rzecz gorsza od
+# czerwonego builda: ktoś przypina wersję i przestaje ją podnosić, albo dopisuje wyjątek,
+# żeby przejść dalej. Miernik, któremu przestaje się ufać, przestaje cokolwiek chronić,
+# a to repozytorium ma już jeden taki przypadek zapisany — #63, gdzie strażnik języka był
+# zielony przez tygodnie wobec trzynastu znalezionych ręcznie pozycji.
+#
+# BRAMKĄ ZOSTAJĄ STRAŻNICY PIERWSZEJ RĘKI: tools/check-a11y.js (nazwa dostępna, etykieta
+# pola, poziomy nagłówków, kontrast liczony arytmetyką WCAG z tokenów) i
+# tools/check-print.js. Ich kryteria są tutaj, czytelne i zmienialne wyłącznie stąd.
+# Ten workflow dokłada drugą parę oczu, której nikt nie musi słuchać w ciągu pięciu minut.
+#
+# NIC NIE WCHODZI DO DRZEWA. `npx` pobiera paczkę do katalogu runnera i znika razem z nim;
+# w repozytorium nie ma i nie będzie package.json ani node_modules — pilnuje tego
+# tools/check-npm.js, którego ten plik nie osłabia. README dopuszcza zależności
+# W OPRZYRZĄDOWANIU i ma na to precedens: PyYAML w porównywarce macierzy wydań.
+#
+# CI zostaje bez dostępu do sieci. Sieć żyje w workflow'ach cotygodniowych — tutaj
+# i w upstream-watch.yml — i nigdzie indziej.
+on:
+  schedule:
+    - cron: "23 6 * * 2"
+  workflow_dispatch:
+
+# Ten sam powód co w upstream-watch.yml: cron i workflow_dispatch mogą się nałożyć, a dwa
+# przebiegi szukające swojego zgłoszenia jednocześnie oba go nie znajdują i oba je zakładają.
+concurrency:
+  group: a11y-audit
+  cancel-in-progress: false
+
+# pull-requests: świadomie BRAK, dokładnie jak w upstream-watch.yml — repozytorium ma
+# wyłączone tworzenie PR-ów przez Actions, a GitHub wiąże tworzenie z zatwierdzaniem
+# w jednym przełączniku. Bramką ma być człowiek.
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  audit:
+    name: axe jako druga para oczu
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Etykieta musi istnieć, zanim cokolwiek jej poszuka — tożsamość zgłoszenia leży
+      # w niej, nie w tytule (#90). --force jest idempotentne.
+      - name: Etykieta tożsamości audytora
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh label create watcher:a11y --color BFD4F2 --force \
+            --description "Zgłoszenie prowadzone przez a11y-audit: znaleziska axe-core do przeglądu"
+
+      # axe-core/cli chce adresu http, nie file://. Serwer jest lokalny i żyje tyle, co ten
+      # krok; produkt nadal nie wykonuje ani jednego żądania — sprawdza to check-network.js
+      # w ci.yml, na scenariuszach, i to tam mieszka obietnica „zero sieci".
+      - name: Serwer lokalny
+        run: |
+          python3 -m http.server 8123 --bind 127.0.0.1 >/tmp/http.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:8123/index.html >/dev/null && break
+            sleep 1
+          done
+          curl -sf http://127.0.0.1:8123/index.html >/dev/null
+
+      # BEZ --exit. Interesuje nas RAPORT, a nie kod wyjścia: kod wyjścia zamieniłby ten
+      # workflow w bramkę, czyli w to, czego ten plik świadomie nie jest.
+      - name: axe
+        id: axe
+        run: |
+          set +e
+          npx --yes @axe-core/cli@4 \
+            http://127.0.0.1:8123/index.html \
+            http://127.0.0.1:8123/generator.html \
+            http://127.0.0.1:8123/validator.html \
+            --save /tmp/axe.json --stdout > /tmp/axe.stdout 2>/tmp/axe.stderr
+          echo "rc=$?" >> "$GITHUB_OUTPUT"
+          tail -20 /tmp/axe.stderr || true
+
+      # PRZEBIEG, KTÓRY SIĘ NIE ODBYŁ, MA WYGLĄDAĆ INACZEJ NIŻ PRZEBIEG BEZ ZNALEZISK.
+      # To jest ta sama zasada co kod 2 u strażników: „nie zmierzyłem" to inna wiadomość
+      # niż „zmierzyłem i jest czysto". Bez tego kroku zerwana sieć, zmiana nazwy paczki
+      # albo padnięty chromedriver dawałyby zgłoszenie „brak znalezisk" — najgorszy możliwy
+      # wynik, bo wygląda jak dobra wiadomość.
+      # PRZEBIEG, KTÓRY SIĘ NIE ODBYŁ, MA WYGLĄDAĆ INACZEJ NIŻ PRZEBIEG BEZ ZNALEZISK.
+      # To ta sama zasada co kod 2 u strażników: „nie zmierzyłem" to inna wiadomość niż
+      # „zmierzyłem i jest czysto". Bez tego rozróżnienia zerwana sieć albo padnięty
+      # chromedriver dawałyby zgłoszenie „brak znalezisk" — wynik wyglądający jak dobra
+      # wiadomość. Rozstrzyga tools/axe-report.js, w drzewie i pod testem, a nie skrypt
+      # wklejony w krok, którego nikt nigdy nie uruchomi lokalnie.
+      - name: Raport
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RC: ${{ steps.axe.outputs.rc }}
+        run: |
+          set -euo pipefail
+          TITLE="Dostępność: cotygodniowy audyt axe-core"
+          BODY="$(node tools/axe-report.js /tmp/axe.json \
+                    --rc "$RC" --stderr /tmp/axe.stderr \
+                    --run "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}")"
+
+          # TOŻSAMOŚĆ PRZEZ ETYKIETĘ I `--state all`, nigdy przez wyszukiwarkę po tytule —
+          # dwukropek w tytule rozbija składnię kwalifikatorów, a indeks jest opóźniony
+          # o minuty względem zakładania zgłoszeń. Oba objawy są takie same: "nie znaleziono",
+          # a skutkiem jest druga kopia tego samego zgłoszenia (#90).
+          FOUND="$(gh issue list --state all --label watcher:a11y --limit 200 \
+                     --json number,state --jq '.[0] | "\(.number) \(.state)"')"
+          NUM="${FOUND%% *}"; STATE="${FOUND##* }"
+          if [ -n "$NUM" ] && [ "$NUM" != "null" ]; then
+            # Ciche `gh issue edit` na zamkniętym zgłoszeniu jest tą samą awarią co duplikat,
+            # tylko cichszą: raport powstaje, jest aktualny i jest niewidoczny.
+            if [ "$STATE" = "CLOSED" ]; then
+              gh issue reopen "$NUM" --comment "Otworzone ponownie przez \`a11y-audit\`: cotygodniowy przebieg ma co zaraportować po tym, jak zgłoszenie zamknięto. Jeśli temat jest naprawdę zamknięty, zdejmij etykietę \`watcher:a11y\` — wtedy audytor założy nowe zgłoszenie zamiast wracać do tego."
+            fi
+            gh issue edit "$NUM" --body "$BODY"
+          else
+            gh issue create --title "$TITLE" \
+              --label "watcher:a11y,area:repo,p3" --body "$BODY"
+          fi

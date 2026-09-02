@@ -159,6 +159,30 @@ R.ok("PRZYNĘTA: definicja tokenu wewnątrz bloku motywu nie jest trafieniem",
 R.ok("PRZYNĘTA: atrybut SVG w markupie jest poza zakresem",
      themeBad.out.indexOf("#3ddc97") === -1);
 
+/* ---- axe-report: „nie odbył się" musi wyglądać inaczej niż „nic nie znalazł" ---- */
+/* To NIE jest strażnik i nie ma go w tools/check-*. Jest tu, bo odpowiada za jedyne
+   rozróżnienie, przez które cotygodniowy audyt może kłamać, i bo skrypt wklejony w krok
+   YAML-a nie ma jak być przetestowany. */
+var axeOk = run("axe-report.js", ["tools/fixtures/axe/wynik.json", "--rc", "0"]);
+R.ok("raport z fixtury -> kod 0 (to generator tekstu, nie kontrola)", axeOk.code === 0,
+     kod(axeOk));
+R.ok("liczy WYSTĄPIENIA, nie reguły", /Znalezisk axe-core: \*\*3\*\* na 2 stronach/.test(axeOk.out),
+     axeOk.out.split("\n")[0]);
+R.ok("pionowa kreska w opisie reguły nie rozbija tabeli",
+     /Form elements must have labels \\\| with a pipe/.test(axeOk.out));
+R.ok("mówi wprost, że nie jest bramką", /audyt, nie bramka/.test(axeOk.out));
+R.ok("i nazywa, czego nie widzi", /Czego ten audyt NIE widzi/.test(axeOk.out));
+
+var axeBrak = run("axe-report.js", ["tools/fixtures/axe/nie-ma-takiego.json", "--rc", "1"]);
+R.ok("brak raportu -> „audyt się nie odbył”, a nie „bez znalezisk”",
+     /Audyt się nie odbył/.test(axeBrak.out), axeBrak.out.split("\n")[0]);
+R.ok("i niesie kod wyjścia npx, żeby było czego szukać", /Kod wyjścia .npx.: .1./.test(axeBrak.out));
+R.ok("PRZYNĘTA: nie udaje, że policzył zero", axeBrak.out.indexOf("Znalezisk axe-core") === -1);
+
+var axeSmieci = run("axe-report.js", ["tools/fixtures/axe/uciety.json", "--rc", "0"]);
+R.ok("uszkodzony JSON -> też „nie odbył się”", /Audyt się nie odbył/.test(axeSmieci.out),
+     axeSmieci.out.split("\n")[0]);
+
 /* ---- check-print: co naprawdę wychodzi z drukarki ---- */
 /* Trzy uruchomienia Chrome'a na jednostronicowej fixturze. Strażnik niesie WŁASNĄ kontrolę
    w każdym przebiegu — wariant z unieważnionym blokiem druku — więc dowód, że potrafi

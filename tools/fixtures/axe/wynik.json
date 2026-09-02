@@ -1,0 +1,15 @@
+[
+  {
+    "url": "http://127.0.0.1:8123/index.html",
+    "violations": []
+  },
+  {
+    "url": "http://127.0.0.1:8123/generator.html",
+    "violations": [
+      { "id": "color-contrast", "impact": "serious", "help": "Elements must meet minimum color contrast ratio thresholds",
+        "nodes": [{ "target": ["#a"] }, { "target": ["#b"] }] },
+      { "id": "label", "impact": "critical", "help": "Form elements must have labels | with a pipe in the text",
+        "nodes": [{ "target": ["#c"] }] }
+    ]
+  }
+]
