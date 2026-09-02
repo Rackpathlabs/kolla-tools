@@ -59,11 +59,27 @@ rather than returning a short list that looks complete.
 
 ## Offline guarantee
 
-Everything happens in your browser. No file is uploaded, nothing is stored on a server,
-and the tools make no network requests at all — a Content-Security-Policy of
-`default-src 'none'` blocks `fetch`, `XMLHttpRequest`, WebSockets and beacons, and CI
-fails if that policy changes, if any outbound API appears in the code, or if any external
-resource is referenced.
+Everything happens in your browser. No file is uploaded and nothing is stored on a server.
+
+**What guarantees it:** a Content-Security-Policy of `default-src 'none'`, pinned in every
+tool, which blocks `fetch`, `XMLHttpRequest`, WebSockets, beacons and every external
+resource at runtime, whatever the code asks for. CI fails if that policy changes by a
+character or stops preceding the first tag that loads anything.
+
+**What CI additionally checks, stated as narrowly as it is true.** Two checks stand behind
+the policy and neither of them proves "no outbound call exists":
+
+- a scan for **six named network APIs** — `fetch`, `XMLHttpRequest`, `sendBeacon`,
+  `WebSocket`, `EventSource`, `importScripts` — as literals in the source, plus external
+  addresses in resource tags, `url()` and `@import`. It is a closed list, so it passes
+  anything its author did not think of; `new Image().src = "https://…"` is ordinary code
+  and goes straight through it;
+- a browser run of the tools' **15 scenarios** with the network log read afterwards, which
+  reports the requests that actually happened. It proves behaviour on the paths it
+  executed, and says nothing about the paths it did not.
+
+The promise rests on the policy. The two checks narrow the ways somebody could write a call
+by accident; for anything to leave the browser, the policy would have to fail as well.
 
 Each tool is one self-contained HTML file. Save it and it keeps working from `file://`,
 offline, with no install and no dependencies.
@@ -87,12 +103,15 @@ instead of staying silent.
 | 2024.2 Dalmatian | 19.x | end of life | yes |
 | 2024.1 Caracal | 18.x | unmaintained | yes |
 | 2023.2 Bobcat | 17.x | end of life | no |
-| 2023.1 Antelope | 16.x | end of life | no |
-| Zed | 15.x | end of life | no |
-| Yoga | 14.x | end of life | no |
+| 2023.1 Antelope | 16.x | unmaintained | no |
+| Zed | 15.x | unmaintained | no |
+| Yoga | 14.x | unmaintained | no |
 
 Base image distributions: `centos`, `debian`, `rocky`, `ubuntu`, validated per release.
-Matrix data verified 2026-08-11 against `docs.openstack.org` and `releases.openstack.org`.
+Matrix data verified 2026-08-11 against `docs.openstack.org` and `releases.openstack.org`,
+and unchanged since — the weekly job has opened no drift report in that time. The status
+column is the one `matrix.js` carries, which is what the tools report; three rows used to
+say "end of life" here while the data said `unmaintained`.
 A weekly job compares the matrix against the OpenStack release data and opens a draft PR
 when a series status or date has moved. It never guesses: anything touching what a rule
 means — a new flag, a changed default, a deprecation — is filed for review instead.
