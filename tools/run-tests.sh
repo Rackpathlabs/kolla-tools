@@ -121,6 +121,12 @@ echo
 echo "== golden: round-trip parsera =="
 "$NODE" tools/golden/roundtrip.golden.js .gen.test.tmp.js $GOLDEN_FLAG || rc=1
 
+# Stan w adresie: round-trip bajtowy i lista odmów. Wzorzec pinuje sam ZAPIS, bo link
+# zapisany dziś ma dać się odczytać jutro.
+echo
+echo "== golden: stan w adresie =="
+"$NODE" tools/golden/link.golden.js .gen.test.tmp.js $GOLDEN_FLAG || rc=1
+
 echo
 echo "== golden: schemat eksportu JSON =="
 "$NODE" tools/golden/export.golden.js .val.test.tmp.js $GOLDEN_FLAG || rc=1

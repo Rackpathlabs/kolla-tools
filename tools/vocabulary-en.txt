@@ -39,6 +39,7 @@ above
 absence
 absent
 accept
+accepts
 acknowledged
 acknowledging
 acknowledgment
@@ -84,6 +85,7 @@ anything
 api
 appear
 appears
+applied
 applies
 are
 around
@@ -111,6 +113,7 @@ balancer
 balancers
 balancing
 bandwidth
+bar
 barbican
 base
 be
@@ -327,6 +330,8 @@ elsewhere
 emitted
 empty
 enable
+encoded
+encoding
 encrypt
 end
 endpoint
@@ -585,6 +590,7 @@ log
 long
 longer
 look
+looking
 looks
 loops
 lose
@@ -728,16 +734,19 @@ ovn
 ovs
 own
 pacemaker
+pairs
 panel
 parameters
 parent
 parser
 part
+partial
 partition
 parts
 pass
 passes
 paste
+pasted
 patches
 patching
 path
@@ -801,6 +810,7 @@ reading
 reads
 ready
 real
+reason
 rebalance
 reboot
 rebuilds
@@ -887,6 +897,7 @@ serves
 service
 services
 set
+sets
 setting
 settings
 settle
@@ -1066,6 +1077,7 @@ were
 what
 when
 where
+wherever
 whether
 which
 while
@@ -1088,6 +1100,7 @@ worth
 would
 write
 writes
+written
 x
 yaml
 yes

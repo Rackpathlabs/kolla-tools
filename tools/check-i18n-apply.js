@@ -131,6 +131,10 @@ function installDom(els) {
     addEventListener: function () {}, removeEventListener: function () {}
   };
   global.getComputedStyle = global.window.getComputedStyle;
+  /* Generator czyta adres przy starcie (#15); bez tych dwóch samo wykonanie bloku
+     rzuca wyjątkiem i strażnik raportuje awarię strony zamiast awarii applier'a. */
+  global.location = { hash: "", href: "file:///generator.html", protocol: "file:" };
+  global.history = { replaceState: function () {} };
   global.navigator = {};
   global.setInterval = function () { return 0; };
   global.clearInterval = function () {};
