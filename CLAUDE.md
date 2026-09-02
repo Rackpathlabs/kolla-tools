@@ -310,6 +310,47 @@ A meter nobody trusts stops protecting anything. That is the lesson of #63, wher
 language guard reported zero against thirteen hand-found positions and had been green
 for weeks.
 
+## A guard's criterion never rides in a commit that changes the product
+
+Two things live in `tools/` and only one of them may travel with a product change. The
+distinction is the whole of this rule, because without it the rule would either forbid
+something required elsewhere or forbid nothing at all.
+
+**The RECORD OF A MEASUREMENT belongs in the commit that changes the thing measured.** A
+threshold, a line in `tools/i18n-unanchored.txt`, a word accepted into
+`tools/vocabulary-en.txt`, a golden file, a snapshot. These are not checks; they are what the
+check read after the change. Separating them produces a commit that is internally
+inconsistent — a threshold sitting below its own measurement, a golden describing output the
+tree no longer produces — and the ratchet rule above says so outright: *when the debt drops,
+lower the threshold in the same pull request.*
+
+**The CRITERION OF A GUARD — what counts as a violation and how it is detected — never shares
+a commit with a product change.** Separate commit, separate description. The reason is
+revert, not tidiness: a commit carrying both cannot be undone in one direction. Undoing the
+product change takes the detection with it, and undoing the detection takes the product change
+with it, so the failure the guard exists to catch becomes unreachable exactly when somebody is
+trying to reach it.
+
+**The defect that produced this rule, and it is measured rather than imagined.** `b2c3867`
+carried the markup of both tools together with `docs/PRINCIPLES.md`, `check-dictionary.js`,
+`check-literals.js`, `guards.test.js` and nine fixtures. `git revert --no-commit` on it applies
+cleanly — 26 files, 323 insertions, 1649 deletions, dictionary consistent, suite green — and
+removes the entire apparatus that found the regression, along with the document explaining why
+meters are built before the work. Reverting the regression stopped being an available move.
+
+**And the rule is not hypothetical in the present tense either.** Measured over the sixty most
+recent non-merge commits: fifteen touch the product and something under `tools/`; eleven touch
+the product and a guard file; eight of those eleven move only a threshold and are correct by
+the paragraph above. **Three mix a product change with a guard's criterion** — `9476b2c`,
+`aa3d9d6`, `7d87a4c` — and all three were written within one day, by somebody who had read
+every other rule in this document. That is the cost being priced here: not a story about a
+commit from months ago, but three in the last sixty.
+
+> NOT ENFORCED. Whether a hunk changes a criterion or records a measurement is a judgement
+> about intent, and no check reads intent. A guard could count files and would fail the eight
+> correct cases along with the three wrong ones, which is how a rule gets deleted the first
+> time it is inconvenient.
+
 ## A milestone's name describes what is in it
 
 An issue that fits no milestone goes to the waiting room — never to the nearest one that

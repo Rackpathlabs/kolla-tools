@@ -18,3 +18,7 @@ Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypeln
 ## Commits carry the project identity, never a person
 
 ## A citation carries the evidence; the SHA is an aid
+
+## A guard's criterion never rides in a commit that changes the product
+
+Zapis pomiaru jedzie z commitem, kryterium strażnika nie. Nieegzekwowana.

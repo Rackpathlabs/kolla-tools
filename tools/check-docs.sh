@@ -96,7 +96,8 @@ else
               "A ratchet threshold may only fall" \
               "A milestone's name describes what is in it" \
               "Commits carry the project identity, never a person" \
-              "A citation carries the evidence; the SHA is an aid"; do
+              "A citation carries the evidence; the SHA is an aid" \
+              "A guard's criterion never rides in a commit that changes the product"; do
     if grep -qF "$want" CLAUDE.md; then
       echo "OK   reguła: $want"
     else

@@ -22,3 +22,7 @@ Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypeln
 ## A citation carries the evidence; the SHA is an aid
 
 Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika.
+
+## A guard's criterion never rides in a commit that changes the product
+
+Zapis pomiaru jedzie z commitem, kryterium strażnika nie. Nieegzekwowana.
