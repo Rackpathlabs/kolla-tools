@@ -218,6 +218,20 @@ are shorter than the pattern they replaced.
 > design, and no check makes it. Written here so the next person reaches for a different
 > shape rather than a fourth edge case.
 
+**Scope a sweep by the sink, not by the name of the field the text sits in.** Nine batches
+moved interface text into the dictionary, and each was cut with a grep over the field names
+the previous batch had seen — `msg:`, `hint:`, `add(`. Seven strings survived all of them by
+sitting under `why:`, `fail:`, `what`, `todo` and in a button label, and they reached the
+screen exactly the way the others did. The grep was asking which words the author had used
+for a variable; the question was which text a user ends up reading. Every one of the seven
+was found afterwards by the measure, not by the sweep — the sweep reported itself complete
+each time.
+
+> NOT ENFORCED. Whether a sweep was scoped by the sink or by a field name is a judgement
+> about how somebody searched, and nothing in a build can see it. Written here because the
+> failure looks like success from inside: a batch that finds nothing more has the same shape
+> as a batch that has finished.
+
 **Parts that are each correct compose into an answer that is wrong.** A counter measuring
 translation progress filtered by file path, paired quotes to find strings, and numbered
 lines after stripping comments. Every step was defensible alone; together they hid
