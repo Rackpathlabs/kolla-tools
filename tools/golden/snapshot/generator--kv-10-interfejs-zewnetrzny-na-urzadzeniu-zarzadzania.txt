@@ -101,7 +101,7 @@ P "Some rules describe a risk the file alone cannot settle. An acknowledgment do
 SPAN "the shared link has headroom and QoS"
 SPAN "Measured bandwidth headroom and switch-side queueing for storage and migration traffic."
 SPAN "migration has its own network outside Kolla"
-SPAN "A dedicated migration VLAN configured through in a nova-compute override."
+SPAN "A dedicated migration network configured through in a nova-compute override."
 CODE "live_migration_inbound_addr"
 LEGEND "Output"
 SPAN "Explanatory comments"
