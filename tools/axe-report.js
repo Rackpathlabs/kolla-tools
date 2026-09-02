@@ -15,7 +15,7 @@
  * Bramką zostają tools/check-a11y.js i tools/check-print.js — kryteria pierwszej ręki.
  *
  * Użycie:
- *     node tools/axe-report.js <raport.json> [--rc N] [--stderr plik] [--run URL]
+ *     node tools/axe-report.js <raport.json> [drugi-kandydat ...] [--rc N] [--stderr plik] [--run URL]
  *
  * Zawsze kod 0: to jest generator tekstu, nie kontrola. Czerwień, gdyby tu była, zamieniłaby
  * audytora w bramkę tylnymi drzwiami.
@@ -49,18 +49,34 @@ function nieOdbylSie(powod) {
     "Ostatnie linie stderr:\n\n```\n" + (err.trim() || "(brak)") + "\n```\n" + stopka;
 }
 
-var surowe;
-try {
-  surowe = fs.readFileSync(plik, "utf8");
-} catch (e) {
-  process.stdout.write(nieOdbylSie("Raport `" + plik + "` nie powstał."));
-  process.exit(0);
+/* WIĘCEJ NIŻ JEDNA ŚCIEŻKA, bo @axe-core/cli w zależności od wersji i przełączników raz
+   zapisuje plik, a raz wypisuje wynik na standardowe wyjście. Zmierzone na przebiegu
+   33618502648: kod wyjścia 0, puste stderr i BRAK pliku wskazanego przez --save. Strażnik
+   powiedział wtedy poprawnie „audyt się nie odbył" — bo z jego punktu widzenia się nie
+   odbył — ale przyczyną było miejsce zapisu, a nie audyt. Kandydaci są sprawdzani po kolei
+   i pierwszy, z którego da się przeczytać JSON, wygrywa. */
+var kandydaci = [plik].concat(process.argv.slice(3).filter(function (a, i, t) {
+  return a.indexOf("--") !== 0 && (i === 0 || t[i - 1].indexOf("--") !== 0);
+}));
+
+/* Przed JSON-em bywa gadanina narzędzia. Szukamy pierwszego nawiasu otwierającego i od
+   niego parsujemy — a jeśli i to nie jest JSON, kandydat odpada. */
+function czytaj(sciezka) {
+  var tekst;
+  try { tekst = fs.readFileSync(sciezka, "utf8"); } catch (e) { return null; }
+  var i = tekst.search(/[[{]/);
+  if (i === -1) return null;
+  try { return JSON.parse(tekst.slice(i)); } catch (e) { return null; }
 }
-var dane;
-try {
-  dane = JSON.parse(surowe);
-} catch (e) {
-  process.stdout.write(nieOdbylSie("Raport `" + plik + "` nie jest poprawnym JSON-em."));
+
+var dane = null, uzyty = null;
+for (var k = 0; k < kandydaci.length; k++) {
+  dane = czytaj(kandydaci[k]);
+  if (dane) { uzyty = kandydaci[k]; break; }
+}
+if (!dane) {
+  process.stdout.write(nieOdbylSie(
+    "Z żadnego z plików nie dało się przeczytać raportu: `" + kandydaci.join("`, `") + "`."));
   process.exit(0);
 }
 
