@@ -227,6 +227,30 @@ R.ok("kolumna klucza zwolniona przez regułę IDENTYFIKATORA, nie przez tę kate
      !/network_interface/.test(diffCells.out) &&
      /identyfikator: klucz, nazwa pliku/.test(diffCells.out), diffCells.out.split("\n")[4]);
 
+/* ---- CZWARTA I PIĄTA ODSŁONA TEJ SAMEJ POMYŁKI: SEKWENCJE UCIECZKI I SPACJA ----
+   #135 (treść dziecka), #145 (wstawki) i #147 (encje HTML) naprawiły trzy warianty jednego
+   błędu: porównywania ZAPISU zamiast tego, co widać. Zostały dwa, oba z tej samej rodziny:
+
+     UCIECZKI  korpus rozwijał `\"`, ale nie `\n`. Wpis „---\nkolla_base_distro…" dawał
+               segment z DWUZNAKOWĄ sekwencją tam, gdzie ekran ma spację.
+     SPACJA    przy usuwaniu treści dziecka wstawialiśmy spację w miejsce elementu, więc
+               wpis „…step (<code>[01:10:2]</code>)." dawał „…step ( )." wobec „…step ()."
+               na ekranie. Nawiasy sklejają się bez odstępu, a znacznik nie jest odstępem.
+
+   Oba wpisy MAJĄ klucz i były liczone jako niepokryte — czyli miernik zgłaszał dług tam,
+   gdzie migracja była już zrobiona. */
+var esc2 = run("check-dictionary.js", ["tools/fixtures/report-escapes.json"]);
+R.ok("wpis z \\n w wartości -> POKRYTY", !/kolla_base_distro/.test(esc2.out),
+     esc2.out.split("\n")[2]);
+R.ok("wpis, w którym dziecko stało między nawiasami -> POKRYTY",
+     !/optionally with a step/.test(esc2.out));
+/* PRZYNĘTA: napis spoza słownika ma dalej NIE być pokryty — obie naprawy są o zapisie
+   wpisu, a nie o luzowaniu kryterium. */
+R.ok("PRZYNĘTA: napis spoza słownika -> dalej BEZ POKRYCIA",
+     /Coś zupełnie innego/.test(esc2.out));
+R.ok("czyli DOKŁADNIE jeden brak w tej fixturze",
+     /BEZ POKRYCIA: 1 RÓŻNYCH NAPISÓW/.test(esc2.out), esc2.out.split("\n")[2]);
+
 var ins = run("check-dictionary.js", ["tools/fixtures/report-insertions.json"]);
 R.ok("wpis ze wstawką, wyrenderowany z wartością -> POKRYTY",
      !/holds no host/.test(ins.out), ins.out.split("\n")[2]);

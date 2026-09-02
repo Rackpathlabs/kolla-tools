@@ -1,0 +1,29 @@
+[
+ {
+  "tag": "PLACEHOLDER",
+  "cls": "import_src",
+  "text": "--- kolla_base_distro: \"rocky\" …",
+  "inData": false,
+  "fromInput": false,
+  "file": "d.html",
+  "scenario": "ucieczki"
+ },
+ {
+  "tag": "P",
+  "cls": "hint",
+  "text": "Ansible expects or , optionally with a step (). Both ends must be of the same kind, and with a leading zero also of the same length.",
+  "inData": false,
+  "fromInput": false,
+  "file": "d.html",
+  "scenario": "ucieczki"
+ },
+ {
+  "tag": "P",
+  "cls": "note",
+  "text": "Coś zupełnie innego, czego w słowniku nie ma.",
+  "inData": false,
+  "fromInput": false,
+  "file": "d.html",
+  "scenario": "ucieczki"
+ }
+]

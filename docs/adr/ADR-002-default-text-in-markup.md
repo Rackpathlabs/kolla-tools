@@ -350,6 +350,14 @@ dopasowanie dopuszczone w drugą stronę — dostatecznie długi segment mieszcz
 w napisie z ekranu też jest pokryciem, z progiem 12 znaków wybranym pomiarem, nie okrągłością.
 `BASELINE` 43 → 21.
 
+**Trzecia, czwarta i piąta (PR #147, #148, #149): encje HTML, sekwencje ucieczki i spacja.**
+Ta sama pomyłka jeszcze trzy razy, w coraz drobniejszym zapisie: korpus porównywał `&rarr;`
+z ekranowym `→`, rozwijał `\"` ale nie `\n`, a przy usuwaniu treści dziecka wstawiał spację
+w miejsce elementu, więc `…step (<code>…</code>).` dawało `…step ( ).` wobec `…step ().`.
+
+**Po piątej odsłonie `BASELINE` wynosi ZERO.** Z 138 różnych napisów, od których zaczynało
+się #86, długiem tekstowym było 55; reszta to pięć odsłon tej pomyłki i pięć klas danych.
+
 **Wniosek dla tego dokumentu, i to jest jedyne, co warto z tego zapamiętać.** Przewidywanie
 „artefakt zniknie sam" było błędne co do MECHANIZMU, a nie co do wielkości: artefakt
 faktycznie nie był długiem tekstowym i faktycznie miał zniknąć — tylko nie przez zmianę
