@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 /* NA WYKONANYCH SCENARIUSZACH NIE ZAOBSERWOWANO ŻADNEGO ŻĄDANIA SIECIOWEGO.
  *
+ * ŻĄDANIA, KTÓRE WYSTĄPIŁY, czytane po WPISACH ZDARZEŃ netlogu — nie napisy w pliku
+ * diagnostycznym. Różnica nie jest szczegółem implementacji: netlog niesie na końcu zrzut
+ * STANU przeglądarki, w którym stoją adresy, do których nikt nie wysłał ani jednego bajtu,
+ * i właśnie je czytaliśmy jako ruch (#128). Kryterium pochodzenia stoi przy hostsFrom.
+ *
  * To zdanie jest całym zakresem tego pliku i jest napisane tak od pierwszej wersji.
  * NIE brzmi „narzędzie nie wychodzi do sieci" — bo tego ten strażnik nie dowodzi
  * i dowieść nie może. Dowodzi ZACHOWANIA NA ŚCIEŻKACH, KTÓRE PRZEJECHAŁ.
@@ -153,17 +158,49 @@ fs.mkdirSync(work, { recursive: true });
 
 function winPath(p) { return p.replace(/\\/g, "/").replace(/^([A-Za-z]):/, "$1:"); }
 
-/* Hosty z netlogu. Czytamy pole url zdarzeń — nie parsujemy całego formatu, bo
-   interesuje nas obecność żądania, a nie jego przebieg. */
+/* HOSTY Z WPISÓW ZDARZEŃ, NIGDY Z GREPA PO PLIKU (#128).
+
+   Do 2026-09-02 hosty wyciągało wyrażenie po CAŁEJ treści pliku. Netlog ma jednak dwie
+   części: `events` — co się wydarzyło — oraz `polledData`, zrzut STANU dopisywany na końcu.
+   `csp.withgoogle.com` nie występował w `events` ANI RAZU; stał wyłącznie w rejestrze
+   punktów Reporting API, zbieranym przez Chrome z nagłówków `report-to:` cudzych odpowiedzi,
+   z własnymi licznikami mówiącymi `reports: 0, uploads: 0`. Żądania nie było. A mimo to host
+   trafiał do wyniku — raz na jakiś czas, zależnie od tego, co zdążyło dojść przed zamknięciem
+   logu, i to jest cały flake opisany w #128.
+
+   Był to pomiar REPREZENTACJI w strażniku zbudowanym po to, żeby mierzyć SKUTEK (ADR-003,
+   opcja D). Ta funkcja odpowiada teraz na pytanie „jakie żądania WYSTĄPIŁY". */
 function hostsFrom(logFile) {
   if (!fs.existsSync(logFile)) return null;
   var raw = fs.readFileSync(logFile, "utf8");
-  var out = Object.create(null), m;
-  var re = /"url":"(https?:\/\/[^"]+)"/g;
-  while ((m = re.exec(raw))) {
-    var h = m[1].split("/")[2];
-    if (h) out[h] = (out[h] || 0) + 1;
+  var log;
+  try {
+    log = JSON.parse(raw);
+  } catch (e) {
+    /* Netlog urwany w połowie zdarzenia zdarza się, gdy proces kończy się w trakcie zapisu.
+       Doklejamy domknięcie i próbujemy raz jeszcze — ale gdy i to zawiedzie, zwracamy null,
+       a wywołujący traktuje to jako BRAK POMIARU, nie jako czysty wynik. */
+    var cut = raw.lastIndexOf("},");
+    try { log = JSON.parse(raw.slice(0, cut + 1) + "]}"); } catch (e2) { return null; }
   }
+  if (!log || !Array.isArray(log.events)) return null;
+
+  var URL_REQUEST = log.constants && log.constants.logSourceType &&
+                    log.constants.logSourceType.URL_REQUEST;
+  var out = Object.create(null);
+  log.events.forEach(function (ev) {
+    var p = ev && ev.params;
+    if (!p || typeof p.url !== "string") return;
+    /* KRYTERIUM POCHODZENIA: zdarzenie musi nieść adres ORAZ jedno ze znamion prawdziwego
+       żądania — `traffic_annotation`, którą Chrome nadaje każdemu żądaniu sieciowemu, albo
+       źródło typu URL_REQUEST. Wpis rejestru punktów raportowania nie ma ani jednego z nich:
+       nie ma adnotacji, nie ma inicjatora, nie ma metody i nie leży w `events`. */
+    var fromRequest = p.traffic_annotation !== undefined ||
+                      (URL_REQUEST !== undefined && ev.source && ev.source.type === URL_REQUEST);
+    if (!fromRequest) return;
+    var m = /^https?:\/\/([^/]+)/.exec(p.url);
+    if (m) out[m[1]] = (out[m[1]] || 0) + 1;
+  });
   return out;
 }
 
