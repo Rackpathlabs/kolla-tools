@@ -80,6 +80,13 @@ backend overrides that split a cluster despite a cluster name being set — live
 likely to surprise, because the resulting failures look random: a load balancer that works
 or hangs depending on which host answered.
 
+**What an export contains.** The validator can hand over its findings as Markdown or as
+JSON. Both files carry material taken from the inventory you loaded — host names, addresses,
+group names — because a finding that did not name them would not be a finding. That puts an
+export in the same class as the comment the generator writes into your `globals.yml`: it
+leaves the browser, and where it goes afterwards is outside anything this tool can promise.
+Nothing is uploaded; the file is built in the page and handed to your download folder.
+
 ## Where certainty ends
 
 Some checks are certain, and some are inferences. The tools distinguish between the two,

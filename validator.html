@@ -287,6 +287,8 @@ Paste the contents of your multinode file, or drag it here."
         <h2><span data-i18n="v.result">Validation result</span>
           <span class="sp"></span>
           <button type="button" class="small ghost" id="btn-report" disabled data-i18n="v.btn.report">Copy report</button>
+          <button type="button" class="small ghost" id="btn-export-md" disabled data-i18n="v.btn.exportMd">Export Markdown</button>
+          <button type="button" class="small ghost" id="btn-export-json" disabled data-i18n="v.btn.exportJson">Export JSON</button>
         </h2>
         <div class="body">
           <div class="verdict" id="verdict" role="status" aria-live="polite">
@@ -1468,6 +1470,15 @@ Paste the contents of your multinode file, or drag it here."
                                    "endpoints become reachable from the public network. An audit usually finds this, " +
                                    "not an outage.",
       "g.d.dependency":            "<code>{what}</code> requires {needs}.",
+      /* Eksport findingów (#14). Dwa kontrakty, jeden przycisk na każdy — powód
+         rozdzielenia stoi przy funkcjach eksportu w validator.html. */
+      "v.btn.exportMd":            "Export Markdown",
+      "v.btn.exportJson":          "Export JSON",
+      "v.exp.colCode":             "Code",
+      "v.exp.colSev":              "Severity",
+      "v.exp.colWhere":            "Where",
+      "v.exp.colWhat":             "What",
+      "v.exp.tally":               "{errors} errors, {warnings} warnings, {infos} informational.",
       "v.f.release.hint":          "Group names are checked against this release.",
       /* OSTATNIE SIEDEM UJŚĆ — przeniesione 2026-09-02 (#58).
 
@@ -1601,6 +1612,8 @@ Paste the contents of your multinode file, or drag it here."
     toast: document.getElementById("toast"),
     file: document.getElementById("file"),
     btnReport: document.getElementById("btn-report"),
+    btnExportMd: document.getElementById("btn-export-md"),
+    btnExportJson: document.getElementById("btn-export-json"),
     release: document.getElementById("release"),
     releaseTo: document.getElementById("release_to"),
     gsrc: document.getElementById("gsrc"),
@@ -1614,6 +1627,10 @@ Paste the contents of your multinode file, or drag it here."
   };
 
   var lastReport = null;
+  /* Wynik analizy trzymany osobno od raportu tekstowego: eksporty budują się z tej samej
+     struktury, co ekran, a nie z raportu — inaczej byłyby trzecim renderem tego samego
+     i rozjechałyby się przy pierwszej zmianie któregokolwiek. */
+  var lastRes = null;
 
   /* ================================================================== */
   /* parser                                                              */
@@ -3004,6 +3021,97 @@ Paste the contents of your multinode file, or drag it here."
     return s;
   }
 
+  /* ================================================================
+     DWA EKSPORTY, DWA RÓŻNE KONTRAKTY — i to jest cała treść tej sekcji.
+
+     JSON JEST KONTRAKTEM MASZYNOWYM. Niesie wyłącznie to, co stabilne: kod findingu,
+     wagę, źródło, linię i odsyłacze, plus wydanie, ścieżkę aktualizacji i obecność
+     globals. NIE NIESIE `msg` ani `hint` — to jest tekst interfejsu, który zmienia się
+     przy każdej migracji do słownika i przy każdej poprawce redakcyjnej, a kod findingu
+     jest stabilny z mocy #26. Skrypt czytający ten plik ma się opierać o kod.
+     Pole `schema` istnieje po to, żeby zmiana kształtu była jawna, a nie odgadywana
+     z obecności pól; golden pinuje kształt bajtowo.
+
+     MARKDOWN JEST DLA CZŁOWIEKA i niesie PEŁNY tekst — komunikaty i podpowiedzi.
+     Podąża więc za słownikiem i BĘDZIE się zmieniał; raport złożony z samych kodów
+     jest tabelką do odkodowania, a nie raportem. Ta różnica jest zamierzona: jeden
+     eksport obiecuje stabilność, drugi czytelność, i żaden nie obiecuje obu naraz.
+     ================================================================ */
+  function buildExportJson(res) {
+    return JSON.stringify({
+      schema: 1,
+      release: res.release ? res.release.id : null,
+      upgradeTo: res.releaseTo ? res.releaseTo.id : null,
+      hasGlobals: !!res.hasGlobals,
+      findings: res.findings.map(function (f) {
+        return {
+          code: f.code,
+          sev: f.sev,
+          src: f.src,
+          line: f.line === undefined ? null : f.line,
+          refs: (f.refs || []).map(function (x) { return x.src + ":" + (x.line || "-"); })
+        };
+      })
+    }, null, 2) + "\n";
+  }
+
+  /* Zliczanie osobno od renderVerdict, bo tamta funkcja RYSUJE. Wywołanie jej dla samej
+     liczby przerysowywałoby werdykt przy każdym eksporcie — czynność uboczna tam, gdzie
+     miał być odczyt, i drugi powód, dla którego widok mógłby się rozjechać z plikiem. */
+  function tallyOf(findings) {
+    var t = { e: 0, w: 0, i: 0 };
+    findings.forEach(function (f) {
+      if (f.sev === "error") t.e++; else if (f.sev === "warn") t.w++; else t.i++;
+    });
+    return t;
+  }
+
+  function buildExportMarkdown(res, tally) {
+    var L = [];
+    L.push("# " + T("v.rep.title"));
+    L.push("");
+    L.push(T("v.rep.hosts", { hosts: res.hostCount, groups: res.order.length }));
+    L.push("");
+    if (!res.findings.length) {
+      L.push(T("v.rep.clean"));
+      return L.join("\n") + "\n";
+    }
+    L.push("| " + T("v.exp.colCode") + " | " + T("v.exp.colSev") + " | " +
+           T("v.exp.colWhere") + " | " + T("v.exp.colWhat") + " |");
+    L.push("|---|---|---|---|");
+    res.findings.forEach(function (f) {
+      var where = f.src === "cross" ? T("v.rep.both") : f.src;
+      if (f.line) where += " " + T("v.rep.refLine", { line: f.line });
+      /* Znaczniki HTML ze słownika znikają, bo Markdown ma być czytelny w terminalu;
+         pionowa kreska jest uciekana, bo inaczej rozbiłaby wiersz tabeli. */
+      var what = String(f.msg || "").replace(/<[^>]+>/g, "").replace(/\|/g, "\\|");
+      if (f.hint) what += " " + String(f.hint).replace(/<[^>]+>/g, "").replace(/\|/g, "\\|");
+      L.push("| `" + f.code + "` | " + f.sev + " | " + where + " | " + what.trim() + " |");
+    });
+    L.push("");
+    L.push(T("v.exp.tally", { errors: tally.e, warnings: tally.w, infos: tally.i }));
+    return L.join("\n") + "\n";
+  }
+
+  /* Pobranie przez blob:, ten sam wzorzec co w generatorze. Zero sieci: blob żyje
+     w przeglądarce, polityka CSP nietknięta. */
+  function download(text, filename, mime) {
+    try {
+      var blob = new Blob([text], { type: mime });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      toast(T("t.download.handed", { name: filename }));
+    } catch (e) {
+      toast(T("t.download.blocked"), true);
+    }
+  }
+
   function buildReport(res, tally) {
     var L = [];
     L.push(T("v.rep.title"));
@@ -3067,6 +3175,9 @@ Paste the contents of your multinode file, or drag it here."
     el.topology.innerHTML = '<p class="empty-state">' + esc(T("v.empty")) + "</p>";
     el.chipHosts.textContent = I18N.count("n.host", 0);
     lastReport = null;
+    lastRes = null;
+    el.btnExportMd.disabled = true;
+    el.btnExportJson.disabled = true;
     el.btnReport.disabled = true;
     lastInput = inputFingerprint();
     markStale();
@@ -3116,7 +3227,10 @@ Paste the contents of your multinode file, or drag it here."
     renderTopology(res);
     var tally = renderVerdict(res.findings);
     lastReport = buildReport(res, tally);
+    lastRes = res;
     el.btnReport.disabled = false;
+    el.btnExportMd.disabled = false;
+    el.btnExportJson.disabled = false;
     lastInput = inputFingerprint();
     markStale();
   }
@@ -3199,6 +3313,18 @@ Paste the contents of your multinode file, or drag it here."
   el.btnReport.addEventListener("click", function () {
     if (!lastReport) return;
     copyText(lastReport + "\n");
+  });
+
+  el.btnExportMd.addEventListener("click", function () {
+    if (!lastRes) return;
+    download(buildExportMarkdown(lastRes, tallyOf(lastRes.findings)),
+             "inventory-findings.md", "text/markdown;charset=utf-8");
+  });
+
+  el.btnExportJson.addEventListener("click", function () {
+    if (!lastRes) return;
+    download(buildExportJson(lastRes), "inventory-findings.json",
+             "application/json;charset=utf-8");
   });
 
   function copyText(text) {

@@ -110,6 +110,10 @@ echo "== golden: round-trip parsera =="
 "$NODE" tools/golden/roundtrip.golden.js .gen.test.tmp.js $GOLDEN_FLAG || rc=1
 
 echo
+echo "== golden: schemat eksportu JSON =="
+"$NODE" tools/golden/export.golden.js .val.test.tmp.js $GOLDEN_FLAG || rc=1
+
+echo
 echo "== golden: walidator =="
 "$NODE" tools/golden/validator.golden.js .val.test.tmp.js $GOLDEN_FLAG || rc=1
 

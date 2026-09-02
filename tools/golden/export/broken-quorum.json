@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "release": "2026.1",
+  "upgradeTo": null,
+  "hasGlobals": false,
+  "findings": [
+    {
+      "code": "QUORUM-COUNT",
+      "sev": "error",
+      "src": "inventory",
+      "line": 5,
+      "refs": []
+    },
+    {
+      "code": "QUORUM-OVN",
+      "sev": "error",
+      "src": "inventory",
+      "line": 22,
+      "refs": []
+    },
+    {
+      "code": "GROUP-RENAMED",
+      "sev": "error",
+      "src": "inventory",
+      "line": 26,
+      "refs": []
+    },
+    {
+      "code": "GATEWAY-NO-HA",
+      "sev": "warn",
+      "src": "inventory",
+      "line": 9,
+      "refs": []
+    },
+    {
+      "code": "GROUP-RETIRED",
+      "sev": "warn",
+      "src": "inventory",
+      "line": 29,
+      "refs": []
+    }
+  ]
+}

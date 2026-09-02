@@ -476,6 +476,15 @@
                                    "endpoints become reachable from the public network. An audit usually finds this, " +
                                    "not an outage.",
       "g.d.dependency":            "<code>{what}</code> requires {needs}.",
+      /* Eksport findingów (#14). Dwa kontrakty, jeden przycisk na każdy — powód
+         rozdzielenia stoi przy funkcjach eksportu w validator.html. */
+      "v.btn.exportMd":            "Export Markdown",
+      "v.btn.exportJson":          "Export JSON",
+      "v.exp.colCode":             "Code",
+      "v.exp.colSev":              "Severity",
+      "v.exp.colWhere":            "Where",
+      "v.exp.colWhat":             "What",
+      "v.exp.tally":               "{errors} errors, {warnings} warnings, {infos} informational.",
       "v.f.release.hint":          "Group names are checked against this release.",
       /* OSTATNIE SIEDEM UJŚĆ — przeniesione 2026-09-02 (#58).
 
