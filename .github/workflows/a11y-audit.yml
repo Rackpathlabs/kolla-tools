@@ -70,11 +70,28 @@ jobs:
 
       # BEZ --exit. Interesuje nas RAPORT, a nie kod wyjścia: kod wyjścia zamieniłby ten
       # workflow w bramkę, czyli w to, czego ten plik świadomie nie jest.
+      #
+      # CHROMEDRIVER Z RUNNERA, NIE Z PACZKI. Pierwszy przebieg (33618082762) padł na tym,
+      # że chromedriver dowieziony przez @axe-core/cli obsługiwał Chrome 152, a w obrazie
+      # runnera stał 151.0.7922.173. To nie jest wypadek: obraz runnera i paczka z npm mają
+      # własne kalendarze wydań i będą się rozjeżdżać w obie strony, w kółko. Sterownik
+      # z obrazu jest z definicji zgodny z przeglądarką z tego samego obrazu.
+      #
+      # Ścieżka jest szukana, a jej BRAK jest głośny — cichy powrót do sterownika z paczki
+      # przywróciłby dokładnie tę awarię, tylko bez śladu w logu.
       - name: axe
         id: axe
         run: |
           set +e
+          DRV="$(command -v chromedriver || true)"
+          if [ -z "$DRV" ]; then
+            echo "chromedriver nie ma w obrazie runnera" > /tmp/axe.stderr
+            echo "rc=127" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "chromedriver: $DRV ($("$DRV" --version 2>/dev/null | head -1))"
           npx --yes @axe-core/cli@4 \
+            --chromedriver-path "$DRV" \
             http://127.0.0.1:8123/index.html \
             http://127.0.0.1:8123/generator.html \
             http://127.0.0.1:8123/validator.html \
