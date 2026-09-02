@@ -12,15 +12,106 @@
  */
 
 /* == KOLLA-THEME BEGIN — generowane z theme.css, nie edytuj w miejscu == */
+/* DWA ZESTAWY TOKENÓW, JEDEN ZESTAW NAZW. Reguły niżej i w trzech plikach HTML nie wiedzą,
+   który motyw obowiązuje — sięgają po --bg i --fg jak dotąd. Motyw zmienia WARTOŚCI,
+   nigdy nazwy, bo inaczej każda reguła musiałaby znać oba warianty i rozjazd między nimi
+   byłby niewidoczny do czasu, aż ktoś przełączy.
+
+   CIEMNY JEST DOMYŚLNY, i to nie jest preferencja: taki był ten motyw od pierwszej wersji,
+   a domyślność odwrotna zmieniłaby wygląd wszystkim, którzy nic nie wybrali. Jasny wchodzi
+   dla tych, którzy o niego proszą — systemem albo przełącznikiem.
+
+   TRZY STANY, NIE DWA. `data-theme` na <html> ma wartość "dark" albo "light" wyłącznie
+   wtedy, gdy człowiek WYBRAŁ; jego brak znaczy „idź za systemem" i jest stanem osobnym od
+   obu wyborów. Bez tego trzeciego stanu nie da się wrócić do preferencji systemu po
+   jednorazowym kliknięciu — a to jest właśnie ten przypadek, w którym przełącznik zaczyna
+   walczyć z ustawieniem systemowym. */
 :root{
-  --bg:#0e1318; --panel:#151b22; --panel-2:#1b232c; --line:#26313c;
-  --fg:#e6edf3; --muted:#8b98a5; --dim:#87939f;
-  --accent:#3ddc97; --accent-dim:#1f7f58;
-  --blue:#5aa9ff; --amber:#e8b339; --red:#ef6a6a;
+  --bg:#0e1318; --panel:#151b22; --panel-2:#1b232c; --line:#26313c; --line-soft:#1e2731;
+  --fg:#e6edf3; --fg-soft:#cbd5dd; --muted:#8b98a5; --dim:#87939f;
+  --accent:#3ddc97; --accent-dim:#1f7f58; --accent-line:#2a9c6c; --accent-hover:#248f63;
+  --on-accent:#eafff5; --knob-on:#3ddc97;
+  --blue:#5aa9ff; --blue-line:#274058; --blue-hover:#8cc4ff;
+  --amber:#e8b339; --red:#ef6a6a;
+  --hdr-top:#131a21; --sunken:#0c1116; --code-fg:#d6e2ec;
+  --chip:#222b34; --chip-2:#1d2630; --track:#2a343f; --knob:#9aa7b4;
+  --hover:#232d38; --hover-line:#33404d;
+  --err-line:#5c2b2b; --err-bg:#241618;
+  --warn-line:#5a4a1e; --warn-bg:#221d12; --alert-line:#8a5b1e;
+  --gutter-fg:#75828f; --gutter-bg:#0a0e12;
+  --syn-c:#7c8b99; --syn-k:#7fd6ff; --syn-p:#8895a2; --syn-v:#e7c07b;
+  --ring:rgba(61,220,151,.14);
   --mono:ui-monospace,SFMono-Regular,"JetBrains Mono","Cascadia Mono",Consolas,"Liberation Mono",monospace;
   --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   --r:8px;
 }
+
+/* Wartości jasne policzone pod ten sam próg co ciemne: WCAG AA 4.5:1 dla każdej pary
+   faktycznie używanej. Nie są odwróceniem ciemnych — odwrócenie kanałów daje kontrast,
+   który wygląda na policzony i nie jest. tools/check-a11y.js liczy OBA zestawy. */
+:root[data-theme="light"]{
+  --bg:#f6f8fa; --panel:#ffffff; --panel-2:#eef1f4; --line:#d0d7de; --line-soft:#e1e6ea;
+  --fg:#1c2128; --fg-soft:#2f3742; --muted:#57606a; --dim:#5b6570;
+  --accent:#0f6b45; --accent-dim:#0f6b45; --accent-line:#0b5637; --accent-hover:#0b5637;
+  --on-accent:#ffffff; --knob-on:#ffffff;
+  --blue:#0a58ca; --blue-line:#a8c7f0; --blue-hover:#0a58ca;
+  --amber:#8a5a00; --red:#b42318;
+  --hdr-top:#ffffff; --sunken:#f6f8fa; --code-fg:#24292f;
+  --chip:#e3e8ed; --chip-2:#eef1f4; --track:#cbd3da; --knob:#41484f;
+  --hover:#e8ecf0; --hover-line:#b7c0c9;
+  --err-line:#e0a49c; --err-bg:#fdeceb;
+  --warn-line:#d9c184; --warn-bg:#fdf6e3; --alert-line:#b07d20;
+  --gutter-fg:#5c6672; --gutter-bg:#eef1f4;
+  --syn-c:#57606a; --syn-k:#0a58ca; --syn-p:#5c6672; --syn-v:#7a4f00;
+  --ring:rgba(15,107,69,.18);
+}
+
+/* Brak data-theme = idź za systemem. Reguła stoi PO wariancie jawnym i jest od niego
+   słabsza specyficznością, więc wybór człowieka wygrywa z ustawieniem systemu — a nie
+   odwrotnie, co byłoby przełącznikiem, który nie przełącza. */
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#f6f8fa; --panel:#ffffff; --panel-2:#eef1f4; --line:#d0d7de; --line-soft:#e1e6ea;
+    --fg:#1c2128; --fg-soft:#2f3742; --muted:#57606a; --dim:#5b6570;
+    --accent:#0f6b45; --accent-dim:#0f6b45; --accent-line:#0b5637; --accent-hover:#0b5637;
+    --on-accent:#ffffff; --knob-on:#ffffff;
+    --blue:#0a58ca; --blue-line:#a8c7f0; --blue-hover:#0a58ca;
+    --amber:#8a5a00; --red:#b42318;
+    --hdr-top:#ffffff; --sunken:#f6f8fa; --code-fg:#24292f;
+    --chip:#e3e8ed; --chip-2:#eef1f4; --track:#cbd3da; --knob:#41484f;
+    --hover:#e8ecf0; --hover-line:#b7c0c9;
+    --err-line:#e0a49c; --err-bg:#fdeceb;
+    --warn-line:#d9c184; --warn-bg:#fdf6e3; --alert-line:#b07d20;
+    --gutter-fg:#5c6672; --gutter-bg:#eef1f4;
+    --syn-c:#57606a; --syn-k:#0a58ca; --syn-p:#5c6672; --syn-v:#7a4f00;
+    --ring:rgba(15,107,69,.18);
+  }
+}
+
+/* PRZEŁĄCZNIK MOTYWU — jedyna reguła interfejsu w tym pliku, i to nie przez wyjątek.
+   Ten przycisk jest identyczny we wszystkich trzech narzędziach i należy do motywu tak
+   samo jak tokeny, więc leży tam, gdzie motyw. Trzymany w trzech arkuszach z osobna
+   rozjechałby się przy pierwszej poprawce w jednym z nich, a rozjazd trzech kopii CSS-a
+   nie jest widoczny dla żadnego strażnika — bo każda kopia z osobna jest poprawna.
+
+   IKONA NIESIE STAN, ETYKIETA GO NAZYWA. `data-stan` ustawia JS, a reguły niżej wybierają
+   jedną z trzech ikon; nazwa dostępna idzie osobno, przez aria-label ze słownika, bo ikona
+   nie jest tekstem i czytnik ekranu nie ma z niej czego przeczytać. */
+.theme-btn{
+  display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;
+  padding:0;background:var(--panel-2);color:var(--muted);border:1px solid var(--line);
+  border-radius:var(--r);cursor:pointer
+}
+.theme-btn:hover{background:var(--hover);border-color:var(--hover-line);color:var(--fg)}
+.theme-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.theme-btn svg{
+  width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round
+}
+.theme-btn [data-ikona]{display:none}
+.theme-btn[data-stan="system"] [data-ikona="system"]{display:inline}
+.theme-btn[data-stan="light"] [data-ikona="light"]{display:inline}
+.theme-btn[data-stan="dark"] [data-ikona="dark"]{display:inline}
 
 /* Atrybut hidden MUSI ukrywać.
    Arkusz przeglądarki daje [hidden]{display:none}, ale to reguła o najniższym

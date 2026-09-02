@@ -40,6 +40,14 @@
       "nav.validator":         "inventory validator",
       "nav.tools":             "Tools",
       "nav.skip":              "Skip to content",
+
+      /* Przełącznik motywu. Nazwa dostępna mówi, co OBOWIĄZUJE, a nie co się stanie po
+         kliknięciu: ikona pokazuje stan tylko widzącym, więc bez tego czytnik ekranu nie
+         miałby skąd wziąć bieżącego ustawienia. Trzy klucze, bo trzy stany — „za systemem"
+         jest osobnym stanem, nie brakiem wyboru. */
+      "nav.theme.system":      "Theme: following the system setting",
+      "nav.theme.light":       "Theme: light",
+      "nav.theme.dark":        "Theme: dark",
       "brand.sub":             "OpenStack tooling",
 
       /* --- hub --- */

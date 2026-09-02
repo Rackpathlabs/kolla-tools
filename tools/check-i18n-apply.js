@@ -165,13 +165,20 @@ FILES.forEach(function (file) {
     return;
   }
 
-  var script = /<script>\n([\s\S]*?)\n<\/script>/.exec(html);
-  if (!script) { console.log("FAIL " + file + ": nie znalazłem bloku <script>"); rc = 1; return; }
+  /* WSZYSTKIE bloki <script>, w kolejności wystąpienia, a nie pierwszy z brzegu.
+     Od #16 strona ma ich dwa: przełącznik motywu musi nałożyć wybór PRZED pierwszym
+     malowaniem, więc siedzi w <head>, a reszta narzędzia zostaje na dole. Dopasowanie
+     do pierwszego bloku raportowało wtedy 132 puste podstawienia na trzech stronach —
+     czyli awarię, której nie było: applier stał w bloku, którego ten strażnik nie
+     czytał. Zachowanie strony jest sumą jej skryptów i tak samo liczy je ten plik. */
+  var bloki = [], re = /<script>\n([\s\S]*?)\n<\/script>/g, mm;
+  while ((mm = re.exec(html))) bloki.push(mm[1]);
+  if (!bloki.length) { console.log("FAIL " + file + ": nie znalazłem bloku <script>"); rc = 1; return; }
 
   installDom(els);
   try {
     /* eslint-disable no-eval */
-    eval(script[1]);
+    eval(bloki.join("\n"));
   } catch (e) {
     console.log("FAIL " + file + ": blok <script> rzucił wyjątkiem — " + e.message);
     rc = 1;

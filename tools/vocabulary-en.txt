@@ -253,6 +253,7 @@ currently
 custom
 cycles
 dalmatian
+dark
 dashboard
 dashboards
 data
@@ -405,6 +406,7 @@ flat
 floating
 flow
 follow
+following
 follows
 for
 force
@@ -561,6 +563,7 @@ letsencrypt
 licence
 lies
 life
+light
 like
 limits
 line
@@ -972,6 +975,7 @@ than
 that
 the
 them
+theme
 then
 theoretically
 there

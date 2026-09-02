@@ -46,6 +46,9 @@ n.error  a  wariant liczebnika: fragment podstawiany w inny napis, wlasnego elem
 n.host  a  wariant liczebnika: fragment podstawiany w inny napis, wlasnego elementu nie ma nigdy
 n.node  a  wariant liczebnika: fragment podstawiany w inny napis, wlasnego elementu nie ma nigdy
 n.warning  a  wariant liczebnika: fragment podstawiany w inny napis, wlasnego elementu nie ma nigdy
+nav.theme.dark  a  jw.
+nav.theme.light  a  jw.
+nav.theme.system  a  nazwa dostepna przelacznika motywu; wybierana ze STANU w JS (ADR-004)
 sev.error  a  etykieta wagi findingu; findingu nie ma, dopoki nie powstanie
 sev.info  a  etykieta wagi findingu; findingu nie ma, dopoki nie powstanie
 sev.warn  a  etykieta wagi findingu; findingu nie ma, dopoki nie powstanie

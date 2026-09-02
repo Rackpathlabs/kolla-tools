@@ -1,0 +1,19 @@
+<!doctype html>
+<!-- Fixtura: reguła z kolorem nieprzezroczystym poza blokiem motywu. Trzy przynęty
+     obok niej mają NIE wpaść: nakładka alfa kompozytuje się z tłem, więc adaptuje się
+     z konstrukcji; atrybut SVG w markupie nie jest regułą CSS; a kolor wewnątrz bloku
+     motywu jest definicją tokenu, czyli dokładnie tym, czego strażnik broni. -->
+<html lang="en"><head><meta charset="utf-8"><title>fixture</title>
+<style>
+/* == KOLLA-THEME BEGIN == */
+:root{ --bg:#0e1318; --fg:#e6edf3; --line:#26313c }
+/* == KOLLA-THEME END == */
+body{background:var(--bg);color:var(--fg)}
+.pulapka{background:#131a21}
+.przyneta-alfa{background:rgba(239,106,106,.14)}
+.przyneta-alfa8{background:#131a2180}
+.przyneta-token{border:1px solid var(--line)}
+</style></head>
+<body>
+<svg viewBox="0 0 8 8" aria-hidden="true"><rect x="0" y="0" width="8" height="8" fill="#3ddc97"/></svg>
+</body></html>

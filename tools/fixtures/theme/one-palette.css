@@ -1,0 +1,51 @@
+/* Fixtura: arkusz z JEDNYM zestawem tokenów. check-a11y.js ma odpowiedzieć kodem 2
+   („nie zmierzyłem"), a nie zieloną linią o drugim motywie, którego nie ma.
+   Zestaw jest PEŁNY, żeby jedynym brakiem był ten, o który fixturze chodzi. */
+/* == KOLLA-THEME BEGIN == */
+:root{
+  --bg:#0e1318;
+  --panel:#151b22;
+  --panel-2:#1b232c;
+  --line:#26313c;
+  --line-soft:#1e2731;
+  --fg:#e6edf3;
+  --fg-soft:#cbd5dd;
+  --muted:#8b98a5;
+  --dim:#87939f;
+  --accent:#3ddc97;
+  --accent-dim:#1f7f58;
+  --accent-line:#2a9c6c;
+  --accent-hover:#248f63;
+  --on-accent:#eafff5;
+  --knob-on:#3ddc97;
+  --blue:#5aa9ff;
+  --blue-line:#274058;
+  --blue-hover:#8cc4ff;
+  --amber:#e8b339;
+  --red:#ef6a6a;
+  --hdr-top:#131a21;
+  --sunken:#0c1116;
+  --code-fg:#d6e2ec;
+  --chip:#222b34;
+  --chip-2:#1d2630;
+  --track:#2a343f;
+  --knob:#9aa7b4;
+  --hover:#232d38;
+  --hover-line:#33404d;
+  --err-line:#5c2b2b;
+  --err-bg:#241618;
+  --warn-line:#5a4a1e;
+  --warn-bg:#221d12;
+  --alert-line:#8a5b1e;
+  --gutter-fg:#75828f;
+  --gutter-bg:#0a0e12;
+  --syn-c:#7c8b99;
+  --syn-k:#7fd6ff;
+  --syn-p:#8895a2;
+  --syn-v:#e7c07b;
+  --ring:rgba(61,220,151,.14);
+  --mono:ui-monospace,SFMono-Regular,"JetBrains Mono","Cascadia Mono",Consolas,"Liberation Mono",monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --r:8px;
+}
+/* == KOLLA-THEME END == */
