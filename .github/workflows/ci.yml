@@ -170,6 +170,13 @@ jobs:
       # SKUTEK, nie źródło. check-offline.js czyta listę sześciu nazw i przepuszcza
       # wywołania, które nie wyglądają na wywołania (#101, ADR-003 opcja D). Ten
       # uruchamia te same scenariusze co krok wyżej i patrzy, co faktycznie wyszło.
+      # Pierwsze przejście dostępności (#17): nazwa dostępna, etykieta pola, poziomy
+      # nagłówków — mierzone na wyrenderowanej stronie — oraz kontrast liczony z tokenów
+      # theme.css arytmetyką WCAG. Osobny krok, bo Chrome jest w obrazie runnera i kosztuje
+      # nas zero, a jego czerwień ma być widoczna bez czytania całego zestawu.
+      - name: "Dostępność: pierwsze przejście"
+        run: node tools/check-a11y.js
+
       - name: Żądania sieciowe na wykonanych scenariuszach
         run: node tools/check-network.js
 

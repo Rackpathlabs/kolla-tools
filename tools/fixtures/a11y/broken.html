@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>fixtura: trzy naruszenia pierwszego przejścia</title></head>
+<body>
+<!-- DOKLADNIE TRZY NARUSZENIA, po jednym na kryterium, plus przyneta na kazde.
+     Straznik, ktory na tej fixturze przechodzi, nie umie upasc — a to jest jedyna
+     rzecz, ktorej o nowym strazniku nie wiadomo z jego wlasnego wyniku. -->
+
+<h1>Tytuł</h1>
+
+<!-- 1. NAZWA: przycisk bez tekstu, bez aria-label, bez title, bez obrazka z alt. -->
+<button id="bez-nazwy"></button>
+<!-- PRZYNETY na kryterium nazwy: kazda ma INNE zrodlo, wiec zwezenie kryterium do
+     jednego zrodla zapali sie tutaj, a nie dopiero na produkcie. -->
+<button id="ma-tekst">Zapisz</button>
+<button id="ma-aria" aria-label="Zamknij"></button>
+<button id="ma-title" title="Kopiuj"></button>
+<button id="ma-labelledby" aria-labelledby="opis"></button>
+<span id="opis">Eksportuj</span>
+<button id="ma-alt"><img src="x.svg" alt="Drukuj"></button>
+<!-- PRZYNETA GLOWNA: element zdjety z drzewa dostepnosci nazwy NIE potrzebuje.
+     Pierwszy pomiar na zastanym interfejsie zglosil trzy takie i byla to wada
+     kryterium, nie interfejsu. -->
+<button id="poza-drzewem" aria-hidden="true" tabindex="-1"></button>
+
+<!-- 2. ETYKIETA: pole bez <label for>, bez przodka <label>, bez aria-label. -->
+<input type="text" id="bez-etykiety">
+<!-- PRZYNETA: placeholder NIE jest etykieta — znika po pierwszym znaku. -->
+<input type="text" id="tylko-placeholder" placeholder="nazwa hosta">
+<label for="z-etykieta">Adres</label><input type="text" id="z-etykieta">
+<label>W przodku <input type="text" id="w-przodku"></label>
+
+<!-- 3. NAGLOWKI: h1 -> h3, przeskok o dwa poziomy. -->
+<h3>Sekcja po przeskoku</h3>
+<!-- PRZYNETA: powrot w gore o dowolna liczbe poziomow jest legalny. -->
+<h2>Powrót w górę</h2>
+<h3>I znowu w dół o jeden</h3>
+</body></html>

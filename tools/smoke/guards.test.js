@@ -80,6 +80,42 @@ R.ok("znacznik nie zmienia długości ani iteracji",
      global.document.querySelectorAll("x").length === 0 &&
      Object.keys(global.document.querySelectorAll("x")).length === 0);
 
+/* ---- PIERWSZE PRZEJŚCIE DOSTĘPNOŚCI (#17) ----
+   Trzy kryteria na wyrenderowanej stronie plus kontrast z tokenów. Fixtura niesie po
+   jednym naruszeniu na kryterium ORAZ przynętę na każde źródło nazwy — bo kryterium
+   zwężone do jednego źródła przechodziłoby na produkcie i zapalałoby się dopiero na
+   cudzym kodzie.
+
+   PRZYNĘTA NAJWAŻNIEJSZA JEST DRUGA W KOLEJNOŚCI CZASOWEJ, nie w kolejności listy:
+   pierwszy pomiar na zastanym interfejsie zgłosił trzy ukryte pola `type="file"`
+   z `aria-hidden="true"` — i była to wada KRYTERIUM, nie interfejsu. Element zdjęty
+   z drzewa dostępności nazwy nie potrzebuje. Złapane dlatego, że pomiar poszedł PRZED
+   jakąkolwiek naprawą, i dlatego przynęta na to stoi w fixturze. */
+var a11yBad = run("check-a11y.js", ["--file", "tools/fixtures/a11y/broken.html"]);
+R.ok("fixtura z trzema naruszeniami -> czerwone", a11yBad.code === 1, kod(a11yBad));
+R.ok("przycisk bez ŹRÓDŁA NAZWY -> zgłoszony", /bez ŹRÓDŁA NAZWY\s+button#bez-nazwy/.test(a11yBad.out),
+     a11yBad.out.split("\n")[1]);
+R.ok("pole bez etykiety -> zgłoszone", /pole bez ETYKIETY\s+input#bez-etykiety/.test(a11yBad.out));
+R.ok("placeholder NIE jest etykietą", /pole bez ETYKIETY\s+input#tylko-placeholder/.test(a11yBad.out));
+R.ok("przeskok poziomu nagłówka -> zgłoszony", /PRZESKOK POZIOMU\s+h1 -> h3/.test(a11yBad.out));
+R.ok("czyli DOKŁADNIE cztery pozycje", /Razem 4 pozycji/.test(a11yBad.out),
+     a11yBad.out.split("\n").filter(function (l) { return /Razem/.test(l); })[0]);
+
+/* PRZYNĘTY. Każda to inne źródło nazwy — strażnik zawężony do jednego zapali się tutaj. */
+["ma-tekst", "ma-aria", "ma-title", "ma-labelledby", "ma-alt", "poza-drzewem"].forEach(function (id) {
+  R.ok("PRZYNĘTA: #" + id + " ma nazwę albo jej nie potrzebuje",
+       a11yBad.out.indexOf("button#" + id) === -1);
+});
+R.ok("PRZYNĘTA: pole z <label for> nie jest zgłaszane", a11yBad.out.indexOf("z-etykieta") === -1);
+R.ok("PRZYNĘTA: pole w przodku <label> nie jest zgłaszane", a11yBad.out.indexOf("w-przodku") === -1);
+R.ok("PRZYNĘTA: powrót w górę o dwa poziomy jest legalny", !/h3 -> h2/.test(a11yBad.out));
+
+/* Kontrast liczony jest z tokenów i wypisywany ZAWSZE — także gdy przechodzi. Zieleń
+   bez liczby nie mówi, czy motyw ma zapas, czy stoi o setną nad progiem. */
+R.ok("kontrast wypisuje NAJGORSZĄ parę, nie samo „zero poniżej progu”",
+     /najgorsza: --[a-z0-9-]+ na --[a-z0-9-]+ = \d+\.\d+:1/.test(a11yBad.out),
+     a11yBad.out.split("\n").filter(function (l) { return /kontrast/.test(l); })[0]);
+
 /* ---- check-literals: liczy ujścia tekstu ---- */
 var clean = run("check-literals.js", ["tools/fixtures/clean.js"]);
 R.ok("czysta fixtura -> zielone", clean.code === 0, kod(clean));
