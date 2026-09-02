@@ -75,6 +75,8 @@
       "g.btn.reset":               "Restore defaults",
       "g.out.fname":               "/etc/kolla/globals.yml",
       "g.btn.download":            "Download globals.yml",
+      "g.btn.link":                "Copy link",
+      "g.btn.link.title":          "Puts the settings into the address bar and copies the link. Settings only — a pasted globals.yml is never encoded.",
       "g.footer":                  "Rackpathlabs — OpenStack tools. A single HTML file, no external dependencies, works offline.",
       "g.desc":                "Generator for a Kolla-Ansible globals.yml: base image, release matrix, interface assignment. Runs offline, with no external dependencies.",
       "hub.h1":                "Two tools for Kolla-Ansible",
@@ -124,6 +126,12 @@
       "t.import.dropped":       "Import dropped — the file is built from the form again.",
       "t.export.blocked":       "Export blocked — the configuration contains errors.",
 
+      /* Link. Komunikat po skopiowaniu mówi, CO POJECHAŁO, a nie „skopiowano" — bo
+         w chwili wklejenia jest już za późno, żeby o to zapytać. */
+      "t.link.copied":          "Link copied. It carries the settings — addresses, interface names, FQDNs — to wherever you paste it.",
+      "t.link.blocked":         "The link was not built — the configuration contains errors.",
+      "t.link.copyFailed":      "Could not copy — the link is in the address bar, copy it from there.",
+
       /* --- generator: etykiety pól, które nie są samą nazwą klucza ---
          Rejestr: nazwa klucza zostaje nazwą klucza. Gdy etykieta niesie coś poza
          nią, dopisek jest ROZDZIELANY strukturalnie, a nie tłumaczony razem
@@ -157,6 +165,15 @@
       "g.view.group":          "Output view",
       "g.view.full":           "full file",
       "g.view.diff":           "only what differs",
+      /* Odmowa linku. Jedno zdanie o tym, co się stało, i drugie o tym, co teraz widać —
+         bez drugiego „link odrzucony" czyta się jak „nic się nie stało". */
+      "g.link.refused":            "This link could not be read, so nothing from it was applied — you are looking at the state this tool starts in, not at a partial version of the link. Reason: {why}.",
+      "g.link.why.tooLong":        "the address is longer than this tool accepts",
+      "g.link.why.version":        "it was written by a different version of this encoding",
+      "g.link.why.syntax":         "it is not built out of key=value pairs",
+      "g.link.why.unknown":        "it names a setting this tool does not have ({what})",
+      "g.link.why.duplicate":      "it sets the same setting twice ({what})",
+      "g.link.why.value":          "one of the values is not one this form would accept ({what})",
       "g.view.note":           "Showing only the keys whose value differs from this tool's initial values — the state this form starts in. This is <strong>not</strong> a comparison against kolla-ansible defaults: this tool does not know them, so a key missing here may still differ from upstream.",
       "g.view.tableNote":      "Left is this tool's initial value, right is the value in the file above.",
       "g.h.diff":              "Differences from the initial values",

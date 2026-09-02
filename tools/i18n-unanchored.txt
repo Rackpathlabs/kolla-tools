@@ -31,6 +31,12 @@ g.d.keyDefault.loaded  a  jw.
 g.d.keyExplicit  a  jw.
 g.d.tlsNoCa  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
 g.diff.absent  a  komorka tabeli roznic budowana per wiersz; tabeli nie ma, dopoki nie ma czego porownac
+g.link.why.duplicate  a  jw.
+g.link.why.syntax  a  jw.
+g.link.why.tooLong  a  powod odmowy linku; wybierany ze STANU odmowy w JS (ADR-004)
+g.link.why.unknown  a  jw.
+g.link.why.value  a  jw.
+g.link.why.version  a  jw.
 g.rule.kv05.ackNote  a  metadane reguly wstrzykiwane w finding; findingu nie ma, dopoki nie powstanie
 g.rule.kv05.why  a  metadane reguly wstrzykiwane w finding; findingu nie ma, dopoki nie powstanie
 g.rule.kv06.ackNote  a  metadane reguly wstrzykiwane w finding; findingu nie ma, dopoki nie powstanie
@@ -65,6 +71,9 @@ t.globals.loaded  a  powiadomienie: element powstaje przy zdarzeniu i znika, w d
 t.import.dropped  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
 t.import.empty  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
 t.import.loaded  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
+t.link.blocked  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
+t.link.copied  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
+t.link.copyFailed  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
 t.parser.unsupported  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
 t.report.copied  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma
 t.report.copyFailed  a  powiadomienie: element powstaje przy zdarzeniu i znika, w dokumencie poczatkowym go nie ma

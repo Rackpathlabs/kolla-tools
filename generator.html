@@ -308,6 +308,14 @@ code{font:12.5px var(--mono);background:var(--sunken);border:1px solid var(--lin
 }
 .toast.on{opacity:1;transform:translate(-50%,0)}
 .toast.alert{border-color:var(--alert-line)}
+/* Pasek odmowy linku. Widoczny TYLKO wtedy, gdy fragment został odrzucony — a wtedy ma
+   być nie do przeoczenia, bo alternatywą jest użytkownik przekonany, że patrzy na to,
+   co dostał w linku. */
+.linkerr{
+  margin:0 0 16px;padding:10px 12px;border:1px solid var(--warn-line);
+  border-radius:var(--r);background:var(--warn-bg);color:var(--amber);
+  font-size:13px;line-height:1.5
+}
 
 footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:var(--dim);font-size:12.5px}
 </style>
@@ -398,6 +406,8 @@ var KOLLA_THEME = (function () {
     Fill in the deployment parameters — the file assembles live on the right. Settings are
     saved locally in the browser; nothing leaves this machine.
   </p>
+
+  <p class="linkerr" id="link-err" role="alert" data-i18n="g.link.refused" hidden>This link could not be read, so nothing from it was applied — you are looking at the state this tool starts in, not at a partial version of the link. Reason: {why}.</p>
 
   <div class="cols">
 
@@ -694,6 +704,9 @@ var KOLLA_THEME = (function () {
           </span>
           <span class="sp"></span>
           <button type="button" id="btn-copy" aria-describedby="status-txt">Copy</button>
+          <button type="button" id="btn-link" data-i18n="g.btn.link" data-i18n-title="g.btn.link.title"
+                  title="Puts the settings into the address bar and copies the link. Settings only — a pasted globals.yml is never encoded."
+                  aria-describedby="status-txt">Copy link</button>
           <button type="button" class="primary" id="btn-download" aria-describedby="status-txt" data-i18n="g.btn.download">Download globals.yml</button>
         </div>
         <p class="hint diffnote" id="view-note" data-i18n="g.view.note" hidden>Showing only the keys whose value differs from this tool's initial values — the state this form starts in. This is <strong>not</strong> a comparison against kolla-ansible defaults: this tool does not know them, so a key missing here may still differ from upstream.</p>
@@ -799,6 +812,8 @@ var KOLLA_THEME = (function () {
       "g.btn.reset":               "Restore defaults",
       "g.out.fname":               "/etc/kolla/globals.yml",
       "g.btn.download":            "Download globals.yml",
+      "g.btn.link":                "Copy link",
+      "g.btn.link.title":          "Puts the settings into the address bar and copies the link. Settings only — a pasted globals.yml is never encoded.",
       "g.footer":                  "Rackpathlabs — OpenStack tools. A single HTML file, no external dependencies, works offline.",
       "g.desc":                "Generator for a Kolla-Ansible globals.yml: base image, release matrix, interface assignment. Runs offline, with no external dependencies.",
       "hub.h1":                "Two tools for Kolla-Ansible",
@@ -848,6 +863,12 @@ var KOLLA_THEME = (function () {
       "t.import.dropped":       "Import dropped — the file is built from the form again.",
       "t.export.blocked":       "Export blocked — the configuration contains errors.",
 
+      /* Link. Komunikat po skopiowaniu mówi, CO POJECHAŁO, a nie „skopiowano" — bo
+         w chwili wklejenia jest już za późno, żeby o to zapytać. */
+      "t.link.copied":          "Link copied. It carries the settings — addresses, interface names, FQDNs — to wherever you paste it.",
+      "t.link.blocked":         "The link was not built — the configuration contains errors.",
+      "t.link.copyFailed":      "Could not copy — the link is in the address bar, copy it from there.",
+
       /* --- generator: etykiety pól, które nie są samą nazwą klucza ---
          Rejestr: nazwa klucza zostaje nazwą klucza. Gdy etykieta niesie coś poza
          nią, dopisek jest ROZDZIELANY strukturalnie, a nie tłumaczony razem
@@ -881,6 +902,15 @@ var KOLLA_THEME = (function () {
       "g.view.group":          "Output view",
       "g.view.full":           "full file",
       "g.view.diff":           "only what differs",
+      /* Odmowa linku. Jedno zdanie o tym, co się stało, i drugie o tym, co teraz widać —
+         bez drugiego „link odrzucony" czyta się jak „nic się nie stało". */
+      "g.link.refused":            "This link could not be read, so nothing from it was applied — you are looking at the state this tool starts in, not at a partial version of the link. Reason: {why}.",
+      "g.link.why.tooLong":        "the address is longer than this tool accepts",
+      "g.link.why.version":        "it was written by a different version of this encoding",
+      "g.link.why.syntax":         "it is not built out of key=value pairs",
+      "g.link.why.unknown":        "it names a setting this tool does not have ({what})",
+      "g.link.why.duplicate":      "it sets the same setting twice ({what})",
+      "g.link.why.value":          "one of the values is not one this form would accept ({what})",
       "g.view.note":           "Showing only the keys whose value differs from this tool's initial values — the state this form starts in. This is <strong>not</strong> a comparison against kolla-ansible defaults: this tool does not know them, so a key missing here may still differ from upstream.",
       "g.view.tableNote":      "Left is this tool's initial value, right is the value in the file above.",
       "g.h.diff":              "Differences from the initial values",
@@ -2276,6 +2306,8 @@ var KOLLA_THEME = (function () {
   var viewDiff = document.getElementById("view-diff");
   var btnCopy = document.getElementById("btn-copy");
   var btnDownload = document.getElementById("btn-download");
+  var btnLink = document.getElementById("btn-link");
+  var linkErr = document.getElementById("link-err");
   var toastEl = document.getElementById("toast");
 
   var currentYaml = "";
@@ -2348,6 +2380,121 @@ var KOLLA_THEME = (function () {
       var s = JSON.parse(raw);
       return (s && typeof s === "object" && !Array.isArray(s)) ? s : null;
     } catch (e) { return null; }
+  }
+
+
+  /* ------------------------------------------------------------------ */
+  /* stan w adresie (#15)                                                */
+  /* ------------------------------------------------------------------ */
+
+  /* CO TU JEDZIE, A CO NIE. Wyłącznie USTAWIENIA — te same pola, które trzyma
+     localStorage. Wklejony globals.yml i wczytany plik NIE trafiają do adresu i nigdy
+     nie trafią: powód stoi w SCOPE.md, w akapicie napisanym przed tym kodem. Fragment
+     nie jedzie w żądaniu, ale jedzie wszędzie tam, gdzie jedzie link — do historii,
+     do schowka, do zgłoszenia, w którym ktoś go wkleił, i do logów każdego systemu,
+     który go po drodze obsłużył.
+
+     BEZ KOMPRESJI, i to jest decyzja, nie zaniedbanie. Skompresowany fragment jest
+     dla człowieka nieczytelny, więc nikt nie sprawdzi, co wysyła — a to jedyna obrona,
+     jaka tu w ogóle istnieje. Zapis `klucz=wartość` da się przeczytać w pasku adresu.
+
+     TYLKO RÓŻNICE WOBEC STANU POCZĄTKOWEGO. Link niosący czterdzieści par, z których
+     trzydzieści osiem jest domyślnych, jest nieczytelny dokładnie tak samo jak
+     skompresowany. Cena jest nazwana: link czyta się WOBEC WARTOŚCI DOMYŚLNYCH TEJ
+     WERSJI, więc gdyby domyślna kiedyś się zmieniła, stary link opisywałby inną
+     konfigurację. Stąd `v=1` na początku — wersja zapisu, nie wersja narzędzia. */
+  var LINK_V = "1";
+
+  /* Próg dotyczy WYŁĄCZNIE odczytu i nie ma go po stronie zapisu — nie dlatego, że
+     „raczej się nie zdarzy", tylko dlatego, że nie może. Zapis idzie przez sanitize(),
+     więc każda wartość jest albo pusta, albo przechodzi wyrażenie swojego pola, a pola
+     tekstowe są przycięte do 64 znaków. Lista pól jest stała, więc najdłuższy możliwy
+     fragment ma 1451 znaków — mniej niż próg, przy każdym wejściu.
+
+     Warunku, który nie może się zapalić, tu nie ma, bo martwy warunek z uzasadnieniem
+     jest groźniejszy od martwego bez niego: uzasadnienie jest tym, co powstrzymuje przed
+     sprawdzeniem. Odczyt to zupełnie co innego — tam po drugiej stronie jest dowolny
+     napis, który ktoś wkleił w pasek adresu. */
+  var LINK_MAX = 2000;
+
+  function stateToFragment(raw) {
+    /* Przez sanitize(), a nie prosto z pól: to ono daje ograniczenie długości opisane
+       wyżej, i to ono sprawia, że link nigdy nie niesie wartości, której formularz by
+       nie przyjął z powrotem. */
+    var s = sanitize(raw);
+    var parts = ["v=" + LINK_V];
+    TEXT_FIELDS.forEach(function (id) {
+      if (s[id] !== DEFAULTS[id]) parts.push(id + "=" + encodeURIComponent(s[id]));
+    });
+    BOOL_FIELDS.forEach(function (id) {
+      if (s[id] !== DEFAULTS[id]) parts.push(id + "=" + (s[id] ? "1" : "0"));
+    });
+    return parts.join("&");
+  }
+
+  /* ZWRACA STAN ALBO POWÓD ODMOWY — nigdy stanu częściowego. sanitize() podmienia
+     złą wartość na domyślną po cichu i dla pamięci lokalnej jest to zachowanie właściwe:
+     tam po drugiej stronie jest poprzedni stan tego samego użytkownika. Link jest czymś
+     innym — przyszedł z zewnątrz i ma opisywać JEDNĄ konfigurację. Fragment, z którego
+     zastosowano osiem pól z dziesięciu, pokazuje konfigurację, której nikt nigdy nie
+     ustawił, i wygląda przy tym dokładnie jak zastosowany w całości. Dlatego pierwszy
+     błąd przerywa całość. */
+  /* Klucz powodu wypisany dosłownie przy każdym powodzie, a nie złożony z „g.link.why."
+     i kodu. Złożenie jest krótsze i NIEWIDOCZNE dla tools/check-i18n.js — martwy klucz
+     przestałby być wykrywalny, a błędna nazwa wyszłaby dopiero na ekranie. Strażnik
+     złapał tu dokładnie ten skrót, zanim zdążył wejść. */
+  var LINK_WHY = {
+    tooLong:   "g.link.why.tooLong",
+    version:   "g.link.why.version",
+    syntax:    "g.link.why.syntax",
+    unknown:   "g.link.why.unknown",
+    duplicate: "g.link.why.duplicate",
+    value:     "g.link.why.value"
+  };
+
+  function stateFromFragment(frag) {
+    var raw = String(frag || "").replace(/^#/, "");
+    if (!raw) return { error: null, state: null };
+    if (raw.length > LINK_MAX) return { error: "tooLong" };
+
+    var pairs = raw.split("&");
+    if (pairs[0] !== "v=" + LINK_V) return { error: "version" };
+
+    var known = {};
+    TEXT_FIELDS.forEach(function (id) { known[id] = "text"; });
+    BOOL_FIELDS.forEach(function (id) { known[id] = "bool"; });
+
+    var over = {}, seen = {};
+    for (var i = 1; i < pairs.length; i++) {
+      var m = /^([a-z0-9_]+)=([^&]*)$/.exec(pairs[i]);
+      if (!m) return { error: "syntax" };
+      var key = m[1];
+      if (!known[key]) return { error: "unknown", detail: key };
+      if (seen[key]) return { error: "duplicate", detail: key };
+      seen[key] = true;
+
+      if (known[key] === "bool") {
+        if (m[2] !== "0" && m[2] !== "1") return { error: "value", detail: key };
+        over[key] = m[2] === "1";
+        continue;
+      }
+      var v;
+      try { v = decodeURIComponent(m[2]); } catch (e) { return { error: "syntax" }; }
+      if (v.length > 64) return { error: "value", detail: key };
+      if (key === "distro") {
+        if (DISTROS.indexOf(v) === -1) return { error: "value", detail: key };
+      } else if (SELECT_VALUES[key]) {
+        if (SELECT_VALUES[key].indexOf(v) === -1) return { error: "value", detail: key };
+      } else if (v !== "" && FIELD_RE[key] && !FIELD_RE[key].test(v)) {
+        return { error: "value", detail: key };
+      }
+      over[key] = v;
+    }
+
+    var s = {};
+    Object.keys(DEFAULTS).forEach(function (k) { s[k] = DEFAULTS[k]; });
+    Object.keys(over).forEach(function (k) { s[k] = over[k]; });
+    return { error: null, state: s };
   }
 
   /* ------------------------------------------------------------------ */
@@ -3478,20 +3625,28 @@ var KOLLA_THEME = (function () {
   function viewText() { return showDiff ? overridesText(currentRows) : currentYaml; }
   function exportText() { return currentYaml.replace(/\n?$/, "\n"); }
 
-  function copyText(text) {
+  /* Klucze komunikatów są PARAMETREM, a nie stałą w środku. Link i plik kopiuje ta sama
+     droga, ale mówią co innego: po skopiowaniu linku trzeba powiedzieć, CO POJECHAŁO,
+     bo w chwili wklejenia jest już za późno, żeby o to zapytać. Druga kopia tej funkcji
+     rozjechałaby się przy pierwszej poprawce ścieżki awaryjnej. */
+  function copyText(text, okKey, failKey) {
+    okKey = okKey || "t.copied";
+    failKey = failKey || "t.copyFailed";
     if (navigator.clipboard && window.isSecureContext) {
       try {
         navigator.clipboard.writeText(text).then(
-          function () { toast(T("t.copied")); },
-          function () { legacyCopy(text); }
+          function () { toast(T(okKey)); },
+          function () { legacyCopy(text, okKey, failKey); }
         );
         return;
       } catch (e) { /* polityka uprawnień potrafi rzucić synchronicznie */ }
     }
-    legacyCopy(text);
+    legacyCopy(text, okKey, failKey);
   }
 
-  function legacyCopy(text) {
+  function legacyCopy(text, okKey, failKey) {
+    okKey = okKey || "t.copied";
+    failKey = failKey || "t.copyFailed";
     var ta = document.createElement("textarea");
     ta.value = text;
     ta.setAttribute("readonly", "");
@@ -3501,7 +3656,7 @@ var KOLLA_THEME = (function () {
     var ok = false;
     try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
     document.body.removeChild(ta);
-    toast(T(ok ? "t.copied" : "t.copyFailed"), !ok);
+    toast(T(ok ? okKey : failKey), !ok);
   }
 
   function download(text, filename) {
@@ -3525,6 +3680,27 @@ var KOLLA_THEME = (function () {
     if (hasErrors) return;
     copyText(viewText().replace(/\n?$/, "\n"));
   });
+  /* PRZYCISK, NIE AUTOMAT. Adres nie zapisuje się sam przy pisaniu, bo URL, który
+     wypełnia się w tle, jest tym, który ktoś kopiuje przez przypadek. Powód stoi
+     w SCOPE.md i to on rozstrzygnął kształt tej funkcji. */
+  btnLink.addEventListener("click", function () {
+    if (hasErrors) { toast(T("t.link.blocked"), true); return; }
+    var frag = stateToFragment(readState());
+    /* replaceState, a nie przypisanie do location.hash: to drugie dokłada wpis do
+       historii przeglądarki przy KAŻDYM kliknięciu, więc przycisk „wstecz" przestaje
+       znaczyć „poprzednia strona". Gdy metody nie ma, zostaje przypisanie — link ma
+       powstać nawet kosztem wpisu w historii. */
+    var url;
+    try {
+      history.replaceState(null, "", "#" + frag);
+      url = location.href;
+    } catch (e) {
+      location.hash = frag;
+      url = location.href;
+    }
+    copyText(url, "t.link.copied", "t.link.copyFailed");
+  });
+
   btnDownload.addEventListener("click", function () {
     if (hasErrors) return;
     download(exportText(), "globals.yml");
@@ -3653,7 +3829,26 @@ var KOLLA_THEME = (function () {
   applyI18n();
   KOLLA_THEME.init(T);
   populateFromMatrix();
-  applyState(load() || DEFAULTS);
+
+  /* LINK WYGRYWA Z PAMIĘCIĄ, ODMOWA NIE ZMIENIA NICZEGO. Otwarcie linku jest aktem
+     jawnym, więc poprawny fragment ma pierwszeństwo przed tym, co zostało zapisane
+     lokalnie. Fragment odrzucony nie kasuje niczego: użytkownik dostaje stan, który
+     zobaczyłby bez linku, i zdanie o tym, że to jest właśnie ten stan — bo „link
+     odrzucony" bez drugiego zdania czyta się jak „nic się nie stało".
+
+     ŻADNEGO ZAPISU DO PAMIĘCI PRZY WEJŚCIU. Gdyby link zapisywał się od razu, jedno
+     kliknięcie w cudzy odsyłacz nadpisywałoby czyjeś własne ustawienia bez pytania.
+     Zapis następuje dopiero wtedy, gdy człowiek coś w formularzu zmieni — czyli tam,
+     gdzie następował dotąd. */
+  var fromLink = stateFromFragment(location.hash);
+  if (fromLink.error) {
+    var why = T(LINK_WHY[fromLink.error], { what: fromLink.detail || "" });
+    linkErr.textContent = T("g.link.refused", { why: why });
+    linkErr.hidden = false;
+    applyState(load() || DEFAULTS);
+  } else {
+    applyState(fromLink.state || load() || DEFAULTS);
+  }
   refresh();
 })();
 </script>
