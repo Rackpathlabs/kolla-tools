@@ -86,13 +86,27 @@ if (!strony.length) {
   process.exit(0);
 }
 
-var razem = 0, sekcje = [];
+/* ZIELEŃ Z LICZBĄ. „Zero znalezisk" bez liczby przebadanych reguł jest nieodróżnialne od
+   audytu, który nie przebadał niczego — a to jest ta sama klasa awarii, przed którą broni
+   kod 2 u strażników, tylko że tutaj wygląda jak dobra wiadomość. Zmierzone na przebiegu
+   33619155354: zero naruszeń przy 1,35 MB raportu, czyli przy realnym pomiarze. Bez tych
+   liczb nie dało się tego powiedzieć z samego zgłoszenia.
+
+   `incomplete` to osobny kubełek axe: reguły, których narzędzie NIE ROZSTRZYGNĘŁO. Wliczone
+   do zera byłyby przemilczeniem, więc stoją osobno. */
+var razem = 0, przeszlo = 0, niepewne = 0, sekcje = [];
 strony.forEach(function (p) {
   var url = p.url || "(bez adresu)";
   var v = p.violations || [];
   v.forEach(function (r) { razem += (r.nodes || []).length; });
+  przeszlo += (p.passes || []).length;
+  niepewne += (p.incomplete || []).length;
   sekcje.push("### " + url + "\n");
-  if (!v.length) { sekcje.push("Bez znalezisk.\n"); return; }
+  if (!v.length) {
+    sekcje.push("Bez znalezisk — reguł zdanych: " + (p.passes || []).length +
+                ", nierozstrzygniętych: " + (p.incomplete || []).length + ".\n");
+    return;
+  }
   sekcje.push("| reguła | waga | wystąpień | opis |");
   sekcje.push("|---|---|---|---|");
   v.forEach(function (r) {
@@ -104,8 +118,13 @@ strony.forEach(function (p) {
 });
 
 process.stdout.write(
-  "Znalezisk axe-core: **" + razem + "** na " + strony.length + " stronach. " +
+  "Znalezisk axe-core: **" + razem + "** na " + strony.length + " stronach, przy " +
+  przeszlo + " zdanych regułach i " + niepewne + " nierozstrzygniętych. " +
   "Treść nadpisywana przy każdym przebiegu.\n" +
+  "\n" +
+  "Liczba zdanych reguł stoi obok zera znalezisk celowo: zero bez niej jest " +
+  "nieodróżnialne\nod audytu, który nie przebadał niczego — a wygląda jak dobra " +
+  "wiadomość. `Nierozstrzygnięte`\nto osobny kubełek axe, nie znaleziska i nie zaliczenia.\n" +
   "\n" +
   "**To jest audyt, nie bramka.** Nic tu nie blokuje builda i nic nie musi zostać naprawione\n" +
   "w ciągu tygodnia. Znalezisko jest kandydatem do przeglądu przez człowieka: część reguł\n" +

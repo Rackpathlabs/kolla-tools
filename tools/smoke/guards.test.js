@@ -168,6 +168,16 @@ R.ok("raport z fixtury -> kod 0 (to generator tekstu, nie kontrola)", axeOk.code
      kod(axeOk));
 R.ok("liczy WYSTĄPIENIA, nie reguły", /Znalezisk axe-core: \*\*3\*\* na 2 stronach/.test(axeOk.out),
      axeOk.out.split("\n")[0]);
+/* Zero bez liczby zdanych reguł jest nieodróżnialne od audytu, który nie przebadał niczego,
+   i wygląda przy tym jak dobra wiadomość. Ta liczba jest tu po to, żeby dało się to
+   rozróżnić z samego zgłoszenia. */
+R.ok("obok znalezisk stoi liczba ZDANYCH reguł",
+     /przy 78 zdanych regułach i 1 nierozstrzygniętych/.test(axeOk.out),
+     axeOk.out.split("\n")[0]);
+R.ok("i strona bez znalezisk też podaje swoją liczbę",
+     /Bez znalezisk — reguł zdanych: 41, nierozstrzygniętych: 1\./.test(axeOk.out));
+R.ok("nierozstrzygnięte są OSOBNYM kubełkiem, nie doliczone do zera",
+     /nie znaleziska i nie zaliczenia/.test(axeOk.out));
 R.ok("pionowa kreska w opisie reguły nie rozbija tabeli",
      /Form elements must have labels \\\| with a pipe/.test(axeOk.out));
 R.ok("mówi wprost, że nie jest bramką", /audyt, nie bramka/.test(axeOk.out));
