@@ -159,6 +159,27 @@ R.ok("PRZYNĘTA: definicja tokenu wewnątrz bloku motywu nie jest trafieniem",
 R.ok("PRZYNĘTA: atrybut SVG w markupie jest poza zakresem",
      themeBad.out.indexOf("#3ddc97") === -1);
 
+/* ---- check-print: co naprawdę wychodzi z drukarki ---- */
+/* Trzy uruchomienia Chrome'a na jednostronicowej fixturze. Strażnik niesie WŁASNĄ kontrolę
+   w każdym przebiegu — wariant z unieważnionym blokiem druku — więc dowód, że potrafi
+   upaść, powstaje też na produkcie. Fixtura jest tu po to, żeby ten dowód dało się
+   uruchomić na czymś o ZNANEJ charakterystyce: dokładnie dwa przecieki, obydwa nazwane. */
+var printBad = run("check-print.js", ["--file", "tools/fixtures/print/leaky.html"]);
+R.ok("blok druku, który nie dosięga własnych tokenów -> czerwone", printBad.code === 1,
+     kod(printBad));
+R.ok("i przeciek jest nazwany po IMIENIU TOKENU, nie po wartości",
+     /--panel \(#151b22\), --muted \(#8b98a5\)/.test(printBad.out),
+     printBad.out.split("\n").filter(function (l) { return /ciemnej palety/.test(l); })[0]);
+R.ok("kontrola wewnątrz przebiegu potwierdza, że zdanie o przeciekach cokolwiek mierzy",
+     /ok   KONTROLA/.test(printBad.out));
+R.ok("PRZYNĘTA: sterowanie ukryte poprawnie nie jest zgłaszane",
+     /ok   sterowanie zniknęło z papieru/.test(printBad.out));
+R.ok("PRZYNĘTA: wydruk niezależny od motywu nie jest zgłaszany",
+     /ok   wydruk nie zależy od motywu ekranowego/.test(printBad.out));
+
+var printGone = run("check-print.js", ["--file", "tools/fixtures/print/nie-ma-takiego.html"]);
+R.ok("brak pliku -> kod 2 („nie zmierzyłem”), nie 1", printGone.code === 2, kod(printGone));
+
 var themeGone = run("check-theme-tokens.js", ["tools/fixtures/theme/nie-ma-takiego.html"]);
 R.ok("brak pliku -> kod 2 („nie zmierzyłem”), nie 1", themeGone.code === 2, kod(themeGone));
 
