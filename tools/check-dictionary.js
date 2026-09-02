@@ -165,8 +165,21 @@ function corpus(stripTags) {
        a najczestsze to "the", "and", "a", "is". Zdanie ze slownika nie mialo
        wtedy prawa sie dopasowac do niczego — kryterium bylo o wiele ZA OSTRE,
        dokladnie odwrotnie, niz podejrzewalismy po skoku liczby segmentow. */
-    joined.replace(stripTags, " ").split(/\{[^}]*\}|\|/).forEach(function (seg) {
-      seg = seg.replace(/\\"/g, '"').replace(/\s+/g, " ").trim();
+    /* Znacznik zamieniamy na spację, ale CAŁY ELEMENT razem z treścią — na NIC.
+       Wpis „…step (<code>[01:10:2]</code>)." dawał inaczej „…step ( )." wobec ekranowego
+       „…step ().": nawiasy sklejają się bez odstępu, bo element w środku nie jest odstępem.
+       Piąta odsłona tej samej pomyłki co wyżej. Puste znaczniki dalej idą na spację, bo
+       „Host <code>x</code> is" ma na ekranie odstęp między słowami. */
+    joined.replace(stripTags, stripTags === DROP ? "" : " ").split(/\{[^}]*\}|\|/).forEach(function (seg) {
+      /* SEKWENCJE UCIECZKI ROZWIJAMY WSZYSTKIE, nie tylko cudzysłów. Wpis
+         „---\\nkolla_base_distro…" niesie w źródle dwuznakową sekwencję tam, gdzie ekran
+         ma nową linię — a po zwinięciu białych znaków SPACJĘ. Rozwijanie samego `\\"`
+         zostawiało więc w korpusie napis, którego ekran nigdy nie pokaże. Czwarta odsłona
+         tej samej pomyłki co #135, #145 i encje z #147: porównywanie ZAPISU zamiast tego,
+         co widać. */
+      seg = seg.replace(/\\n/g, "\n").replace(/\\t/g, "\t").replace(/\\r/g, "\r")
+               .replace(/\\"/g, '"').replace(/\\\\/g, "\\")
+               .replace(/\s+/g, " ").trim();
       /* Pusty segment to ta sama pusta igla, wchodzaca DRUGA DROGA: nie
          z normalizacji napisu z ekranu, tylko z budowy korpusu. Wpis zlozony
          z samej wstawki ("{count}") po cieciu po {…} nie zostawia nic.
@@ -648,7 +661,14 @@ report.forEach(function (f) {
    `what`, `todo` i w etykiecie przycisku — a na ekran trafiały tak samo. Zakrój po nazwie
    pola pyta o zapis, zakrój po ujściu pyta o skutek, i to jest ta sama różnica, którą to
    repozytorium płaci od #101. */
-var BASELINE = 4;
+/* ZERO, 2026-09-02. Nie „prawie zero z gwiazdką": KAŻDY widoczny napis pochodzi ze
+   słownika albo z nazwanej kategorii danych, a lista kategorii i ich granice stoją wyżej.
+
+   Próg zostaje na miejscu i zostaje ZEREM. Nie jest już miarą długu — długu nie ma — tylko
+   twierdzeniem, którego złamanie jest widoczne natychmiast: pierwszy nowy napis poza
+   słownikiem robi build czerwony i nie ma progu, za który dałoby się go schować. To jest
+   dokładnie to, o co ta stała walczyła od 444. */
+var BASELINE = 0;
 var bArg = process.argv.indexOf("--baseline");
 if (bArg !== -1) {
   var bVal = Number(process.argv[bArg + 1]);
