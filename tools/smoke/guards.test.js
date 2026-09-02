@@ -272,8 +272,13 @@ R.ok("…choć wystąpień PRZYBYWA, więc fixtura naprawdę dokłada scenariusz
      c1 && c2 && c2.wystapienia > c1.wystapienia,
      c1 && c2 ? c1.wystapienia + " -> " + c2.wystapienia : "—");
 /* NORMALIZACJA, zapisana jako asercja, a nie tylko jako zdanie przy stałej:
-   „inventory: line 2", „line 7" i „line 41" to JEDEN napis. Trzy wystąpienia
-   szablonu w drugiej fixturze mają dać jedną pozycję długu. */
+   „audit: step 2", „step 7" i „step 41" to JEDEN napis. Trzy wystąpienia szablonu
+   w drugiej fixturze mają dać jedną pozycję długu.
+
+   Szablonem był tu do 2026-09-02 „inventory: line N", wzięty z produktu. Przestał się
+   nadawać, kiedy ten napis trafił do słownika (#58) — fixtura zaczęła mierzyć pokrycie
+   zamiast normalizacji i zgłosiła to sama. Napis jest teraz WYMYŚLONY, więc żadna
+   migracja go nie dosięgnie. */
 R.ok("ten sam szablon z inną liczbą to JEDEN napis", c2 && c2.napisy === 3,
      c2 ? "napisów: " + c2.napisy : "—");
 

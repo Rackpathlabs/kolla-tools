@@ -643,7 +643,12 @@ report.forEach(function (f) {
    strażniki porównujące ekran ze słownikiem dekodują teraz encje HTML. Encje były
    trzecim wariantem tej samej pomyłki co #135 i #145: porównywaliśmy ZAPIS zamiast tego,
    co widać — „&rarr;" w słowniku wobec „→" na ekranie. */
-var BASELINE = 11;
+/* 11 -> 4, partia #58 zakrojona PO UJŚCIU, a nie po nazwie pola. Poprzednie partie szły
+   gripem po `msg:`, `hint:` i `add(`; te siedem napisów siedziało pod `why:`, `fail:`,
+   `what`, `todo` i w etykiecie przycisku — a na ekran trafiały tak samo. Zakrój po nazwie
+   pola pyta o zapis, zakrój po ujściu pyta o skutek, i to jest ta sama różnica, którą to
+   repozytorium płaci od #101. */
+var BASELINE = 4;
 var bArg = process.argv.indexOf("--baseline");
 if (bArg !== -1) {
   var bVal = Number(process.argv[bArg + 1]);

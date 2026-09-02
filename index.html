@@ -629,6 +629,38 @@ footer a{color:var(--muted)}
                                    "not an outage.",
       "g.d.dependency":            "<code>{what}</code> requires {needs}.",
       "v.f.release.hint":          "Group names are checked against this release.",
+      /* OSTATNIE SIEDEM UJŚĆ — przeniesione 2026-09-02 (#58).
+
+         Poprzednie partie były zakrojone gripem po `msg:`, `hint:` i `add(`, a te napisy
+         siedziały pod `why:`, `fail:`, `what`, `todo` i w etykiecie przycisku — czyli pod
+         nazwami pól, o których nikt nie pomyślał. Ta partia jest zakrojona po UJŚCIU:
+         wszystko, co trafia do `msg`/`hint` findingu albo na ekran jako etykieta, idzie
+         przez słownik niezależnie od tego, jak nazywa się pole w tabeli reguł.
+
+         Cztery grupy kworum dzielą jedno zdanie `why` — jeden klucz, cztery użycia. */
+      "v.q.why.control":       "Three independent quorum mechanisms ride on this one host list: Galera, RabbitMQ quorum queues and Corosync.",
+      "v.q.why.own":           "The group carries its own membership instead of inheriting from <code>[control]</code>.",
+      "v.q.fail.control":      "With two nodes, losing one puts Galera into non-Primary — the database goes read-only and every write API call returns 500. With four, losing two (one rack, one switch) kills quorum even though two healthy nodes remain. It surfaces at the first real failover, or during a rolling reboot while patching.",
+      "v.q.fail.mariadb":      "Losing half the nodes puts the cluster into non-Primary — the database goes read-only.",
+      "v.q.fail.rabbitmq":     "Quorum queues need a majority. Without one, publishing blocks and RPC calls between services time out.",
+      "v.q.fail.hacluster":    "An even Corosync cluster cannot form a majority under a network partition — neither half takes over the resources.",
+      "v.q.fail.etcd":         "Without a majority etcd goes read-only — services that lose contact with it cannot persist state.",
+      "v.u.what.procedure":        "changes in release <code>{rel}</code> in a way that editing the file cannot settle",
+      "v.u.todo.procedure":        "This needs an operational step on the running environment, not a YAML fix. " +
+                                   "The tool cannot tell whether that step was taken — it would need the " +
+                                   "deployment history, not the file. SCOPE.md explains why.",
+      "v.u.what.renamed":          "is renamed to <code>{to}</code> in release <code>{rel}</code>",
+      "v.u.what.circumstances":    "changes its circumstances in release <code>{rel}</code>",
+      "v.u.todo.circumstances":    "The change does not block the upgrade, but it is worth noting.",
+      "v.u.what.retired":          "stops being supported in release <code>{rel}</code>",
+      "v.u.todo.retiredKey":       "Remove the key, or accept that it no longer does anything.",
+      "v.u.todo.retiredGroup":     "Plan where the workload moves, then drop the group from the inventory.",
+      "v.rep.lineButton":          "inventory: line {line}",
+      "g.d.hostOs":                "Host systems supported in release <code>{rel}</code>: {list}.",
+      "g.d.keyExplicit":           "<code>{key}</code> is set explicitly in the file — the value no longer depends on the release default ({label}).",
+      "g.d.keyDefault":            "The file does not set <code>{key}</code> — the release default <code>{value}</code> applies ({label}).",
+      "g.d.keyDefault.loaded":     "The loaded file does not set <code>{key}</code> — the release default <code>{value}</code> applies ({label}).",
+      "g.d.keyDefault.importNote": "The import does not add missing keys — the export reproduces the file unchanged.",
       "v.f.syntax.hint":           "Expected format: <code>[name]</code>, <code>[name:children]</code> or <code>[name:vars]</code>.",
       "v.f.sectionKind":           "Unknown section type <code>{kind}</code>.",
       "v.f.childrenFormat":        "Section <code>[{group}:children]</code> may contain only group names, one per line.",

@@ -23,7 +23,12 @@ g.d.dependency  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstan
 g.d.extDirect  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
 g.d.extShared  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
 g.d.fqdnIdentical  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
+g.d.hostOs  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
 g.d.ifaceRequired  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
+g.d.keyDefault  a  jw.
+g.d.keyDefault.importNote  a  fragment doklejany do komunikatu diagnostyki w trybie importu
+g.d.keyDefault.loaded  a  jw.
+g.d.keyExplicit  a  jw.
 g.d.tlsNoCa  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
 g.diff.absent  a  komorka tabeli roznic budowana per wiersz; tabeli nie ma, dopoki nie ma czego porownac
 g.rule.kv05.ackNote  a  metadane reguly wstrzykiwane w finding; findingu nie ma, dopoki nie powstanie
@@ -123,11 +128,18 @@ v.q.aio.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.q.ceph.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.q.count.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.q.even  a  fragment komunikatu findingu skladany warunkowo; findingu nie ma, dopoki nie powstanie
+v.q.fail.control  a  skutek utraty kworum, wstrzykiwany w finding; findingu nie ma, dopoki nie powstanie
+v.q.fail.etcd  a  jw.
+v.q.fail.hacluster  a  jw.
+v.q.fail.mariadb  a  jw.
+v.q.fail.rabbitmq  a  jw.
 v.q.needOdd  a  fragment komunikatu findingu skladany warunkowo; findingu nie ma, dopoki nie powstanie
 v.q.ovnSpof.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
 v.q.ovnSpof.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.q.single.msg  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.q.tooFew  a  fragment komunikatu findingu skladany warunkowo; findingu nie ma, dopoki nie powstanie
+v.q.why.control  a  uzasadnienie reguly kworum, wstrzykiwane w finding; findingu nie ma, dopoki nie powstanie
+v.q.why.own  a  jw., wspolne dla czterech grup kworum
 v.r.group  a  komunikat findingu o zmianie nazwy grupy; findingu nie ma, dopoki nie powstanie
 v.r.removed  a  fragment komunikatu o wydaniu, w ktorym grupa zniknela; skladany w komunikat findingu
 v.r.renamed  a  fragment komunikatu o wydaniu, w ktorym grupe przemianowano; skladany w komunikat findingu
@@ -140,6 +152,7 @@ v.rep.clean  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopoki 
 v.rep.globalsNo  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopoki nie ma wyniku
 v.rep.globalsYes  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopoki nie ma wyniku
 v.rep.hosts  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopoki nie ma wyniku
+v.rep.lineButton  a  etykieta przycisku odnosnika do linii; przycisk powstaje razem z findingiem
 v.rep.path  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopoki nie ma wyniku
 v.rep.refLine  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopoki nie ma wyniku
 v.rep.refMissing  a  wiersz raportu tekstowego skladany w JS; raportu nie ma, dopoki nie ma wyniku
@@ -166,8 +179,16 @@ v.topology.subgroups  a  komorka albo naglowek tabeli topologii budowanej per wi
 v.u.gap.hint  a  podpowiedz findingu trybu aktualizacji; findingu nie ma, dopoki nie powstanie
 v.u.gap.which1  a  wariant liczebnika wstrzykiwany w podpowiedz findingu; wlasnego elementu nie ma nigdy
 v.u.gap.whichN  a  wariant liczebnika wstrzykiwany w podpowiedz findingu; wlasnego elementu nie ma nigdy
+v.u.todo.circumstances  a  jw.
+v.u.todo.procedure  a  fragment podpowiedzi findingu trybu aktualizacji, skladany warunkowo
 v.u.todo.renameGroup  a  fragment zadania do wykonania, wybierany warunkowo i wstrzykiwany w finding
 v.u.todo.renameKey  a  fragment zadania do wykonania, wybierany warunkowo i wstrzykiwany w finding
+v.u.todo.retiredGroup  a  jw.
+v.u.todo.retiredKey  a  jw.
+v.u.what.circumstances  a  jw.
+v.u.what.procedure  a  fragment komunikatu findingu trybu aktualizacji, skladany warunkowo
+v.u.what.renamed  a  jw.
+v.u.what.retired  a  jw.
 v.verdict.clean  a  kolejny STAN elementu #verdict-txt; stanem poczatkowym jest v.start i to tamten klucz ma kotwice
 v.verdict.errors  a  kolejny STAN elementu #verdict-txt; stanem poczatkowym jest v.start i to tamten klucz ma kotwice
 v.verdict.warnings  a  kolejny STAN elementu #verdict-txt; stanem poczatkowym jest v.start i to tamten klucz ma kotwice
