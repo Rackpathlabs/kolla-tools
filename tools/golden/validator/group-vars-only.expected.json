@@ -1,0 +1,21 @@
+{
+  "release": "2026.1",
+  "upgradeTo": null,
+  "globals": false,
+  "findings": [
+    {
+      "code": "EMPTY-GROUP",
+      "sev": "warn",
+      "src": "inventory",
+      "line": 46,
+      "refs": []
+    },
+    {
+      "code": "GROUP-VARS-ONLY",
+      "sev": "warn",
+      "src": "inventory",
+      "line": 46,
+      "refs": []
+    }
+  ]
+}

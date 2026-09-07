@@ -1,0 +1,14 @@
+{
+  "release": "2026.1",
+  "upgradeTo": null,
+  "globals": false,
+  "findings": [
+    {
+      "code": "DUPLICATE-VAR",
+      "sev": "warn",
+      "src": "inventory",
+      "line": 42,
+      "refs": []
+    }
+  ]
+}

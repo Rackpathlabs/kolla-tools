@@ -1,0 +1,21 @@
+{
+  "release": "2026.1",
+  "upgradeTo": null,
+  "globals": false,
+  "findings": [
+    {
+      "code": "GROUP-CYCLE",
+      "sev": "error",
+      "src": "inventory",
+      "line": 43,
+      "refs": []
+    },
+    {
+      "code": "CHILD-SELF",
+      "sev": "error",
+      "src": "inventory",
+      "line": 43,
+      "refs": []
+    }
+  ]
+}
