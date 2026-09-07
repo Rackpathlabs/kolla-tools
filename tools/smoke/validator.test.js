@@ -535,7 +535,18 @@ var NO_LINE = {
   "KV-09-VIP-SUBNET":"inferencja z adresów wielu hostów, bez jednego wiersza źródłowego"
 };
 
-var seenNoLine = {}, missingLine = [], missingHint = [], counted = 0;
+/* Kody, których SKUTEK stoi w KOMUNIKACIE, a nie w osobnej podpowiedzi. Ta sama
+   konstrukcja co NO_LINE wyżej i z tego samego powodu: kryterium #10 mówi, że finding ma
+   nazwać skutek, a nie że ma wypełnić konkretne pole. Wpis jest dopuszczalny WYŁĄCZNIE
+   wtedy, gdy skutek naprawdę pada w komunikacie — nie wtedy, gdy podpowiedzi po prostu
+   nikt nie napisał. Ta różnica właśnie się opłaciła: gałąź SYNTAX o pustej nazwie sekcji
+   wyglądała tak samo jak ten przypadek, a była zwykłym przeoczeniem i dostała podpowiedź
+   swoich rodzeństw zamiast wpisu tutaj. */
+var NO_HINT = {
+  "SECTION-REPEATED": "skutek stoi w komunikacie („Ansible merges the entries”), osobna podpowiedź powtarzałaby to samo zdanie"
+};
+
+var seenNoLine = {}, seenNoHint = {}, missingLine = [], missingHint = [], counted = 0;
 fsx.readdirSync(gdir).filter(function (f) { return f.slice(-4) === ".ini"; }).forEach(function (f) {
   var text = fsx.readFileSync(pathx.join(gdir, f), "utf8");
   var mrel = /^#\s*golden-release:\s*(\S+)\s*$/m.exec(text);
@@ -544,7 +555,10 @@ fsx.readdirSync(gdir).filter(function (f) { return f.slice(-4) === ".ini"; }).fo
   var glob = fsx.existsSync(gp) ? T.GLOBALS.parse(fsx.readFileSync(gp, "utf8")) : null;
   T.analyse(T.parse(text), mrel[1], glob, {}, null).findings.forEach(function (x) {
     counted++;
-    if (!x.hint) missingHint.push(x.code);
+    if (!x.hint) {
+      seenNoHint[x.code] = 1;
+      if (!NO_HINT[x.code]) missingHint.push(x.code + " (" + f + ")");
+    }
     if (x.line === null || x.line === undefined) {
       seenNoLine[x.code] = 1;
       if (!NO_LINE[x.code]) missingLine.push(x.code + " (" + f + ")");
@@ -552,8 +566,11 @@ fsx.readdirSync(gdir).filter(function (f) { return f.slice(-4) === ".ini"; }).fo
   });
 });
 
-ok("każdy finding nazywa SKUTEK (hint), " + counted + " sprawdzonych",
+ok("każdy finding nazywa SKUTEK (hint) albo ma zapisany powód, " + counted + " sprawdzonych",
    missingHint.length === 0, missingHint.join(","));
+ok("i żaden powód z NO_HINT nie jest nieaktualny — kod, który już niesie podpowiedź, wypada z listy",
+   Object.keys(NO_HINT).every(function (c) { return seenNoHint[c]; }),
+   Object.keys(NO_HINT).filter(function (c) { return !seenNoHint[c]; }).join(","));
 ok("każdy finding bez linii ma zapisany powód",
    missingLine.length === 0, missingLine.join(","));
 ok("i żaden powód nie jest nieaktualny — kod, który już wskazuje linię, wypada z listy",
