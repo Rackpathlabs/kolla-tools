@@ -1,0 +1,14 @@
+{
+  "release": "2026.1",
+  "upgradeTo": null,
+  "globals": false,
+  "findings": [
+    {
+      "code": "SYNTAX",
+      "sev": "error",
+      "src": "inventory",
+      "line": 40,
+      "refs": []
+    }
+  ]
+}
