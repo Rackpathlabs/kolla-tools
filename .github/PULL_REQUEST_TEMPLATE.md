@@ -1,0 +1,5 @@
+- [ ] Linked issue as `refs #NN` / `part of #NN` (closing keyword only as a whole line in the description, never in the title)
+- [ ] Title contains no closing keyword
+- [ ] Commits carry the project identity (rackpathlabs-ops)
+- [ ] `bash tools/run-tests.sh` exits 0 locally
+- [ ] No new external resource, script, font or request anywhere

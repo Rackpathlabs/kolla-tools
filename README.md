@@ -130,7 +130,10 @@ bash tools/sync-blocks.sh          # push shared blocks into the HTML files
 Rules for changing this code — severity against evidence, what a tool may claim, where a
 check has to stand — are in [docs/PRINCIPLES.md](docs/PRINCIPLES.md). The operational
 rules for making a change — git and review hygiene, and which thresholds a change may
-move — are in [CLAUDE.md](CLAUDE.md).
+move — are in [CLAUDE.md](CLAUDE.md). A contributor setting up a clone for the first
+time, or wondering which files need whose review, starts at
+[CONTRIBUTING.md](CONTRIBUTING.md): the entry steps before a first commit and the
+boundary between owned files and everything else.
 
 Two checks cannot be automated and are written out as a ten-minute keyboard pass in
 [docs/MANUAL-CHECKS.md](docs/MANUAL-CHECKS.md): whether the tools can actually be traversed
