@@ -2166,7 +2166,12 @@ Paste the contents of your multinode file, or drag it here."
         }
         var inner = hm[1].trim();
         if (!inner) {
-          add("error", "SYNTAX", T("v.f.syntax.emptyName"), lineNo);
+          /* Ta sama podpowiedź, co przy nagłówku niesparsowalnym wyżej: pusta nazwa
+             to jeden z przypadków, których „Expected format" dotyczy wprost. Gałąź
+             stała bez podpowiedzi, a asercja kryterium #10 tego nie widziała, bo do
+             #56 żaden scenariusz jej nie zapalał. */
+          add("error", "SYNTAX", T("v.f.syntax.emptyName"), lineNo,
+              T("v.f.syntax.hint"));
           current = null;
           continue;
         }
