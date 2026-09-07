@@ -1,0 +1,2 @@
+cinder_cluster_name: ceph
+distro_python_version: 3

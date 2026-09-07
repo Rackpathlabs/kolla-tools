@@ -654,13 +654,24 @@ fsx.readdirSync(gdir).filter(function (f) { return f.slice(-4) === ".ini"; }).fo
 var alien = Object.keys(FIRED).filter(function (i) { return !T.VALIDATOR_IDS[i]; });
 ok("każdy zapalony kod jest w VALIDATOR_IDS", alien.length === 0, alien.join(","));
 
-/* Pozycje, których scenariusze powyżej i sweep golden nie zapalają — KAŻDA Z
-   POWODEM, nie z liczbą. W TYM KOMICIE TABELA JEST CELOWO PUSTA: to samo w sobie
-   jest punktem tego kroku. Powody trafiają tu razem ze scenariuszami z kolejnych
-   kroków #56, które je uzasadnią — dopisanie ich teraz, przed dowodem, byłoby tym
-   samym błędem, przed którym ostrzega nagłówek UNREACHED w generator.test.js:
-   gotowe uzasadnienie schowałoby czerwony wynik, który ten komit ma pokazać. */
-var UNREACHED = {};
+/* Pozycje, których scenariusze powyżej i sweep golden nie zapalają — KAŻDA Z POWODEM,
+   nie z liczbą. Tabela była pusta od chwili powstania rejestru aż do teraz, celowo: powód
+   dopisany przed scenariuszem, który go uzasadnia, schowałby czerwień zamiast ją wyjaśnić.
+
+   POWÓD MÓWI, CZEGO NIE MA W DANYCH, a nie że reguła jest martwa. To rozróżnienie ma tu
+   precedens, który się opłacił: DISTRO-NOT-IN-RELEASE stał w tej samej roli po stronie
+   generatora z powodem „żadne wydanie w macierzy nie odrzuca dziś obrazu z DISTROS",
+   policzonym iteracją po parach (wydanie × distro), i ODŻYŁ 2026-09-02, gdy z 2026.2
+   zniknął CentOS. Wpis niżej jest tej samej klasy i ma tak samo zniknąć, gdy dane się
+   zmienią — pilnuje tego asercja nieaktualności tuż pod tabelą. */
+var UNREACHED = {
+  /* Policzone nad KOLLA_MATRIX, nie oszacowane: 40 wpisów `deprecated` we wszystkich
+     wydaniach, z czego kind="key" + sev="info" + brak replacedBy — jedyna kombinacja,
+     dla której upgradeCode() składa ten kod — daje ZERO. Dla porównania ta sama
+     kombinacja przy kind="group" daje 2 (cinder-volume i cinder-backup w 2026.1), więc
+     UPGRADE-GROUP-CHANGED ma własny wzorzec, a ten nie ma z czego go mieć. */
+  "UPGRADE-KEY-CHANGED": "0 z 40 wpisów deprecated ma kind=key i sev=info bez replacedBy; osiągalne przy zmianie danych, jak DISTRO-NOT-IN-RELEASE"
+};
 
 var unreached = Object.keys(T.VALIDATOR_IDS).filter(function (i) { return !FIRED[i]; }).sort();
 var undocumented = unreached.filter(function (i) { return !UNREACHED[i]; });
