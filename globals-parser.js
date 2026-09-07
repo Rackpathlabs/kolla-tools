@@ -169,10 +169,17 @@
         var restTrim = rest.trim();
 
         if (Object.prototype.hasOwnProperty.call(keys, key)) {
+          /* T() jest bezpieczne tutaj, bo to wnętrze parse() — wywoływane później,
+             nie w chwili uruchomienia tego IIFE. W validator.html blok GLOBALS-PARSER
+             jest wklejony PRZED blokiem KOLLA-I18N, więc `var T = I18N.t;` jeszcze nie
+             wykonało się, gdy TA funkcja jest DEFINIOWANA — dopiero gdy jest WOŁANA.
+             Wywołanie T() na poziomie modułu tego IIFE (poza funkcją) rzuciłoby
+             wyjątkiem w validator.html i przeszłoby bez błędu w generator.html, gdzie
+             kolejność bloków jest odwrotna. Nie przenosić stąd. */
           findings.push({
             sev: "warn", code: "KEY-REPEATED", line: lineNo,
-            msg: "Key <code>" + key + "</code> appears again on line " + lineNo + ".",
-            hint: "Ansible takes the last occurrence; the earlier ones are dead."
+            msg: T("p.keyRepeated", { key: key, line: lineNo }),
+            hint: T("p.keyRepeated.hint")
           });
         }
 

@@ -50,6 +50,14 @@
       "nav.theme.dark":        "Theme: dark",
       "brand.sub":             "OpenStack tooling",
 
+      /* --- parser wspólny (globals-parser.js), prefiks p. ---
+         Ten blok jest wklejony bajtowo w generator.html I W validator.html, więc klucz
+         nazwany dla jednego narzędzia (v. — walidator, g. — generator) byłby kłamstwem
+         w drugim. t. nie nadaje się jako ogólna wspólna przestrzeń — patrz niżej, to
+         toasty. Stąd osobny, neutralny prefiks dla tego, co żyje w obu naraz. */
+      "p.keyRepeated":         "Key <code>{key}</code> appears again on line {line}.",
+      "p.keyRepeated.hint":    "Ansible takes the last occurrence; the earlier ones are dead.",
+
       /* --- hub --- */
       "hub.title":             "Rackpathlabs — Kolla-Ansible tools",
       "hub.desc":              "Two Kolla-Ansible tools: a globals.yml generator and an inventory validator. They run in your browser, offline, and upload nothing.",
@@ -303,6 +311,9 @@
       /* --- liczebniki: en dwie formy, pl trzy --- */
       "n.node":                "node|nodes",
       "n.host":                "host|hosts",
+      /* Wersja z wielkiej litery: finding NO-ADDRESS zaczyna nią zdanie, a n.host
+         zostaje małą literą dla użyć w środku zdania, które już na niej polegają. */
+      "n.hostCap":             "Host|Hosts",
       "n.error":               "error|errors",
       "n.warning":             "warning|warnings",
 /* --- walidator: raport tekstowy --- */
@@ -545,6 +556,8 @@
       "g.d.keyDefault.importNote": "The import does not add missing keys — the export reproduces the file unchanged.",
       "v.f.syntax.hint":           "Expected format: <code>[name]</code>, <code>[name:children]</code> or <code>[name:vars]</code>.",
       "v.f.sectionKind":           "Unknown section type <code>{kind}</code>.",
+      /* Podpowiedź przeniesiona z literału (#56) — sam komunikat już szedł przez T(). */
+      "v.f.sectionKind.hint":      "Ansible recognises only <code>:children</code> and <code>:vars</code>.",
       "v.f.childrenFormat":        "Section <code>[{group}:children]</code> may contain only group names, one per line.",
       "v.f.groupCycle.hint":       "Ansible will refuse an inventory like this when it loads it.",
       "v.f.duplicateVar":          "Variable <code>{key}</code> is set twice in <code>[{group}:vars]</code>.",
@@ -556,6 +569,34 @@
       "v.f.hostNoKollaGroup":      "Host <code>{host}</code> is in no group that Kolla-Ansible deploys onto.",
       "v.f.hostNoKollaGroup.hint": "Its groups are {groups}, and Kolla-Ansible selects hosts by group name. No service will be deployed on this host.",
       "v.f.hostNoKollaGroup.none": "It belongs to no group beyond the implicit ones. No service will be deployed on this host.",
+
+      /* Kolejna partia przeniesiona z literałów walidatora (#56). Wartości przepisane
+         BAJT W BAJT z kodu — migracja przenosi tekst, nie zmienia go. Kolejność wpisów
+         jak kolejność miejsc w validator.html: GROUP-NAME, SECTION-REPEATED, HOST-VAR,
+         HOST-LIMIT, GROUP-VARS-ONLY, DUPLICATE-CHILD, CHILD-SELF, SHARED-ADDRESS,
+         NO-ADDRESS. CHILD-SELF nie ma podpowiedzi w kodzie źródłowym — nie wolno jej
+         tu wymyślać. */
+      "v.f.groupName":             "The group name <code>{group}</code> contains characters that are not allowed.",
+      "v.f.groupName.hint":        "Letters, digits and <code>_ . -</code> are allowed.",
+      "v.f.sectionRepeated":       "Section <code>[{group}]</code> appears again (first on line {line}). Ansible merges the entries.",
+      "v.f.hostVar":               "Token <code>{token}</code> on host <code>{host}</code> is not a variable assignment.",
+      "v.f.hostVar.hint":          "Host variables are written as <code>key=value</code>, with no spaces around the equals sign.",
+      "v.f.hostLimit":             "The inventory exceeds the {max} host limit this tool handles.",
+      "v.f.hostLimit.hint":        "Later entries were not analysed. Split the file, or check whether the ranges are wider than intended.",
+      "v.f.groupVarsOnly":         "Group <code>{group}</code> has a vars section but neither hosts nor child groups.",
+      "v.f.groupVarsOnly.hint":    "The variables apply to nothing.",
+      "v.f.duplicateChild":        "The child group <code>{child}</code> is listed twice in <code>[{group}:children]</code>.",
+      "v.f.duplicateChild.hint":   "First occurrence: line {line}.",
+      "v.f.childSelf":             "Group <code>{group}</code> lists itself as a child group.",
+      "v.f.sharedAddress":         "The address <code>{addr}</code> serves several hosts on different ports: {hosts}.",
+      "v.f.sharedAddress.hint":    "Correct behind NAT or in a nested lab; make sure that was the intention.",
+      /* NO-ADDRESS: słowo wiodące ("Host"/"Hosts") idzie przez I18N.plural("n.hostCap", …)
+         w kodzie wywołania, nie przez wstawkę tutaj — ten klucz zaczyna się od "without",
+         dokładnie tak jak literał zaczynał się od spacji po słowie wiodącym. Fragment
+         " and N more" ma własny klucz, .more, bo bywa pustym łańcuchem. */
+      "v.f.noAddress":             "without <code>ansible_host</code>: {list}{more}.",
+      "v.f.noAddress.more":        " and {count} more",
+      "v.f.noAddress.hint":        "The name must resolve through DNS or <code>/etc/hosts</code> on the deployment host.",
 
       "v.verdict.errors":      "The inventory contains errors that block deployment.",
       "v.verdict.warnings":    "Syntax is valid — there are warnings to review.",
