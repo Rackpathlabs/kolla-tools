@@ -1967,6 +1967,125 @@ Paste the contents of your multinode file, or drag it here."
     };
   }
 
+  /* STABILNE IDENTYFIKATORY DIAGNOSTYKI — jedno miejsce, w którym widać wszystkie naraz.
+   *
+   * TA TABELA JEST DOKUMENTACJĄ I KONTRAKTEM NARAZ, dokładnie jak DIAG_IDS po stronie
+   * generatora. Findingi walidatora niosą stabilny `code` od początku — to nie jest
+   * powód, dla którego ta tabela nie była potrzebna wcześniej. Golden pinuje kod, wagę
+   * i linię (patrz nagłówek `tools/golden/validator.golden.js`), ale nic dotąd nie
+   * sprawdzało, że zbiór kodów, które reguły UMIEJĄ wyemitować, pokrywa się ze zbiorem
+   * kodów, które KIEDYKOLWIEK się zapaliły — dokładnie ta sama luka co przy #26 po
+   * stronie generatora, tylko że tam diagnostyka nie zmieniała emisji, a tu golden
+   * pinuje ją wprost i mimo to nikt nie sprawdzał kompletności samego zbioru.
+   *
+   * KONTRAKT JEST DWUKIERUNKOWY. Test dymny sprawdza obie strony: żaden emitowany
+   * identyfikator nie może być spoza tej tabeli (wymyślenie kodu w miejscu wywołania =
+   * czerwony build) i żadna pozycja nie może być nieosiągalna (martwy wpis wygląda na
+   * przemyślany, a nie jest). Drugi kierunek jest ważniejszy: to on łapie regułę bez
+   * scenariusza i wagę, którą dało się bezkarnie odwrócić, bo żaden test jej nie dotykał.
+   *
+   * MIEJSCA EMISJI ZATRZYMUJĄ SWOJE LITERAŁY CELOWO — `add("error", "SYNTAX", …)` i
+   * `code: "RELEASE"` nie zamieniają się w odwołania do tej tabeli. `tools/check-
+   * dictionary.js` buduje własny rejestr kodów CZYTAJĄC ŹRÓDŁO wzorcami dopasowanymi do
+   * miejsc emisji (`add(...)`, `code: "..."`), a piąty, szerszy wzorzec (WERSALIKI-Z-
+   * MYŚLNIKIEM) nie widzi pięciu kodów walidatora bez myślnika — RANGE, RELEASE, SYNTAX,
+   * TYPO, UNSUPPORTED; usunięcie ich literałów z miejsc emisji wypchnęłoby je z tego
+   * rejestru, TYPO i RELEASE i RANGE przestałyby być zwolnione ze zliczania jako tekst
+   * interfejsu (są widoczne w `tools/golden/snapshot/validator--*.txt`), a próg BASELINE
+   * w tamtym strażniku poszedłby w górę z niewłaściwego powodu.
+   *
+   * SIEDEM WARTOŚCI `upgradeCode()` JEST WYPISANYCH WPROST, bo funkcja (patrz wyżej,
+   * `function upgradeCode(dep)`) dla wpisu innego niż `procedure` SKŁADA kod z bazy w
+   * czasie działania: `base + "-RENAMED"`, `base + "-CHANGED"`, `base + "-RETIRED"`,
+   * gdzie `base` to `"UPGRADE-KEY"` albo `"UPGRADE-GROUP"`. Sześć z siedmiu wartości nie
+   * istnieje więc nigdzie w źródle jako CAŁY napis — tylko `"UPGRADE-PROCEDURE"` jest
+   * literałem wprost. Bez wypisania tych sześciu osobno kontrakt w stronę „każdy
+   * emitowany kod jest w tabeli" byłby fałszywie czerwony na każdym przebiegu, który
+   * dotyka aktualizacji.
+   *
+   * Identyfikatory findingów PARSERA WSPÓLNEGO (UNSUPPORTED, KEY-REPEATED,
+   * KEY-DEPRECATED, KEY-UNKNOWN) nie są tu powtórzone w całości celowo — ten sam powód,
+   * co przy DIAG_IDS generatora: ścieżka walidacji globals.yml PRZENOSI `f.code`, a
+   * powtórzenie listy byłoby drugą kopią, która rozjedzie się z globals-parser.js przy
+   * pierwszej nowej regule. Z tej czwórki w tym narzędziu mogą zapalić się WYŁĄCZNIE
+   * UNSUPPORTED i KEY-REPEATED, bo obie siedzą w `GLOBALS.parse()`, którego wynik
+   * walidator faktycznie czyta (patrz `GLOBALS.parse(gtext)` niżej w pliku); KEY-
+   * DEPRECATED i KEY-UNKNOWN siedzą w `GLOBALS.review()`, a walidator tej funkcji nigdy
+   * nie wywołuje — zero trafień na `grep -n "GLOBALS\.review" validator.html`. ŻADEN
+   * z tej czwórki nie ma tu pozycji, także UNSUPPORTED: tabela wylicza kody WŁASNE tego
+   * narzędzia, a ten należy do bloku wspólnego. Kontrakt w stronę „każdy emitowany kod
+   * jest w tabeli" jest więc na UNSUPPORTED CZERWONY i zostaje taki do czasu, aż
+   * globals-parser.js dostanie własny rejestr, a asercja zacznie pytać o sumę obu.
+   *
+   * Rodzina nazw: SCREAMING-KEBAB, reguły dwuplikowe (KV-01, KV-07, KV-09) z własnym
+   * numerem z przodu i wariantem z tyłu tam, gdzie jedna reguła produkuje różne
+   * findingi — tak jak KV-09-VIP-COLLISION i KV-09-VIP-SUBNET niżej.
+   */
+  var VALIDATOR_IDS = {
+    /* ---- etap parsowania ---- */
+    "SYNTAX":                      "linia inventory nieparsowalna",
+    "GROUP-NAME":                  "nazwa grupy nie przechodzi wzorca Ansible",
+    "SECTION-REPEATED":            "ta sama sekcja zadeklarowana drugi raz",
+    "OUTSIDE-GROUP":               "host albo wpis poza jakąkolwiek sekcją",
+    "GROUP-VAR":                   "wpis w :vars bez formy klucz=wartość albo klucz: wartość",
+    "CHILDREN-FORMAT":             "wpis w :children z dodatkowymi tokenami",
+    "HOST-VAR":                    "zmienna hosta bez formy klucz=wartość",
+    "RANGE":                       "wzorzec zakresu [a:b] odrzucony przez Ansible",
+    "HOST-LIMIT":                  "liczba hostów po rozwinięciu zakresów przekracza limit",
+    /* ---- wydanie ---- */
+    "RELEASE":                     "status wybranego wydania z macierzy",
+    "GROUP-RENAMED":               "grupa przemianowana w wybranym wydaniu",
+    "GROUP-RETIRED":               "grupa wycofana w wybranym wydaniu",
+    /* ---- kworum i topologia ---- */
+    "QUORUM-AIO":                  "AIO z więcej niż jednym hostem w grupie kworum",
+    "QUORUM-COUNT":                "liczebność grupy kworum poza dozwolonym zbiorem",
+    "QUORUM-OVN":                  "liczebność grupy baz OVN poza dozwolonym zbiorem",
+    "OVN-NORTHD":                  "ovn-northd poza hostami bazy OVN",
+    "CEPH-OUTSIDE-KOLLA":          "Ceph zarządzany przez Kollę, a to poza jej zakresem",
+    "QUORUM-CEPH":                 "liczebność klastra Ceph poza dozwolonym zbiorem",
+    /* ---- kolokacja ---- */
+    "COLLOCATION-CONTROL-COMPUTE": "control i compute na tym samym hoście",
+    "COLLOCATION-NETWORK":         "network kolokowany z control albo compute",
+    "GATEWAY-NO-HA":               "brama sieciowa bez nadmiarowości",
+    "COLLOCATION-STORAGE":         "storage kolokowany poza wspieranym układem",
+    /* ---- reguły dwuplikowe (inventory + globals.yml) ---- */
+    "KV-01-FENCING":               "KV-01: HA klastra bez fencingu w globals.yml",
+    "KV-07-CINDER-CLUSTER":        "KV-07: cinder-volume bez trybu klastrowego",
+    "KV-09-VIP-COLLISION":         "KV-09: VIP koliduje z adresem hosta",
+    "KV-09-VIP-SUBNET":            "KV-09: VIP poza podsiecią wywnioskowaną z hostów",
+    /* ---- aktualizacja wydania ---- */
+    "UPGRADE-DIRECTION":           "wydanie docelowe starsze niż obecne",
+    "UPGRADE-GAP":                 "ścieżka przechodzi przez wydanie bez katalogu zmian",
+    "UPGRADE-PROCEDURE":           "wydanie na ścieżce wymaga procedury ręcznej",
+    "UPGRADE-KEY-RENAMED":         "klucz globals.yml przemianowany na ścieżce aktualizacji",
+    "UPGRADE-KEY-CHANGED":         "znaczenie klucza zmienione bez zmiany nazwy",
+    "UPGRADE-KEY-RETIRED":         "klucz wycofany na ścieżce aktualizacji",
+    "UPGRADE-GROUP-RENAMED":       "grupa przemianowana na ścieżce aktualizacji",
+    "UPGRADE-GROUP-CHANGED":       "okoliczności grupy zmienione bez zmiany nazwy",
+    "UPGRADE-GROUP-RETIRED":       "grupa wycofana na ścieżce aktualizacji",
+    /* ---- struktura inventory ---- */
+    "GROUP-CYCLE":                 "cykl w grafie :children",
+    "MISSING-GROUP":               "grupa wymagana przez Kollę nieobecna w pliku",
+    "EMPTY-GROUP":                 "grupa obecna, ale bez żadnego hosta",
+    "GROUP-UNDEFINED":             "grupa użyta jako dziecko, a nigdzie niezadeklarowana",
+    "GROUP-VARS-ONLY":             "grupa ma tylko :vars, bez hostów i bez dzieci",
+    "DUPLICATE-HOST":              "ten sam host zadeklarowany drugi raz w tej samej grupie",
+    "DUPLICATE-CHILD":             "to samo dziecko wciągnięte drugi raz przez :children",
+    "CHILD-SELF":                  "grupa wciąga samą siebie jako dziecko",
+    "DUPLICATE-VAR":               "ta sama zmienna ustawiona drugi raz w tym samym miejscu",
+    "CONFLICTING-VAR":             "ta sama zmienna hosta ma różne wartości w różnych grupach",
+    /* ---- adresy ---- */
+    "DUPLICATE-ENDPOINT":          "dwa hosty dzielą ten sam ansible_host",
+    "SHARED-ADDRESS":              "adres współdzielony między rolami bez tego wymagających",
+    "NO-ADDRESS":                  "host bez żadnego rozpoznanego adresu",
+    /* ---- nazwy i zasięg ---- */
+    "TYPO":                        "nazwa grupy blisko znanej nazwy Kolli (odległość Levenshteina)",
+    "GROUP-CUSTOM":                "grupa spoza słownika Kolli, potraktowana jako własna",
+    "HOST-NO-KOLLA-GROUP":         "host nie należy do żadnej grupy rozpoznawanej przez Kollę",
+    /* ---- pusty plik ---- */
+    "NO-HOSTS":                    "inventory bez żadnego hosta"
+  };
+
   function parse(text) {
     var lines = text.split(/\r?\n/);
     var groups = Object.create(null);

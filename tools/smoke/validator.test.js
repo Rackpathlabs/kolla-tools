@@ -5,10 +5,25 @@ lib.installDom();
 var T = lib.loadTool(process.argv[2],
   ["parse", "analyse", "buildReport", "KOLLA_MATRIX", "findRelease",
    "defaultRelease", "SAMPLE_OK", "SAMPLE_BAD", "GLOBALS", "I18N",
-   "inputFingerprint", "markStale"]);
+   "inputFingerprint", "markStale", "VALIDATOR_IDS"]);
 
 var R = lib.runner();
 var ok = R.ok;
+
+/* TALICA ZAPALONYCH KODÓW — musi liczyć to, co scenariusze NIŻEJ naprawdę wykonują,
+   nie ręcznie trzymaną listę „kodów, o których myślimy, że są pokryte". Ręczna lista
+   to dokładnie ten sam błąd co UNREACHED pisane z góry: wygląda na przemyślaną, a
+   milczy dokładnie wtedy, kiedy scenariusz, na którym się opierała, zniknie albo się
+   zmieni. Owijamy więc analyse() raz, w jednym miejscu, i każdy kolejny scenariusz w
+   tym pliku — łącznie z sweepem golden na końcu — dokłada się do tego samego zbioru
+   bez osobnej księgowości. */
+var FIRED = Object.create(null);
+var rawAnalyse = T.analyse;
+T.analyse = function () {
+  var r = rawAnalyse.apply(null, arguments);
+  r.findings.forEach(function (f) { FIRED[f.code] = 1; });
+  return r;
+};
 
 var INV = [
   "[control]", "ctl[01:03] ansible_host=10.0.0.1[1:3]", "",
@@ -584,4 +599,83 @@ ok("zawiera wiersz z wydaniem", /Release: 2026\.1 Gazpacho \(kolla-ansible 22\.x
    rep.split("\n").slice(0, 6).join(" | "));
 ok("raport nie niesie wiersza o języku — narzędzie jest jednojęzyczne",
    !/^Language:/m.test(rep));
+
+/* ---- kontrakt VALIDATOR_IDS (#56, krok C0) ----
+   Ten sam dwukierunkowy kontrakt co przy DIAG_IDS generatora (patrz nagłówek
+   VALIDATOR_IDS w validator.html) — tam, gdzie ten test i tamten różnią się, różnica
+   jest opisana obok, nie domyślna.
+
+   NAJPIERW SWEEP GOLDEN, bo część kodów (reguły dwuplikowe, GAP na ścieżce
+   aktualizacji, RELEASE dla wydań spoza "development") nie ma scenariusza wyżej w
+   tym pliku i żyje wyłącznie w tools/golden/validator/*.ini. Sweep honoruje
+   WSZYSTKIE TRZY nagłówki i towarzysza `<nazwa>.globals.yml` — dokładnie tak samo,
+   jak tools/golden/validator.golden.js — bo pominięcie któregokolwiek zaniżyłoby
+   FIRED bez żadnego widocznego powodu (np. reguły dwuplikowe wymagają globals,
+   a UPGRADE-* wymaga golden-upgrade-to). */
+fsx.readdirSync(gdir).filter(function (f) { return f.slice(-4) === ".ini"; }).forEach(function (f) {
+  var text = fsx.readFileSync(pathx.join(gdir, f), "utf8");
+  var mrel = /^#\s*golden-release:\s*(\S+)\s*$/m.exec(text);
+  if (!mrel) return;
+  var name = f.slice(0, -4);
+  var gp = pathx.join(gdir, name + ".globals.yml");
+  var glob = fsx.existsSync(gp) ? T.GLOBALS.parse(fsx.readFileSync(gp, "utf8")) : null;
+  var acks = {};
+  var am = /^#\s*golden-ack:\s*(\S+)\s*$/m.exec(text);
+  if (am) am[1].split(",").forEach(function (a) { acks[a.trim()] = true; });
+  var um = /^#\s*golden-upgrade-to:\s*(\S+)\s*$/m.exec(text);
+  var to = um ? um[1] : "";
+  T.analyse(T.parse(text), mrel[1], glob, acks, to);
+});
+
+var alien = Object.keys(FIRED).filter(function (i) { return !T.VALIDATOR_IDS[i]; });
+ok("każdy zapalony kod jest w VALIDATOR_IDS", alien.length === 0, alien.join(","));
+
+/* Pozycje, których scenariusze powyżej i sweep golden nie zapalają — KAŻDA Z
+   POWODEM, nie z liczbą. W TYM KOMICIE TABELA JEST CELOWO PUSTA: to samo w sobie
+   jest punktem tego kroku. Powody trafiają tu razem ze scenariuszami z kolejnych
+   kroków #56, które je uzasadnią — dopisanie ich teraz, przed dowodem, byłoby tym
+   samym błędem, przed którym ostrzega nagłówek UNREACHED w generator.test.js:
+   gotowe uzasadnienie schowałoby czerwony wynik, który ten komit ma pokazać. */
+var UNREACHED = {};
+
+var unreached = Object.keys(T.VALIDATOR_IDS).filter(function (i) { return !FIRED[i]; }).sort();
+var undocumented = unreached.filter(function (i) { return !UNREACHED[i]; });
+ok("każda niezapalona pozycja ma zapisany powód", undocumented.length === 0,
+   "bez powodu: " + undocumented.join(","));
+var staleReasons = Object.keys(UNREACHED).filter(function (i) { return FIRED[i]; });
+ok("i żaden powód nie jest nieaktualny (pozycja jednak się zapala)",
+   staleReasons.length === 0, staleReasons.join(","));
+ok("pokrycie: " + (Object.keys(T.VALIDATOR_IDS).length - unreached.length) + " z " +
+   Object.keys(T.VALIDATOR_IDS).length + " pozycji zapalonych", true);
+
+/* ---- upgradeCode(): druga kopia REGUŁY, nie ŹRÓDŁA, i to CELOWO ----
+   upgradeCode() zostaje niewyeksportowana — to prywatna funkcja pomocnicza
+   analyse(), a poszerzanie publicznego API tylko po to, żeby test miał co wywołać,
+   przeciekałoby przez granicę modułu w złą stronę. Cztery linie reguły są więc
+   PRZEPISANE tutaj drugi raz. To DRUGA KOPIA NA PRZYNĘTĘ: jej jedynym zadaniem
+   jest złapać moment, w którym ta kopia i validator.html się rozjadą, a to wymaga
+   dwóch niezależnych zapisów tej samej reguły — jednego wspólnego nie dałoby się
+   rozjechać, więc nie złapałby niczego. */
+function upgradeCodeShadow(dep) {
+  if (dep.kind === "procedure") return "UPGRADE-PROCEDURE";
+  var base = (dep.kind === "key") ? "UPGRADE-KEY" : "UPGRADE-GROUP";
+  if (dep.replacedBy) return base + "-RENAMED";
+  if (dep.sev === "info") return base + "-CHANGED";
+  return base + "-RETIRED";
+}
+var upgradeAlien = [];
+T.KOLLA_MATRIX.releases.forEach(function (rel) {
+  (rel.deprecated || []).forEach(function (dep) {
+    var code = upgradeCodeShadow(dep);
+    if (!T.VALIDATOR_IDS[code]) upgradeAlien.push(code + " (" + rel.id + "/" + dep.name + ")");
+  });
+});
+ok("każdy kod, jaki upgradeCode() wyda nad KOLLA_MATRIX, jest w VALIDATOR_IDS",
+   upgradeAlien.length === 0, upgradeAlien.join(","));
+
+/* Oba warianty gałęzi releaseRules (linia z code: dep.replacedBy ? "GROUP-RENAMED"
+   : "GROUP-RETIRED") — osobno od upgradeCode(), bo to inna funkcja i inne kody. */
+ok("oba warianty gałęzi releaseRules (GROUP-RENAMED / GROUP-RETIRED) są w VALIDATOR_IDS",
+   !!T.VALIDATOR_IDS["GROUP-RENAMED"] && !!T.VALIDATOR_IDS["GROUP-RETIRED"]);
+
 R.finish();
