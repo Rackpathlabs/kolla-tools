@@ -2081,9 +2081,7 @@ Paste the contents of your multinode file, or drag it here."
     /* ---- nazwy i zasięg ---- */
     "TYPO":                        "nazwa grupy blisko znanej nazwy Kolli (odległość Levenshteina)",
     "GROUP-CUSTOM":                "grupa spoza słownika Kolli, potraktowana jako własna",
-    "HOST-NO-KOLLA-GROUP":         "host nie należy do żadnej grupy rozpoznawanej przez Kollę",
-    /* ---- pusty plik ---- */
-    "NO-HOSTS":                    "inventory bez żadnego hosta"
+    "HOST-NO-KOLLA-GROUP":         "host nie należy do żadnej grupy rozpoznawanej przez Kollę"
   };
 
   function parse(text) {
@@ -3211,9 +3209,23 @@ Paste the contents of your multinode file, or drag it here."
     /* --- kworum i liczebność grup --- */
     quorumRules(groups, effective, hostNames).forEach(function (f) { findings.push(f); });
 
-    if (!hostNames.length && !findings.some(function (f) { return f.sev === "error"; })) {
-      add("error", "NO-HOSTS", "The inventory contains no host.", null);
-    }
+    /* Kod NO-HOSTS („inventory bez żadnego hosta", waga error) usunięty razem z jego pozycją
+       w VALIDATOR_IDS. Nazwa stoi tu wprost i BEZ CUDZYSŁOWU: bez nazwy nikt nie znajdzie tego
+       zapisu, szukając kodu, którego nie ma w tabeli, a cudzysłów wpisałby go z powrotem do
+       rejestru, który check-dictionary.js czyta ze źródła.
+       Warunek brzmiał `!hostNames.length && !findings.some(f => f.sev === "error")`.
+       Przy braku hostów każda z trzech grup w CRITICAL (control, network, compute — patrz stała
+       CRITICAL) jest albo nieobecna, co daje MISSING-GROUP o sev "error", albo zadeklarowana i pusta,
+       co daje EMPTY-GROUP o sev "error". Trzeciego stanu nie ma, bo efektywny zbiór grupy jest
+       niepusty dokładnie wtedy, gdy istnieje host. Więc druga połowa warunku jest fałszywa zawsze,
+       gdy prawdziwa jest pierwsza.
+       Zmierzone 2026-09-07 na sześciu bezhostowych kształtach — pusty plik, same komentarze, pięć
+       wymaganych grup pustych, pięć wymaganych grup wskazujących przez :children na pustą grupę,
+       pięć sekcji tylko z :vars, oraz linia hosta z odrzuconym wzorcem zakresu — każdy z nich dał
+       dokładnie trzy findingi o sev "error" i ani razu NO-HOSTS.
+       Gdyby MISSING-GROUP lub EMPTY-GROUP przestały być "error" dla grup krytycznych, ta gałąź
+       znów byłaby osiągalna — to stwierdzenie o dzisiejszych severity, nie twierdzenie o niemożliwości
+       w ogóle. */
 
     /* Plik był dotąd jeden, więc źródło findingu było niejawne. Od trybu łączonego
        musi być jawne — inaczej numer linii wskazuje nie wiadomo gdzie. */
