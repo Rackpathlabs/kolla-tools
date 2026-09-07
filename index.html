@@ -940,8 +940,12 @@ var KOLLA_THEME = (function () {
          BAJT W BAJT z kodu — migracja przenosi tekst, nie zmienia go. Kolejność wpisów
          jak kolejność miejsc w validator.html: GROUP-NAME, SECTION-REPEATED, HOST-VAR,
          HOST-LIMIT, GROUP-VARS-ONLY, DUPLICATE-CHILD, CHILD-SELF, SHARED-ADDRESS,
-         NO-ADDRESS. CHILD-SELF nie ma podpowiedzi w kodzie źródłowym — nie wolno jej
-         tu wymyślać. */
+         NO-ADDRESS. CHILD-SELF nie miał wtedy podpowiedzi w kodzie i nie wolno jej było
+         przy migracji wymyślać. Dostał ją później (#56) i nadal nie jest wymyślona: bierze
+         v.f.groupCycle.hint, czyli podpowiedź findingu, od którego jest NIEROZDZIELNY —
+         grupa wciągająca samą siebie JEST cyklem długości jeden, więc zdanie o odmowie
+         Ansible jest o niej prawdziwe. Zobacz tools/golden/validator/group-child-self.ini:
+         GROUP-CYCLE i CHILD-SELF zapalają się tam razem i nie da się ich rozdzielić. */
       "v.f.groupName":             "The group name <code>{group}</code> contains characters that are not allowed.",
       "v.f.groupName.hint":        "Letters, digits and <code>_ . -</code> are allowed.",
       "v.f.sectionRepeated":       "Section <code>[{group}]</code> appears again (first on line {line}). Ansible merges the entries.",
