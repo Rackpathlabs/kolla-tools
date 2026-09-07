@@ -816,6 +816,24 @@ R.ok("dokument skrócony do nagłówków -> czerwone na rozmiarze", dg.code === 
 R.ok("i podaje liczbę bajtów oraz próg",
      /SCOPE\.md: 157 bajtów/.test(dg.out) && /próg 2000/.test(dg.out), dg.out.split("\n")[0]);
 
+/* SIODMA FIXTURA: CONTRIBUTING.md z naglowkiem "## Who reviews what" zmienionym na
+   inny ("## Review responsibilities"), akapit pod nim — jedyne miejsce ze slowem
+   CODEOWNERS — zostaje bez zmian. To jest CZERWONA FIXTURA WSTAWIONA PRZED KRYTERIUM:
+   check-docs.sh w tym commicie jeszcze NIC nie wie o CONTRIBUTING.md, wiec ponizsze
+   trzy asercje SA CZERWONE i to jest oczekiwany stan, nie usterka. Powod jest ten sam
+   co przy #96: czerwien strażnika trzeba UJRZEC, zanim doda się kryterium, ktore ja
+   ma zgasic — a nie zalozyc, ze zgasnie, kiedy kryterium wreszcie powstanie.
+   Trzecia asercja pilnuje WLASCIWOSCI ROZROZNIAJACEJ, dla ktorej caly ten podzial na
+   dwa commity istnieje: DOKLADNIE JEDEN powod czerwieni, nie dwa na raz. */
+var dtc = docs("thin-contributing");
+R.ok("CONTRIBUTING.md bez „## Who reviews what” -> czerwone", dtc.code === 1, kod(dtc));
+R.ok("i nazywa brakujący fragment",
+     dtc.out.indexOf('FAIL CONTRIBUTING.md: brak fragmentu "## Who reviews what"') !== -1,
+     dtc.out.split("\n").filter(function (l) { return /CONTRIBUTING/.test(l); })[0]);
+R.ok("i to jest jedyny powód czerwieni, nie dwa naraz",
+     dtc.out.split("\n").filter(function (l) { return /^FAIL/.test(l); }).length === 1,
+     dtc.out.split("\n").filter(function (l) { return /^FAIL/.test(l); }).join(" | "));
+
 /* ---- spójność bloków współdzielonych ----
    Straznik bez dowodu upadku do #96, a to, czego pilnuje, jest niewidoczne z definicji:
    blok rozjechany ze zrodlem nie daje ZADNEGO objawu na ekranie. Dwie kopie tego samego

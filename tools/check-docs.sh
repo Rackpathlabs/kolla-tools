@@ -133,6 +133,32 @@ else
   done
 fi
 
+# Krok wejściowy dla nowego klonu — .git/config nie jest klonowany, więc `git config
+# --local` trzeba wpisać ręcznie — mieszka WYŁĄCZNIE w tym dokumencie. Dokument, który da
+# się wypatroszyć bez czerwonej kompilacji, jest dokumentem na jedną iterację: zniknie
+# przy pierwszym porządkowaniu i nikt tego nie zauważy, dopóki ktoś nie zacommituje pod
+# cudzym nazwiskiem.
+if [ ! -f CONTRIBUTING.md ]; then
+  echo "FAIL CONTRIBUTING.md: brak pliku"; rc=1
+else
+  n=$(wc -c < CONTRIBUTING.md)
+  if [ "$n" -lt 1500 ]; then
+    echo "FAIL CONTRIBUTING.md: $n bajtów — przewodnik wygląda na wypatroszony (próg 1500)"; rc=1
+  else
+    echo "OK   CONTRIBUTING.md ($n B)"
+  fi
+  for want in "git config --local" \
+              "Co-authored-by" \
+              "CODEOWNERS" \
+              "## Who reviews what"; do
+    if grep -qF "$want" CONTRIBUTING.md; then
+      echo "OK   przewodnik: $want"
+    else
+      echo "FAIL CONTRIBUTING.md: brak fragmentu \"$want\""; rc=1
+    fi
+  done
+fi
+
 # README powstał w ramach issue #1, dziś zamkniętego. Warunek „dopóki nie istnieje"
 # zostaje mimo to: plik może zniknąć, a sprawdzenie odnośnika w nieistniejącym pliku
 # ma być POMINIĘTE GŁOŚNO, żeby pominięcie nie wyglądało jak zaliczenie.
@@ -155,6 +181,11 @@ if [ -f README.md ]; then
     echo "OK   README.md odsyła do PRINCIPLES.md"
   else
     echo "FAIL README.md: brak odnośnika do PRINCIPLES.md"; rc=1
+  fi
+  if grep -q "CONTRIBUTING.md" README.md; then
+    echo "OK   README.md odsyła do CONTRIBUTING.md"
+  else
+    echo "FAIL README.md: brak odnośnika do CONTRIBUTING.md"; rc=1
   fi
 else
   echo "--   README.md jeszcze nie istnieje (issue #1) — sprawdzenie odnośnika pominięte"

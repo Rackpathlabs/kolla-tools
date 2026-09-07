@@ -1,0 +1,21 @@
+# Anything not listed below is the site/meta layer — README, docs/img, sitemap,
+# robots, OG tags, favicon — and goes through an ordinary pull request review.
+# This file assigns ownership; changing it is itself a change to an owned file.
+
+/generator.html @rackpathlabs-ops
+/validator.html @rackpathlabs-ops
+/index.html @rackpathlabs-ops
+/matrix.js @rackpathlabs-ops
+/globals-parser.js @rackpathlabs-ops
+/i18n.js @rackpathlabs-ops
+/i18n-apply.js @rackpathlabs-ops
+/theme.css @rackpathlabs-ops
+/theme-switch.js @rackpathlabs-ops
+/tools/ @rackpathlabs-ops
+/.github/ @rackpathlabs-ops
+/docs/adr/ @rackpathlabs-ops
+/CLAUDE.md @rackpathlabs-ops
+/SCOPE.md @rackpathlabs-ops
+/docs/PRINCIPLES.md @rackpathlabs-ops
+/CONTRIBUTING.md @rackpathlabs-ops
+/.gitignore @rackpathlabs-ops
