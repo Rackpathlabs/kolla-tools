@@ -150,7 +150,14 @@ r = runInv(inv(CTL3.concat(["[ovn-database]", "ctl01", "ctl02", ""])));
 ok("2 hosty -> błąd", find(r, "QUORUM-OVN")[0] && find(r, "QUORUM-OVN")[0].sev === "error");
 ok("opisany tryb awarii (zamrożona chmura)", /read-only/.test(find(r, "QUORUM-OVN")[0].hint));
 
-r = runInv(inv(CTL3.concat(["[ovn-database]", "ctl01", "ctl02", "ctl03", "cmp01", "ctl04", ""])));
+/* ctl04 niesie ansible_host, choć ta asercja pyta wyłącznie o LICZBĘ hostów. Bez
+   adresu ten scenariusz zapalał także NO-ADDRESS — ubocznie, bo ctl04 wchodzi tu
+   tylko po to, żeby było ich pięć. Zapalenie uboczne jest nieodróżnialne od
+   zamierzonego: rejestr z #56 liczył NO-ADDRESS jako pokryty, a jedynym dowodem
+   był host dopisany do zupełnie innej reguły. Od teraz dowodem jest własny wzorzec
+   tools/golden/validator/addr-no-address.ini, a ten scenariusz zapala jeden kod. */
+r = runInv(inv(CTL3.concat(["[ovn-database]", "ctl01", "ctl02", "ctl03", "cmp01",
+                            "ctl04 ansible_host=10.0.0.14", ""])));
 ok("5 hostów -> błąd (powyżej 3)", hasCode(r, "QUORUM-OVN"));
 
 r = runInv(inv(CTL3.concat(["[ovn-database:children]", "control", "",
