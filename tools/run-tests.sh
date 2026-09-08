@@ -64,6 +64,9 @@ echo "== zero zależności npm =="
 
 echo
 echo "== wpięcie strażników w build =="
+# Rejestr regul KV kontra oba rejestry kodow (#174).
+"$NODE" tools/check-ruleset.js || rc=1
+
 "$NODE" tools/check-wiring.js || rc=1
 
 echo
