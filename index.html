@@ -596,7 +596,19 @@ var KOLLA_THEME = (function () {
       "g.hint.extIf":              "External traffic interface. No IP address, no configuration — Neutron takes it over entirely. Several comma-separated interfaces mean several physical networks.",
       "g.hint.brName":             "OVS bridges, one per external interface. The counts must match.",
       "g.hint.apiIf":              "API traffic and the Corosync ring. Empty inherits <code>network_interface</code>.",
-      "g.hint.stgIf":              "Storage traffic (Ceph). Empty inherits <code>network_interface</code>.",
+      /* Pole ruchu Ceph (#185). storage_interface usunięty z kolla-ansible w 15.0.0
+         i nigdy nie sterował ruchem Ceph — pole zostaje wejściem projektowym KV-05
+         i KV-10, a do pliku idzie komentarzem. */
+      "g.field.cephIf":            "Ceph traffic interface",
+      "g.role.cephIf":             "the interface you named for Ceph traffic",
+      "g.hint.stgIf":              "Host interface carrying Ceph public-network traffic. A design input: Kolla has no key for it, so it goes into the file as a comment and feeds KV-05 and KV-10.",
+      "g.d.kv05.same":             "The interface you named for Ceph traffic (<code>{stg}</code>) and <code>api_interface</code> (<code>{api}</code>) sit on the same device <code>{dev}</code>.",
+      "g.d.kv05.inherits":         "You named no interface for Ceph traffic, so it follows <code>network_interface</code> (<code>{net}</code>) while <code>enable_hacluster</code> is on.",
+      /* Errata importu, wariant „usunięte przez upstream" (#185) — odróżniony od
+         wariantu „nazwa wymyślona", bo czytelnikowi należy się wydanie i to, czym
+         ta zmienna była. */
+      "g.import.removedUpstream":  "<code>{key}</code> was removed from Kolla-Ansible in {release} and is ignored. Versions {versions} of this generator wrote it.",
+      "g.import.removedUpstream.hint": "It {note}. This import did not change your file; remove the dead line yourself.",
       "g.hint.migIf":              "Live migration. Empty inherits <code>api_interface</code>.",
       "g.hint.extVip":             "Address of the public endpoints. Empty means the same as internal.",
       "g.hint.extVipIf":           "Interface that carries the external VIP.",
