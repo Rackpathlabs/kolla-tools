@@ -569,10 +569,10 @@ var KOLLA_THEME = (function () {
           </div>
 
           <div class="field">
-            <label for="stg_if">storage_interface</label>
+            <label for="stg_if" data-i18n="g.field.cephIf">Ceph traffic interface</label>
             <input type="text" id="stg_if" spellcheck="false" placeholder="inherits network_interface"
                    aria-describedby="h-stg_if" maxlength="15">
-            <p class="hint" id="h-stg_if" data-i18n="g.hint.stgIf">Storage traffic (Ceph). Empty inherits <code>network_interface</code>.</p>
+            <p class="hint" id="h-stg_if" data-i18n="g.hint.stgIf">Host interface carrying Ceph public-network traffic. A design input: Kolla has no key for it, so it goes into the file as a comment and feeds KV-05 and KV-10.</p>
           </div>
 
           <div class="field">
@@ -1046,7 +1046,19 @@ var KOLLA_THEME = (function () {
       "g.hint.extIf":              "External traffic interface. No IP address, no configuration — Neutron takes it over entirely. Several comma-separated interfaces mean several physical networks.",
       "g.hint.brName":             "OVS bridges, one per external interface. The counts must match.",
       "g.hint.apiIf":              "API traffic and the Corosync ring. Empty inherits <code>network_interface</code>.",
-      "g.hint.stgIf":              "Storage traffic (Ceph). Empty inherits <code>network_interface</code>.",
+      /* Pole ruchu Ceph (#185). storage_interface usunięty z kolla-ansible w 15.0.0
+         i nigdy nie sterował ruchem Ceph — pole zostaje wejściem projektowym KV-05
+         i KV-10, a do pliku idzie komentarzem. */
+      "g.field.cephIf":            "Ceph traffic interface",
+      "g.role.cephIf":             "the interface you named for Ceph traffic",
+      "g.hint.stgIf":              "Host interface carrying Ceph public-network traffic. A design input: Kolla has no key for it, so it goes into the file as a comment and feeds KV-05 and KV-10.",
+      "g.d.kv05.same":             "The interface you named for Ceph traffic (<code>{stg}</code>) and <code>api_interface</code> (<code>{api}</code>) sit on the same device <code>{dev}</code>.",
+      "g.d.kv05.inherits":         "You named no interface for Ceph traffic, so it follows <code>network_interface</code> (<code>{net}</code>) while <code>enable_hacluster</code> is on.",
+      /* Errata importu, wariant „usunięte przez upstream" (#185) — odróżniony od
+         wariantu „nazwa wymyślona", bo czytelnikowi należy się wydanie i to, czym
+         ta zmienna była. */
+      "g.import.removedUpstream":  "<code>{key}</code> was removed from Kolla-Ansible in {release} and is ignored. Versions {versions} of this generator wrote it.",
+      "g.import.removedUpstream.hint": "It {note}. This import did not change your file; remove the dead line yourself.",
       "g.hint.migIf":              "Live migration. Empty inherits <code>api_interface</code>.",
       "g.hint.extVip":             "Address of the public endpoints. Empty means the same as internal.",
       "g.hint.extVipIf":           "Interface that carries the external VIP.",
@@ -2449,15 +2461,12 @@ var KOLLA_THEME = (function () {
     neutron_external_interface: "ext_if",
     neutron_bridge_name: "br_name",
     api_interface: "api_if",
-    storage_interface: "stg_if",
     migration_interface: "mig_if",
     kolla_external_vip_address: "ext_vip",
     kolla_external_vip_interface: "ext_vip_if",
     kolla_internal_fqdn: "int_fqdn",
     kolla_external_fqdn: "ext_fqdn",
     neutron_plugin_agent: "ml2",
-    octavia_amp_network_type: "amp_net",
-    octavia_amp_network_provider_physical_network: "physnet",
     enable_haproxy: "t_haproxy",
     enable_cinder: "t_cinder",
     enable_heat: "t_heat",
@@ -2480,7 +2489,21 @@ var KOLLA_THEME = (function () {
      do cudzych plików przez cztery wydania tego generatora. Wpis zostaje na stałe —
      pliki z tamtych wersji nie przestaną istnieć dlatego, że poprawiliśmy nazwę. */
   var RETRACTED_KEYS = {
-    kolla_enable_letsencrypt: { correct: "enable_letsencrypt", written_by: "v0.1–v0.4" }
+    /* kind: "invented" — napis, którego kolla-ansible nie zna i nigdy nie znała.
+       kind: "removed"  — zmienna, która istniała i została przez upstream usunięta;
+       tu należy się czytelnikowi wydanie i to, czym ta zmienna BYŁA, bo inaczej
+       poprawka wygląda na kosmetyczną, a nie jest. */
+    kolla_enable_letsencrypt: {
+      kind: "invented", correct: "enable_letsencrypt", written_by: "v0.1–v0.4" },
+    octavia_amp_network_type: {
+      kind: "invented", correct: "octavia_amp_network.provider_network_type",
+      written_by: "v0.1–v0.4.1" },
+    octavia_amp_network_provider_physical_network: {
+      kind: "invented", correct: "octavia_amp_network.provider_physical_network",
+      written_by: "v0.1–v0.4.1" },
+    storage_interface: {
+      kind: "removed", removedIn: "15.0.0", written_by: "v0.1–v0.4.1",
+      note: "only set the default for swift_storage_interface; never carried Ceph traffic" }
   };
 
   /* Errata importu: nazwa spoza upstreamu, wypisana kiedyś przez to narzędzie. Zgłasza
@@ -2495,8 +2518,12 @@ var KOLLA_THEME = (function () {
       var meta = RETRACTED_KEYS[key];
       out.push({
         id: "IMPORT-KEY-NOT-UPSTREAM", level: "warn", field: null,
-        msg: T("g.import.notUpstream", { key: esc(key), versions: meta.written_by }) +
-             " " + T("g.import.notUpstream.hint", { correct: esc(meta.correct) })
+        msg: meta.kind === "removed"
+          ? T("g.import.removedUpstream", { key: esc(key), release: meta.removedIn,
+                                            versions: meta.written_by }) +
+            " " + T("g.import.removedUpstream.hint", { note: esc(meta.note) })
+          : T("g.import.notUpstream", { key: esc(key), versions: meta.written_by }) +
+            " " + T("g.import.notUpstream.hint", { correct: esc(meta.correct) })
       });
     });
     return out;
@@ -2842,13 +2869,13 @@ var KOLLA_THEME = (function () {
       d.push({ id: "KV-05-STORAGE-API-LINK",
         level: lintSev("KV-05", lintVariant("KV-05", s), s),
         field: R["KV-05"].field,
+        /* Treść mówi „the interface you named for Ceph traffic", a nie
+           „storage_interface": ta zmienna nie istnieje w kolla-ansible od 15.0.0, więc
+           nazwanie jej w komunikacie było twierdzeniem nieprawdziwym. To korekta faktu,
+           nie redakcja. */
         msg: (sameLink
-          ? "<code>storage_interface</code> (<code>" + esc(f.stg) + "</code>) and " +
-            "<code>api_interface</code> (<code>" + esc(f.api) + "</code>) sit on the same " +
-            "device <code>" + esc(baseDev(f.api)) + "</code>."
-          : "<code>storage_interface</code> is unset — it inherits " +
-            "<code>network_interface</code> (<code>" + esc(f.stg) + "</code>) while " +
-            "<code>enable_hacluster</code> is on.") + " " + lintHint("KV-05", s)
+          ? T("g.d.kv05.same", { stg: esc(f.stg), api: esc(f.api), dev: esc(baseDev(f.api)) })
+          : T("g.d.kv05.inherits", { net: esc(f.stg) })) + " " + lintHint("KV-05", s)
       });
     }
 
@@ -2874,7 +2901,10 @@ var KOLLA_THEME = (function () {
     }
     addMgmt("network_interface", f.net);
     addMgmt("api_interface", f.api);
-    addMgmt("storage_interface", f.stg);
+    /* Etykieta ROLI, nie nazwa klucza: storage_interface nie istnieje w kolla-ansible
+       od 15.0.0, a KV-10 nadal ma prawo porównać to urządzenie z interfejsem zewnętrznym
+       — pole jest wejściem projektowym, a nie kluczem pliku. */
+    addMgmt(T("g.role.cephIf"), f.stg);
 
     splitList(s.ext_if).forEach(function (ext) {
       mgmt.forEach(function (p) {
@@ -3159,7 +3189,11 @@ var KOLLA_THEME = (function () {
     } else {
       extList.forEach(function (x) { checkIface(x, "neutron_external_interface", d); });
     }
-    [["api_if", "api_interface"], ["stg_if", "storage_interface"],
+    /* Drugi element to ETYKIETA, która trafia do komunikatu i do podświetlenia pola.
+       Dla stg_if NIE JEST to nazwa klucza Kolli, bo taka nie istnieje — pole jest
+       wejściem projektowym KV-05 i KV-10, a do pliku idzie komentarzem (patrz buildYaml).
+       Etykieta zostaje identyfikatorem pola, żeby nie twierdzić czegoś o upstreamie. */
+    [["api_if", "api_interface"], ["stg_if", "stg_if"],
      ["mig_if", "migration_interface"], ["ext_vip_if", "kolla_external_vip_interface"]
     ].forEach(function (p) {
       if (s[p[0]]) checkIface(s[p[0]], p[1], d);
@@ -3313,7 +3347,15 @@ var KOLLA_THEME = (function () {
     /* Interfejsy pochodne wypisujemy tylko wtedy, gdy operator je ustawił —
        pusty klucz w globals.yml znaczy co innego niż jego brak. */
     if (s.api_if) L.push("api_interface: " + fv(s, bad, "api_if"));
-    if (s.stg_if) L.push("storage_interface: " + fv(s, bad, "stg_if"));
+    /* storage_interface USUNIĘTY z kolla-ansible (nota o usunięciu pierwszy raz w tagu
+       15.0.0) i nigdy nie sterował ruchem Ceph — ustawiał domyślną dla
+       swift_storage_interface. Kolla nie ma ŻADNEJ zmiennej dla ruchu Ceph/RBD. Pole
+       zostaje jako wejście KV-05 i KV-10, ale do pliku idzie komentarzem: wpisanie tu
+       klucza byłoby obietnicą, której Kolla nie wykona. */
+    if (s.stg_if && c && !bad.stg_if) {
+      L.push("# Ceph (public network) traffic: " + s.stg_if +
+             " - kept off api_interface (KV-05); not a kolla-ansible key");
+    }
     if (s.mig_if) L.push("migration_interface: " + fv(s, bad, "mig_if"));
     if (c && !s.mig_if) {
       L.push("# migration_interface is unset, so live migration goes over api_interface,");
@@ -3394,8 +3436,26 @@ var KOLLA_THEME = (function () {
       if (c) { L.push(rule); L.push("# Octavia"); L.push(rule); }
       L.push('octavia_network_type: ' + q(s.amp_net === "tenant" ? "tenant" : "provider"));
       if (s.amp_net !== "tenant") {
-        L.push("octavia_amp_network_type: " + q(s.amp_net));
-        L.push("octavia_amp_network_provider_physical_network: " + fv(s, bad, "physnet"));
+        /* CAŁA MAPA, nie dwa klucze. Ansible zastępuje słowniki (hash_behaviour nie jest
+           ustawione nigdzie w drzewie kolla-ansible, więc obowiązuje domyślne "replace"),
+           więc podanie samego provider_* skasowałoby nazwę sieci i podsieć. Pola, o które
+           formularz nie pyta, niosą wartości domyślne roli. */
+        if (c) {
+          L.push("# octavia_amp_network overrides the whole map (Ansible replaces dicts);");
+          L.push("# unchanged fields carry the upstream defaults from");
+          L.push("# ansible/roles/octavia/defaults/main.yml @ 22.1.0 l.377-387.");
+          L.push("# Adjust the subnet to your management network.");
+        }
+        L.push("octavia_amp_network:");
+        L.push("  name: " + q("lb-mgmt-net"));
+        L.push("  shared: " + yn(false));
+        L.push("  provider_network_type: " + q(s.amp_net));
+        L.push("  provider_physical_network: " + fv(s, bad, "physnet"));
+        L.push("  subnet:");
+        L.push("    name: " + q("lb-mgmt-subnet"));
+        L.push("    cidr: " + q("10.1.0.0/24"));
+        L.push("    no_gateway_ip: " + yn(true));
+        L.push("    enable_dhcp: " + yn(true));
       }
       if (c) {
         L.push("# octavia_network_interface must exist on EVERY host in the");

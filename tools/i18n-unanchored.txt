@@ -29,17 +29,22 @@ g.d.keyDefault  a  jw.
 g.d.keyDefault.importNote  a  fragment doklejany do komunikatu diagnostyki w trybie importu
 g.d.keyDefault.loaded  a  jw.
 g.d.keyExplicit  a  jw.
+g.d.kv05.inherits  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
+g.d.kv05.same  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
 g.d.tlsNoCa  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
 g.d.vridRange  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
 g.diff.absent  a  komorka tabeli roznic budowana per wiersz; tabeli nie ma, dopoki nie ma czego porownac
 g.import.notUpstream  a  komunikat erraty importu; erraty nie ma, dopoki nie powstanie
 g.import.notUpstream.hint  a  podpowiedz erraty importu; erraty nie ma, dopoki nie powstanie
+g.import.removedUpstream  a  komunikat erraty importu; erraty nie ma, dopoki nie powstanie
+g.import.removedUpstream.hint  a  podpowiedz erraty importu; erraty nie ma, dopoki nie powstanie
 g.link.why.duplicate  a  jw.
 g.link.why.syntax  a  jw.
 g.link.why.tooLong  a  powod odmowy linku; wybierany ze STANU odmowy w JS (ADR-004)
 g.link.why.unknown  a  jw.
 g.link.why.value  a  jw.
 g.link.why.version  a  jw.
+g.role.cephIf  a  etykieta roli interfejsu, podstawiana w inny napis; wlasnego elementu nie ma
 g.rule.kv05.ackNote  a  metadane reguly wstrzykiwane w finding; findingu nie ma, dopoki nie powstanie
 g.rule.kv05.why  a  metadane reguly wstrzykiwane w finding; findingu nie ma, dopoki nie powstanie
 g.rule.kv06.ackNote  a  metadane reguly wstrzykiwane w finding; findingu nie ma, dopoki nie powstanie

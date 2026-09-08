@@ -282,6 +282,70 @@ ok("podmiana tylko dla zmienionych kluczy",
 ok("bez zmian brak podmian",
    Object.keys(T.changedOverrides(doc, T.rawStateFromParsed(doc))).length === 0);
 
+console.log("octavia_amp_network — mapa, nie płaskie klucze:");
+/* Zmierzone 2026-09-08 na 20.5.0 i 22.1.0: octavia_amp_network_type ani
+   octavia_amp_network_provider_physical_network nie występują w drzewie Kolli ANI RAZU.
+   Upstream trzyma je jako klucze WEWNĄTRZ mapy octavia_amp_network — rola
+   ansible/roles/octavia/defaults/main.yml:377 i przykład w
+   doc/source/reference/networking/octavia.rst:209. Nasz importer czytał to poprawnie
+   od dawna; eksport pisał nazwy, których nikt nie czyta. */
+var octState = base({ t_octavia: true, t_barbican: true, amp_net: "vlan",
+                      physnet: "physnet1", t_provider: true });
+var octYaml = T.buildYaml(octState, T.badFields(T.validate(octState, null))).text;
+ok("plik niesie mapę octavia_amp_network", /^octavia_amp_network:$/m.test(octYaml),
+   octYaml.split("\n").filter(function (l) { return /octavia/.test(l); }).slice(0, 4).join(" | "));
+[["name", /^  name: /m], ["shared", /^  shared: /m],
+ ["provider_network_type: vlan", /^  provider_network_type: "vlan"$/m],
+ ["provider_physical_network: physnet1", /^  provider_physical_network: "physnet1"$/m],
+ ["subnet", /^  subnet:$/m], ["subnet.name", /^    name: /m],
+ ["subnet.cidr", /^    cidr: /m], ["subnet.no_gateway_ip", /^    no_gateway_ip: /m],
+ ["subnet.enable_dhcp", /^    enable_dhcp: /m]].forEach(function (c) {
+  ok("  mapa niesie " + c[0], c[1].test(octYaml));
+});
+ok("i nie niesie żadnej z dwóch płaskich nazw",
+   octYaml.indexOf("octavia_amp_network_type") === -1 &&
+   octYaml.indexOf("octavia_amp_network_provider_physical_network") === -1);
+
+var tenState = base({ t_octavia: true, t_barbican: true, amp_net: "tenant" });
+var tenYaml = T.buildYaml(tenState, T.badFields(T.validate(tenState, null))).text;
+ok("sieć typu tenant nie wypisuje mapy w ogóle", !/^octavia_amp_network:$/m.test(tenYaml));
+
+/* ROUND-TRIP PRZEZ WŁASNĄ EMISJĘ: to, co narzędzie napisało, musi dać się przez nie
+   odczytać. Do dziś nie dawało — eksport i import mówiły o dwóch różnych kształtach. */
+var back = T.rawStateFromParsed(P.parse(octYaml));
+ok("import własnego pliku odtwarza typ sieci amfor", back.amp_net === "vlan", String(back.amp_net));
+ok("i nazwę sieci fizycznej", back.physnet === "physnet1", String(back.physnet));
+
+var impSrc2 = require("fs").readFileSync(
+  require("path").join(__dirname, "..", "..", "generator.html"), "utf8");
+var impMap2 = /var IMPORT_MAP = \{([\s\S]*?)\n  \};/.exec(impSrc2)[1];
+ok("IMPORT_MAP nie mapuje martwych nazw Octavii",
+   impMap2.indexOf("octavia_amp_network_type") === -1 &&
+   impMap2.indexOf("octavia_amp_network_provider_physical_network") === -1);
+ok("plik z płaską nazwą Octavii budzi erratę",
+   erratum(P.parse('---\noctavia_amp_network_type: "vlan"\n')).length === 1);
+
+console.log("storage_interface — wejście projektowe, nie klucz:");
+/* Zmierzone: storage_interface został USUNIĘTY z kolla-ansible; nota o usunięciu
+   pojawia się pierwszy raz w tagu 15.0.0, czyli trzy serie główne przed 2025.1.
+   Nota deprecacji mówi, czym była: „only sets the default for swift_storage_interface".
+   Nigdy nie sterowała ruchem Ceph. W group_vars/all @ 22.1.0 nie ma ŻADNEJ zmiennej
+   dla ruchu Ceph ani RBD. Pole zostaje jako wejście KV-05 i KV-10, ale do pliku idzie
+   komentarzem, nie kluczem. */
+var stgState = base({ stg_if: "eth2", t_comments: true });
+var stgYaml = T.buildYaml(stgState, T.badFields(T.validate(stgState, null))).text;
+ok("plik nigdy nie niesie klucza storage_interface",
+   !/^storage_interface:/m.test(stgYaml),
+   stgYaml.split("\n").filter(function (l) { return /storage/.test(l); }).join(" | "));
+ok("niesie za to komentarz o ruchu Ceph z nazwą interfejsu i regułą",
+   /^# Ceph \(public network\) traffic: eth2/m.test(stgYaml) && /KV-05/.test(stgYaml),
+   stgYaml.split("\n").filter(function (l) { return /Ceph/.test(l); }).join(" | "));
+ok("plik z usuniętym kluczem budzi erratę wariantu removed",
+   erratum(P.parse('---\nstorage_interface: "eth2"\n')).length === 1 &&
+   /15\.0\.0/.test(erratum(P.parse('---\nstorage_interface: "eth2"\n'))[0].msg) &&
+   /swift_storage_interface/.test(erratum(P.parse('---\nstorage_interface: "eth2"\n'))[0].msg),
+   (erratum(P.parse('---\nstorage_interface: "eth2"\n'))[0] || {}).msg);
+
 console.log("letsencrypt key name:");
 /* NAZWA KLUCZA JEST TWIERDZENIEM O UPSTREAMIE. Zmierzone 2026-09-08 na tagach 20.5.0
    i 22.1.0: napis "kolla_enable_letsencrypt" nie występuje w drzewie kolla-ansible ani

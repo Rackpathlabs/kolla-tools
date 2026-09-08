@@ -160,13 +160,13 @@ configuration becomes an error.
 
 ## KV-05 — Corosync, storage and live migration on one link
 
-**Class:** A (generator). **Mode:** single.
+**Class:** A on a design input; the file cannot express it (C). **Mode:** single.
 **Codes:** `KV-05-STORAGE-API-LINK` — error with `enable_hacluster`,
 warning otherwise; *info* after acknowledgment (`ack_link`).
 
 **Rule.** `api_interface` — Corosync takes its ring from it — must not
-share a physical link with `storage_interface` or migration traffic
-without VLAN separation and QoS.
+share a physical link with Ceph traffic or migration traffic without VLAN
+separation and QoS.
 
 **Failure mode.** At scale, typically after two to four weeks. A Ceph
 backfill, an OSD-replace rebalance, or a single 64 GB live migration
@@ -175,12 +175,30 @@ declares the node lost, Masakari starts evacuating a perfectly healthy
 host under load. The classic "everything worked for three weeks and then
 the cloud killed its own compute node".
 
-**What the tool checks.** `network_interface`, `api_interface`,
-`storage_interface`, `migration_interface`, `tunnel_interface` against
-each other. Alarm when storage equals api, or when storage is unset
-(inherits `network_interface`) while `enable_hacluster: "yes"`. Base
-devices are compared, not full strings: `bond0.10` and `bond0.20` are the
-same `bond0` — split on the first dot.
+**What the tool checks.** `network_interface`, `api_interface`, the
+interface the operator names for Ceph traffic, `migration_interface` and
+`tunnel_interface` against each other. Alarm when the Ceph interface equals
+api, or when it is unnamed — so it follows `network_interface` — while
+`enable_hacluster: "yes"`. Base devices are compared, not full strings:
+`bond0.10` and `bond0.20` are the same `bond0` — split on the first dot.
+
+The Ceph interface is a **design input, not a key**. The form asks for it, the
+rule reasons about it, and the generated file records it as a comment naming
+this rule. `globals.yml` has no way to say it, so the finding is about the
+design in front of the operator rather than about a line the deployment will
+read.
+
+**Amendment 2026-09-08.** This rule was written around `storage_interface` and
+that variable does not exist. It was deprecated in the 14.x series — *"deprecated
+and will be removed in the next release as it was causing confusion. The variable
+only sets the default for `swift_storage_interface`"* — and the removal note
+first appears in tag **15.0.0**, three major series before 2025.1, the oldest
+release this tool calls maintained. It never carried Ceph traffic. Measured the
+same day: `group_vars/all` at 22.1.0 holds thirteen `*_interface` variables and
+**none of them is for Ceph or RBD**; there is no `storage_network` either. Kolla
+has not deployed Ceph since Ussuri, so where that traffic runs is a property of
+the external cluster and the host network. The rule keeps its subject and loses
+its key.
 
 **Not a bug when.** A ≥ 2×25G bond with measured headroom and switch-side
 QoS. The bond alone settles nothing — LACP hashes per flow, one migration
@@ -334,7 +352,7 @@ behaviour depends on initialisation order at boot: deploy works, host
 does not come back after a reboot.
 
 **What the tool checks.** Direct equality with `network_interface`,
-`api_interface` or `storage_interface` → error. Base-device match
+`api_interface` or the Ceph interface named in the form → error. Base-device match
 (`network_interface` split on the first dot equals
 `neutron_external_interface`) → warning demanding a written decision.
 
@@ -449,7 +467,20 @@ way.
 **What the tool checks.** `provider_network_type: vlan` with provider
 networks off; a physnet that does not follow from the external interface
 list (physnets are positional: the n-th interface is `physnetN`); a
-single-entry external interface cannot map two physnets.
+single-entry external interface cannot map two physnets. The generated file
+carries the whole `octavia_amp_network` mapping, with a comment citing
+`ansible/roles/octavia/defaults/main.yml` at 22.1.0 for the fields the form
+does not ask about — Ansible replaces dictionaries rather than merging them,
+so a partial map would delete the network name and the subnet.
+
+**Amendment 2026-09-08.** From v0.1 to v0.4.1 the generator wrote two flat keys,
+`octavia_amp_network_type` and `octavia_amp_network_provider_physical_network`,
+neither of which occurs anywhere in the kolla-ansible tree. Kolla read neither,
+built the management network from the role default — a tenant network named
+`lb-mgmt-net` — and the amphora came up on the wrong network: exactly the failure
+described above, produced by a file this rule had passed. The importer had read
+the mapping correctly the whole time, so export and import disagreed and the
+import half was right.
 
 **What it cannot check.** Per-host interface naming in `host_vars`
 (SCOPE.md, "Per-host heterogeneity in host_vars").
