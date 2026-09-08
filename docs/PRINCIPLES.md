@@ -104,6 +104,29 @@ does not. A string is data if it occurs verbatim in what was fed into the input 
 which covers every place user content reaches the screen, including the ones that do not
 exist yet.
 
+**A key name is a claim about upstream.** Every key `buildYaml` writes into somebody's
+`globals.yml` asserts that kolla-ansible reads a variable by that name. That is a fact
+about another repository, and it needs a source — a tag and a path — like any other fact
+this project states. `kolla_enable_letsencrypt` had none. It was emitted from v0.1 to v0.4,
+mapped on import, printed as the toggle's label and repeated in the ruleset, and the string
+occurs nowhere in kolla-ansible: not in `group_vars`, not in a role, not in a template, not
+in a release note. Kolla reads `enable_letsencrypt`. Four releases and three sessions of
+work passed over it, and the ruleset repeated the name because it was written from memory
+rather than from a tag, which is how a wrong name survives review by looking familiar.
+
+The damage compounded in the direction that is hardest to notice. A generated file that
+enabled Let's Encrypt was ignored by Kolla; KV-14 then excused the missing-CA error on the
+strength of that dead switch, so the one file certain to fail at Keystone bootstrap was the
+one the tool passed; and importing a correctly written file reported the working key as
+unknown while the dead one filled the form in silence. Every layer agreed with every other
+because they all came from the same unchecked source.
+
+**Nothing enforces this today.** No guard reads `buildYaml` and asks where each name came
+from; the defect was found by cloning kolla-ansible and grepping, by hand, while measuring
+something else. The register of per-release upstream values filed as #81 is the mechanism
+this rule is waiting for — until it exists, a key name in this repository is exactly as
+reliable as whoever last typed it.
+
 ### Where a check has to stand, and how wide
 
 **A check nobody has seen fail is not a check.** Every guard here has a fixture that makes
