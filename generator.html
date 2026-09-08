@@ -626,7 +626,7 @@ var KOLLA_THEME = (function () {
           </label>
           <label class="toggle" for="t_letsencrypt">
             <input type="checkbox" id="t_letsencrypt">
-            <span class="t-txt"><span class="t-name">kolla_enable_letsencrypt</span>
+            <span class="t-txt"><span class="t-name">enable_letsencrypt</span>
               <span class="t-desc" data-i18n="g.toggle.d03">Let's Encrypt certificates — the images' system trust store suffices.</span></span>
           </label>
         </fieldset>
@@ -1028,6 +1028,10 @@ var KOLLA_THEME = (function () {
       "g.hint.release":            "Image tag, for example <code>2025.1</code>. Should match the kolla-ansible version.",
       /* KV-08 (#173). Klucz keepalived_virtual_router_id: generator wypisuje go jawnie,
          a przy imporcie zgłasza jego brak — kontrakt jak przy KV-12a. */
+      /* Errata importu (#182): nazwa klucza, której kolla-ansible nie zna, wypisywana
+         przez to narzędzie od v0.1 do v0.4. */
+      "g.import.notUpstream":      "<code>{key}</code> is not a Kolla-Ansible variable and Kolla ignores it. Versions {versions} of this generator wrote it.",
+      "g.import.notUpstream.hint": "The working key is <code>{correct}</code>. This import did not change your file: set the toggle to write the correct key on export, and remove the dead line yourself.",
       "g.hint.vrid":               "1–255, unique per environment on a shared L2 domain.",
       "g.ack.kv08":                "this L2 domain carries exactly one Kolla install",
       "g.ack.kv08.desc":           "This L2 domain carries exactly one Kolla install and no side-by-side redeploy is planned.",
@@ -2339,6 +2343,7 @@ var KOLLA_THEME = (function () {
     "CEPH-EXTERNAL":                "Kolla nie wdraża Cepha, klaster musi istnieć",
     "PROVIDER-PHYSNETS":            "odwzorowanie sieci provider na sieci fizyczne",
     "STORAGE-UNAVAILABLE":          "przeglądarka blokuje pamięć lokalną",
+    "IMPORT-KEY-NOT-UPSTREAM":      "klucz zapisany przez dawną wersję generatora, którego Kolla nie zna",
     "IMPORT-VALUE-SANITISED":       "wartość z wczytanego pliku nie przeszła sanityzacji",
     "IMPORT-NON-SCALAR-KEPT":       "klucze nieskalarne zostawione bez zmian",
     "IMPORT-TEMPLATE-WITHHELD":     "podmiana wstrzymana: treść wykonywalna przez Ansible",
@@ -2466,8 +2471,36 @@ var KOLLA_THEME = (function () {
     enable_neutron_provider_networks: "t_provider",
     kolla_enable_tls_internal: "t_tls_int",
     kolla_copy_ca_into_containers: "t_copy_ca",
-    kolla_enable_letsencrypt: "t_letsencrypt"
+    enable_letsencrypt: "t_letsencrypt"
   };
+
+  /* KLUCZE, KTÓRE TO NARZĘDZIE PISAŁO BŁĘDNIE. To NIE jest deprecacja Kolli — tamte
+     mieszkają w macierzy wydań i mówią o zmianie po stronie upstreamu. Tu chodzi o
+     NASZĄ POMYŁKĘ: napis, którego kolla-ansible nie zna i nigdy nie znała, wypisywany
+     do cudzych plików przez cztery wydania tego generatora. Wpis zostaje na stałe —
+     pliki z tamtych wersji nie przestaną istnieć dlatego, że poprawiliśmy nazwę. */
+  var RETRACTED_KEYS = {
+    kolla_enable_letsencrypt: { correct: "enable_letsencrypt", written_by: "v0.1–v0.4" }
+  };
+
+  /* Errata importu: nazwa spoza upstreamu, wypisana kiedyś przez to narzędzie. Zgłasza
+     i NIE PRZEPISUJE — round-trip bajtowy obowiązuje tak samo, gdy martwa linia jest
+     naszym błędem. Osobna funkcja, bo nie przechodzi przez validate(): validate() pyta
+     o stan formularza, a to jest zdanie o TEKŚCIE wczytanego pliku. */
+  function erratumFindings(doc) {
+    var out = [];
+    if (!doc || !doc.keys) return out;
+    Object.keys(RETRACTED_KEYS).forEach(function (key) {
+      if (!doc.keys[key]) return;
+      var meta = RETRACTED_KEYS[key];
+      out.push({
+        id: "IMPORT-KEY-NOT-UPSTREAM", level: "warn", field: null,
+        msg: T("g.import.notUpstream", { key: esc(key), versions: meta.written_by }) +
+             " " + T("g.import.notUpstream.hint", { correct: esc(meta.correct) })
+      });
+    });
+    return out;
+  }
 
   /* Klucze rozumiane przez generator mimo braku własnego pola: albo wypisuje je sam
      (kontrakt KV-12a), albo wynikają z wyboru backendu magazynu, albo są mappingiem
@@ -3296,7 +3329,7 @@ var KOLLA_THEME = (function () {
       if (s.ext_fqdn) L.push("kolla_external_fqdn: " + fv(s, bad, "ext_fqdn"));
       L.push("kolla_enable_tls_internal: " + yn(s.t_tls_int));
       if (s.t_tls_int) L.push("kolla_copy_ca_into_containers: " + yn(s.t_copy_ca));
-      L.push("kolla_enable_letsencrypt: " + yn(s.t_letsencrypt));
+      L.push("enable_letsencrypt: " + yn(s.t_letsencrypt));
       if (c && s.t_tls_int && !s.t_copy_ca && !s.t_letsencrypt) {
         L.push("# NOTE: without kolla_copy_ca_into_containers the containers will not trust a private CA.");
       }
@@ -3766,6 +3799,8 @@ var KOLLA_THEME = (function () {
       found.push({ id: f.code, level: f.sev, field: null,
                    msg: "line " + f.line + ": " + f.msg + (f.hint ? " " + f.hint : "") });
     });
+
+    erratumFindings(parsed).forEach(function (f) { found.push(f); });
 
     importedDoc = parsed;
     importFindings = found;

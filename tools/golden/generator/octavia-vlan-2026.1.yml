@@ -40,7 +40,7 @@ kolla_internal_fqdn: "internal.cloud.example.net"
 kolla_external_fqdn: "cloud.example.net"
 kolla_enable_tls_internal: "yes"
 kolla_copy_ca_into_containers: "yes"
-kolla_enable_letsencrypt: "no"
+enable_letsencrypt: "no"
 
 ###############################################################################
 # Load balancing

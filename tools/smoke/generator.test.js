@@ -5,7 +5,7 @@ lib.installDom();
 var T = lib.loadTool(process.argv[2],
   ["validate", "findRelease", "DISTROS", "KOLLA_MATRIX", "buildYaml", "badFields",
    "DEFAULTS", "baseDev", "physnets", "LINT", "DIAG_IDS",
-   "overrides", "overridesText", "I18N",
+   "overrides", "overridesText", "I18N", "erratumFindings",
    "GLOBALS", "rawStateFromParsed", "changedOverrides", "yamlBool"]);
 
 var R = lib.runner();
@@ -282,6 +282,66 @@ ok("podmiana tylko dla zmienionych kluczy",
 ok("bez zmian brak podmian",
    Object.keys(T.changedOverrides(doc, T.rawStateFromParsed(doc))).length === 0);
 
+console.log("letsencrypt key name:");
+/* NAZWA KLUCZA JEST TWIERDZENIEM O UPSTREAMIE. Zmierzone 2026-09-08 na tagach 20.5.0
+   i 22.1.0: napis "kolla_enable_letsencrypt" nie występuje w drzewie kolla-ansible ani
+   razu, a zmienna, którą Kolla czyta, to `enable_letsencrypt` — definicja w
+   ansible/group_vars/all.yml:913 (20.5.0) i ansible/group_vars/all/letsencrypt.yml:2
+   (22.1.0), konsumowana przez role loadbalancer, letsencrypt i horizon. */
+var leState = base({ t_letsencrypt: true });
+var leYaml = T.buildYaml(leState, T.badFields(T.validate(leState, null))).text;
+ok("emitowany plik niesie enable_letsencrypt",
+   /^enable_letsencrypt: "yes"$/m.test(leYaml),
+   leYaml.split("\n").filter(function (l) { return /letsencrypt/.test(l); }).join(" | "));
+ok("i nie niesie martwej nazwy",
+   leYaml.indexOf("kolla_enable_letsencrypt") === -1);
+
+var impSrc = require("fs").readFileSync(
+  require("path").join(__dirname, "..", "..", "generator.html"), "utf8");
+var impMap = /var IMPORT_MAP = \{([\s\S]*?)\n  \};/.exec(impSrc)[1];
+ok("IMPORT_MAP mapuje enable_letsencrypt", /\benable_letsencrypt:/.test(impMap));
+ok("i nie mapuje martwej nazwy", impMap.indexOf("kolla_enable_letsencrypt") === -1);
+
+/* ERRATA. Plik napisany przez v0.1-v0.4 niesie klucz, którego Kolla nie zna. Import ma
+   to POWIEDZIEĆ i niczego nie przepisywać — round-trip bajtowy obowiązuje tak samo, gdy
+   martwa linia jest naszą własną pomyłką. */
+/* Wywołanie OSŁONIĘTE, a obecność funkcji sprawdzona osobno. loadTool odmawia
+   załadowania narzędzia, gdy nazwa z listy nie istnieje w jego zakresie, więc dopisanie
+   erratumFindings do tamtej listy zamieniłoby CZERWIEŃ TREŚCI w awarię ładowania —
+   a wtedy nie widać, czego brakuje, tylko że nic nie ruszyło. */
+function erratum(doc) {
+  return (T.erratumFindings ? T.erratumFindings(doc) : []);
+}
+ok("generator eksportuje erratumFindings", typeof T.erratumFindings === "function",
+   typeof T.erratumFindings);
+
+var oldDoc = P.parse('---\nkolla_enable_letsencrypt: "yes"\n');
+var err = erratum(oldDoc);
+ok("stary klucz w importowanym pliku -> dokładnie jeden wpis", err.length === 1,
+   JSON.stringify(err.map(function (x) { return x.id; })));
+ok("i jest to IMPORT-KEY-NOT-UPSTREAM o wadze warn",
+   err.length === 1 && err[0].id === "IMPORT-KEY-NOT-UPSTREAM" && err[0].level === "warn",
+   err.length ? err[0].id + ":" + err[0].level : "(brak)");
+ok("i komunikat nazywa klucz działający oraz wersje, które pisały martwy",
+   err.length === 1 && /enable_letsencrypt/.test(err[0].msg) && /v0\.1/.test(err[0].msg),
+   err.length ? err[0].msg : "(brak)");
+ok("plik z poprawną nazwą nie budzi erraty",
+   erratum(P.parse('---\nenable_letsencrypt: "yes"\n')).length === 0);
+
+/* Druga strona tej samej pomyłki: dopóki IMPORT_MAP znał wyłącznie martwą nazwę,
+   plik napisany POPRAWNIE dostawał KEY-UNKNOWN. */
+var known = {};
+Object.keys(/var IMPORT_MAP = \{([\s\S]*?)\n  \};/.exec(impSrc) ? {} : {});
+var kre = /^\s*([a-z_0-9]+):/gm, km;
+while ((km = kre.exec(impMap)) !== null) known[km[1]] = 1;
+ok("import poprawnej nazwy nie zgłasza KEY-UNKNOWN",
+   !T.GLOBALS.review(P.parse('---\nenable_letsencrypt: "yes"\n'),
+                     T.findRelease("2026.1"), known)
+     .some(function (f) { return f.code === "KEY-UNKNOWN"; }));
+
+ok("DIAG_IDS zna IMPORT-KEY-NOT-UPSTREAM", !!T.DIAG_IDS["IMPORT-KEY-NOT-UPSTREAM"],
+   Object.keys(T.DIAG_IDS).filter(function (k) { return /^IMPORT-/.test(k); }).join(","));
+
 console.log("KV-08 — VRID at the upstream default:");
 /* Reguła ma DWA styki i oba są tu, bo pojedynczo każdy z nich da się spełnić źle.
    TWORZENIE OD ZERA: klucz wychodzi w pliku zawsze, więc reguła nie ma prawa zapalić
@@ -459,6 +519,10 @@ T.validate(kv08St, kv08Doc).forEach(function (x) { fired[x.id] = (fired[x.id] ||
 T.validate(Object.assign({}, kv08St, { ack_vrid: true }), kv08Doc)
  .forEach(function (x) { fired[x.id] = (fired[x.id] || 0) + 1; });
 T.validate(base({ vrid: "0" })).forEach(function (x) { fired[x.id] = (fired[x.id] || 0) + 1; });
+/* Errata importu nie przechodzi przez validate(), więc DRIVE musi ją wywołać wprost —
+   inaczej jej kod byłby w DIAG_IDS jako nieosiągalny, a jest wywoływalny. */
+(T.erratumFindings ? T.erratumFindings(T.GLOBALS.parse('---\nkolla_enable_letsencrypt: "yes"\n')) : [])
+ .forEach(function (x) { fired[x.id] = (fired[x.id] || 0) + 1; });
 
 var alien = Object.keys(fired).filter(function (i) { return !T.DIAG_IDS[i]; });
 ok("każda diagnostyka niesie identyfikator z DIAG_IDS", alien.length === 0, alien.join(","));

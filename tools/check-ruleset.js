@@ -29,7 +29,7 @@ function arg(name, dflt) {
 var repo = path.join(__dirname, "..");
 var rootArg = arg("--root", null);
 var root = rootArg ? path.join(repo, rootArg) : repo;
-var EXPECT_DIAG = parseInt(arg("--expect-diag", "54"), 10);
+var EXPECT_DIAG = parseInt(arg("--expect-diag", "55"), 10);
 var EXPECT_VAL  = parseInt(arg("--expect-validator", "51"), 10);
 
 var rc = 0;

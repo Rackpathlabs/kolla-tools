@@ -578,6 +578,10 @@ var KOLLA_THEME = (function () {
       "g.hint.release":            "Image tag, for example <code>2025.1</code>. Should match the kolla-ansible version.",
       /* KV-08 (#173). Klucz keepalived_virtual_router_id: generator wypisuje go jawnie,
          a przy imporcie zgłasza jego brak — kontrakt jak przy KV-12a. */
+      /* Errata importu (#182): nazwa klucza, której kolla-ansible nie zna, wypisywana
+         przez to narzędzie od v0.1 do v0.4. */
+      "g.import.notUpstream":      "<code>{key}</code> is not a Kolla-Ansible variable and Kolla ignores it. Versions {versions} of this generator wrote it.",
+      "g.import.notUpstream.hint": "The working key is <code>{correct}</code>. This import did not change your file: set the toggle to write the correct key on export, and remove the dead line yourself.",
       "g.hint.vrid":               "1–255, unique per environment on a shared L2 domain.",
       "g.ack.kv08":                "this L2 domain carries exactly one Kolla install",
       "g.ack.kv08.desc":           "This L2 domain carries exactly one Kolla install and no side-by-side redeploy is planned.",

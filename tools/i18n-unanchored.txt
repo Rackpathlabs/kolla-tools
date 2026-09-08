@@ -32,6 +32,8 @@ g.d.keyExplicit  a  jw.
 g.d.tlsNoCa  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
 g.d.vridRange  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
 g.diff.absent  a  komorka tabeli roznic budowana per wiersz; tabeli nie ma, dopoki nie ma czego porownac
+g.import.notUpstream  a  komunikat erraty importu; erraty nie ma, dopoki nie powstanie
+g.import.notUpstream.hint  a  podpowiedz erraty importu; erraty nie ma, dopoki nie powstanie
 g.link.why.duplicate  a  jw.
 g.link.why.syntax  a  jw.
 g.link.why.tooLong  a  powod odmowy linku; wybierany ze STANU odmowy w JS (ADR-004)
