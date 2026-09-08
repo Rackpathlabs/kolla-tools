@@ -469,6 +469,19 @@ R.ok("kolumna klucza zwolniona przez regułę IDENTYFIKATORA, nie przez tę kate
      !/network_interface/.test(diffCells.out) &&
      /identyfikator: klucz, nazwa pliku/.test(diffCells.out), diffCells.out.split("\n")[4]);
 
+/* ---- PIĄTA KATEGORIA: WARTOŚĆ DOMYŚLNA UPSTREAMU (ADR-005, #81) ----
+   Trzecia kolumna widoku różnic niesie literał z repozytorium kolla-ansible. Cudza wartość
+   nie jest tekstem tego interfejsu, więc nie dostaje klucza — dostałaby go tylko po to, żeby
+   ktoś ją kiedyś przetłumaczył, a wtedy narzędzie kłamałoby o cudzym pliku.
+
+   Zmierzone PRZED dodaniem zwolnienia, na tej samej fixturze: 3 różne napisy, w tym
+   `<td class="up"> "eth0"`. Po zwolnieniu zostają 2 — komórka bez klasy i przynęta `note`. */
+R.ok("komórka UP -> zwolniona", !/class="up">/.test(diffCells.out), diffCells.out.split("\n")[2]);
+/* PRZYNĘTA: komórka nieporównywalna niesie ZDANIE TEGO NARZĘDZIA i ma się liczyć.
+   Bez niej zwolnienie po samym `up` objęłoby cały tekst, który sami tam wypisujemy. */
+R.ok("PRZYNĘTA: komórka UP NOTE NIE jest zwolniona",
+     /Not covered by any key/.test(diffCells.out), diffCells.out.split("\n")[2]);
+
 /* ---- CZWARTA I PIĄTA ODSŁONA TEJ SAMEJ POMYŁKI: SEKWENCJE UCIECZKI I SPACJA ----
    #135 (treść dziecka), #145 (wstawki) i #147 (encje HTML) naprawiły trzy warianty jednego
    błędu: porównywania ZAPISU zamiast tego, co widać. Zostały dwa, oba z tej samej rodziny:

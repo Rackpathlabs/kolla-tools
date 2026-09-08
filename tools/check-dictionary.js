@@ -391,6 +391,22 @@ var CATEGORIES = [
   { why: "wartość w tabeli różnic: treść pliku użytkownika przed importem i po nim",
     test: function (f) {
       return /(^|\s)(was|is)(\s|$)/.test(String(f.cls || "")) && f.tag === "TD";
+    } },
+
+  /* WARTOŚĆ DOMYŚLNA UPSTREAMU W TABELI RÓŻNIC (ADR-005, #81). Trzecia kolumna pokazuje,
+     co kolla-ansible ma w swoich `group_vars` — literał z CUDZEGO repozytorium, przepisany
+     wraz ze ścieżką, linią i tagiem. To nie jest tekst tego interfejsu i nie ma prawa
+     dostać klucza w słowniku: klucz oznaczałby, że tłumaczymy cudzą wartość.
+
+     Zwalnia klasa `up` i TYLKO bez `note`. Komórka nieporównywalna — wartość wyprowadzana,
+     mapa, brak wpisu, wydanie nieskatalogowane — niesie ZDANIE TEGO NARZĘDZIA o tym, czego
+     nie porównało, więc idzie przez słownik jak każde inne; markup stawia jej `note` po to,
+     żeby to zwolnienie jej nie objęło. Obie komórki stoją w
+     tools/fixtures/report-diffcells.json, przynęta z `note` włącznie. */
+  { why: "wartość domyślna upstreamu: literał z repozytorium kolla-ansible, nie tekst interfejsu",
+    test: function (f) {
+      var c = String(f.cls || "");
+      return /(^|\s)up(\s|$)/.test(c) && !/(^|\s)note(\s|$)/.test(c) && f.tag === "TD";
     } }
 
   /* Kategorii „brak liter" i „nazwa własna wydania" tu nie ma. Nie zwalniały ANI
