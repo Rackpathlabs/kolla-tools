@@ -133,6 +133,48 @@ a source other than `group_vars/all` (role defaults would need a second
 draft PR that a reviewer cannot judge from the diff alone — that is the
 signal that "values, not semantics" was the wrong cut.
 
+## Amendment 2026-09-08
+
+Written the same day as the decision, because measuring the three keys the
+context called "defined in a role" showed that none of them is.
+
+**The context sentence was wrong.** It said "3 have no value at that level and
+are defined in a role". Measured against 20.5.0 and 22.1.0 with a full clone:
+`storage_interface` was **removed** from kolla-ansible — the removal note first
+appears in tag 15.0.0 — and the two Octavia names,
+`octavia_amp_network_type` and
+`octavia_amp_network_provider_physical_network`, occur **nowhere in the tree**
+in any form. They are keys inside the `octavia_amp_network` mapping. So of the
+four keys with no scalar in `group_vars/all`, three were defects of this tool
+rather than facts about upstream, and they were fixed in #184 and #185 before
+the register was written. Filed and closed: #182, #184, #185.
+
+**Two more kinds.** `kind: "scalar" | "derived" | "absent"` does not cover
+what was found:
+
+- `kind: "map"` — the key is a mapping whose defaults live in a role rather
+  than in `group_vars/all`. Carries `path` and `line` of the role file and the
+  default map itself, because Ansible replaces dictionaries and the generator
+  has to emit the whole thing. `octavia_amp_network` is the first entry.
+- `kind: "removed"` — the key existed upstream and was removed. Carries
+  `removedIn` and what the variable used to mean. Nothing in the emitted set
+  has this kind any more, and the kind exists so that the next one is recorded
+  rather than deleted: `RETRACTED_KEYS` in the generator holds the same
+  distinction for import.
+
+**The key count moved.** The decision was written against 32 emitted keys. The
+generator now emits **31**: three flat names went, one mapping arrived. The
+scope rule is unchanged — the register covers exactly what buildYaml emits —
+but the number in the context section above is the one measured before the two
+fixes.
+
+**What this changes about the decision: nothing, and that is the point.** Every
+axis still resolves the same way, and the case for the register got stronger
+rather than weaker. Four of thirty-two emitted keys — one in eight — were
+claims about upstream with no source behind them, all four found by hand with a
+clone and a grep, none of them by any guard. The register is the mechanism that
+makes the fifth impossible to add.
+
 ## Actions
 
 - [ ] `defaults.js` with the three maintained releases, sourced (PR 1)
@@ -143,3 +185,5 @@ signal that "values, not semantics" was the wrong cut.
 - [ ] `upstream_watch.py` defaults class; workflow PR description (PR 2)
 - [ ] #81 closed when both PRs are on main and the watcher has run green
       once on a schedule
+- [x] the three keys the context called "defined in a role" measured; #184
+      and #185 filed and fixed before the register (amendment above)
