@@ -638,6 +638,109 @@ def self_test():
         failures.append("the scanner keywords do not follow the matrix: missing %s"
                         % sorted(want - set(kw)))
 
+    # --- WARTOŚCI DOMYŚLNE UPSTREAMU (ADR-005, #81) ---------------------------
+    #
+    # Tabela w defaults.js jest MIGAWKĄ cudzego repozytorium. Migawka, której nikt
+    # nie odświeża, po jednym wydaniu upstreamu twierdzi coś nieprawdziwego o pliku,
+    # którego nie czytała — i twierdzi to tym samym zdaniem co wtedy, gdy była
+    # prawdziwa. Ta klasa jest jedyną rzeczą stojącą między tabelą a taką migawką.
+    #
+    # Komparator jest CZYSTY: dostaje sparsowany defaults.js i teksty plików
+    # z otagowanego drzewa, więc cały ten dowód działa bez sieci, w ci.yml.
+    dsrc_all = ("---\n"
+                "network_interface: \"eth0\"\n"
+                "api_interface: \"{{ network_interface }}\"\n"
+                "enable_haproxy: \"yes\"\n")
+    dsrc_role = ("---\n"
+                 "octavia_amp_network:\n"
+                 "  name: lb-mgmt-net\n"
+                 "  subnet:\n"
+                 "    name: lb-mgmt-subnet\n")
+    P_ALL, P_ROLE = "ansible/group_vars/all/common.yml", "ansible/roles/octavia/defaults/main.yml"
+    defaults_honest = {
+        "releases": {"2026.1": {"tag": "22.1.0", "catalogued": True,
+                                "path": "ansible/group_vars/all/", "sha": "6d3ced62"},
+                     "2026.2": {"catalogued": False}},
+        "keys": {
+            "network_interface": {"kind": "scalar", "values": {
+                "2026.1": {"literal": '"eth0"', "path": P_ALL, "line": 2}}},
+            "api_interface": {"kind": "derived", "values": {
+                "2026.1": {"expr": '"{{ network_interface }}"', "path": P_ALL, "line": 3}}},
+            "enable_haproxy": {"kind": "scalar", "values": {
+                "2026.1": {"literal": '"yes"', "path": P_ALL, "line": 4}}},
+            "octavia_amp_network": {"kind": "map", "values": {
+                "2026.1": {"literal": "octavia_amp_network:\n  name: lb-mgmt-net\n"
+                                      "  subnet:\n    name: lb-mgmt-subnet",
+                           "path": P_ROLE, "line": 2}}}}}
+    sources_honest = {("2026.1", P_ALL): dsrc_all, ("2026.1", P_ROLE): dsrc_role}
+
+    dd, dcomp, dskip = compare_defaults(defaults_honest, sources_honest)
+    print("  %-22s %s" % ("defaults clean", "silent" if not dd else "FALSE ALARM"))
+    if dd:
+        failures.append("the defaults table reported drift against data that agrees: %r" % dd)
+    if len(dcomp) != 4:
+        failures.append("expected 4 compared default values, got %d" % len(dcomp))
+    # Wydanie nieskatalogowane MUSI trafić do pominiętych z powodem. Cisza na nim
+    # czyta się jak zgodność, a to jest dokładnie ta pomyłka, którą flaga
+    # `catalogued` ma nazwać zamiast ukryć.
+    ok = any(r == "2026.2" for r, _w in dskip)
+    print("  %-22s %s" % ("uncatalogued named", "named" if ok else "SILENT"))
+    if not ok:
+        failures.append("an uncatalogued release was passed over without a reason")
+
+    dcases = [
+        ("default value moved", {("2026.1", P_ALL): dsrc_all.replace('"eth0"', '"eth1"')},
+         "network_interface", "literal"),
+        ("default line moved", {("2026.1", P_ALL): "# added a line\n" + dsrc_all},
+         "network_interface", "line"),
+        ("key left the file", {("2026.1", P_ALL): dsrc_all.replace("network_interface: \"eth0\"\n", "")},
+         "network_interface", "presence"),
+        ("derived expr changed", {("2026.1", P_ALL): dsrc_all.replace("{{ network_interface }}",
+                                                                     "{{ network_interface | default('eth0') }}")},
+         "api_interface", "expr"),
+        ("map body changed", {("2026.1", P_ROLE): dsrc_role.replace("lb-mgmt-net", "lb-mgmt-net2")},
+         "octavia_amp_network", "literal"),
+    ]
+    for label, patch, key, field in dcases:
+        src = dict(sources_honest); src.update(patch)
+        dd, _c, _s = compare_defaults(defaults_honest, src)
+        hit = [x for x in dd if x["key"] == key and x["field"] == field]
+        print("  %-22s %s" % (label, "detected" if hit else "NOT DETECTED"))
+        if not hit:
+            failures.append("defaults drift not detected: %s (%s/%s)" % (label, key, field))
+
+    # PISOWNIA BOOLEANA. Między 21.x a 22.x trzynaście wartości zmieniło "no" na
+    # false bez zmiany znaczenia. Dla WIDOKU RÓŻNIC to nie jest zmiana i ADR-005
+    # każe porównywać przez yamlBool. Dla TABELI to jest zmiana, bo tabela cytuje
+    # pisownię ze źródła — więc rozjazd jest zgłaszany, ale NIESIE ZNACZNIK, że
+    # znaczenie jest to samo. Bez znacznika recenzent trzynastu wierszy nie odróżni
+    # od trzynastu zmian zachowania, a wtedy przejrzy je wszystkie tak samo.
+    src = dict(sources_honest)
+    src[("2026.1", P_ALL)] = dsrc_all.replace('enable_haproxy: "yes"', "enable_haproxy: false")
+    dd, _c, _s = compare_defaults(defaults_honest, src)
+    hit = [x for x in dd if x["key"] == "enable_haproxy" and x["field"] == "literal"]
+    print("  %-22s %s" % ("bool respelled", "detected" if hit else "NOT DETECTED"))
+    if not hit:
+        failures.append("a boolean respelled upstream was not recorded as drift")
+    elif hit[0].get("sameMeaning") is not True:
+        failures.append("a spelling-only boolean change was not marked as such")
+    # I ODWROTNIE: zmiana znaczenia nie ma prawa dostać tego znacznika.
+    src[("2026.1", P_ALL)] = dsrc_all.replace('enable_haproxy: "yes"', 'enable_haproxy: "no"')
+    dd, _c, _s = compare_defaults(defaults_honest, src)
+    hit = [x for x in dd if x["key"] == "enable_haproxy"]
+    ok = bool(hit) and hit[0].get("sameMeaning") is not True
+    print("  %-22s %s" % ("bool value flipped", "detected" if ok else "NOT DETECTED"))
+    if not ok:
+        failures.append("a boolean whose VALUE changed was reported as spelling only")
+
+    # Nieodebrany plik to nie jest czysty przebieg. Ta sama zasada co przy seriach:
+    # cicha awaria pobierania wygląda dokładnie jak zgodność.
+    dd, _c, dskip = compare_defaults(defaults_honest, {("2026.1", P_ROLE): dsrc_role})
+    ok = any("ansible/group_vars" in w for _r, w in dskip) and not [x for x in dd if x["key"] == "network_interface"]
+    print("  %-22s %s" % ("source not fetched", "named" if ok else "SILENT"))
+    if not ok:
+        failures.append("a source that was never fetched did not reach the skipped column")
+
     if failures:
         for f in failures:
             print("FAIL " + f, file=sys.stderr)
