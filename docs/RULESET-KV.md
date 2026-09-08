@@ -419,6 +419,14 @@ diagnostic, not an edit. Rule of thumb: "create me a file" may add keys;
 "fix my file" may not. The generator side of this contract is pinned by
 tests, not by a finding code.
 
+**And the upstream defaults table does not widen it** (ADR-005, #81).
+`defaults.js` gives the diff view a second baseline: what kolla-ansible
+has in its own `group_vars` at a named tag. It is a **display**, read by
+nothing that decides what the emitted file contains. A key the generator
+does not emit gets no entry — the table's own guard asserts both
+directions of that — so knowing an upstream default has never been, and
+here is not, a reason to write a key into somebody's file.
+
 ## KV-12b — Toggling om_enable_rabbitmq_quorum_queues between deployments
 
 **Class:** C. **Mode:** none.

@@ -183,7 +183,7 @@
       "g.link.why.duplicate":      "it sets the same setting twice ({what})",
       "g.link.why.value":          "one of the values is not one this form would accept ({what})",
       "g.view.note":           "Showing only the keys whose value differs from this tool's initial values — the state this form starts in. This is <strong>not</strong> a comparison against kolla-ansible defaults: this tool does not know them, so a key missing here may still differ from upstream.",
-      "g.view.tableNote":      "Left is this tool's initial value, right is the value in the file above.",
+      "g.view.tableNote":          "Left is this tool's initial value, then the value in the file above, then what kolla-ansible defaults to. Derived values and maps are shown, not compared.",
       "g.h.diff":              "Differences from the initial values",
       "g.diff.key":            "key",
       "g.diff.initial":        "initial value",
@@ -233,6 +233,20 @@
       /* Pole ruchu Ceph (#185). storage_interface usunięty z kolla-ansible w 15.0.0
          i nigdy nie sterował ruchem Ceph — pole zostaje wejściem projektowym KV-05
          i KV-10, a do pliku idzie komentarzem. */
+      /* Druga linia odniesienia: wartości domyślne kolla-ansible (ADR-005, #81).
+         Zdanie o porównaniu NIESIE TAG — bez niego mówiłoby „defaulty kolla-ansible"
+         bez powiedzenia, czyjej wersji, a asercja w generator.test.js na to nie pozwala. */
+      "g.diff.upstream":           "kolla-ansible default",
+      "g.diff.upstream.derived":   "derived from <code>{expr}</code> — shown, not compared",
+      "g.diff.upstream.map":       "a mapping with defaults in a role — shown, not compared",
+      "g.diff.upstream.unknown":   "no entry in the defaults register",
+      "g.diff.upstream.uncatalogued": "upstream defaults not catalogued for {release}",
+      /* Twierdzenie i zastrzeżenie w DWÓCH wpisach, nie w jednym zdaniu. Asercja
+         w generator.test.js szuka twierdzenia o porównaniu i wyklucza wpisy ze słowem
+         „not" — zdanie łączone byłoby dla niej niewidzialne, czyli zawężenie chroniłoby
+         zbiór pusty. Rozdzielenie jest po to, żeby twierdzenie dało się zobaczyć. */
+      "g.diff.upstream.snippet":   "Compared against kolla-ansible {tag} defaults where the upstream value is a scalar.",
+      "g.diff.upstream.snippet.derived": "Derived values and maps are shown, not compared.",
       "g.field.cephIf":            "Ceph traffic interface",
       "g.role.cephIf":             "the interface you named for Ceph traffic",
       "g.hint.stgIf":              "Host interface carrying Ceph public-network traffic. A design input: Kolla has no key for it, so it goes into the file as a comment and feeds KV-05 and KV-10.",

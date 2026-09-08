@@ -18,6 +18,12 @@ It also reads an existing file. On import the form fills in, unrecognised and de
 keys are reported, and export patches your original instead of rewriting it — comments,
 key order and keys the generator knows nothing about survive untouched.
 
+The diff view puts a second baseline beside the tool's own initial values: what
+kolla-ansible defaults to at a named tag, read from its `group_vars` and recorded with the
+file and line. Nineteen of the thirty-one emitted keys are compared that way; the other
+twelve are derived expressions or a map defined in a role, and those are shown rather than
+compared.
+
 ![Generator](docs/img/generator.png)
 
 ### Validator — inventory

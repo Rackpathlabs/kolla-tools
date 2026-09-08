@@ -795,12 +795,13 @@ var KOLLA_THEME = (function () {
       <div class="panel" id="diffpanel" style="margin-top:18px" hidden>
         <h2 data-i18n="g.h.diff">Differences from the initial values</h2>
         <div class="body">
-          <p class="hint" data-i18n="g.view.tableNote">Left is this tool's initial value, right is the value in the file above.</p>
+          <p class="hint" data-i18n="g.view.tableNote">Left is this tool's initial value, then the value in the file above, then what kolla-ansible defaults to. Derived values and maps are shown, not compared.</p>
           <table class="difftab" id="difftab">
             <thead><tr>
               <th data-i18n="g.diff.key">key</th>
               <th data-i18n="g.diff.initial">initial value</th>
               <th data-i18n="g.diff.thisFile">this file</th>
+              <th data-i18n="g.diff.upstream">kolla-ansible default</th>
             </tr></thead>
             <tbody id="diffbody"></tbody>
           </table>
@@ -999,7 +1000,7 @@ var KOLLA_THEME = (function () {
       "g.link.why.duplicate":      "it sets the same setting twice ({what})",
       "g.link.why.value":          "one of the values is not one this form would accept ({what})",
       "g.view.note":           "Showing only the keys whose value differs from this tool's initial values — the state this form starts in. This is <strong>not</strong> a comparison against kolla-ansible defaults: this tool does not know them, so a key missing here may still differ from upstream.",
-      "g.view.tableNote":      "Left is this tool's initial value, right is the value in the file above.",
+      "g.view.tableNote":          "Left is this tool's initial value, then the value in the file above, then what kolla-ansible defaults to. Derived values and maps are shown, not compared.",
       "g.h.diff":              "Differences from the initial values",
       "g.diff.key":            "key",
       "g.diff.initial":        "initial value",
@@ -1049,6 +1050,20 @@ var KOLLA_THEME = (function () {
       /* Pole ruchu Ceph (#185). storage_interface usunięty z kolla-ansible w 15.0.0
          i nigdy nie sterował ruchem Ceph — pole zostaje wejściem projektowym KV-05
          i KV-10, a do pliku idzie komentarzem. */
+      /* Druga linia odniesienia: wartości domyślne kolla-ansible (ADR-005, #81).
+         Zdanie o porównaniu NIESIE TAG — bez niego mówiłoby „defaulty kolla-ansible"
+         bez powiedzenia, czyjej wersji, a asercja w generator.test.js na to nie pozwala. */
+      "g.diff.upstream":           "kolla-ansible default",
+      "g.diff.upstream.derived":   "derived from <code>{expr}</code> — shown, not compared",
+      "g.diff.upstream.map":       "a mapping with defaults in a role — shown, not compared",
+      "g.diff.upstream.unknown":   "no entry in the defaults register",
+      "g.diff.upstream.uncatalogued": "upstream defaults not catalogued for {release}",
+      /* Twierdzenie i zastrzeżenie w DWÓCH wpisach, nie w jednym zdaniu. Asercja
+         w generator.test.js szuka twierdzenia o porównaniu i wyklucza wpisy ze słowem
+         „not" — zdanie łączone byłoby dla niej niewidzialne, czyli zawężenie chroniłoby
+         zbiór pusty. Rozdzielenie jest po to, żeby twierdzenie dało się zobaczyć. */
+      "g.diff.upstream.snippet":   "Compared against kolla-ansible {tag} defaults where the upstream value is a scalar.",
+      "g.diff.upstream.snippet.derived": "Derived values and maps are shown, not compared.",
       "g.field.cephIf":            "Ceph traffic interface",
       "g.role.cephIf":             "the interface you named for Ceph traffic",
       "g.hint.stgIf":              "Host interface carrying Ceph public-network traffic. A design input: Kolla has no key for it, so it goes into the file as a comment and feeds KV-05 and KV-10.",
@@ -1481,6 +1496,220 @@ var KOLLA_THEME = (function () {
 
   var STORE = "rackpathlabs.globals-generator.v1";
   var HEADER = "# Generated with Rackpathlabs globals.yml generator";
+
+  /* == KOLLA-DEFAULTS BEGIN — generowane z defaults.js, nie edytuj w miejscu == */
+  var KOLLA_DEFAULTS = {
+    releases: {
+      "2025.1": { tag: "20.5.0", catalogued: true,
+                 path: "ansible/group_vars/all.yml", sha: "7e049a6f10eb55ccf4c24e17235392cba192e77c" },
+      "2025.2": { tag: "21.2.0", catalogued: true,
+                 path: "ansible/group_vars/all/", sha: "3145f775fb14fa420f41f8cfaca28ed33491824a" },
+      "2026.1": { tag: "22.1.0", catalogued: true,
+                 path: "ansible/group_vars/all/", sha: "6d3ced620a6febb9c3aec9eb906c7ebe3c879817" },
+      "2026.2": { catalogued: false },
+      "2024.2": { catalogued: false },
+      "2024.1": { catalogued: false },
+      "2023.2": { catalogued: false },
+      "2023.1": { catalogued: false },
+      "zed": { catalogued: false },
+      "yoga": { catalogued: false }
+    },
+    keys: {
+      "api_interface": { kind: "derived",
+        values: {
+          "2025.1": { expr: '"{{ network_interface }}"', path: "ansible/group_vars/all.yml", line: 300 },
+          "2025.2": { expr: '"{{ network_interface }}"', path: "ansible/group_vars/all/common.yml", line: 239 },
+          "2026.1": { expr: '"{{ network_interface }}"', path: "ansible/group_vars/all/common.yml", line: 240 }
+        } },
+      "enable_barbican": { kind: "scalar",
+        values: {
+          "2025.1": { literal: '"no"', path: "ansible/group_vars/all.yml", line: 854 },
+          "2025.2": { literal: '"no"', path: "ansible/group_vars/all/barbican.yml", line: 2 },
+          "2026.1": { literal: 'false', path: "ansible/group_vars/all/barbican.yml", line: 2 }
+        } },
+      "enable_cinder": { kind: "scalar",
+        values: {
+          "2025.1": { literal: '"no"', path: "ansible/group_vars/all.yml", line: 863 },
+          "2025.2": { literal: '"no"', path: "ansible/group_vars/all/cinder.yml", line: 2 },
+          "2026.1": { literal: 'false', path: "ansible/group_vars/all/cinder.yml", line: 2 }
+        } },
+      "enable_grafana": { kind: "scalar",
+        values: {
+          "2025.1": { literal: '"no"', path: "ansible/group_vars/all.yml", line: 883 },
+          "2025.2": { literal: '"no"', path: "ansible/group_vars/all/grafana.yml", line: 2 },
+          "2026.1": { literal: 'false', path: "ansible/group_vars/all/grafana.yml", line: 2 }
+        } },
+      "enable_hacluster": { kind: "derived",
+        values: {
+          "2025.1": { expr: '"{{ enable_masakari_hostmonitor | bool }}"', path: "ansible/group_vars/all.yml", line: 885 },
+          "2025.2": { expr: '"{{ enable_masakari_hostmonitor | bool }}"', path: "ansible/group_vars/all/hacluster.yml", line: 2 },
+          "2026.1": { expr: '"{{ enable_masakari_hostmonitor | bool }}"', path: "ansible/group_vars/all/hacluster.yml", line: 2 }
+        } },
+      "enable_haproxy": { kind: "scalar",
+        values: {
+          "2025.1": { literal: '"yes"', path: "ansible/group_vars/all.yml", line: 836 },
+          "2025.2": { literal: '"yes"', path: "ansible/group_vars/all/haproxy.yml", line: 2 },
+          "2026.1": { literal: 'true', path: "ansible/group_vars/all/haproxy.yml", line: 2 }
+        } },
+      "enable_heat": { kind: "derived",
+        values: {
+          "2025.1": { expr: '"{{ enable_openstack_core | bool }}"', path: "ansible/group_vars/all.yml", line: 886 },
+          "2025.2": { expr: '"{{ enable_openstack_core | bool }}"', path: "ansible/group_vars/all/heat.yml", line: 2 },
+          "2026.1": { expr: '"{{ enable_openstack_core | bool }}"', path: "ansible/group_vars/all/heat.yml", line: 2 }
+        } },
+      "enable_horizon": { kind: "derived",
+        values: {
+          "2025.1": { expr: '"{{ enable_openstack_core | bool }}"', path: "ansible/group_vars/all.yml", line: 887 },
+          "2025.2": { expr: '"{{ enable_openstack_core | bool }}"', path: "ansible/group_vars/all/horizon.yml", line: 2 },
+          "2026.1": { expr: '"{{ enable_openstack_core | bool }}"', path: "ansible/group_vars/all/horizon.yml", line: 2 }
+        } },
+      "enable_letsencrypt": { kind: "scalar",
+        values: {
+          "2025.1": { literal: '"no"', path: "ansible/group_vars/all.yml", line: 913 },
+          "2025.2": { literal: '"no"', path: "ansible/group_vars/all/letsencrypt.yml", line: 2 },
+          "2026.1": { literal: 'false', path: "ansible/group_vars/all/letsencrypt.yml", line: 2 }
+        } },
+      "enable_masakari": { kind: "scalar",
+        values: {
+          "2025.1": { literal: '"no"', path: "ansible/group_vars/all.yml", line: 923 },
+          "2025.2": { literal: '"no"', path: "ansible/group_vars/all/masakari.yml", line: 2 },
+          "2026.1": { literal: 'false', path: "ansible/group_vars/all/masakari.yml", line: 2 }
+        } },
+      "enable_neutron_provider_networks": { kind: "scalar",
+        values: {
+          "2025.1": { literal: '"no"', path: "ansible/group_vars/all.yml", line: 936 },
+          "2025.2": { literal: '"no"', path: "ansible/group_vars/all/neutron.yml", line: 12 },
+          "2026.1": { literal: 'false', path: "ansible/group_vars/all/neutron.yml", line: 12 }
+        } },
+      "enable_octavia": { kind: "scalar",
+        values: {
+          "2025.1": { literal: '"no"', path: "ansible/group_vars/all.yml", line: 948 },
+          "2025.2": { literal: '"no"', path: "ansible/group_vars/all/octavia.yml", line: 2 },
+          "2026.1": { literal: 'false', path: "ansible/group_vars/all/octavia.yml", line: 2 }
+        } },
+      "enable_prometheus": { kind: "scalar",
+        values: {
+          "2025.1": { literal: '"no"', path: "ansible/group_vars/all.yml", line: 957 },
+          "2025.2": { literal: '"no"', path: "ansible/group_vars/all/prometheus.yml", line: 2 },
+          "2026.1": { literal: 'false', path: "ansible/group_vars/all/prometheus.yml", line: 2 }
+        } },
+      "keepalived_virtual_router_id": { kind: "scalar",
+        values: {
+          "2025.1": { literal: '"51"', path: "ansible/group_vars/all.yml", line: 247 },
+          "2025.2": { literal: '"51"', path: "ansible/group_vars/all/keepalived.yml", line: 8 },
+          "2026.1": { literal: '"51"', path: "ansible/group_vars/all/keepalived.yml", line: 8 }
+        } },
+      "kolla_base_distro": { kind: "scalar",
+        values: {
+          "2025.1": { literal: '"rocky"', path: "ansible/group_vars/all.yml", line: 52 },
+          "2025.2": { literal: '"rocky"', path: "ansible/group_vars/all/common.yml", line: 181 },
+          "2026.1": { literal: '"rocky"', path: "ansible/group_vars/all/common.yml", line: 180 }
+        } },
+      "kolla_copy_ca_into_containers": { kind: "scalar",
+        values: {
+          "2025.1": { literal: '"no"', path: "ansible/group_vars/all.yml", line: 1064 },
+          "2025.2": { literal: '"no"', path: "ansible/group_vars/all/haproxy.yml", line: 17 },
+          "2026.1": { literal: 'false', path: "ansible/group_vars/all/haproxy.yml", line: 17 }
+        } },
+      "kolla_enable_tls_internal": { kind: "scalar",
+        values: {
+          "2025.1": { literal: '"no"', path: "ansible/group_vars/all.yml", line: 1058 },
+          "2025.2": { literal: '"no"', path: "ansible/group_vars/all/haproxy.yml", line: 11 },
+          "2026.1": { literal: 'false', path: "ansible/group_vars/all/haproxy.yml", line: 11 }
+        } },
+      "kolla_external_fqdn": { kind: "derived",
+        values: {
+          "2025.1": { expr: '"{{ kolla_internal_fqdn if kolla_same_external_internal_vip | bool else kolla_external_vip_address }}"', path: "ansible/group_vars/all.yml", line: 58 },
+          "2025.2": { expr: '"{{ kolla_internal_fqdn if kolla_same_external_internal_vip | bool else kolla_external_vip_address }}"', path: "ansible/group_vars/all/common.yml", line: 187 },
+          "2026.1": { expr: '"{{ kolla_internal_fqdn if kolla_same_external_internal_vip | bool else kolla_external_vip_address }}"', path: "ansible/group_vars/all/common.yml", line: 191 }
+        } },
+      "kolla_external_vip_address": { kind: "derived",
+        values: {
+          "2025.1": { expr: '"{{ kolla_internal_vip_address }}"', path: "ansible/group_vars/all.yml", line: 56 },
+          "2025.2": { expr: '"{{ kolla_internal_vip_address }}"', path: "ansible/group_vars/all/common.yml", line: 185 },
+          "2026.1": { expr: '"{{ kolla_internal_vip_address }}"', path: "ansible/group_vars/all/common.yml", line: 184 }
+        } },
+      "kolla_external_vip_interface": { kind: "derived",
+        values: {
+          "2025.1": { expr: '"{{ network_interface }}"', path: "ansible/group_vars/all.yml", line: 299 },
+          "2025.2": { expr: '"{{ network_interface }}"', path: "ansible/group_vars/all/common.yml", line: 238 },
+          "2026.1": { expr: '"{{ network_interface }}"', path: "ansible/group_vars/all/common.yml", line: 239 }
+        } },
+      "kolla_internal_fqdn": { kind: "derived",
+        values: {
+          "2025.1": { expr: '"{{ kolla_internal_vip_address }}"', path: "ansible/group_vars/all.yml", line: 55 },
+          "2025.2": { expr: '"{{ kolla_internal_vip_address }}"', path: "ansible/group_vars/all/common.yml", line: 184 },
+          "2026.1": { expr: '"{{ kolla_internal_vip_address }}"', path: "ansible/group_vars/all/common.yml", line: 183 }
+        } },
+      "kolla_internal_vip_address": { kind: "derived",
+        values: {
+          "2025.1": { expr: '"{{ kolla_internal_address | default(\'\') }}"', path: "ansible/group_vars/all.yml", line: 54 },
+          "2025.2": { expr: '"{{ kolla_internal_address | default(\'\') }}"', path: "ansible/group_vars/all/common.yml", line: 183 },
+          "2026.1": { expr: '"{{ kolla_internal_address | default(\'\') }}"', path: "ansible/group_vars/all/common.yml", line: 182 }
+        } },
+      "migration_interface": { kind: "derived",
+        values: {
+          "2025.1": { expr: '"{{ api_interface }}"', path: "ansible/group_vars/all.yml", line: 301 },
+          "2025.2": { expr: '"{{ api_interface }}"', path: "ansible/group_vars/all/nova.yml", line: 40 },
+          "2026.1": { expr: '"{{ api_interface }}"', path: "ansible/group_vars/all/nova.yml", line: 40 }
+        } },
+      "network_interface": { kind: "scalar",
+        values: {
+          "2025.1": { literal: '"eth0"', path: "ansible/group_vars/all.yml", line: 297 },
+          "2025.2": { literal: '"eth0"', path: "ansible/group_vars/all/common.yml", line: 237 },
+          "2026.1": { literal: '"eth0"', path: "ansible/group_vars/all/common.yml", line: 238 }
+        } },
+      "neutron_bridge_name": { kind: "derived",
+        values: {
+          "2025.1": { expr: '"{{ \'br-dvs\' if neutron_plugin_agent == \'vmware_dvs\' else \'br_dpdk\' if enable_ovs_dpdk | bool else \'br-ex\' }}"', path: "ansible/group_vars/all.yml", line: 1214 },
+          "2025.2": { expr: '"{{ \'br_dpdk\' if enable_ovs_dpdk | bool else \'br-ex\' }}"', path: "ansible/group_vars/all/neutron.yml", line: 37 },
+          "2026.1": { expr: '"{{ \'br_dpdk\' if enable_ovs_dpdk | bool else \'br-ex\' }}"', path: "ansible/group_vars/all/neutron.yml", line: 37 }
+        } },
+      "neutron_external_interface": { kind: "scalar",
+        values: {
+          "2025.1": { literal: '"eth1"', path: "ansible/group_vars/all.yml", line: 298 },
+          "2025.2": { literal: '"eth1"', path: "ansible/group_vars/all/neutron.yml", line: 31 },
+          "2026.1": { literal: '"eth1"', path: "ansible/group_vars/all/neutron.yml", line: 31 }
+        } },
+      "neutron_plugin_agent": { kind: "scalar",
+        values: {
+          "2025.1": { literal: '"openvswitch"', path: "ansible/group_vars/all.yml", line: 332 },
+          "2025.2": { literal: '"openvswitch"', path: "ansible/group_vars/all/neutron.yml", line: 26 },
+          "2026.1": { literal: '"openvswitch"', path: "ansible/group_vars/all/neutron.yml", line: 26 }
+        } },
+      "octavia_amp_network": { kind: "map",
+        /* Mapa z roli, nie z group_vars/all. Wypisywana w całości, bo Ansible
+           zastępuje słowniki zamiast je scalać (hash_behaviour nie jest ustawione
+           nigdzie w drzewie kolla-ansible). Pokazywana, nigdy porównywana. */
+        values: {
+          "2025.1": { literal: 'octavia_amp_network:\n  name: lb-mgmt-net\n  shared: false\n  subnet:\n    name: lb-mgmt-subnet\n    cidr: "{{ octavia_amp_network_cidr }}"\n    no_gateway_ip: yes\n    enable_dhcp: yes\n',
+                     path: "ansible/roles/octavia/defaults/main.yml", line: 370, sha: "6184ccc4e6cf823c67667e917f32af490bcdb5f2" },
+          "2025.2": { literal: 'octavia_amp_network:\n  name: lb-mgmt-net\n  shared: false\n  subnet:\n    name: lb-mgmt-subnet\n    cidr: "{{ octavia_amp_network_cidr }}"\n    no_gateway_ip: yes\n    enable_dhcp: yes\n',
+                     path: "ansible/roles/octavia/defaults/main.yml", line: 377, sha: "e683e67669806cc0c844a23302733ddf8a123b90" },
+          "2026.1": { literal: 'octavia_amp_network:\n  name: lb-mgmt-net\n  shared: false\n  subnet:\n    name: lb-mgmt-subnet\n    cidr: "{{ octavia_amp_network_cidr }}"\n    no_gateway_ip: true\n    enable_dhcp: true\n',
+                     path: "ansible/roles/octavia/defaults/main.yml", line: 377, sha: "1909af8cff27e80d154728170597b4f804e665c1" }
+        } },
+      "octavia_network_type": { kind: "scalar",
+        values: {
+          "2025.1": { literal: '"provider"', path: "ansible/group_vars/all.yml", line: 1419 },
+          "2025.2": { literal: '"provider"', path: "ansible/group_vars/all/octavia.yml", line: 20 },
+          "2026.1": { literal: '"provider"', path: "ansible/group_vars/all/octavia.yml", line: 20 }
+        } },
+      "om_enable_rabbitmq_stream_fanout": { kind: "scalar",
+        values: {
+          "2025.1": { literal: 'true', path: "ansible/group_vars/all.yml", line: 292 },
+          "2025.2": { literal: 'true', path: "ansible/group_vars/all/common.yml", line: 293 },
+          "2026.1": { literal: 'true', path: "ansible/group_vars/all/common.yml", line: 299 }
+        } },
+      "openstack_release": { kind: "scalar",
+        values: {
+          "2025.1": { literal: '"2025.1"', path: "ansible/group_vars/all.yml", line: 795 },
+          "2025.2": { literal: '"2025.2"', path: "ansible/group_vars/all/common.yml", line: 308 },
+          "2026.1": { literal: '"2026.1"', path: "ansible/group_vars/all/common.yml", line: 310 }
+        } }
+    }
+  };
+  /* == KOLLA-DEFAULTS END == */
 
   /* == KOLLA-MATRIX BEGIN — generowane z matrix.js, nie edytuj w miejscu == */
   /* Jedna tabela konsumowana przez oba narzędzia. Dodanie wydania = dopisanie
@@ -3623,9 +3852,17 @@ var KOLLA_THEME = (function () {
   /* Snippet do wklejenia w pull requeście. Nagłówek mówi, czym JEST linia odniesienia
      i czym NIE JEST — bo ten tekst wyjeżdża poza przeglądarkę i nikt nie zobaczy obok
      niego interfejsu, w którym stało wyjaśnienie. */
-  function overridesText(rows) {
-    var L = ["# Keys whose value differs from this tool's initial values.",
-             "# NOT a comparison against kolla-ansible defaults - this tool does not know them."];
+  function overridesText(rows, release) {
+    /* Drugie zdanie zależy od tego, czy dla wybranego wydania W OGÓLE mamy defaulty
+       upstreamu. Gdy mamy — zaprzeczenie byłoby nieprawdą; gdy nie mamy — zostaje, bo
+       nadal jest prawdziwe. Snippet wyjeżdża poza przeglądarkę i musi nieść to zdanie
+       sam, więc nie wolno mu mówić raz tak, raz inaczej niż interfejs obok. */
+    var relDef = release && KOLLA_DEFAULTS.releases[release];
+    var second = relDef && relDef.catalogued
+      ? "# " + T("g.diff.upstream.snippet", { tag: relDef.tag }) + " " +
+        T("g.diff.upstream.snippet.derived")
+      : "# NOT a comparison against kolla-ansible defaults - this tool does not know them.";
+    var L = ["# Keys whose value differs from this tool's initial values.", second];
     var any = false;
     rows.forEach(function (r) {
       if (r.now === null) return;
@@ -3635,6 +3872,33 @@ var KOLLA_THEME = (function () {
     if (!any) L.push("# (nothing differs from the initial values)");
     return L.join("\n");
   }
+
+  /* DRUGA LINIA ODNIESIENIA: wartości domyślne kolla-ansible (ADR-005). Jedno miejsce,
+     w którym rozstrzyga się, CO wolno powiedzieć o kluczu — reszta interfejsu tylko to
+     wyświetla. Zwraca `comparable`, bo różnica ma sens wyłącznie dla skalara: wyrażenie
+     Jinja i mapę POKAZUJEMY, nigdy nie porównujemy, a wydanie nieskatalogowane mówi „nie
+     badano", nie „bez różnicy". */
+  function upstreamCell(key, release) {
+    var rel = KOLLA_DEFAULTS.releases[release];
+    if (!rel || !rel.catalogued) {
+      return { comparable: false, tag: null,
+               text: T("g.diff.upstream.uncatalogued", { release: esc(String(release)) }) };
+    }
+    var e = KOLLA_DEFAULTS.keys[key];
+    if (!e) return { comparable: false, tag: rel.tag, text: T("g.diff.upstream.unknown") };
+    var v = e.values && e.values[release];
+    if (!v) return { comparable: false, tag: rel.tag,
+                     text: T("g.diff.upstream.uncatalogued", { release: esc(String(release)) }) };
+    if (e.kind === "scalar") return { comparable: true, tag: rel.tag, text: v.literal };
+    if (e.kind === "derived")
+      return { comparable: false, tag: rel.tag,
+               text: T("g.diff.upstream.derived", { expr: esc(v.expr) }) };
+    return { comparable: false, tag: rel.tag, text: T("g.diff.upstream.map") };
+  }
+
+  /* Wydanie z formularza, jedno miejsce. Widok różnic i snippet muszą pytać o to samo,
+     inaczej powiedziałyby o dwóch różnych wersjach upstreamu. */
+  function currentRelease() { return el.release ? el.release.value : null; }
 
   function renderDiff(rows) {
     diffBody.innerHTML = rows.map(function (r) {
@@ -3649,8 +3913,14 @@ var KOLLA_THEME = (function () {
          oznaczyć w markupie, gdzie renderuje wartości z cudzego pliku. Bez tej klasy
          kategoria nie miałaby czego rozpoznać, a rozpoznawanie po treści zwalniałoby
          zdania interfejsu. */
+      var up = upstreamCell(r.key, currentRelease());
+      /* Komórka upstreamu dostaje własną klasę z tego samego powodu co `is`:
+         check-dictionary.js zwalnia po klasie, a tu renderujemy wartość z CUDZEGO
+         repozytorium, nie zdanie interfejsu. */
       return '<tr><td class="k">' + esc(r.key) + '</td><td class="was">' + was +
-             '</td><td class="is">' + now + "</td></tr>";
+             '</td><td class="is">' + now +
+             '</td><td class="up' + (up.comparable ? '' : ' note') + '">' + up.text +
+             "</td></tr>";
     }).join("");
   }
 
@@ -3932,13 +4202,13 @@ var KOLLA_THEME = (function () {
      zawsze: snippet nie jest plikiem globals.yml i nazwanie go tak byłoby tą samą
      klasą pomyłki co werdykt przed sprawdzeniem. */
   function renderView() {
-    var text = showDiff ? overridesText(currentRows) : currentYaml;
+    var text = showDiff ? overridesText(currentRows, currentRelease()) : currentYaml;
     renderYaml(text);
     diffPanel.hidden = !showDiff;
     viewNote.hidden = !showDiff;
   }
 
-  function viewText() { return showDiff ? overridesText(currentRows) : currentYaml; }
+  function viewText() { return showDiff ? overridesText(currentRows, currentRelease()) : currentYaml; }
   function exportText() { return currentYaml.replace(/\n?$/, "\n"); }
 
   /* Klucze komunikatów są PARAMETREM, a nie stałą w środku. Link i plik kopiuje ta sama

@@ -1,0 +1,3 @@
+# klucze, ktore generator emituje w tej fixturze
+network_interface
+neutron_external_interface
