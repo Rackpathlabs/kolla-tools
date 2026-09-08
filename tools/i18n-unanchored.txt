@@ -30,6 +30,7 @@ g.d.keyDefault.importNote  a  fragment doklejany do komunikatu diagnostyki w try
 g.d.keyDefault.loaded  a  jw.
 g.d.keyExplicit  a  jw.
 g.d.tlsNoCa  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
+g.d.vridRange  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
 g.diff.absent  a  komorka tabeli roznic budowana per wiersz; tabeli nie ma, dopoki nie ma czego porownac
 g.link.why.duplicate  a  jw.
 g.link.why.syntax  a  jw.
@@ -41,12 +42,17 @@ g.rule.kv05.ackNote  a  metadane reguly wstrzykiwane w finding; findingu nie ma,
 g.rule.kv05.why  a  metadane reguly wstrzykiwane w finding; findingu nie ma, dopoki nie powstanie
 g.rule.kv06.ackNote  a  metadane reguly wstrzykiwane w finding; findingu nie ma, dopoki nie powstanie
 g.rule.kv06.why  a  metadane reguly wstrzykiwane w finding; findingu nie ma, dopoki nie powstanie
+g.rule.kv08.ack  a  nota potwierdzenia dopisywana do emitowanego pliku; nie jest elementem strony
+g.rule.kv08.hint  a  podpowiedz diagnostyki; diagnostyki nie ma, dopoki nie powstanie
+g.rule.kv08.msg  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
+g.rule.kv08.why  a  uzasadnienie reguly, doklejane do komunikatu; wlasnego elementu nie ma
 g.rule.kv10.why  a  metadane reguly wstrzykiwane w finding; findingu nie ma, dopoki nie powstanie
 g.rule.kv13.why  a  metadane reguly wstrzykiwane w finding; findingu nie ma, dopoki nie powstanie
 g.title.exportBlocked  a  podpowiedz przycisku ustawiana warunkowo w JS; w dokumencie poczatkowym tego tekstu nie ma
 g.verdict.blocked  a  kolejny STAN elementu #status-txt; jego stanem poczatkowym jest g.verdict.pending i to tamten klucz ma kotwice
 g.verdict.clean  a  kolejny STAN elementu #status-txt; jego stanem poczatkowym jest g.verdict.pending i to tamten klucz ma kotwice
 g.verdict.warn  a  kolejny STAN elementu #status-txt; jego stanem poczatkowym jest g.verdict.pending i to tamten klucz ma kotwice
+g.yaml.kv08.comment  a  komentarz wpisywany do emitowanego globals.yml; nie jest elementem strony
 n.computeNode  a  wariant liczebnika: fragment podstawiany w inny napis, wlasnego elementu nie ma nigdy
 n.error  a  wariant liczebnika: fragment podstawiany w inny napis, wlasnego elementu nie ma nigdy
 n.host  a  wariant liczebnika: fragment podstawiany w inny napis, wlasnego elementu nie ma nigdy

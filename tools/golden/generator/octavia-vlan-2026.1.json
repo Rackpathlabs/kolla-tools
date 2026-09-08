@@ -2,6 +2,7 @@
   "distro": "ubuntu",
   "release": "2026.1",
   "vip": "10.40.0.250",
+  "vrid": "51",
   "ext_vip": "203.0.113.20",
   "ext_vip_if": "bond1",
   "net_if": "bond0.10",

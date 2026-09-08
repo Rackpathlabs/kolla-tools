@@ -282,6 +282,60 @@ ok("podmiana tylko dla zmienionych kluczy",
 ok("bez zmian brak podmian",
    Object.keys(T.changedOverrides(doc, T.rawStateFromParsed(doc))).length === 0);
 
+console.log("KV-08 — VRID at the upstream default:");
+/* Reguła ma DWA styki i oba są tu, bo pojedynczo każdy z nich da się spełnić źle.
+   TWORZENIE OD ZERA: klucz wychodzi w pliku zawsze, więc reguła nie ma prawa zapalić
+   się na własnym produkcie generatora — ten sam kontrakt co KV-12a.
+   IMPORT: brak klucza jest DIAGNOSTYKĄ, nie edycją; round-trip bajtowy wygrywa
+   z chęcią uzupełnienia cudzego pliku. */
+var vridNo = '---\nkolla_base_distro: "rocky"\nopenstack_release: "2025.1"\nenable_haproxy: "yes"\n';
+var vDocNo = P.parse(vridNo);
+var vStNo  = T.rawStateFromParsed(vDocNo);
+var dVridNo = T.validate(vStNo, vDocNo);
+ok("import bez klucza -> ostrzeżenie KV-08-VRID-DEFAULT",
+   dVridNo.some(function (x) { return x.id === "KV-08-VRID-DEFAULT" && x.level === "warn"; }),
+   dVridNo.map(function (x) { return x.id; }).join(","));
+ok("i komunikat powtarza kontrakt importu",
+   has(dVridNo, "warn", /does not add missing keys/));
+
+var dVridAck = T.validate(Object.assign({}, vStNo, { ack_vrid: true }), vDocNo);
+ok("potwierdzenie obniża do informacji, wpis NIE znika",
+   dVridAck.some(function (x) { return x.id === "KV-08-VRID-DEFAULT" && x.level === "info"; }),
+   dVridAck.map(function (x) { return x.id + ":" + x.level; }).join(","));
+
+var vDocYes = P.parse(vridNo.replace("enable_haproxy",
+  'keepalived_virtual_router_id: "77"\nenable_haproxy'));
+ok("import z kluczem -> cisza",
+   !T.validate(T.rawStateFromParsed(vDocYes), vDocYes)
+     .some(function (x) { return x.id === "KV-08-VRID-DEFAULT"; }));
+
+/* Od zera: klucz w pliku i żadnego wpisu o jego braku. */
+var vridState = base({});
+var vridYaml = T.buildYaml(vridState, T.badFields(T.validate(vridState, null))).text;
+ok("generowanie od zera emituje keepalived_virtual_router_id",
+   /^keepalived_virtual_router_id:/m.test(vridYaml),
+   vridYaml.split("\n").filter(function (l) { return /keepalived/.test(l); }).join(" | "));
+ok("i własny plik generatora nie wpada we własną regułę",
+   !T.validate(base({})).some(function (x) { return x.id === "KV-08-VRID-DEFAULT"; }));
+
+/* Zakres 1–255 to WŁASNOŚĆ PROTOKOŁU, nie preferencja: pole router id w VRRP ma
+   osiem bitów, a zero jest zarezerwowane. Wartość spoza zakresu nie jest ryzykiem,
+   tylko plikiem, którego keepalived nie przyjmie — stąd error, nie ostrzeżenie. */
+[["0", "zero"], ["256", "powyżej ośmiu bitów"], ["abc", "nieliczba"]].forEach(function (c) {
+  ok("VRID " + c[0] + " (" + c[1] + ") -> błąd",
+     T.validate(base({ vrid: c[0] })).some(function (x) {
+       return x.id === "KV-08-VRID-RANGE" && x.level === "error";
+     }));
+});
+ok("VRID 1 i 255 są poprawne — granice należą do zakresu",
+   !T.validate(base({ vrid: "1" })).concat(T.validate(base({ vrid: "255" })))
+     .some(function (x) { return x.id === "KV-08-VRID-RANGE"; }));
+
+ok("LINT niesie wpis KV-08 z wagą i potwierdzeniem",
+   T.LINT["KV-08"] && T.LINT["KV-08"].ack === "ack_vrid" &&
+   T.LINT["KV-08"].sev && T.LINT["KV-08"].sev.missing === "warn",
+   JSON.stringify(T.LINT["KV-08"] || null));
+
 console.log("styk kontraktu KV-12a z importem:");
 /* Jedyne miejsce, gdzie dwie zasady się stykają: kontrakt „generator wypisuje klucz
    krytyczny jawnie" kontra „import niczego nie dopisuje". Wygrywa round-trip bajtowy,
@@ -396,6 +450,15 @@ DRIVE.forEach(function (c) {
 });
 T.validate(base({release:"2026.1"}), T.GLOBALS.parse('---\nkolla_base_distro: "rocky"\n'))
  .forEach(function (x) { fired[x.id] = (fired[x.id] || 0) + 1; });
+/* KV-08 ma trzy stany i żaden nie wynika z pozostałych: brak klucza przy imporcie,
+   ten sam brak po potwierdzeniu, oraz wartość spoza zakresu przy tworzeniu od zera.
+   Wpis {vrid:""} w DRIVE nie zapaliłby pierwszego — od zera klucz wychodzi zawsze. */
+var kv08Doc = T.GLOBALS.parse('---\nkolla_base_distro: "rocky"\n');
+var kv08St = T.rawStateFromParsed(kv08Doc);
+T.validate(kv08St, kv08Doc).forEach(function (x) { fired[x.id] = (fired[x.id] || 0) + 1; });
+T.validate(Object.assign({}, kv08St, { ack_vrid: true }), kv08Doc)
+ .forEach(function (x) { fired[x.id] = (fired[x.id] || 0) + 1; });
+T.validate(base({ vrid: "0" })).forEach(function (x) { fired[x.id] = (fired[x.id] || 0) + 1; });
 
 var alien = Object.keys(fired).filter(function (i) { return !T.DIAG_IDS[i]; });
 ok("każda diagnostyka niesie identyfikator z DIAG_IDS", alien.length === 0, alien.join(","));
@@ -465,8 +528,8 @@ ok("reguły KV nie niosą literału wagi — nagłówek LINT mówi prawdę",
    pustą listę nieodróżnialną od czystego wyniku (#68, tools/testlib.js). JEDENAŚCIE,
    nie piętnaście: piętnaście to liczba KODÓW KV w obu narzędziach, a cztery z nich
    (KV-01, KV-07, KV-09 ×2) emituje walidator — ten test czyta tylko generator.html. */
-ok("i wzorzec widzi wszystkie jedenaście miejsc emisji KV w tym pliku",
-   kvLines.filter(function (l) { return /id:\s*"KV-/.test(l); }).length === 11,
+ok("i wzorzec widzi wszystkie trzynaście miejsc emisji KV w tym pliku",
+   kvLines.filter(function (l) { return /id:\s*"KV-/.test(l); }).length === 13,
    "" + kvLines.filter(function (l) { return /id:\s*"KV-/.test(l); }).length);
 
 ok("każda reguła z LINT ma identyfikator z własnym numerem KV",

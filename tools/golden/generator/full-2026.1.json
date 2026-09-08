@@ -2,6 +2,7 @@
   "distro": "ubuntu",
   "release": "2026.1",
   "vip": "172.16.4.200",
+  "vrid": "51",
   "net_if": "ens3",
   "ext_if": "ens4",
   "t_haproxy": true,

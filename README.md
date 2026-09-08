@@ -11,7 +11,8 @@ multinode inventory. Both run entirely in your browser, as single HTML files.
 
 Fill in a form and get a `globals.yml` with comments explaining each decision. It checks
 the file as you build it: release against base image, interfaces against each other,
-internal TLS, endpoint naming, service dependencies, and the Octavia amphora network.
+internal TLS, endpoint naming, service dependencies, the keepalived router id, and the
+Octavia amphora network.
 
 It also reads an existing file. On import the form fills in, unrecognised and deprecated
 keys are reported, and export patches your original instead of rewriting it — comments,
