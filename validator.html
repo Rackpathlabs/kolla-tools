@@ -1455,6 +1455,17 @@ Paste the contents of your multinode file, or drag it here."
          albo czego dotyczy — nie jak go użyć. */
       "g.hint.distro":             "Base distribution of the container images. Must match the images in the registry.",
       "g.hint.release":            "Image tag, for example <code>2025.1</code>. Should match the kolla-ansible version.",
+      /* KV-08 (#173). Klucz keepalived_virtual_router_id: generator wypisuje go jawnie,
+         a przy imporcie zgłasza jego brak — kontrakt jak przy KV-12a. */
+      "g.hint.vrid":               "1–255, unique per environment on a shared L2 domain.",
+      "g.ack.kv08":                "this L2 domain carries exactly one Kolla install",
+      "g.ack.kv08.desc":           "This L2 domain carries exactly one Kolla install and no side-by-side redeploy is planned.",
+      "g.yaml.kv08.comment":       "keepalived_virtual_router_id  - explicit on purpose: the upstream default is 51 in every install; change it when a second Kolla install shares this L2 domain, or the two VIPs will fight for master",
+      "g.rule.kv08.msg":           "<code>keepalived_virtual_router_id</code> is absent, so keepalived runs with the upstream default 51. Import does not add missing keys.",
+      "g.rule.kv08.hint":          "Every Kolla install defaults to 51. A second environment in the same L2 domain runs a second VRRP group with the same VRID; the VIP flaps between them and each HAProxy receives the other's traffic. Set an explicit, unique value, or acknowledge a deliberately isolated segment.",
+      "g.rule.kv08.why":           "VRRP identifies a group by its router id; two groups with one id on one segment are one group as far as the protocol is concerned.",
+      "g.rule.kv08.ack":           "This L2 domain carries exactly one Kolla install and no side-by-side redeploy is planned.",
+      "g.d.vridRange":             "<code>keepalived_virtual_router_id</code>: <code>{value}</code> is outside 1–255; a VRRP router id is an eight-bit field and zero is reserved.",
       "g.hint.vip":                "A free IPv4 address on the management network — not held by any host.",
       "g.hint.netIf":              "Management/API network interface. Needs an IP address on every node.",
       "g.hint.extIf":              "External traffic interface. No IP address, no configuration — Neutron takes it over entirely. Several comma-separated interfaces mean several physical networks.",

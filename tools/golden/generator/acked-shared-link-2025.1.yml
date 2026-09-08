@@ -24,6 +24,8 @@ openstack_release: "2025.1"
 network_interface: "bond0"
 neutron_external_interface: "eth3"
 kolla_internal_vip_address: "10.50.0.250"
+# keepalived_virtual_router_id  - explicit on purpose: the upstream default is 51 in every install; change it when a second Kolla install shares this L2 domain, or the two VIPs will fight for master
+keepalived_virtual_router_id: "51"
 neutron_bridge_name: "br-ex"
 api_interface: "bond0"
 storage_interface: "bond0"

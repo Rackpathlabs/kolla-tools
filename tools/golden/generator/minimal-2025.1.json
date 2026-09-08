@@ -2,6 +2,7 @@
   "distro": "rocky",
   "release": "2025.1",
   "vip": "10.0.0.250",
+  "vrid": "51",
   "net_if": "eth0",
   "ext_if": "eth1",
   "t_haproxy": true,

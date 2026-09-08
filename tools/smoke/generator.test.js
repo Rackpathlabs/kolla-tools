@@ -528,8 +528,8 @@ ok("reguły KV nie niosą literału wagi — nagłówek LINT mówi prawdę",
    pustą listę nieodróżnialną od czystego wyniku (#68, tools/testlib.js). JEDENAŚCIE,
    nie piętnaście: piętnaście to liczba KODÓW KV w obu narzędziach, a cztery z nich
    (KV-01, KV-07, KV-09 ×2) emituje walidator — ten test czyta tylko generator.html. */
-ok("i wzorzec widzi wszystkie jedenaście miejsc emisji KV w tym pliku",
-   kvLines.filter(function (l) { return /id:\s*"KV-/.test(l); }).length === 11,
+ok("i wzorzec widzi wszystkie trzynaście miejsc emisji KV w tym pliku",
+   kvLines.filter(function (l) { return /id:\s*"KV-/.test(l); }).length === 13,
    "" + kvLines.filter(function (l) { return /id:\s*"KV-/.test(l); }).length);
 
 ok("każda reguła z LINT ma identyfikator z własnym numerem KV",

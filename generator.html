@@ -534,6 +534,13 @@ var KOLLA_THEME = (function () {
           </div>
 
           <div class="field">
+            <label for="vrid">keepalived_virtual_router_id</label>
+            <input type="number" id="vrid" min="1" max="255" step="1"
+                   aria-describedby="h-vrid">
+            <p class="hint" id="h-vrid" data-i18n="g.hint.vrid">1–255, unique per environment on a shared L2 domain.</p>
+          </div>
+
+          <div class="field">
             <label for="net_if">network_interface <span class="req" data-i18n="g.field.required">required</span></label>
             <input type="text" id="net_if" spellcheck="false" placeholder="eth0"
                    aria-required="true" aria-describedby="h-net_if" maxlength="15">
@@ -736,6 +743,11 @@ var KOLLA_THEME = (function () {
             <input type="checkbox" id="ack_link">
             <span class="t-txt"><span class="t-name" data-i18n="g.ack.kv05">the shared link has headroom and QoS</span>
               <span class="t-desc" data-i18n="g.toggle.d15">Measured bandwidth headroom and switch-side queueing for storage and migration traffic.</span></span>
+          </label>
+          <label class="toggle" for="ack_vrid">
+            <input type="checkbox" id="ack_vrid">
+            <span class="t-txt"><span class="t-name" data-i18n="g.ack.kv08">this L2 domain carries exactly one Kolla install</span>
+              <span class="t-desc" data-i18n="g.ack.kv08.desc">This L2 domain carries exactly one Kolla install and no side-by-side redeploy is planned.</span></span>
           </label>
           <label class="toggle" for="ack_migration">
             <input type="checkbox" id="ack_migration">
@@ -1014,6 +1026,17 @@ var KOLLA_THEME = (function () {
          albo czego dotyczy — nie jak go użyć. */
       "g.hint.distro":             "Base distribution of the container images. Must match the images in the registry.",
       "g.hint.release":            "Image tag, for example <code>2025.1</code>. Should match the kolla-ansible version.",
+      /* KV-08 (#173). Klucz keepalived_virtual_router_id: generator wypisuje go jawnie,
+         a przy imporcie zgłasza jego brak — kontrakt jak przy KV-12a. */
+      "g.hint.vrid":               "1–255, unique per environment on a shared L2 domain.",
+      "g.ack.kv08":                "this L2 domain carries exactly one Kolla install",
+      "g.ack.kv08.desc":           "This L2 domain carries exactly one Kolla install and no side-by-side redeploy is planned.",
+      "g.yaml.kv08.comment":       "keepalived_virtual_router_id  - explicit on purpose: the upstream default is 51 in every install; change it when a second Kolla install shares this L2 domain, or the two VIPs will fight for master",
+      "g.rule.kv08.msg":           "<code>keepalived_virtual_router_id</code> is absent, so keepalived runs with the upstream default 51. Import does not add missing keys.",
+      "g.rule.kv08.hint":          "Every Kolla install defaults to 51. A second environment in the same L2 domain runs a second VRRP group with the same VRID; the VIP flaps between them and each HAProxy receives the other's traffic. Set an explicit, unique value, or acknowledge a deliberately isolated segment.",
+      "g.rule.kv08.why":           "VRRP identifies a group by its router id; two groups with one id on one segment are one group as far as the protocol is concerned.",
+      "g.rule.kv08.ack":           "This L2 domain carries exactly one Kolla install and no side-by-side redeploy is planned.",
+      "g.d.vridRange":             "<code>keepalived_virtual_router_id</code>: <code>{value}</code> is outside 1–255; a VRRP router id is an eight-bit field and zero is reserved.",
       "g.hint.vip":                "A free IPv4 address on the management network — not held by any host.",
       "g.hint.netIf":              "Management/API network interface. Needs an IP address on every node.",
       "g.hint.extIf":              "External traffic interface. No IP address, no configuration — Neutron takes it over entirely. Several comma-separated interfaces mean several physical networks.",
@@ -2206,6 +2229,15 @@ var KOLLA_THEME = (function () {
       why: T("g.rule.kv06.why"),
       ackNote: T("g.rule.kv06.ackNote")
     },
+    "KV-08": {
+      /* Jedyny wariant to `missing`, bo reguła ma jeden warunek: klucza nie ma w pliku.
+         Wartość spoza zakresu jest osobnym kodem, nie wariantem tego — tamto jest plikiem,
+         którego keepalived nie przyjmie, a to ryzykiem, które on przyjmie i wykona. */
+      ack: "ack_vrid", field: "vrid",
+      sev: { missing: "warn", range: "error" },
+      why: T("g.rule.kv08.why"),
+      ackNote: T("g.rule.kv08.ack")
+    },
     "KV-10": {
       ack: null, field: "ext_if",
       sev: { direct: "error", shared: "warn" },
@@ -2287,6 +2319,8 @@ var KOLLA_THEME = (function () {
     "IFACE-LOOPBACK":               "interfejs pętli zwrotnej w układzie wielowęzłowym",
     "KV-05-STORAGE-API-LINK":       "KV-05: magazyn i pierścień Corosync na jednym łączu",
     "KV-06-MIGRATION-IFACE":        "KV-06: migracja na łączu API",
+    "KV-08-VRID-DEFAULT":           "KV-08: VRID keepalived zostawiony na domyślnym 51",
+    "KV-08-VRID-RANGE":             "KV-08: VRID poza zakresem 1-255 albo nie jest liczbą",
     "KV-10-EXTERNAL-DIRECT":        "KV-10: interfejs zewnętrzny = interfejs zarządzania",
     "KV-10-EXTERNAL-SHARED":        "KV-10: wspólne urządzenie bazowe",
     "KV-13-AMP-PROVIDER-OFF":       "KV-13: amfory na VLAN bez sieci provider",
@@ -2331,6 +2365,12 @@ var KOLLA_THEME = (function () {
     return null;
   }
 
+  /* Waga z tabeli, ale Z POMINIĘCIEM potwierdzenia. Potrzebna dokładnie raz: KV-08 ma
+     dwa warianty o różnej naturze. „missing" to ryzyko kolizji w segmencie i operator
+     może je świadomie przyjąć; „range" to wartość, której keepalived nie przyjmie —
+     tego nie da się potwierdzić, bo potwierdzenie nie zmienia pliku. */
+  function lintSevRaw(id, variant) { return LINT[id].sev[variant]; }
+
   /* Potwierdzenie obniża wagę do informacji — jedno miejsce dla wszystkich reguł. */
   function lintSev(id, variant, s) {
     var r = LINT[id];
@@ -2348,6 +2388,7 @@ var KOLLA_THEME = (function () {
 
   var DEFAULTS = {
     distro: "rocky",
+    vrid: "51",
     release: "2025.1",
     vip: "",
     net_if: "eth0",
@@ -2385,11 +2426,11 @@ var KOLLA_THEME = (function () {
 
   var TEXT_FIELDS = ["distro", "release", "vip", "net_if", "ext_if", "br_name",
     "api_if", "stg_if", "mig_if", "ext_vip", "ext_vip_if", "int_fqdn", "ext_fqdn",
-    "ml2", "storage", "amp_net", "physnet"];
+    "ml2", "storage", "amp_net", "physnet", "vrid"];
   var BOOL_FIELDS = ["t_haproxy", "t_cinder", "t_heat", "t_horizon", "t_barbican",
     "t_octavia", "t_prometheus", "t_grafana", "t_hacluster", "t_masakari",
     "t_provider", "t_tls_int", "t_copy_ca", "t_letsencrypt",
-    "ack_link", "ack_migration", "t_comments"];
+    "ack_link", "ack_migration", "ack_vrid", "t_comments"];
 
   /* Odwzorowanie kluczy globals.yml na pola formularza. Klucz spoza tej mapy nie
      jest błędem — generator go nie interpretuje, ale przy eksporcie zostawia
@@ -2398,6 +2439,7 @@ var KOLLA_THEME = (function () {
     kolla_base_distro: "distro",
     openstack_release: "release",
     kolla_internal_vip_address: "vip",
+    keepalived_virtual_router_id: "vrid",
     network_interface: "net_if",
     neutron_external_interface: "ext_if",
     neutron_bridge_name: "br_name",
@@ -3006,6 +3048,29 @@ var KOLLA_THEME = (function () {
       }
     }
 
+    /* --- KV-08: identyfikator grupy VRRP keepalived --- */
+    /* Dwa różne pytania, więc dwa kody. ZAKRES pytamy zawsze: wartość spoza 1-255 albo
+       nie-liczba to plik, którego keepalived nie przyjmie — błąd niezależny od trybu.
+       BRAK KLUCZA pytamy WYŁĄCZNIE przy imporcie, ten sam kontrakt co KV-12a: przy
+       generowaniu od zera klucz wychodzi zawsze (patrz buildYaml), więc własny plik
+       generatora nie ma jak w tę regułę wpaść. */
+    var vridRaw = String(s.vrid == null ? "" : s.vrid).trim();
+    if (vridRaw !== "") {
+      var vridNum = /^[0-9]+$/.test(vridRaw) ? parseInt(vridRaw, 10) : NaN;
+      if (!(vridNum >= 1 && vridNum <= 255)) {
+        d.push({ id: "KV-08-VRID-RANGE", level: lintSevRaw("KV-08", "range"), field: "vrid",
+          msg: T("g.d.vridRange", { value: esc(vridRaw) })
+        });
+      }
+    }
+    if (doc && !doc.keys.keepalived_virtual_router_id) {
+      d.push({ id: "KV-08-VRID-DEFAULT",
+        level: lintSev("KV-08", "missing", s), field: null,
+        msg: T("g.rule.kv08.msg"),
+        why: T("g.rule.kv08.hint")
+      });
+    }
+
     /* --- VIP --- */
     if (!s.vip) {
       d.push({ id: "VIP-REQUIRED", level: "error", field: "vip", msg: "Field <code>kolla_internal_vip_address</code> is required." });
@@ -3206,6 +3271,10 @@ var KOLLA_THEME = (function () {
     L.push("network_interface: " + fv(s, bad, "net_if"));
     L.push("neutron_external_interface: " + fv(s, bad, "ext_if"));
     L.push("kolla_internal_vip_address: " + fv(s, bad, "vip"));
+    /* Kontrakt KV-08, ta sama zasada co przy KV-12a: klucz krytyczny wychodzi JAWNIE,
+       więc plik wyprodukowany tym narzędziem nie wpada we własną regułę. */
+    if (c) L.push("# " + T("g.yaml.kv08.comment"));
+    L.push("keepalived_virtual_router_id: " + fv(s, bad, "vrid"));
     if (s.br_name) L.push("neutron_bridge_name: " + fv(s, bad, "br_name"));
 
     /* Interfejsy pochodne wypisujemy tylko wtedy, gdy operator je ustawił —

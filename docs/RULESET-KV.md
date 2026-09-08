@@ -253,7 +253,10 @@ clustering would itself be the bug.
 **Class:** A for the missing key; collision detection is B-adjacent (needs
 a second `globals.yml`, which no tool takes). **Mode:** single.
 **Codes:** `KV-08-VRID-DEFAULT` — warning on import when the key is absent;
-*info* after acknowledgment (`ack_vrid`).
+*info* after acknowledgment (`ack_vrid`). `KV-08-VRID-RANGE` — error when the
+value is outside 1–255 or is not a number; the acknowledgment does **not**
+lower it, because it speaks about collision risk on a segment while an
+out-of-range value is a file keepalived will not accept.
 
 **Rule.** `keepalived_virtual_router_id` must be explicit and unique per
 environment whenever more than one Kolla installation can share an L2

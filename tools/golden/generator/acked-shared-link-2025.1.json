@@ -2,6 +2,7 @@
   "distro": "rocky",
   "release": "2025.1",
   "vip": "10.50.0.250",
+  "vrid": "51",
   "ext_vip": "",
   "ext_vip_if": "",
   "net_if": "bond0",
