@@ -5,7 +5,7 @@ lib.installDom();
 var T = lib.loadTool(process.argv[2],
   ["validate", "findRelease", "DISTROS", "KOLLA_MATRIX", "buildYaml", "badFields",
    "DEFAULTS", "baseDev", "physnets", "LINT", "DIAG_IDS",
-   "overrides", "overridesText", "I18N",
+   "overrides", "overridesText", "I18N", "erratumFindings",
    "GLOBALS", "rawStateFromParsed", "changedOverrides", "yamlBool"]);
 
 var R = lib.runner();

@@ -486,7 +486,7 @@ audit, not an outage.
 VIPs differ → error. External VIP equal to internal while the two VIP
 interfaces differ — HAProxy would bind the same address twice → error.
 
-**Not a bug when.** `kolla_enable_letsencrypt: "yes"` — the system trust
+**Not a bug when.** `enable_letsencrypt: "yes"` — the system trust
 store in the images suffices.
 
 ## KV-15 — openstack_release, base distro and image tag against the installed kolla-ansible
