@@ -795,12 +795,13 @@ var KOLLA_THEME = (function () {
       <div class="panel" id="diffpanel" style="margin-top:18px" hidden>
         <h2 data-i18n="g.h.diff">Differences from the initial values</h2>
         <div class="body">
-          <p class="hint" data-i18n="g.view.tableNote">Left is this tool's initial value, right is the value in the file above.</p>
+          <p class="hint" data-i18n="g.view.tableNote">Left is this tool's initial value, then the value in the file above, then what kolla-ansible defaults to. Derived values and maps are shown, not compared.</p>
           <table class="difftab" id="difftab">
             <thead><tr>
               <th data-i18n="g.diff.key">key</th>
               <th data-i18n="g.diff.initial">initial value</th>
               <th data-i18n="g.diff.thisFile">this file</th>
+              <th data-i18n="g.diff.upstream">kolla-ansible default</th>
             </tr></thead>
             <tbody id="diffbody"></tbody>
           </table>
@@ -999,7 +1000,7 @@ var KOLLA_THEME = (function () {
       "g.link.why.duplicate":      "it sets the same setting twice ({what})",
       "g.link.why.value":          "one of the values is not one this form would accept ({what})",
       "g.view.note":           "Showing only the keys whose value differs from this tool's initial values — the state this form starts in. This is <strong>not</strong> a comparison against kolla-ansible defaults: this tool does not know them, so a key missing here may still differ from upstream.",
-      "g.view.tableNote":      "Left is this tool's initial value, right is the value in the file above.",
+      "g.view.tableNote":          "Left is this tool's initial value, then the value in the file above, then what kolla-ansible defaults to. Derived values and maps are shown, not compared.",
       "g.h.diff":              "Differences from the initial values",
       "g.diff.key":            "key",
       "g.diff.initial":        "initial value",
@@ -1049,6 +1050,20 @@ var KOLLA_THEME = (function () {
       /* Pole ruchu Ceph (#185). storage_interface usunięty z kolla-ansible w 15.0.0
          i nigdy nie sterował ruchem Ceph — pole zostaje wejściem projektowym KV-05
          i KV-10, a do pliku idzie komentarzem. */
+      /* Druga linia odniesienia: wartości domyślne kolla-ansible (ADR-005, #81).
+         Zdanie o porównaniu NIESIE TAG — bez niego mówiłoby „defaulty kolla-ansible"
+         bez powiedzenia, czyjej wersji, a asercja w generator.test.js na to nie pozwala. */
+      "g.diff.upstream":           "kolla-ansible default",
+      "g.diff.upstream.derived":   "derived from <code>{expr}</code> — shown, not compared",
+      "g.diff.upstream.map":       "a mapping with defaults in a role — shown, not compared",
+      "g.diff.upstream.unknown":   "no entry in the defaults register",
+      "g.diff.upstream.uncatalogued": "upstream defaults not catalogued for {release}",
+      /* Twierdzenie i zastrzeżenie w DWÓCH wpisach, nie w jednym zdaniu. Asercja
+         w generator.test.js szuka twierdzenia o porównaniu i wyklucza wpisy ze słowem
+         „not" — zdanie łączone byłoby dla niej niewidzialne, czyli zawężenie chroniłoby
+         zbiór pusty. Rozdzielenie jest po to, żeby twierdzenie dało się zobaczyć. */
+      "g.diff.upstream.snippet":   "Compared against kolla-ansible {tag} defaults where the upstream value is a scalar.",
+      "g.diff.upstream.snippet.derived": "Derived values and maps are shown, not compared.",
       "g.field.cephIf":            "Ceph traffic interface",
       "g.role.cephIf":             "the interface you named for Ceph traffic",
       "g.hint.stgIf":              "Host interface carrying Ceph public-network traffic. A design input: Kolla has no key for it, so it goes into the file as a comment and feeds KV-05 and KV-10.",
@@ -3837,9 +3852,17 @@ var KOLLA_THEME = (function () {
   /* Snippet do wklejenia w pull requeście. Nagłówek mówi, czym JEST linia odniesienia
      i czym NIE JEST — bo ten tekst wyjeżdża poza przeglądarkę i nikt nie zobaczy obok
      niego interfejsu, w którym stało wyjaśnienie. */
-  function overridesText(rows) {
-    var L = ["# Keys whose value differs from this tool's initial values.",
-             "# NOT a comparison against kolla-ansible defaults - this tool does not know them."];
+  function overridesText(rows, release) {
+    /* Drugie zdanie zależy od tego, czy dla wybranego wydania W OGÓLE mamy defaulty
+       upstreamu. Gdy mamy — zaprzeczenie byłoby nieprawdą; gdy nie mamy — zostaje, bo
+       nadal jest prawdziwe. Snippet wyjeżdża poza przeglądarkę i musi nieść to zdanie
+       sam, więc nie wolno mu mówić raz tak, raz inaczej niż interfejs obok. */
+    var relDef = release && KOLLA_DEFAULTS.releases[release];
+    var second = relDef && relDef.catalogued
+      ? "# " + T("g.diff.upstream.snippet", { tag: relDef.tag }) + " " +
+        T("g.diff.upstream.snippet.derived")
+      : "# NOT a comparison against kolla-ansible defaults - this tool does not know them.";
+    var L = ["# Keys whose value differs from this tool's initial values.", second];
     var any = false;
     rows.forEach(function (r) {
       if (r.now === null) return;
@@ -3849,6 +3872,33 @@ var KOLLA_THEME = (function () {
     if (!any) L.push("# (nothing differs from the initial values)");
     return L.join("\n");
   }
+
+  /* DRUGA LINIA ODNIESIENIA: wartości domyślne kolla-ansible (ADR-005). Jedno miejsce,
+     w którym rozstrzyga się, CO wolno powiedzieć o kluczu — reszta interfejsu tylko to
+     wyświetla. Zwraca `comparable`, bo różnica ma sens wyłącznie dla skalara: wyrażenie
+     Jinja i mapę POKAZUJEMY, nigdy nie porównujemy, a wydanie nieskatalogowane mówi „nie
+     badano", nie „bez różnicy". */
+  function upstreamCell(key, release) {
+    var rel = KOLLA_DEFAULTS.releases[release];
+    if (!rel || !rel.catalogued) {
+      return { comparable: false, tag: null,
+               text: T("g.diff.upstream.uncatalogued", { release: esc(String(release)) }) };
+    }
+    var e = KOLLA_DEFAULTS.keys[key];
+    if (!e) return { comparable: false, tag: rel.tag, text: T("g.diff.upstream.unknown") };
+    var v = e.values && e.values[release];
+    if (!v) return { comparable: false, tag: rel.tag,
+                     text: T("g.diff.upstream.uncatalogued", { release: esc(String(release)) }) };
+    if (e.kind === "scalar") return { comparable: true, tag: rel.tag, text: v.literal };
+    if (e.kind === "derived")
+      return { comparable: false, tag: rel.tag,
+               text: T("g.diff.upstream.derived", { expr: esc(v.expr) }) };
+    return { comparable: false, tag: rel.tag, text: T("g.diff.upstream.map") };
+  }
+
+  /* Wydanie z formularza, jedno miejsce. Widok różnic i snippet muszą pytać o to samo,
+     inaczej powiedziałyby o dwóch różnych wersjach upstreamu. */
+  function currentRelease() { return el.release ? el.release.value : null; }
 
   function renderDiff(rows) {
     diffBody.innerHTML = rows.map(function (r) {
@@ -3863,8 +3913,14 @@ var KOLLA_THEME = (function () {
          oznaczyć w markupie, gdzie renderuje wartości z cudzego pliku. Bez tej klasy
          kategoria nie miałaby czego rozpoznać, a rozpoznawanie po treści zwalniałoby
          zdania interfejsu. */
+      var up = upstreamCell(r.key, currentRelease());
+      /* Komórka upstreamu dostaje własną klasę z tego samego powodu co `is`:
+         check-dictionary.js zwalnia po klasie, a tu renderujemy wartość z CUDZEGO
+         repozytorium, nie zdanie interfejsu. */
       return '<tr><td class="k">' + esc(r.key) + '</td><td class="was">' + was +
-             '</td><td class="is">' + now + "</td></tr>";
+             '</td><td class="is">' + now +
+             '</td><td class="up' + (up.comparable ? '' : ' note') + '">' + up.text +
+             "</td></tr>";
     }).join("");
   }
 
@@ -4146,13 +4202,13 @@ var KOLLA_THEME = (function () {
      zawsze: snippet nie jest plikiem globals.yml i nazwanie go tak byłoby tą samą
      klasą pomyłki co werdykt przed sprawdzeniem. */
   function renderView() {
-    var text = showDiff ? overridesText(currentRows) : currentYaml;
+    var text = showDiff ? overridesText(currentRows, currentRelease()) : currentYaml;
     renderYaml(text);
     diffPanel.hidden = !showDiff;
     viewNote.hidden = !showDiff;
   }
 
-  function viewText() { return showDiff ? overridesText(currentRows) : currentYaml; }
+  function viewText() { return showDiff ? overridesText(currentRows, currentRelease()) : currentYaml; }
   function exportText() { return currentYaml.replace(/\n?$/, "\n"); }
 
   /* Klucze komunikatów są PARAMETREM, a nie stałą w środku. Link i plik kopiuje ta sama

@@ -1164,3 +1164,9 @@ dicts
 feeds
 main
 replaces
+compared
+derived
+mapping
+maps
+register
+scalar

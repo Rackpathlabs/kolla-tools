@@ -5,7 +5,7 @@ lib.installDom();
 var T = lib.loadTool(process.argv[2],
   ["validate", "findRelease", "DISTROS", "KOLLA_MATRIX", "buildYaml", "badFields",
    "DEFAULTS", "baseDev", "physnets", "LINT", "DIAG_IDS",
-   "overrides", "overridesText", "I18N", "erratumFindings", "KOLLA_DEFAULTS",
+   "overrides", "overridesText", "I18N", "erratumFindings", "KOLLA_DEFAULTS", "upstreamCell",
    "GLOBALS", "rawStateFromParsed", "changedOverrides", "yamlBool"]);
 
 var R = lib.runner();
@@ -738,11 +738,7 @@ ok("rejestr zna 31 kluczy", Object.keys(KD.keys || {}).length === 31,
 ok("i trzy wydania oznaczone jako catalogued",
    Object.keys(KD.releases || {}).filter(function (r) { return KD.releases[r].catalogued; }).length === 3);
 
-/* upstreamCell NIE jest na liście loadTool celowo: gdy funkcja jeszcze nie istnieje,
-   loadTool rzuca i cały zestaw pada, zamiast pokazać, czego brakuje (ten sam błąd
-   złapaliśmy przy erratumFindings). Obecność sprawdza asercja, użycie jest osłonięte.
-
-   upstreamCell(key, release) — jedno miejsce, w którym rozstrzyga się, CO wolno
+/* upstreamCell(key, release) — jedno miejsce, w którym rozstrzyga się, CO wolno
    powiedzieć o danym kluczu: wartość dla skalara, wyrażenie dla derived i map bez
    porównania, a dla wydania nieskatalogowanego zdanie o tym, że nie badano. */
 ok("generator eksportuje upstreamCell", typeof T.upstreamCell === "function",

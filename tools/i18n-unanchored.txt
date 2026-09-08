@@ -34,6 +34,12 @@ g.d.kv05.same  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstani
 g.d.tlsNoCa  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
 g.d.vridRange  a  komunikat diagnostyki; diagnostyki nie ma, dopoki nie powstanie
 g.diff.absent  a  komorka tabeli roznic budowana per wiersz; tabeli nie ma, dopoki nie ma czego porownac
+g.diff.upstream.derived  a  tresc komorki tabeli roznic; komorki nie ma, dopoki nie ma wiersza
+g.diff.upstream.map  a  jw.
+g.diff.upstream.snippet  a  zdanie w snippecie eksportu; snippet nie jest elementem strony
+g.diff.upstream.snippet.derived  a  jw.
+g.diff.upstream.uncatalogued  a  jw.
+g.diff.upstream.unknown  a  jw.
 g.import.notUpstream  a  komunikat erraty importu; erraty nie ma, dopoki nie powstanie
 g.import.notUpstream.hint  a  podpowiedz erraty importu; erraty nie ma, dopoki nie powstanie
 g.import.removedUpstream  a  komunikat erraty importu; erraty nie ma, dopoki nie powstanie

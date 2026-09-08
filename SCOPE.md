@@ -65,15 +65,29 @@ configuration. No file we read contains them. Where a rule depends on such a fac
 offers an acknowledgment that records the operator's decision instead of pretending to
 have verified it.
 
-**Whether a value matches the upstream Kolla-Ansible default.** The generator can show
-only the keys whose value differs from **its own initial values** — the state the form
-starts in. That is not the same question, and the interface says so where it offers it.
-The release matrix carries the upstream default for four keys, of which the generator
-emits one; for the other twenty-four it has no upstream value to compare against.
-Presenting our starting point as "the Kolla default" would be the kind of claim this
-document exists to prevent. A curated per-release defaults table, sourced from
-`group_vars/all.yml` at a specific tag and verifiable rather than hand-written, is filed
-separately; until it exists, a key absent from that view may still differ from upstream.
+**Whether a value matches the upstream Kolla-Ansible default — for eleven of the
+thirty-one keys, and for no release outside three.** The defaults table this paragraph
+used to describe as filed-and-missing now exists: `defaults.js`, one entry per key the
+generator emits, each value carrying the file and line it was read from at a named tag
+(20.5.0, 21.2.0, 22.1.0 — the tags of 2025.1, 2025.2 and 2026.1) and the tree SHA that
+pins it. The diff view shows it as a **second** baseline beside the tool's own initial
+values, never instead of them.
+
+**What it compares and what it only shows, counted rather than characterised.** Of the
+31 entries: **19 are scalar** and are compared; **11 are derived** — the upstream default
+is a Jinja expression over other variables (`{{ kolla_internal_address }}` and its
+relatives), and its value depends on inputs the table does not hold; **1 is a map** —
+`octavia_amp_network`, whose default lives in a role rather than in `group_vars`. Derived
+values and the map are **rendered with their expression and shown, not compared**, because
+a comparison would be against a string that upstream never evaluates to. So the honest
+figure is 19 of 31 compared, not 31.
+
+**And nothing outside those three releases is known.** A release the table does not
+catalogue — 2026.2 today — renders as uncatalogued rather than as agreement. A key with
+no entry for the selected release renders the same way. Both are visible statements of
+ignorance; neither is a green tick. Presenting our starting point as "the Kolla default"
+remains the claim this document exists to prevent, and the table does not license it for
+the twelve keys it cannot compare.
 
 **Per-host heterogeneity in `host_vars`.** The current input model is one inventory file
 and optionally one `globals.yml`. Configuration that varies per host — an
