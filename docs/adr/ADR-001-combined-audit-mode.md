@@ -222,3 +222,49 @@ w `CLAUDE.md`: zdanie „warto pilnować" nie pilnuje.
 
 Działania 5 i 6 dotyczyły treści zgłoszeń i kolejności pisania `SCOPE.md`. Oba
 są dziś nieodtwarzalne z drzewa i nie próbujemy ich zgadywać.
+
+---
+
+## Druga weryfikacja po fakcie (2026-09-08)
+
+Druga rewizja tego samego progu. Sekcja „Weryfikacja po fakcie (2026-08-21)" wyżej
+odnotowała, że ostrzeżenie „`validator.html` rośnie do ~100 KB — warto pilnować"
+minęło niezauważone przy 159 KB. Ten wpis mierzy stan po #56 i podejmuje decyzję,
+zamiast ponowić ostrzeżenie.
+
+**Pomiar, main @ 585be0a, 2026-09-08.** Granice bloków z `tools/blocks-lib.sh`, nie
+z oka:
+
+| | całość | bloki współdzielone | logika własna |
+|---|---:|---:|---:|
+| `generator.html` | 220 605 B | 103 698 B (47,0 %) | 116 907 B (53,0 %) |
+| `validator.html` | 214 957 B | 103 698 B (48,2 %) | 111 259 B (51,8 %) |
+
+Blok jest w obu plikach ten sam co do bajtu — to jest kryterium, którego pilnuje
+`tools/check-blocks.sh`, a nie zbieg okoliczności.
+
+**Martwa waga.** Każde narzędzie niesie cały słownik, także wpisy drugiego:
+
+| | kluczy nieużywanych | bajtów | % pliku |
+|---|---:|---:|---:|
+| `generator.html` | 227 z 362 | 24 031 B | 10,9 % |
+| `validator.html` | 144 z 362 | 14 977 B | 7,0 % |
+
+**Decyzja: bez zmiany architektury.** Zdjęcie martwej wagi wymagałoby porzucenia
+kryterium „blok bajtowo identyczny w każdej kopii" — dzielenia słownika na części
+per narzędzie, czyli zamiany jednego porównania, które `check-blocks.sh` umie
+wykonać, na trzy, które trzeba by wymyślić. Cena: 10 % rozmiaru pliku. Nie warto.
+
+**Następny próg rewizji, tym razem jako liczba, a nie jako „warto pilnować":**
+logika własna przekracza **150 KB** w którymkolwiek pliku (dziś 116,9 / 111,3 KB),
+albo pojawia się **czwarty konsument** bloków współdzielonych (dziś trzy:
+`generator.html`, `validator.html`, `index.html`).
+
+**NIC TEGO PROGU NIE PILNUJE.** To jest ta sama klasa zapisu, którą sekcja wyżej
+nazwała po imieniu — „zdanie »warto pilnować« nie pilnuje" — i nowa liczba nie
+zmienia tego faktu, tylko czyni warunek sprawdzalnym przez człowieka, który go
+kiedyś przeczyta. Strażnik wymagałby czytania rozmiarów w CI i progu, który
+sam jest ratchetem; nie powstał i ten wpis go nie obiecuje.
+
+**Status ADR bez zmian: Accepted.** Rewizja dotyczy konsekwencji rozmiarowej,
+nie decyzji o miejscu trybu łączonego.

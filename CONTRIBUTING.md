@@ -56,6 +56,13 @@ Files listed in [`.github/CODEOWNERS`](.github/CODEOWNERS) need a review from th
 named there. Everything else — the site, meta tags, SEO, images — goes through an
 ordinary pull request. This is a line of responsibility, not a judgement about trust.
 
+`enforce_admins` stays false: a repository administrator can merge past the code-owner
+review this branch protection requires, and nobody else can. The asymmetry is deliberate —
+with a single owner, a pull request opened by that owner has nobody to approve it — and it
+has been used: #177, 61 files all under CODEOWNERS, merged with `--admin`. It also means
+the guarantee reads "an owner reviewed it, unless an administrator chose otherwise", and
+the second half is invisible from the pull request.
+
 ## Screenshots, logs, examples
 
 No home paths, no login names, no hostnames, no addresses from private networks — in
@@ -65,7 +72,9 @@ responsibility stays with whoever attaches one.
 
 Build example inventories and configuration snippets out of addresses nobody owns and
 names that describe nothing but position: the RFC 5737 documentation ranges
-(`192.0.2.0/24`, `198.51.100.0/24`) and host names of the form `host01`, `host02`.
+(`192.0.2.0/24`, `198.51.100.0/24`) and host names of the form `host01`, `host02`. Host
+names that need a dot use the RFC 2606 documentation TLD (`host01.example`); the same rule
+that keeps addresses out of anybody's network keeps names out of anybody's zone.
 
 ## Where the rules live
 
