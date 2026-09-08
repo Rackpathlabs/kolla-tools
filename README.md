@@ -86,7 +86,9 @@ offline, with no install and no dependencies.
 
 These tools also do not check everything, and [SCOPE.md](SCOPE.md) says what they leave
 out, where an answer is an inference rather than a fact, and what an empty result does and
-does not prove. Reading it is worth the three minutes before you trust a clean run.
+does not prove. Reading it is worth the three minutes before you trust a clean run. The
+rules themselves, with what each one will cause when it fires, are in
+[docs/RULESET-KV.md](docs/RULESET-KV.md).
 
 ## Supported releases
 
