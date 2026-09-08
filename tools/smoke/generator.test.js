@@ -436,6 +436,39 @@ ok("pokrycie: " + (Object.keys(T.DIAG_IDS).length - unreached.length) + " z " +
 
 /* Reguły rulesetu KV niosą swój numer z przodu — ta sama rodzina co
    KV-01-FENCING i KV-09-VIP-COLLISION po stronie walidatora. */
+/* ---- nagłówek LINT jest TWIERDZENIEM, nie opisem (#174) ----
+   Nad tabelą LINT stoi zdanie: „W treści reguł niżej nie ma ani jednego literału wagi."
+   To jest sprawdzalne, więc jest sprawdzane — inaczej jest ozdobą, która starzeje się
+   w ciszy jak każdy zapis bez egzekucji.
+
+   ZAKRES: wyłącznie miejsca emisji reguł KV, czyli te, których wagą rządzi LINT. Reszta
+   diagnostyki (IFACE-*, RELEASE-*, DISTRO-*, VIP-*) nosi literały wagi CAŁKIEM LEGALNIE
+   — trzydzieści dziewięć wystąpień `level: "…"` w tym pliku, z czego do reguł KV należy
+   dziś jedno. Zakaz obejmujący cały plik byłby czerwony na trzydziestu ośmiu poprawnych
+   miejscach, a strażnik, który każe naprawiać poprawny kod, zostanie wyłączony.
+
+   SKANUJEMY TEKST ŹRÓDŁA, nie wykonujemy kodu: pytanie brzmi „jak waga jest ZAPISANA",
+   a nie „jaka wyszła" — literał i lintSev() mogą dać tę samą wartość i właśnie o to
+   chodzi, żeby je odróżnić. */
+var kvLines = genHtml.split("\n");
+var kvLiteral = [];
+kvLines.forEach(function (line, i) {
+  if (!/id:\s*"KV-/.test(line)) return;
+  var window = kvLines.slice(i, i + 3).join(" ");
+  var m = /level:\s*"(error|warn|info)"/.exec(window);
+  if (m) kvLiteral.push((/id:\s*"(KV-[A-Z0-9-]+)"/.exec(line) || [])[1] + " -> " + m[1] +
+                        " (generator.html:" + (i + 1) + ")");
+});
+ok("reguły KV nie niosą literału wagi — nagłówek LINT mówi prawdę",
+   kvLiteral.length === 0, kvLiteral.join(", "));
+/* Licznik przed użyciem: wzorzec, który przestałby trafiać w miejsca emisji, dałby
+   pustą listę nieodróżnialną od czystego wyniku (#68, tools/testlib.js). JEDENAŚCIE,
+   nie piętnaście: piętnaście to liczba KODÓW KV w obu narzędziach, a cztery z nich
+   (KV-01, KV-07, KV-09 ×2) emituje walidator — ten test czyta tylko generator.html. */
+ok("i wzorzec widzi wszystkie jedenaście miejsc emisji KV w tym pliku",
+   kvLines.filter(function (l) { return /id:\s*"KV-/.test(l); }).length === 11,
+   "" + kvLines.filter(function (l) { return /id:\s*"KV-/.test(l); }).length);
+
 ok("każda reguła z LINT ma identyfikator z własnym numerem KV",
    Object.keys(T.LINT).filter(function (k) { return /^KV-/.test(k); }).every(function (k) {
      return Object.keys(T.DIAG_IDS).some(function (i) { return i.indexOf(k + "-") === 0; });
