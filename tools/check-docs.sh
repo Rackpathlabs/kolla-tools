@@ -165,6 +165,36 @@ else
   done
 fi
 
+# Rejestr reguł KV. Piąta rodzina, z tego samego powodu co cztery wyżej — ale z jedną
+# różnicą wartą zapisania: treść tego dokumentu pilnuje OSOBNY strażnik,
+# tools/check-ruleset.js, który porównuje go z DIAG_IDS i VALIDATOR_IDS. Tutaj pilnujemy
+# tylko SZKIELETU: że plik istnieje, ma rozmiar, ma nagłówek każdej reguły i prawo
+# severity, oraz że da się do niego trafić z README i ze SCOPE. Dwie różne gwarancje,
+# obie potrzebne: tamten wie, czy sekcja wskazuje istniejący kod, ten wie, czy sekcja
+# w ogóle jeszcze jest.
+if [ ! -f docs/RULESET-KV.md ]; then
+  echo "FAIL docs/RULESET-KV.md: brak pliku"; rc=1
+else
+  n=$(wc -c < docs/RULESET-KV.md)
+  if [ "$n" -lt 8000 ]; then
+    echo "FAIL docs/RULESET-KV.md: $n bajtów — rejestr wygląda na wypatroszony (próg 8000)"; rc=1
+  else
+    echo "OK   docs/RULESET-KV.md ($n B)"
+  fi
+  # Numer 12 osobno jako 12a i 12b: to jedna reguła rozdzielona na dwie o różnej klasie
+  # sprawdzalności, i każda z nich ma własną sekcję.
+  for want in "## KV-01" "## KV-02" "## KV-03" "## KV-04" "## KV-05" \
+              "## KV-06" "## KV-07" "## KV-08" "## KV-09" "## KV-10" \
+              "## KV-11" "## KV-12a" "## KV-12b" "## KV-13" "## KV-14" "## KV-15" \
+              "Severity never exceeds"; do
+    if grep -qF "$want" docs/RULESET-KV.md; then
+      echo "OK   rejestr: $want"
+    else
+      echo "FAIL docs/RULESET-KV.md: brak fragmentu \"$want\""; rc=1
+    fi
+  done
+fi
+
 # README powstał w ramach issue #1, dziś zamkniętego. Warunek „dopóki nie istnieje"
 # zostaje mimo to: plik może zniknąć, a sprawdzenie odnośnika w nieistniejącym pliku
 # ma być POMINIĘTE GŁOŚNO, żeby pominięcie nie wyglądało jak zaliczenie.
@@ -192,6 +222,16 @@ if [ -f README.md ]; then
     echo "OK   README.md odsyła do CONTRIBUTING.md"
   else
     echo "FAIL README.md: brak odnośnika do CONTRIBUTING.md"; rc=1
+  fi
+  if grep -q "RULESET-KV.md" README.md; then
+    echo "OK   README.md odsyła do RULESET-KV.md"
+  else
+    echo "FAIL README.md: brak odnośnika do RULESET-KV.md"; rc=1
+  fi
+  if grep -q "RULESET-KV.md" SCOPE.md; then
+    echo "OK   SCOPE.md odsyła do RULESET-KV.md"
+  else
+    echo "FAIL SCOPE.md: brak odnośnika do RULESET-KV.md"; rc=1
   fi
 else
   echo "--   README.md jeszcze nie istnieje (issue #1) — sprawdzenie odnośnika pominięte"
