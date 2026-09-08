@@ -1,0 +1,14 @@
+{
+  "release": "2026.1",
+  "upgradeTo": null,
+  "globals": false,
+  "findings": [
+    {
+      "code": "DUPLICATE-HOST",
+      "sev": "error",
+      "src": "inventory",
+      "line": 21,
+      "refs": []
+    }
+  ]
+}

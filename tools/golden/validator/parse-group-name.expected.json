@@ -1,0 +1,21 @@
+{
+  "release": "2026.1",
+  "upgradeTo": null,
+  "globals": false,
+  "findings": [
+    {
+      "code": "GROUP-NAME",
+      "sev": "error",
+      "src": "inventory",
+      "line": 46,
+      "refs": []
+    },
+    {
+      "code": "GROUP-CUSTOM",
+      "sev": "info",
+      "src": "inventory",
+      "line": 46,
+      "refs": []
+    }
+  ]
+}

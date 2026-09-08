@@ -169,10 +169,17 @@
         var restTrim = rest.trim();
 
         if (Object.prototype.hasOwnProperty.call(keys, key)) {
+          /* T() jest bezpieczne tutaj, bo to wnętrze parse() — wywoływane później,
+             nie w chwili uruchomienia tego IIFE. W validator.html blok GLOBALS-PARSER
+             jest wklejony PRZED blokiem KOLLA-I18N, więc `var T = I18N.t;` jeszcze nie
+             wykonało się, gdy TA funkcja jest DEFINIOWANA — dopiero gdy jest WOŁANA.
+             Wywołanie T() na poziomie modułu tego IIFE (poza funkcją) rzuciłoby
+             wyjątkiem w validator.html i przeszłoby bez błędu w generator.html, gdzie
+             kolejność bloków jest odwrotna. Nie przenosić stąd. */
           findings.push({
             sev: "warn", code: "KEY-REPEATED", line: lineNo,
-            msg: "Key <code>" + key + "</code> appears again on line " + lineNo + ".",
-            hint: "Ansible takes the last occurrence; the earlier ones are dead."
+            msg: T("p.keyRepeated", { key: key, line: lineNo }),
+            hint: T("p.keyRepeated.hint")
           });
         }
 
@@ -394,6 +401,26 @@
       return out;
     }
 
-    return { parse: parse, emit: emit, review: review, quote: quote };
+    /* Rejestr kodów tego parsera (#56, krok C7) — osobny od VALIDATOR_IDS w
+       validator.html i od DIAG_IDS w generator.html, i to celowo: ten blok jest
+       wklejony bajtowo do DWÓCH narzędzi (patrz nagłówek pliku), więc kod wpisany
+       do tabeli tylko jednego z nich byłby nieobecny w tabeli drugiego, mimo że oba
+       go emitują — parse() i review() żyją tu, w bloku wspólnym, jeden raz.
+
+       GDZIE KAŻDY MOŻE SIĘ ZAPALIĆ, nie „czy jest osiągalny w ogóle" — to drugie
+       rozstrzygają asercje, nie ten komentarz:
+         UNSUPPORTED, KEY-REPEATED   — z parse(), którego wynik czyta generator I
+           walidator (ten drugi nigdy nie woła review(), patrz niżej).
+         KEY-DEPRECATED, KEY-UNKNOWN — z review(). Generator ją woła (patrz
+           `GLOBALS.review(...)` w generator.html); walidator NIGDY — zero trafień
+           na `grep -n "GLOBALS\.review" validator.html`. */
+    var CODES = {
+      "UNSUPPORTED":    "konstrukcja spoza obsługiwanego podzbioru YAML",
+      "KEY-REPEATED":   "ten sam klucz drugi raz na wcięciu zerowym",
+      "KEY-DEPRECATED": "klucz wycofany w wybranym wydaniu",
+      "KEY-UNKNOWN":    "klucz, który nie jest polem formularza generatora"
+    };
+
+    return { parse: parse, emit: emit, review: review, quote: quote, CODES: CODES };
   })();
   /* == GLOBALS-PARSER END == */

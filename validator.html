@@ -967,10 +967,17 @@ Paste the contents of your multinode file, or drag it here."
         var restTrim = rest.trim();
 
         if (Object.prototype.hasOwnProperty.call(keys, key)) {
+          /* T() jest bezpieczne tutaj, bo to wnętrze parse() — wywoływane później,
+             nie w chwili uruchomienia tego IIFE. W validator.html blok GLOBALS-PARSER
+             jest wklejony PRZED blokiem KOLLA-I18N, więc `var T = I18N.t;` jeszcze nie
+             wykonało się, gdy TA funkcja jest DEFINIOWANA — dopiero gdy jest WOŁANA.
+             Wywołanie T() na poziomie modułu tego IIFE (poza funkcją) rzuciłoby
+             wyjątkiem w validator.html i przeszłoby bez błędu w generator.html, gdzie
+             kolejność bloków jest odwrotna. Nie przenosić stąd. */
           findings.push({
             sev: "warn", code: "KEY-REPEATED", line: lineNo,
-            msg: "Key <code>" + key + "</code> appears again on line " + lineNo + ".",
-            hint: "Ansible takes the last occurrence; the earlier ones are dead."
+            msg: T("p.keyRepeated", { key: key, line: lineNo }),
+            hint: T("p.keyRepeated.hint")
           });
         }
 
@@ -1192,7 +1199,27 @@ Paste the contents of your multinode file, or drag it here."
       return out;
     }
 
-    return { parse: parse, emit: emit, review: review, quote: quote };
+    /* Rejestr kodów tego parsera (#56, krok C7) — osobny od VALIDATOR_IDS w
+       validator.html i od DIAG_IDS w generator.html, i to celowo: ten blok jest
+       wklejony bajtowo do DWÓCH narzędzi (patrz nagłówek pliku), więc kod wpisany
+       do tabeli tylko jednego z nich byłby nieobecny w tabeli drugiego, mimo że oba
+       go emitują — parse() i review() żyją tu, w bloku wspólnym, jeden raz.
+
+       GDZIE KAŻDY MOŻE SIĘ ZAPALIĆ, nie „czy jest osiągalny w ogóle" — to drugie
+       rozstrzygają asercje, nie ten komentarz:
+         UNSUPPORTED, KEY-REPEATED   — z parse(), którego wynik czyta generator I
+           walidator (ten drugi nigdy nie woła review(), patrz niżej).
+         KEY-DEPRECATED, KEY-UNKNOWN — z review(). Generator ją woła (patrz
+           `GLOBALS.review(...)` w generator.html); walidator NIGDY — zero trafień
+           na `grep -n "GLOBALS\.review" validator.html`. */
+    var CODES = {
+      "UNSUPPORTED":    "konstrukcja spoza obsługiwanego podzbioru YAML",
+      "KEY-REPEATED":   "ten sam klucz drugi raz na wcięciu zerowym",
+      "KEY-DEPRECATED": "klucz wycofany w wybranym wydaniu",
+      "KEY-UNKNOWN":    "klucz, który nie jest polem formularza generatora"
+    };
+
+    return { parse: parse, emit: emit, review: review, quote: quote, CODES: CODES };
   })();
   /* == GLOBALS-PARSER END == */
 
@@ -1267,6 +1294,14 @@ Paste the contents of your multinode file, or drag it here."
       "nav.theme.light":       "Theme: light",
       "nav.theme.dark":        "Theme: dark",
       "brand.sub":             "OpenStack tooling",
+
+      /* --- parser wspólny (globals-parser.js), prefiks p. ---
+         Ten blok jest wklejony bajtowo w generator.html I W validator.html, więc klucz
+         nazwany dla jednego narzędzia (v. — walidator, g. — generator) byłby kłamstwem
+         w drugim. t. nie nadaje się jako ogólna wspólna przestrzeń — patrz niżej, to
+         toasty. Stąd osobny, neutralny prefiks dla tego, co żyje w obu naraz. */
+      "p.keyRepeated":         "Key <code>{key}</code> appears again on line {line}.",
+      "p.keyRepeated.hint":    "Ansible takes the last occurrence; the earlier ones are dead.",
 
       /* --- hub --- */
       "hub.title":             "Rackpathlabs — Kolla-Ansible tools",
@@ -1521,6 +1556,9 @@ Paste the contents of your multinode file, or drag it here."
       /* --- liczebniki: en dwie formy, pl trzy --- */
       "n.node":                "node|nodes",
       "n.host":                "host|hosts",
+      /* Wersja z wielkiej litery: finding NO-ADDRESS zaczyna nią zdanie, a n.host
+         zostaje małą literą dla użyć w środku zdania, które już na niej polegają. */
+      "n.hostCap":             "Host|Hosts",
       "n.error":               "error|errors",
       "n.warning":             "warning|warnings",
 /* --- walidator: raport tekstowy --- */
@@ -1763,6 +1801,8 @@ Paste the contents of your multinode file, or drag it here."
       "g.d.keyDefault.importNote": "The import does not add missing keys — the export reproduces the file unchanged.",
       "v.f.syntax.hint":           "Expected format: <code>[name]</code>, <code>[name:children]</code> or <code>[name:vars]</code>.",
       "v.f.sectionKind":           "Unknown section type <code>{kind}</code>.",
+      /* Podpowiedź przeniesiona z literału (#56) — sam komunikat już szedł przez T(). */
+      "v.f.sectionKind.hint":      "Ansible recognises only <code>:children</code> and <code>:vars</code>.",
       "v.f.childrenFormat":        "Section <code>[{group}:children]</code> may contain only group names, one per line.",
       "v.f.groupCycle.hint":       "Ansible will refuse an inventory like this when it loads it.",
       "v.f.duplicateVar":          "Variable <code>{key}</code> is set twice in <code>[{group}:vars]</code>.",
@@ -1774,6 +1814,38 @@ Paste the contents of your multinode file, or drag it here."
       "v.f.hostNoKollaGroup":      "Host <code>{host}</code> is in no group that Kolla-Ansible deploys onto.",
       "v.f.hostNoKollaGroup.hint": "Its groups are {groups}, and Kolla-Ansible selects hosts by group name. No service will be deployed on this host.",
       "v.f.hostNoKollaGroup.none": "It belongs to no group beyond the implicit ones. No service will be deployed on this host.",
+
+      /* Kolejna partia przeniesiona z literałów walidatora (#56). Wartości przepisane
+         BAJT W BAJT z kodu — migracja przenosi tekst, nie zmienia go. Kolejność wpisów
+         jak kolejność miejsc w validator.html: GROUP-NAME, SECTION-REPEATED, HOST-VAR,
+         HOST-LIMIT, GROUP-VARS-ONLY, DUPLICATE-CHILD, CHILD-SELF, SHARED-ADDRESS,
+         NO-ADDRESS. CHILD-SELF nie miał wtedy podpowiedzi w kodzie i nie wolno jej było
+         przy migracji wymyślać. Dostał ją później (#56) i nadal nie jest wymyślona: bierze
+         v.f.groupCycle.hint, czyli podpowiedź findingu, od którego jest NIEROZDZIELNY —
+         grupa wciągająca samą siebie JEST cyklem długości jeden, więc zdanie o odmowie
+         Ansible jest o niej prawdziwe. Zobacz tools/golden/validator/group-child-self.ini:
+         GROUP-CYCLE i CHILD-SELF zapalają się tam razem i nie da się ich rozdzielić. */
+      "v.f.groupName":             "The group name <code>{group}</code> contains characters that are not allowed.",
+      "v.f.groupName.hint":        "Letters, digits and <code>_ . -</code> are allowed.",
+      "v.f.sectionRepeated":       "Section <code>[{group}]</code> appears again (first on line {line}). Ansible merges the entries.",
+      "v.f.hostVar":               "Token <code>{token}</code> on host <code>{host}</code> is not a variable assignment.",
+      "v.f.hostVar.hint":          "Host variables are written as <code>key=value</code>, with no spaces around the equals sign.",
+      "v.f.hostLimit":             "The inventory exceeds the {max} host limit this tool handles.",
+      "v.f.hostLimit.hint":        "Later entries were not analysed. Split the file, or check whether the ranges are wider than intended.",
+      "v.f.groupVarsOnly":         "Group <code>{group}</code> has a vars section but neither hosts nor child groups.",
+      "v.f.groupVarsOnly.hint":    "The variables apply to nothing.",
+      "v.f.duplicateChild":        "The child group <code>{child}</code> is listed twice in <code>[{group}:children]</code>.",
+      "v.f.duplicateChild.hint":   "First occurrence: line {line}.",
+      "v.f.childSelf":             "Group <code>{group}</code> lists itself as a child group.",
+      "v.f.sharedAddress":         "The address <code>{addr}</code> serves several hosts on different ports: {hosts}.",
+      "v.f.sharedAddress.hint":    "Correct behind NAT or in a nested lab; make sure that was the intention.",
+      /* NO-ADDRESS: słowo wiodące ("Host"/"Hosts") idzie przez I18N.plural("n.hostCap", …)
+         w kodzie wywołania, nie przez wstawkę tutaj — ten klucz zaczyna się od "without",
+         dokładnie tak jak literał zaczynał się od spacji po słowie wiodącym. Fragment
+         " and N more" ma własny klucz, .more, bo bywa pustym łańcuchem. */
+      "v.f.noAddress":             "without <code>ansible_host</code>: {list}{more}.",
+      "v.f.noAddress.more":        " and {count} more",
+      "v.f.noAddress.hint":        "The name must resolve through DNS or <code>/etc/hosts</code> on the deployment host.",
 
       "v.verdict.errors":      "The inventory contains errors that block deployment.",
       "v.verdict.warnings":    "Syntax is valid — there are warnings to review.",
@@ -1967,6 +2039,124 @@ Paste the contents of your multinode file, or drag it here."
     };
   }
 
+  /* STABILNE IDENTYFIKATORY DIAGNOSTYKI — jedno miejsce, w którym widać wszystkie naraz.
+   *
+   * TA TABELA JEST DOKUMENTACJĄ I KONTRAKTEM NARAZ, dokładnie jak DIAG_IDS po stronie
+   * generatora. Findingi walidatora niosą stabilny `code` od początku — to nie jest
+   * powód, dla którego ta tabela nie była potrzebna wcześniej. Golden pinuje kod, wagę
+   * i linię (patrz nagłówek `tools/golden/validator.golden.js`), ale nic dotąd nie
+   * sprawdzało, że zbiór kodów, które reguły UMIEJĄ wyemitować, pokrywa się ze zbiorem
+   * kodów, które KIEDYKOLWIEK się zapaliły — dokładnie ta sama luka co przy #26 po
+   * stronie generatora, tylko że tam diagnostyka nie zmieniała emisji, a tu golden
+   * pinuje ją wprost i mimo to nikt nie sprawdzał kompletności samego zbioru.
+   *
+   * KONTRAKT JEST DWUKIERUNKOWY. Test dymny sprawdza obie strony: żaden emitowany
+   * identyfikator nie może być spoza tej tabeli (wymyślenie kodu w miejscu wywołania =
+   * czerwony build) i żadna pozycja nie może być nieosiągalna (martwy wpis wygląda na
+   * przemyślany, a nie jest). Drugi kierunek jest ważniejszy: to on łapie regułę bez
+   * scenariusza i wagę, którą dało się bezkarnie odwrócić, bo żaden test jej nie dotykał.
+   *
+   * MIEJSCA EMISJI ZATRZYMUJĄ SWOJE LITERAŁY CELOWO — `add("error", "SYNTAX", …)` i
+   * `code: "RELEASE"` nie zamieniają się w odwołania do tej tabeli. `tools/check-
+   * dictionary.js` buduje własny rejestr kodów CZYTAJĄC ŹRÓDŁO wzorcami dopasowanymi do
+   * miejsc emisji (`add(...)`, `code: "..."`), a piąty, szerszy wzorzec (WERSALIKI-Z-
+   * MYŚLNIKIEM) nie widzi pięciu kodów walidatora bez myślnika — RANGE, RELEASE, SYNTAX,
+   * TYPO, UNSUPPORTED; usunięcie ich literałów z miejsc emisji wypchnęłoby je z tego
+   * rejestru, TYPO i RELEASE i RANGE przestałyby być zwolnione ze zliczania jako tekst
+   * interfejsu (są widoczne w `tools/golden/snapshot/validator--*.txt`), a próg BASELINE
+   * w tamtym strażniku poszedłby w górę z niewłaściwego powodu.
+   *
+   * SIEDEM WARTOŚCI `upgradeCode()` JEST WYPISANYCH WPROST, bo funkcja (patrz wyżej,
+   * `function upgradeCode(dep)`) dla wpisu innego niż `procedure` SKŁADA kod z bazy w
+   * czasie działania: `base + "-RENAMED"`, `base + "-CHANGED"`, `base + "-RETIRED"`,
+   * gdzie `base` to `"UPGRADE-KEY"` albo `"UPGRADE-GROUP"`. Sześć z siedmiu wartości nie
+   * istnieje więc nigdzie w źródle jako CAŁY napis — tylko `"UPGRADE-PROCEDURE"` jest
+   * literałem wprost. Bez wypisania tych sześciu osobno kontrakt w stronę „każdy
+   * emitowany kod jest w tabeli" byłby fałszywie czerwony na każdym przebiegu, który
+   * dotyka aktualizacji.
+   *
+   * Identyfikatory findingów PARSERA WSPÓLNEGO (UNSUPPORTED, KEY-REPEATED,
+   * KEY-DEPRECATED, KEY-UNKNOWN) nie są tu powtórzone w całości celowo — ten sam powód,
+   * co przy DIAG_IDS generatora: ścieżka walidacji globals.yml PRZENOSI `f.code`, a
+   * powtórzenie listy byłoby drugą kopią, która rozjedzie się z globals-parser.js przy
+   * pierwszej nowej regule. Z tej czwórki w tym narzędziu mogą zapalić się WYŁĄCZNIE
+   * UNSUPPORTED i KEY-REPEATED, bo obie siedzą w `GLOBALS.parse()`, którego wynik
+   * walidator faktycznie czyta (patrz `GLOBALS.parse(gtext)` niżej w pliku); KEY-
+   * DEPRECATED i KEY-UNKNOWN siedzą w `GLOBALS.review()`, a walidator tej funkcji nigdy
+   * nie wywołuje — zero trafień na `grep -n "GLOBALS\.review" validator.html`. ŻADEN
+   * z tej czwórki nie ma tu pozycji, także UNSUPPORTED: tabela wylicza kody WŁASNE tego
+   * narzędzia, a ten należy do bloku wspólnego. Od #56/C7 blok wspólny ma WŁASNY rejestr
+   * — `GLOBALS.CODES` w globals-parser.js — a asercja w validator.test.js pyta o sumę
+   * `T.VALIDATOR_IDS` i `T.GLOBALS.CODES`, więc UNSUPPORTED przestał być czerwony bez
+   * potrzeby dopisywania go tutaj.
+   *
+   * Rodzina nazw: SCREAMING-KEBAB, reguły dwuplikowe (KV-01, KV-07, KV-09) z własnym
+   * numerem z przodu i wariantem z tyłu tam, gdzie jedna reguła produkuje różne
+   * findingi — tak jak KV-09-VIP-COLLISION i KV-09-VIP-SUBNET niżej.
+   */
+  var VALIDATOR_IDS = {
+    /* ---- etap parsowania ---- */
+    "SYNTAX":                      "linia inventory nieparsowalna",
+    "GROUP-NAME":                  "nazwa grupy nie przechodzi wzorca Ansible",
+    "SECTION-REPEATED":            "ta sama sekcja zadeklarowana drugi raz",
+    "OUTSIDE-GROUP":               "host albo wpis poza jakąkolwiek sekcją",
+    "GROUP-VAR":                   "wpis w :vars bez formy klucz=wartość albo klucz: wartość",
+    "CHILDREN-FORMAT":             "wpis w :children z dodatkowymi tokenami",
+    "HOST-VAR":                    "zmienna hosta bez formy klucz=wartość",
+    "RANGE":                       "wzorzec zakresu [a:b] odrzucony przez Ansible",
+    "HOST-LIMIT":                  "liczba hostów po rozwinięciu zakresów przekracza limit",
+    /* ---- wydanie ---- */
+    "RELEASE":                     "status wybranego wydania z macierzy",
+    "GROUP-RENAMED":               "grupa przemianowana w wybranym wydaniu",
+    "GROUP-RETIRED":               "grupa wycofana w wybranym wydaniu",
+    /* ---- kworum i topologia ---- */
+    "QUORUM-AIO":                  "AIO z więcej niż jednym hostem w grupie kworum",
+    "QUORUM-COUNT":                "liczebność grupy kworum poza dozwolonym zbiorem",
+    "QUORUM-OVN":                  "liczebność grupy baz OVN poza dozwolonym zbiorem",
+    "OVN-NORTHD":                  "ovn-northd poza hostami bazy OVN",
+    "CEPH-OUTSIDE-KOLLA":          "Ceph zarządzany przez Kollę, a to poza jej zakresem",
+    "QUORUM-CEPH":                 "liczebność klastra Ceph poza dozwolonym zbiorem",
+    /* ---- kolokacja ---- */
+    "COLLOCATION-CONTROL-COMPUTE": "control i compute na tym samym hoście",
+    "COLLOCATION-NETWORK":         "network kolokowany z control albo compute",
+    "GATEWAY-NO-HA":               "brama sieciowa bez nadmiarowości",
+    "COLLOCATION-STORAGE":         "storage kolokowany poza wspieranym układem",
+    /* ---- reguły dwuplikowe (inventory + globals.yml) ---- */
+    "KV-01-FENCING":               "KV-01: HA klastra bez fencingu w globals.yml",
+    "KV-07-CINDER-CLUSTER":        "KV-07: cinder-volume bez trybu klastrowego",
+    "KV-09-VIP-COLLISION":         "KV-09: VIP koliduje z adresem hosta",
+    "KV-09-VIP-SUBNET":            "KV-09: VIP poza podsiecią wywnioskowaną z hostów",
+    /* ---- aktualizacja wydania ---- */
+    "UPGRADE-DIRECTION":           "wydanie docelowe starsze niż obecne",
+    "UPGRADE-GAP":                 "ścieżka przechodzi przez wydanie bez katalogu zmian",
+    "UPGRADE-PROCEDURE":           "wydanie na ścieżce wymaga procedury ręcznej",
+    "UPGRADE-KEY-RENAMED":         "klucz globals.yml przemianowany na ścieżce aktualizacji",
+    "UPGRADE-KEY-CHANGED":         "znaczenie klucza zmienione bez zmiany nazwy",
+    "UPGRADE-KEY-RETIRED":         "klucz wycofany na ścieżce aktualizacji",
+    "UPGRADE-GROUP-RENAMED":       "grupa przemianowana na ścieżce aktualizacji",
+    "UPGRADE-GROUP-CHANGED":       "okoliczności grupy zmienione bez zmiany nazwy",
+    "UPGRADE-GROUP-RETIRED":       "grupa wycofana na ścieżce aktualizacji",
+    /* ---- struktura inventory ---- */
+    "GROUP-CYCLE":                 "cykl w grafie :children",
+    "MISSING-GROUP":               "grupa wymagana przez Kollę nieobecna w pliku",
+    "EMPTY-GROUP":                 "grupa obecna, ale bez żadnego hosta",
+    "GROUP-UNDEFINED":             "grupa użyta jako dziecko, a nigdzie niezadeklarowana",
+    "GROUP-VARS-ONLY":             "grupa ma tylko :vars, bez hostów i bez dzieci",
+    "DUPLICATE-HOST":              "ten sam host zadeklarowany drugi raz w tej samej grupie",
+    "DUPLICATE-CHILD":             "to samo dziecko wciągnięte drugi raz przez :children",
+    "CHILD-SELF":                  "grupa wciąga samą siebie jako dziecko",
+    "DUPLICATE-VAR":               "ta sama zmienna ustawiona drugi raz w tym samym miejscu",
+    "CONFLICTING-VAR":             "ta sama zmienna hosta ma różne wartości w różnych grupach",
+    /* ---- adresy ---- */
+    "DUPLICATE-ENDPOINT":          "dwa hosty dzielą ten sam ansible_host",
+    "SHARED-ADDRESS":              "adres współdzielony między rolami bez tego wymagających",
+    "NO-ADDRESS":                  "host bez żadnego rozpoznanego adresu",
+    /* ---- nazwy i zasięg ---- */
+    "TYPO":                        "nazwa grupy blisko znanej nazwy Kolli (odległość Levenshteina)",
+    "GROUP-CUSTOM":                "grupa spoza słownika Kolli, potraktowana jako własna",
+    "HOST-NO-KOLLA-GROUP":         "host nie należy do żadnej grupy rozpoznawanej przez Kollę"
+  };
+
   function parse(text) {
     var lines = text.split(/\r?\n/);
     var groups = Object.create(null);
@@ -2001,7 +2191,12 @@ Paste the contents of your multinode file, or drag it here."
         }
         var inner = hm[1].trim();
         if (!inner) {
-          add("error", "SYNTAX", T("v.f.syntax.emptyName"), lineNo);
+          /* Ta sama podpowiedź, co przy nagłówku niesparsowalnym wyżej: pusta nazwa
+             to jeden z przypadków, których „Expected format" dotyczy wprost. Gałąź
+             stała bez podpowiedzi, a asercja kryterium #10 tego nie widziała, bo do
+             #56 żaden scenariusz jej nie zapalał. */
+          add("error", "SYNTAX", T("v.f.syntax.emptyName"), lineNo,
+              T("v.f.syntax.hint"));
           current = null;
           continue;
         }
@@ -2010,19 +2205,18 @@ Paste the contents of your multinode file, or drag it here."
         var kind = parts.length > 1 ? parts[1].trim().toLowerCase() : "hosts";
         if (parts.length > 2 || (kind !== "hosts" && kind !== "vars" && kind !== "children")) {
           add("error", "SYNTAX", T("v.f.sectionKind", { kind: esc(inner) }), lineNo,
-              "Ansible recognises only <code>:children</code> and <code>:vars</code>.");
+              T("v.f.sectionKind.hint"));
           current = null;
           continue;
         }
         if (!/^[A-Za-z0-9_.-]+$/.test(gname)) {
-          add("error", "GROUP-NAME", "The group name <code>" + esc(gname) + "</code> contains characters that are not allowed.", lineNo,
-              "Letters, digits and <code>_ . -</code> are allowed.");
+          add("error", "GROUP-NAME", T("v.f.groupName", { group: esc(gname) }), lineNo,
+              T("v.f.groupName.hint"));
         }
         var g = group(gname);
         if (kind === "hosts") {
           if (g.declaredAt.length) {
-            add("info", "SECTION-REPEATED", "Section <code>[" + esc(gname) + "]</code> appears again (first on line " +
-                g.declaredAt[0] + "). Ansible merges the entries.", lineNo);
+            add("info", "SECTION-REPEATED", T("v.f.sectionRepeated", { group: esc(gname), line: g.declaredAt[0] }), lineNo);
           }
           g.declaredAt.push(lineNo);
         } else if (kind === "vars") {
@@ -2081,9 +2275,8 @@ Paste the contents of your multinode file, or drag it here."
         if (eq < 1) {
           if (!varReported) {
             varReported = true;
-            add("error", "HOST-VAR", "Token <code>" + esc(tokens[t]) + "</code> on host <code>" + esc(head) +
-                "</code> is not a variable assignment.", lineNo,
-                "Host variables are written as <code>key=value</code>, with no spaces around the equals sign.");
+            add("error", "HOST-VAR", T("v.f.hostVar", { token: esc(tokens[t]), host: esc(head) }), lineNo,
+                T("v.f.hostVar.hint"));
           }
           continue;
         }
@@ -2103,8 +2296,8 @@ Paste the contents of your multinode file, or drag it here."
       if (names.length > hostBudget) {
         if (!budgetHit) {
           budgetHit = true;
-          add("error", "HOST-LIMIT", "The inventory exceeds the " + MAX_HOSTS + " host limit this tool handles.",
-              lineNo, "Later entries were not analysed. Split the file, or check whether the ranges are wider than intended.");
+          add("error", "HOST-LIMIT", T("v.f.hostLimit", { max: MAX_HOSTS }),
+              lineNo, T("v.f.hostLimit.hint"));
         }
         names = names.slice(0, Math.max(0, hostBudget));
       }
@@ -2889,8 +3082,8 @@ Paste the contents of your multinode file, or drag it here."
         add("error", "GROUP-UNDEFINED", T("v.f.groupUndefined", { group: esc(name) }),
             g.referencedAt[0], T("v.f.groupUndefined.hint", { group: esc(name) }));
       } else if (g.varsAt.length) {
-        add("warn", "GROUP-VARS-ONLY", "Group <code>" + esc(name) + "</code> has a vars section but neither hosts nor child groups.",
-            g.varsAt[0], "The variables apply to nothing.");
+        add("warn", "GROUP-VARS-ONLY", T("v.f.groupVarsOnly", { group: esc(name) }),
+            g.varsAt[0], T("v.f.groupVarsOnly.hint"));
       }
     });
 
@@ -2910,13 +3103,19 @@ Paste the contents of your multinode file, or drag it here."
       var seenChild = Object.create(null);
       g.children.forEach(function (c) {
         if (seenChild[c.name]) {
-          add("warn", "DUPLICATE-CHILD", "The child group <code>" + esc(c.name) + "</code> is listed twice in <code>[" + esc(name) + ":children]</code>.",
-              c.line, "First occurrence: line " + seenChild[c.name] + ".");
+          add("warn", "DUPLICATE-CHILD", T("v.f.duplicateChild", { child: esc(c.name), group: esc(name) }),
+              c.line, T("v.f.duplicateChild.hint", { line: seenChild[c.name] }));
         } else {
           seenChild[c.name] = c.line;
         }
         if (c.name === name) {
-          add("error", "CHILD-SELF", "Group <code>" + esc(name) + "</code> lists itself as a child group.", c.line);
+          /* Podpowiedź POŻYCZONA od GROUP-CYCLE, nie wymyślona: samoodwołanie jest
+             cyklem długości jeden i detectCycle() zgłasza je zawsze razem z tym
+             wpisem, więc „Ansible will refuse an inventory like this" jest zdaniem
+             prawdziwym także o tym findingu. Nierozdzielność pary jest przypięta
+             wzorcem tools/golden/validator/group-child-self.ini. */
+          add("error", "CHILD-SELF", T("v.f.childSelf", { group: esc(name) }), c.line,
+              T("v.f.groupCycle.hint"));
         }
       });
 
@@ -2980,9 +3179,10 @@ Paste the contents of your multinode file, or drag it here."
         return e.indexOf(addr + ":") === 0 && Object.keys(byEndpoint[e]).length > 1;
       });
       if (conflicting) return;   // zgłoszone już jako błąd wyżej
-      add("info", "SHARED-ADDRESS", "The address <code>" + esc(addr) + "</code> serves several hosts on different ports: " +
-          hosts.map(function (n) { return "<code>" + esc(n) + "</code>"; }).join(", ") + ".",
-          byAddress[addr][hosts[1]], "Correct behind NAT or in a nested lab; make sure that was the intention.");
+      add("info", "SHARED-ADDRESS",
+          T("v.f.sharedAddress", { addr: esc(addr),
+              hosts: hosts.map(function (n) { return "<code>" + esc(n) + "</code>"; }).join(", ") }),
+          byAddress[addr][hosts[1]], T("v.f.sharedAddress.hint"));
     });
 
     /* --- hosty bez ansible_host --- */
@@ -2991,11 +3191,15 @@ Paste the contents of your multinode file, or drag it here."
              host !== "localhost" && !/^\d{1,3}(\.\d{1,3}){3}$/.test(host) && host.indexOf(".") === -1;
     });
     if (noAddr.length) {
-      add("info", "NO-ADDRESS", plural(noAddr.length, "Host", "Hosts") + " without <code>ansible_host</code>: " +
-          noAddr.slice(0, 8).map(function (n) { return "<code>" + esc(n) + "</code>"; }).join(", ") +
-          (noAddr.length > 8 ? " and " + (noAddr.length - 8) + " more" : "") + ".",
+      /* Słowo wiodące idzie przez I18N.plural, nie przez wstawkę w v.f.noAddress —
+         patrz komentarz przy tym kluczu w i18n.js. */
+      add("info", "NO-ADDRESS", I18N.plural("n.hostCap", noAddr.length) + " " +
+          T("v.f.noAddress", {
+            list: noAddr.slice(0, 8).map(function (n) { return "<code>" + esc(n) + "</code>"; }).join(", "),
+            more: noAddr.length > 8 ? T("v.f.noAddress.more", { count: noAddr.length - 8 }) : ""
+          }),
           hostIndex[noAddr[0]].defs[0].line,
-          "The name must resolve through DNS or <code>/etc/hosts</code> on the deployment host.");
+          T("v.f.noAddress.hint"));
     }
 
     /* Liczebność grup obsługują quorumRules() i collocationRules(). Wcześniejsze
@@ -3092,9 +3296,23 @@ Paste the contents of your multinode file, or drag it here."
     /* --- kworum i liczebność grup --- */
     quorumRules(groups, effective, hostNames).forEach(function (f) { findings.push(f); });
 
-    if (!hostNames.length && !findings.some(function (f) { return f.sev === "error"; })) {
-      add("error", "NO-HOSTS", "The inventory contains no host.", null);
-    }
+    /* Kod NO-HOSTS („inventory bez żadnego hosta", waga error) usunięty razem z jego pozycją
+       w VALIDATOR_IDS. Nazwa stoi tu wprost i BEZ CUDZYSŁOWU: bez nazwy nikt nie znajdzie tego
+       zapisu, szukając kodu, którego nie ma w tabeli, a cudzysłów wpisałby go z powrotem do
+       rejestru, który check-dictionary.js czyta ze źródła.
+       Warunek brzmiał `!hostNames.length && !findings.some(f => f.sev === "error")`.
+       Przy braku hostów każda z trzech grup w CRITICAL (control, network, compute — patrz stała
+       CRITICAL) jest albo nieobecna, co daje MISSING-GROUP o sev "error", albo zadeklarowana i pusta,
+       co daje EMPTY-GROUP o sev "error". Trzeciego stanu nie ma, bo efektywny zbiór grupy jest
+       niepusty dokładnie wtedy, gdy istnieje host. Więc druga połowa warunku jest fałszywa zawsze,
+       gdy prawdziwa jest pierwsza.
+       Zmierzone 2026-09-07 na sześciu bezhostowych kształtach — pusty plik, same komentarze, pięć
+       wymaganych grup pustych, pięć wymaganych grup wskazujących przez :children na pustą grupę,
+       pięć sekcji tylko z :vars, oraz linia hosta z odrzuconym wzorcem zakresu — każdy z nich dał
+       dokładnie trzy findingi o sev "error" i ani razu NO-HOSTS.
+       Gdyby MISSING-GROUP lub EMPTY-GROUP przestały być "error" dla grup krytycznych, ta gałąź
+       znów byłaby osiągalna — to stwierdzenie o dzisiejszych severity, nie twierdzenie o niemożliwości
+       w ogóle. */
 
     /* Plik był dotąd jeden, więc źródło findingu było niejawne. Od trybu łączonego
        musi być jawne — inaczej numer linii wskazuje nie wiadomo gdzie. */

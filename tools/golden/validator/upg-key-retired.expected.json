@@ -1,0 +1,16 @@
+{
+  "release": "2025.2",
+  "upgradeTo": "2026.1",
+  "globals": true,
+  "findings": [
+    {
+      "code": "UPGRADE-KEY-RETIRED",
+      "sev": "warn",
+      "src": "globals",
+      "line": 2,
+      "refs": [
+        "globals:2"
+      ]
+    }
+  ]
+}

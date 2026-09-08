@@ -87,6 +87,7 @@ appear
 appears
 applied
 applies
+apply
 are
 around
 arp
@@ -123,6 +124,7 @@ becomes
 been
 before
 begin
+behind
 being
 belongs
 below
@@ -177,6 +179,7 @@ change
 changed
 changes
 changing
+characters
 chassis
 check
 checked
@@ -262,6 +265,7 @@ dashboards
 data
 database
 dataplane
+dead
 debian
 decision
 decisions
@@ -300,12 +304,14 @@ differ
 differences
 different
 differs
+digits
 direct
 disable
 discard
 distributed
 distribution
 distro
+dns
 do
 document
 does
@@ -322,6 +328,7 @@ duplicates
 during
 dvr
 each
+earlier
 editing
 edits
 effect
@@ -361,6 +368,7 @@ every
 everything
 exactly
 example
+exceeds
 exclusive
 exemption
 exist
@@ -452,6 +460,7 @@ hacluster
 half
 handed
 handle
+handles
 hang
 hangs
 happen
@@ -514,6 +523,8 @@ installation
 instance
 instances
 instead
+intended
+intention
 interface
 interfaces
 internal
@@ -565,11 +576,13 @@ length
 less
 let
 letsencrypt
+letters
 licence
 lies
 life
 light
 like
+limit
 limits
 line
 link
@@ -634,6 +647,7 @@ mechanisms
 member
 membership
 memory
+merges
 met
 metadata
 metric
@@ -665,11 +679,13 @@ mutually
 name
 named
 names
+nat
 nbctl
 need
 needing
 needs
 neither
+nested
 network
 networking
 networks
@@ -800,6 +816,7 @@ raft
 raises
 random
 range
+ranges
 rarely
 rather
 rbd
@@ -819,6 +836,7 @@ received
 receives
 recognise
 recognised
+recognises
 records
 redeclare
 redfish
@@ -846,6 +864,7 @@ required
 requires
 resembles
 reserve
+resolve
 resource
 resources
 restart
@@ -966,6 +985,7 @@ success
 suffices
 support
 supported
+sure
 surfaces
 survives
 suspends
@@ -1085,6 +1105,7 @@ who
 whole
 whose
 why
+wider
 will
 with
 within

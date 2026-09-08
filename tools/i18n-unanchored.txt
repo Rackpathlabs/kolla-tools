@@ -50,11 +50,14 @@ g.verdict.warn  a  kolejny STAN elementu #status-txt; jego stanem poczatkowym je
 n.computeNode  a  wariant liczebnika: fragment podstawiany w inny napis, wlasnego elementu nie ma nigdy
 n.error  a  wariant liczebnika: fragment podstawiany w inny napis, wlasnego elementu nie ma nigdy
 n.host  a  wariant liczebnika: fragment podstawiany w inny napis, wlasnego elementu nie ma nigdy
+n.hostCap  a  wariant liczebnika: fragment podstawiany w inny napis, wlasnego elementu nie ma nigdy
 n.node  a  wariant liczebnika: fragment podstawiany w inny napis, wlasnego elementu nie ma nigdy
 n.warning  a  wariant liczebnika: fragment podstawiany w inny napis, wlasnego elementu nie ma nigdy
 nav.theme.dark  a  jw.
 nav.theme.light  a  jw.
 nav.theme.system  a  nazwa dostepna przelacznika motywu; wybierana ze STANU w JS (ADR-004)
+p.keyRepeated  a  komunikat findingu KEY-REPEATED (parser wspolny); findingu nie ma, dopoki nie powstanie
+p.keyRepeated.hint  a  podpowiedz findingu KEY-REPEATED (parser wspolny); findingu nie ma, dopoki nie powstanie
 sev.error  a  etykieta wagi findingu; findingu nie ma, dopoki nie powstanie
 sev.info  a  etykieta wagi findingu; findingu nie ma, dopoki nie powstanie
 sev.warn  a  etykieta wagi findingu; findingu nie ma, dopoki nie powstanie
@@ -99,9 +102,12 @@ v.exp.colSev  a  jw.
 v.exp.colWhat  a  jw.
 v.exp.colWhere  a  jw.
 v.exp.tally  a  podsumowanie w eksporcie Markdown; eksportu nie ma, dopoki nie powstanie
+v.f.childSelf  a  komunikat findingu CHILD-SELF; findingu nie ma, dopoki nie powstanie
 v.f.childrenFormat  a  komunikat findingu CHILDREN-FORMAT; findingu nie ma, dopoki nie powstanie
 v.f.conflictingVar  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.f.conflictingVar.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
+v.f.duplicateChild  a  komunikat findingu DUPLICATE-CHILD; findingu nie ma, dopoki nie powstanie
+v.f.duplicateChild.hint  a  podpowiedz findingu DUPLICATE-CHILD; findingu nie ma, dopoki nie powstanie
 v.f.duplicateEndpoint  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.f.duplicateEndpoint.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
 v.f.duplicateHost  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
@@ -112,15 +118,26 @@ v.f.emptyGroup.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstan
 v.f.groupCustom  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.f.groupCustom.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
 v.f.groupCycle.hint  a  podpowiedz findingu GROUP-CYCLE; findingu nie ma, dopoki nie powstanie
+v.f.groupName  a  komunikat findingu GROUP-NAME; findingu nie ma, dopoki nie powstanie
+v.f.groupName.hint  a  podpowiedz findingu GROUP-NAME; findingu nie ma, dopoki nie powstanie
 v.f.groupUndefined  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.f.groupUndefined.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
 v.f.groupVar  a  komunikat findingu GROUP-VAR; findingu nie ma, dopoki nie powstanie
 v.f.groupVar.hint  a  podpowiedz findingu GROUP-VAR; findingu nie ma, dopoki nie powstanie
+v.f.groupVarsOnly  a  komunikat findingu GROUP-VARS-ONLY; findingu nie ma, dopoki nie powstanie
+v.f.groupVarsOnly.hint  a  podpowiedz findingu GROUP-VARS-ONLY; findingu nie ma, dopoki nie powstanie
+v.f.hostLimit  a  komunikat findingu HOST-LIMIT; findingu nie ma, dopoki nie powstanie
+v.f.hostLimit.hint  a  podpowiedz findingu HOST-LIMIT; findingu nie ma, dopoki nie powstanie
 v.f.hostNoKollaGroup  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.f.hostNoKollaGroup.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
 v.f.hostNoKollaGroup.none  a  wariant podpowiedzi findingu wybierany warunkowo; findingu nie ma, dopoki nie powstanie
+v.f.hostVar  a  komunikat findingu HOST-VAR; findingu nie ma, dopoki nie powstanie
+v.f.hostVar.hint  a  podpowiedz findingu HOST-VAR; findingu nie ma, dopoki nie powstanie
 v.f.missingGroup  a  komunikat findingu; findingu nie ma, dopoki nie powstanie
 v.f.missingGroup.hint  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
+v.f.noAddress  a  komunikat findingu NO-ADDRESS; findingu nie ma, dopoki nie powstanie
+v.f.noAddress.hint  a  podpowiedz findingu NO-ADDRESS; findingu nie ma, dopoki nie powstanie
+v.f.noAddress.more  a  fragment komunikatu findingu skladany warunkowo; findingu nie ma, dopoki nie powstanie
 v.f.outsideGroup  a  komunikat findingu OUTSIDE-GROUP; findingu nie ma, dopoki nie powstanie
 v.f.outsideGroup.hint  a  podpowiedz findingu OUTSIDE-GROUP; findingu nie ma, dopoki nie powstanie
 v.f.range  a  komunikat findingu RANGE; findingu nie ma, dopoki nie powstanie
@@ -133,6 +150,10 @@ v.f.requiredEmpty.monitoring  a  podpowiedz findingu; findingu nie ma, dopoki ni
 v.f.requiredEmpty.network  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
 v.f.requiredEmpty.storage  a  podpowiedz findingu; findingu nie ma, dopoki nie powstanie
 v.f.sectionKind  a  komunikat findingu SYNTAX; findingu nie ma, dopoki nie powstanie
+v.f.sectionKind.hint  a  podpowiedz findingu SYNTAX; findingu nie ma, dopoki nie powstanie
+v.f.sectionRepeated  a  komunikat findingu SECTION-REPEATED; findingu nie ma, dopoki nie powstanie
+v.f.sharedAddress  a  komunikat findingu SHARED-ADDRESS; findingu nie ma, dopoki nie powstanie
+v.f.sharedAddress.hint  a  podpowiedz findingu SHARED-ADDRESS; findingu nie ma, dopoki nie powstanie
 v.f.syntax.emptyName  a  komunikat findingu SYNTAX; findingu nie ma, dopoki nie powstanie
 v.f.syntax.hint  a  podpowiedz findingu SYNTAX; findingu nie ma, dopoki nie powstanie
 v.f.syntax.malformed  a  komunikat findingu SYNTAX; findingu nie ma, dopoki nie powstanie

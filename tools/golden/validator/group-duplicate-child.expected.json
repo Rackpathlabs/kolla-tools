@@ -1,0 +1,14 @@
+{
+  "release": "2026.1",
+  "upgradeTo": null,
+  "globals": false,
+  "findings": [
+    {
+      "code": "DUPLICATE-CHILD",
+      "sev": "warn",
+      "src": "inventory",
+      "line": 28,
+      "refs": []
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "ok": true,
+  "keys": [
+    {
+      "key": "kolla_base_distro",
+      "kind": "scalar",
+      "line": 4
+    },
+    {
+      "key": "kolla_base_distro",
+      "kind": "scalar",
+      "line": 4
+    }
+  ],
+  "findings": [
+    {
+      "code": "KEY-REPEATED",
+      "sev": "warn",
+      "line": 4
+    }
+  ],
+  "review": []
+}

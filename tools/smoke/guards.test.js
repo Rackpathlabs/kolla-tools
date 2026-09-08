@@ -1561,4 +1561,61 @@ R.ok("jednowyrazowy placeholder konfiguracji -> zwolniony", !/"br-ex"/.test(attr
 R.ok("jednowyrazowy aria-label -> NIE zwolniony", /Narzędzia/.test(attrs.out), attrs.out.split("\n")[3]);
 R.ok("podpowiedź w placeholderze -> NIE zwolniona", /domyślnie adres VIP/.test(attrs.out));
 
+/* ---- kontrakt GLOBALS.CODES (#56, krok C7) ----
+   Parser wspólny dostał w tym kroku WŁASNY rejestr kodów — `CODES` w
+   globals-parser.js, osobny od VALIDATOR_IDS i DIAG_IDS, bo ten blok jest wklejony
+   bajtowo do DWÓCH narzędzi i kod wypisany tylko w tabeli jednego z nich byłby
+   nieobecny w tabeli drugiego, mimo że oba go emitują (uzasadnienie stoi przy
+   definicji CODES w globals-parser.js). validator.test.js zamyka drugą połowę tego
+   kontraktu — „każdy zapalony kod jest w sumie VALIDATOR_IDS i GLOBALS.CODES" — ta
+   część tutaj pyta odwrotnie: „każdy kod z CODES ma scenariusz, który go faktycznie
+   zapala", a scenariuszami są goldeny roundtrip w tools/golden/roundtrip/.
+
+   Klucze CODES czytamy z TEKSTU źródła, nie przez wykonanie bloku — ten sam powód,
+   co w tools/check-i18n.js: strażnik ma działać także wtedy, gdy blok jest
+   składniowo zepsuty. */
+var gpSrc = require("fs").readFileSync(path.join(root, "globals-parser.js"), "utf8");
+var codesBlock = /var CODES = \{([\s\S]*?)\n\s*\};/.exec(gpSrc);
+var globalsCodes = [];
+if (codesBlock) {
+  /* Klasa znaków jak w tools/check-dictionary.js (`[A-Z][A-Z0-9-]*`), a nie węższa:
+     kod z cyfrą — rodzina KV-NN po stronie obu narzędzi — byłby dla węższego wzorca
+     NIEWIDZIALNY, a wtedy asercja liczności niżej dalej widziałaby cztery pozycje
+     i przepuściła piątą, nigdy niesprawdzoną. Licznik broni tabeli tylko wtedy, gdy
+     wzorzec widzi wszystko, co w niej stoi. */
+  var codeKeyRe = /"([A-Z][A-Z0-9-]*)":/g;
+  var ckm;
+  while ((ckm = codeKeyRe.exec(codesBlock[1])) !== null) globalsCodes.push(ckm[1]);
+}
+
+/* Regexowi, który po cichu trafi w zero, wynik zerowy i wynik poprawny wyglądają
+   identycznie — ten sam kształt awarii co #68 opisany na górze tools/testlib.js:
+   „nic nie znalazłem" nieodróżnialne od „nie ma czym mierzyć". Dlatego LICZBA
+   pozycji jest osobną asercją, przed jakimkolwiek użyciem listy niżej. */
+R.ok("tabela CODES w globals-parser.js ma dokładnie cztery pozycje",
+     globalsCodes.length === 4, globalsCodes.join(","));
+
+var roundtripDir = path.join(root, "tools", "golden", "roundtrip");
+var expectedFiles = require("fs").readdirSync(roundtripDir)
+  .filter(function (f) { return /\.expected\.json$/.test(f); });
+var goldenCodes = Object.create(null);   // code -> lista plików, w których wystąpił
+expectedFiles.forEach(function (f) {
+  var doc = JSON.parse(require("fs").readFileSync(path.join(roundtripDir, f), "utf8"));
+  (doc.findings || []).concat(doc.review || []).forEach(function (item) {
+    (goldenCodes[item.code] || (goldenCodes[item.code] = [])).push(f);
+  });
+});
+
+/* Każdy kod z CODES ma dostać scenariusz, w którym faktycznie się zapala — inaczej
+   rejestr wylicza możliwość, której nikt nie sprawdził. UNSUPPORTED, KEY-DEPRECATED
+   i KEY-UNKNOWN mają swój golden od dawna; KEY-REPEATED nie ma żadnego — ta asercja
+   ma to powiedzieć na czerwono. Golden dla KEY-REPEATED jest osobnym krokiem (C8),
+   celowo: czerwień ma zostać zobaczona, zanim coś ją ucisza. */
+globalsCodes.forEach(function (code) {
+  var files = goldenCodes[code] || [];
+  R.ok("kod " + code + " ma scenariusz w tools/golden/roundtrip/", files.length > 0,
+       "żaden z " + expectedFiles.length + " goldenów roundtrip go nie zawiera: " +
+       expectedFiles.join(", "));
+});
+
 R.finish();
