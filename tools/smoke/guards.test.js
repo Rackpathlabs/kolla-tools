@@ -1703,4 +1703,46 @@ R.ok("i to jedyny powód czerwieni",
      rsC.out.split("\n").filter(function (l) { return /^FAIL/.test(l); }).length === 1,
      rsC.out.split("\n").filter(function (l) { return /^FAIL/.test(l); }).join(" | "));
 
+/* ---- rejestr wartości domyślnych upstreamu (ADR-005) ----
+   Trzy fixtury, każda z jednym defektem: klucz emitowany bez wpisu, wpis bez emisji,
+   wpis bez źródła. Każda niesie własny emitted.txt i defaults.js — na fixturze nie ma
+   narzędzia do uruchomienia, a przedmiotem testu jest KRYTERIUM, nie emisja.
+
+   W TYM KOMICIE defaults.js W KORZENIU NIE ISTNIEJE, więc te asercje są czerwone razem
+   z przebiegiem na repozytorium. Stan oczekiwany. */
+function defaults(variant, keys, entries) {
+  return run("check-defaults.js", ["--root", "tools/fixtures/defaults/" + variant,
+                                   "--expect-keys", String(keys),
+                                   "--expect-entries", String(entries)]);
+}
+var dfA = defaults("missing-key", 3, 2);
+R.ok("klucz emitowany bez wpisu -> czerwone", dfA.code === 1, kod(dfA));
+R.ok("i komunikat nazywa klucz", /openstack_release/.test(dfA.out), dfA.out.split("\n")[0]);
+R.ok("i to jedyny powód czerwieni",
+     dfA.out.split("\n").filter(function (l) { return /^FAIL/.test(l); }).length === 1,
+     dfA.out.split("\n").filter(function (l) { return /^FAIL/.test(l); }).join(" | "));
+
+var dfB = defaults("dead-entry", 2, 3);
+R.ok("wpis bez emisji -> czerwone", dfB.code === 1, kod(dfB));
+R.ok("i komunikat nazywa martwy wpis",
+     /openstack_release/.test(dfB.out) && /martwy/.test(dfB.out), dfB.out.split("\n")[0]);
+R.ok("i to jedyny powód czerwieni",
+     dfB.out.split("\n").filter(function (l) { return /^FAIL/.test(l); }).length === 1,
+     dfB.out.split("\n").filter(function (l) { return /^FAIL/.test(l); }).join(" | "));
+
+var dfC = defaults("no-source", 2, 2);
+R.ok("wpis bez źródła -> czerwone", dfC.code === 1, kod(dfC));
+R.ok("i komunikat nazywa wpis oraz brakujące pole",
+     /neutron_external_interface/.test(dfC.out) && /path/.test(dfC.out), dfC.out.split("\n")[0]);
+R.ok("i to jedyny powód czerwieni",
+     dfC.out.split("\n").filter(function (l) { return /^FAIL/.test(l); }).length === 1,
+     dfC.out.split("\n").filter(function (l) { return /^FAIL/.test(l); }).join(" | "));
+
+/* PRZYNĘTA NA RODZAJ „absent": wpis mówiący „nie wiem, gdzie upstream to definiuje" ma
+   być błędem, a nie danymi. Cztery nazwy kluczy (#182, #184, #185) kosztowały dokładnie
+   ta niewiedza, więc rejestr nie ma prawa jej przyjąć. */
+R.ok("check-defaults.js odrzuca kind \"absent\" jako niewiedzę zapisaną jako dane",
+     /absent/.test(require("fs").readFileSync(
+       path.join(root, "tools", "check-defaults.js"), "utf8")));
+
 R.finish();

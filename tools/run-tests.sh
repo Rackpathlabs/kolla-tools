@@ -104,6 +104,10 @@ echo
 echo "== przełącznik motywu =="
 "$NODE" tools/smoke/theme.test.js .gen.test.tmp.js || rc=1
 
+# Rejestr wartosci domyslnych upstreamu kontra klucze emitowane (ADR-005, #81).
+# Wycinek <script> argumentem: klucze liczy sie URUCHAMIAJAC generator, nie regexpem.
+"$NODE" tools/check-defaults.js .gen.test.tmp.js || rc=1
+
 echo
 echo "== walidator =="
 "$NODE" tools/smoke/validator.test.js .val.test.tmp.js || rc=1
