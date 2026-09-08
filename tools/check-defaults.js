@@ -87,7 +87,10 @@ if (!fs.existsSync(dfPath)) {
   fail("brak defaults.js w " + (rootArg || "korzeniu repo"));
 } else {
   var src = fs.readFileSync(dfPath, "utf8");
-  var keysBlock = /keys:\s*\{([\s\S]*)\n\s*\}\s*;?\s*$/.exec(src);
+  /* NIE kotwiczymy do końca pliku: źródło bloku kończy się znacznikiem KOLLA-DEFAULTS END,
+     a nie klamrą. Pierwsza wersja pasowała do fixtur i nie pasowała do rzeczywistości —
+     fixtura jest wtedy testem swojego własnego kształtu, nie kryterium. */
+  var keysBlock = /keys:\s*\{([\s\S]*)/.exec(src);
   if (!keysBlock) fail("defaults.js: nie znalazłem sekcji keys");
   else {
     /* Ciało wpisu tniemy DO POCZĄTKU NASTĘPNEGO, nie oknem o stałej długości. Okno
