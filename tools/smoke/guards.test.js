@@ -813,8 +813,11 @@ R.ok("i mówi, którego brakuje", /brak odnośnika do CLAUDE\.md/.test(dl.out));
    wlasnie po to i nigdy nie zostala pokazana, jak zapala. */
 var dg = docs("gutted");
 R.ok("dokument skrócony do nagłówków -> czerwone na rozmiarze", dg.code === 1, kod(dg));
+/* 214, nie 157: fixtura gutted dostała w tym commicie odnośnik do rejestru reguł
+   w SCOPE.md, jak wszystkie pozostałe, i urosła o tę linię. Liczba jest zapisem
+   pomiaru, więc jedzie razem ze zmianą, która ją przesunęła. */
 R.ok("i podaje liczbę bajtów oraz próg",
-     /SCOPE\.md: 157 bajtów/.test(dg.out) && /próg 2000/.test(dg.out), dg.out.split("\n")[0]);
+     /SCOPE\.md: 214 bajtów/.test(dg.out) && /próg 2000/.test(dg.out), dg.out.split("\n")[0]);
 
 /* SIODMA FIXTURA: CONTRIBUTING.md z naglowkiem "## Who reviews what" zmienionym na
    inny ("## Review responsibilities"), akapit pod nim — jedyne miejsce ze slowem
@@ -1636,6 +1639,25 @@ globalsCodes.forEach(function (code) {
        "żaden z " + expectedFiles.length + " goldenów roundtrip go nie zawiera: " +
        expectedFiles.join(", "));
 });
+
+/* DZIEWIĄTA FIXTURA DOKUMENTÓW: docs/RULESET-KV.md bez nagłówka „## KV-08", przy
+   wszystkich pozostałych piętnastu na miejscu i przy rozmiarze NAD progiem — 8759 B wobec
+   8000 — żeby brak jednej kotwicy był jej JEDYNYM defektem. Pierwsza wersja miała 7658 B
+   i byłaby czerwona także na rozmiarze, czyli z dwóch powodów naraz.
+
+   Czerwona przed kryterium: check-docs.sh w tym commicie nie zna jeszcze rodziny
+   RULESET-KV.md, więc ten wariant przechodzi na ZIELONO i asercje niżej są czerwone.
+
+   Szkielet rejestru dostaje w tym samym commicie POZOSTAŁE OSIEM wariantów — bez tego
+   wszystkie ośmiu zapaliłyby się przy kryterium na defekcie, który nie jest ich. */
+var dtr = docs("thin-ruleset");
+R.ok("docs/RULESET-KV.md bez nagłówka ## KV-08 -> czerwone", dtr.code === 1, kod(dtr));
+R.ok("i nazywa brakującą kotwicę",
+     dtr.out.indexOf('FAIL docs/RULESET-KV.md: brak fragmentu "## KV-08"') !== -1,
+     dtr.out.split("\n").filter(function (l) { return /RULESET/.test(l); })[0]);
+R.ok("i to jedyny powód czerwieni, nie dwa naraz",
+     dtr.out.split("\n").filter(function (l) { return /^FAIL/.test(l); }).length === 1,
+     dtr.out.split("\n").filter(function (l) { return /^FAIL/.test(l); }).join(" | "));
 
 /* ---- rejestr reguł KV kontra oba rejestry kodów (#174) ----
    Trzy fixtury, każda z JEDNYM defektem, w kształcie thin-contributing/no-asymmetry:
