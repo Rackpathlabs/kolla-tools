@@ -834,6 +834,25 @@ R.ok("i to jest jedyny powód czerwieni, nie dwa naraz",
      dtc.out.split("\n").filter(function (l) { return /^FAIL/.test(l); }).length === 1,
      dtc.out.split("\n").filter(function (l) { return /^FAIL/.test(l); }).join(" | "));
 
+/* ÓSMA FIXTURA: CONTRIBUTING.md z sekcją „## Who reviews what" NIETKNIĘTĄ, ale bez zdania
+   o enforce_admins — czyli bez tej połowy gwarancji przeglądu, której nie widać z pull
+   requesta. Znów CZERWONA FIXTURA PRZED KRYTERIUM: check-docs.sh w tym commicie nie zna
+   jeszcze kotwicy „enforce_admins", więc ten wariant przechodzi na ZIELONO i trzy asercje
+   niżej SĄ CZERWONE — to jest stan oczekiwany, nie usterka.
+
+   Dlaczego osobna fixtura, a nie rozszerzenie thin-contributing: tamta gubi CAŁY nagłówek
+   sekcji, ta ma nagłówek i akapit, a brakuje jej jednego zdania w środku. Gdyby jedna
+   fixtura niosła oba defekty, żadna z dwóch kotwic nie byłaby przypięta osobno i nie dałoby
+   się powiedzieć, która z nich pracuje. */
+var dna = docs("no-asymmetry");
+R.ok("CONTRIBUTING.md bez zdania o enforce_admins -> czerwone", dna.code === 1, kod(dna));
+R.ok("i nazywa brakujący fragment",
+     dna.out.indexOf('FAIL CONTRIBUTING.md: brak fragmentu "enforce_admins"') !== -1,
+     dna.out.split("\n").filter(function (l) { return /CONTRIBUTING/.test(l); })[0]);
+R.ok("i to jest jedyny powód czerwieni, nie dwa naraz",
+     dna.out.split("\n").filter(function (l) { return /^FAIL/.test(l); }).length === 1,
+     dna.out.split("\n").filter(function (l) { return /^FAIL/.test(l); }).join(" | "));
+
 /* ---- spójność bloków współdzielonych ----
    Straznik bez dowodu upadku do #96, a to, czego pilnuje, jest niewidoczne z definicji:
    blok rozjechany ze zrodlem nie daje ZADNEGO objawu na ekranie. Dwie kopie tego samego
