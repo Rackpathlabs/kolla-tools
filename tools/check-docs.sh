@@ -147,10 +147,16 @@ else
   else
     echo "OK   CONTRIBUTING.md ($n B)"
   fi
+  # „enforce_admins" kotwiczy DRUGĄ POŁOWĘ gwarancji przeglądu: bramka wymaga zatwierdzenia
+  # właściciela, ale administrator może ją ominąć, i tego z pull requesta nie widać. Zdanie,
+  # które to mówi, jest jedyną drogą, żeby ktoś się o tym dowiedział przed merge'em — a nie
+  # po nim. Osobna kotwica od „## Who reviews what", bo gubi się osobno: nagłówek może stać
+  # nietknięty, a zdanie zniknąć przy pierwszym skracaniu akapitu (fixtura no-asymmetry).
   for want in "git config --local" \
               "Co-authored-by" \
               "CODEOWNERS" \
-              "## Who reviews what"; do
+              "## Who reviews what" \
+              "enforce_admins"; do
     if grep -qF "$want" CONTRIBUTING.md; then
       echo "OK   przewodnik: $want"
     else
