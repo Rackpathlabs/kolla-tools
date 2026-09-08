@@ -1199,7 +1199,27 @@ Paste the contents of your multinode file, or drag it here."
       return out;
     }
 
-    return { parse: parse, emit: emit, review: review, quote: quote };
+    /* Rejestr kodów tego parsera (#56, krok C7) — osobny od VALIDATOR_IDS w
+       validator.html i od DIAG_IDS w generator.html, i to celowo: ten blok jest
+       wklejony bajtowo do DWÓCH narzędzi (patrz nagłówek pliku), więc kod wpisany
+       do tabeli tylko jednego z nich byłby nieobecny w tabeli drugiego, mimo że oba
+       go emitują — parse() i review() żyją tu, w bloku wspólnym, jeden raz.
+
+       GDZIE KAŻDY MOŻE SIĘ ZAPALIĆ, nie „czy jest osiągalny w ogóle" — to drugie
+       rozstrzygają asercje, nie ten komentarz:
+         UNSUPPORTED, KEY-REPEATED   — z parse(), którego wynik czyta generator I
+           walidator (ten drugi nigdy nie woła review(), patrz niżej).
+         KEY-DEPRECATED, KEY-UNKNOWN — z review(). Generator ją woła (patrz
+           `GLOBALS.review(...)` w generator.html); walidator NIGDY — zero trafień
+           na `grep -n "GLOBALS\.review" validator.html`. */
+    var CODES = {
+      "UNSUPPORTED":    "konstrukcja spoza obsługiwanego podzbioru YAML",
+      "KEY-REPEATED":   "ten sam klucz drugi raz na wcięciu zerowym",
+      "KEY-DEPRECATED": "klucz wycofany w wybranym wydaniu",
+      "KEY-UNKNOWN":    "klucz, który nie jest polem formularza generatora"
+    };
+
+    return { parse: parse, emit: emit, review: review, quote: quote, CODES: CODES };
   })();
   /* == GLOBALS-PARSER END == */
 
@@ -2065,9 +2085,10 @@ Paste the contents of your multinode file, or drag it here."
    * DEPRECATED i KEY-UNKNOWN siedzą w `GLOBALS.review()`, a walidator tej funkcji nigdy
    * nie wywołuje — zero trafień na `grep -n "GLOBALS\.review" validator.html`. ŻADEN
    * z tej czwórki nie ma tu pozycji, także UNSUPPORTED: tabela wylicza kody WŁASNE tego
-   * narzędzia, a ten należy do bloku wspólnego. Kontrakt w stronę „każdy emitowany kod
-   * jest w tabeli" jest więc na UNSUPPORTED CZERWONY i zostaje taki do czasu, aż
-   * globals-parser.js dostanie własny rejestr, a asercja zacznie pytać o sumę obu.
+   * narzędzia, a ten należy do bloku wspólnego. Od #56/C7 blok wspólny ma WŁASNY rejestr
+   * — `GLOBALS.CODES` w globals-parser.js — a asercja w validator.test.js pyta o sumę
+   * `T.VALIDATOR_IDS` i `T.GLOBALS.CODES`, więc UNSUPPORTED przestał być czerwony bez
+   * potrzeby dopisywania go tutaj.
    *
    * Rodzina nazw: SCREAMING-KEBAB, reguły dwuplikowe (KV-01, KV-07, KV-09) z własnym
    * numerem z przodu i wariantem z tyłu tam, gdzie jedna reguła produkuje różne

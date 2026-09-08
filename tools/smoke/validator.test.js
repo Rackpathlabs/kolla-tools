@@ -651,8 +651,18 @@ fsx.readdirSync(gdir).filter(function (f) { return f.slice(-4) === ".ini"; }).fo
   T.analyse(T.parse(text), mrel[1], glob, acks, to);
 });
 
-var alien = Object.keys(FIRED).filter(function (i) { return !T.VALIDATOR_IDS[i]; });
-ok("każdy zapalony kod jest w VALIDATOR_IDS", alien.length === 0, alien.join(","));
+/* Kontrakt jest przeciw SUMIE dwóch rejestrów, nie samemu VALIDATOR_IDS: walidator
+   emituje własne kody, ale FIRED dostaje też to, co przez `glob.findings` przekaże
+   mu parser wspólny — a ten od #56/C7 ma WŁASNY rejestr, `T.GLOBALS.CODES` w
+   globals-parser.js (uzasadnienie „dlaczego osobny" stoi tam, nie tu). Że każdy kod
+   z GLOBALS.CODES ma scenariusz, który go zapala, sprawdza guards.test.js — tu
+   pytamy tylko, czy to, co się faktycznie zapaliło, mieści się w sumie obu tabel. */
+var union = {};
+Object.keys(T.VALIDATOR_IDS).forEach(function (i) { union[i] = true; });
+Object.keys(T.GLOBALS.CODES).forEach(function (i) { union[i] = true; });
+var alien = Object.keys(FIRED).filter(function (i) { return !union[i]; });
+ok("każdy zapalony kod jest w VALIDATOR_IDS albo w GLOBALS.CODES",
+   alien.length === 0, alien.join(","));
 
 /* Pozycje, których scenariusze powyżej i sweep golden nie zapalają — KAŻDA Z POWODEM,
    nie z liczbą. Tabela była pusta od chwili powstania rejestru aż do teraz, celowo: powód
