@@ -2213,7 +2213,12 @@ var KOLLA_THEME = (function () {
     },
     "KV-13": {
       ack: null, field: "physnet",
-      sev: { missing: "error" },
+      /* Dwa warianty, bo reguła ma dwa różne dowody. `missing` to brak zależności, którą
+         plik nazywa wprost — physnet spoza listy albo provider wyłączony. `flat` to sieć
+         amfor typu flat: opiera się o ten sam provider, ale plik nie pokazuje żadnej
+         niezgodności, więc wpis jest przypomnieniem, nie zarzutem. Waga stała w kodzie
+         literałem do #174; tabela jest jedynym miejscem, w którym wolno ją zobaczyć. */
+      sev: { missing: "error", flat: "info" },
       why: T("g.rule.kv13.why")
     },
     "KV-14": {
@@ -2832,7 +2837,7 @@ var KOLLA_THEME = (function () {
       }
     } else if (s.t_octavia && s.amp_net === "flat") {
       d.push({ id: "KV-13-AMP-FLAT",
-        level: "info", field: "amp_net",
+        level: lintSev("KV-13", "flat", s), field: "amp_net",
         msg: T("g.d.ampFlat")
       });
     }

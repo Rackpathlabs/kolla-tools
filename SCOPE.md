@@ -28,7 +28,10 @@ escalation condition.
 The full rule set is not reproduced here, and this is deliberate: a list in a document
 drifts from the code that implements it. Every finding carries a stable code, the
 severity it earned, and the line it refers to. Those are the authority. This document
-covers the boundary, not the contents.
+covers the boundary, not the contents. The contents are in
+[docs/RULESET-KV.md](docs/RULESET-KV.md), which is not a list in a document either: a
+guard checks it against both code registries in every build, so a rule that names a code
+nothing emits, or a code with no rule, turns the build red rather than ageing quietly.
 
 ## What these tools deliberately do not check
 

@@ -21,3 +21,5 @@ Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypeln
 ## The upgrade path mode
 
 Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. Akapit wypelniajacy, zeby plik przekroczyl prog bajtowy straznika. 
+
+Tresc regul: [docs/RULESET-KV.md](docs/RULESET-KV.md).
