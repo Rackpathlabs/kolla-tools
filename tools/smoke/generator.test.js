@@ -5,7 +5,7 @@ lib.installDom();
 var T = lib.loadTool(process.argv[2],
   ["validate", "findRelease", "DISTROS", "KOLLA_MATRIX", "buildYaml", "badFields",
    "DEFAULTS", "baseDev", "physnets", "LINT", "DIAG_IDS",
-   "overrides", "overridesText", "I18N", "erratumFindings",
+   "overrides", "overridesText", "I18N", "erratumFindings", "KOLLA_DEFAULTS",
    "GLOBALS", "rawStateFromParsed", "changedOverrides", "yamlBool"]);
 
 var R = lib.runner();
@@ -718,8 +718,58 @@ var claims = Object.keys(T.I18N.dict).filter(function (k) {
   return /(differs?|different|compared?)[^.]{0,40}(kolla|upstream)[^.]{0,20}default/i.test(v) &&
          !/\bnot\b/i.test(v);
 });
-ok("żaden wpis słownika nie twierdzi porównania z defaultami Kolli/upstreamu",
-   claims.length === 0, claims.join(","));
+/* ZAWĘŻENIE (ADR-005). Twierdzenie o porównaniu z defaultami upstreamu jest teraz
+   DOZWOLONE — ale wyłącznie we wpisie, który niesie wstawkę {tag}. Bez tagu zdanie
+   mówiłoby „porównane z defaultami kolla-ansible" bez powiedzenia CZYJEJ WERSJI, a to
+   jest dokładnie ta klasa twierdzenia, przed którą ta asercja stała od początku: nazwa
+   bez źródła. Reszta słownika ma zakaz jak dotąd. */
+var claimsNoTag = claims.filter(function (k) { return String(T.I18N.dict[k]).indexOf("{tag}") === -1; });
+ok("twierdzenie o defaultach upstreamu tylko we wpisie z {tag}",
+   claimsNoTag.length === 0, claimsNoTag.join(","));
+ok("i taki wpis ISTNIEJE — inaczej zawężenie broniłoby pustego zbioru",
+   claims.length > 0, "wpisow z twierdzeniem: " + claims.length);
+
+/* --- druga linia odniesienia: defaulty upstreamu (ADR-005) --- */
+ok("generator eksportuje KOLLA_DEFAULTS", typeof T.KOLLA_DEFAULTS === "object" && !!T.KOLLA_DEFAULTS,
+   typeof T.KOLLA_DEFAULTS);
+var KD = T.KOLLA_DEFAULTS || { keys: {}, releases: {} };
+ok("rejestr zna 31 kluczy", Object.keys(KD.keys || {}).length === 31,
+   String(Object.keys(KD.keys || {}).length));
+ok("i trzy wydania oznaczone jako catalogued",
+   Object.keys(KD.releases || {}).filter(function (r) { return KD.releases[r].catalogued; }).length === 3);
+
+/* upstreamCell NIE jest na liście loadTool celowo: gdy funkcja jeszcze nie istnieje,
+   loadTool rzuca i cały zestaw pada, zamiast pokazać, czego brakuje (ten sam błąd
+   złapaliśmy przy erratumFindings). Obecność sprawdza asercja, użycie jest osłonięte.
+
+   upstreamCell(key, release) — jedno miejsce, w którym rozstrzyga się, CO wolno
+   powiedzieć o danym kluczu: wartość dla skalara, wyrażenie dla derived i map bez
+   porównania, a dla wydania nieskatalogowanego zdanie o tym, że nie badano. */
+ok("generator eksportuje upstreamCell", typeof T.upstreamCell === "function",
+   typeof T.upstreamCell);
+if (typeof T.upstreamCell === "function") {
+  var c1 = T.upstreamCell("network_interface", "2026.1");
+  ok("skalar: porównywalny, z wartością i tagiem",
+     c1 && c1.comparable === true && /eth0/.test(c1.text) && /22\.1\.0/.test(c1.tag),
+     JSON.stringify(c1));
+  var c2 = T.upstreamCell("api_interface", "2026.1");
+  ok("derived: pokazany, nie porównywany",
+     c2 && c2.comparable === false && /network_interface/.test(c2.text), JSON.stringify(c2));
+  var c3 = T.upstreamCell("octavia_amp_network", "2026.1");
+  ok("map: pokazana, nie porównywana", c3 && c3.comparable === false, JSON.stringify(c3));
+  var c4 = T.upstreamCell("network_interface", "2024.1");
+  ok("wydanie nieskatalogowane: mówi, że nie badano, i nie porównuje",
+     c4 && c4.comparable === false && /2024\.1/.test(c4.text), JSON.stringify(c4));
+}
+
+/* Snippet: zdanie warunkowe. Gdy kolumna upstream jest obecna, zaprzeczenie byłoby
+   nieprawdą; gdy nie ma, zaprzeczenie zostaje. */
+ok("snippet z linią odniesienia upstreamu mówi, co porównał",
+   /Compared against kolla-ansible/.test(T.overridesText(one, "2026.1")),
+   T.overridesText(one, "2026.1").split("\n")[1]);
+ok("i nadal zaprzecza, gdy wydania nie skatalogowano",
+   /NOT a comparison against kolla-ansible defaults/.test(T.overridesText(one, "2024.1")),
+   T.overridesText(one, "2024.1").split("\n")[1]);
 
 /* Wybór widoku nie jest polem konfiguracji — inaczej pojawiłby się we własnym
    zestawieniu jako klucz, którego nie ma w pliku. */
