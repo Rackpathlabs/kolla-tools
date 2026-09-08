@@ -252,9 +252,8 @@ clustering would itself be the bug.
 
 **Class:** A for the missing key; collision detection is B-adjacent (needs
 a second `globals.yml`, which no tool takes). **Mode:** single.
-**Codes:** not implemented: filed as #173; the code will be
-`KV-08-VRID-DEFAULT`, warning, with an acknowledgment for a deliberately
-isolated L2 domain.
+**Codes:** `KV-08-VRID-DEFAULT` — warning on import when the key is absent;
+*info* after acknowledgment (`ack_vrid`).
 
 **Rule.** `keepalived_virtual_router_id` must be explicit and unique per
 environment whenever more than one Kolla installation can share an L2
@@ -269,9 +268,9 @@ shows VRRP advertisements from hosts in neither inventory. The most
 common real-world trigger is a side-by-side redeploy next to a live
 environment.
 
-**What the tool will check.** Key absent → warning. On import a missing
-key is a diagnostic, not an edit (the KV-12a contract). Generating from
-scratch emits the key explicitly with a comment.
+**What the tool checks.** Key absent → warning. On import a missing key is
+a diagnostic, not an edit (the KV-12a contract). Generating from scratch
+emits the key explicitly with a comment.
 
 **What it cannot check.** The same value in two environments' files —
 that needs a second file, and the register says so rather than pretending
@@ -549,8 +548,7 @@ mode is not a convenience, it is where these three live (ADR-001).
 
 | Class | Rules | Count |
 |---|---|---|
-| A — implemented, single file | KV-02, 03, 04, 05, 06, 10, 11, 12a, 13 (core), 14, 15 (matrix) | 11 |
-| A — not implemented | KV-08 (#173) | 1 |
+| A — implemented, single file | KV-02, 03, 04, 05, 06, 08, 10, 11, 12a, 13 (core), 14, 15 (matrix) | 12 |
 | B — implemented, combined mode | KV-01, 07, 09; KV-04 escalation | 3 (+1) |
 | C — documented, not checkable | KV-12b, 15 (installed version); fragments of 01, 06, 07, 09, 13 | 2 (+fragments) |
 
