@@ -222,11 +222,11 @@
            zastępuje słowniki zamiast je scalać (hash_behaviour nie jest ustawione
            nigdzie w drzewie kolla-ansible). Pokazywana, nigdy porównywana. */
         values: {
-          "2025.1": { literal: 'octavia_amp_network:\n  name: lb-mgmt-net\n  shared: false\n  subnet:\n    name: lb-mgmt-subnet\n    cidr: "{{ octavia_amp_network_cidr }}"\n    no_gateway_ip: yes\n    enable_dhcp: yes\n',
+          "2025.1": { literal: 'octavia_amp_network:\n  name: lb-mgmt-net\n  shared: false\n  subnet:\n    name: lb-mgmt-subnet\n    cidr: "{{ octavia_amp_network_cidr }}"\n    no_gateway_ip: yes\n    enable_dhcp: yes',
                      path: "ansible/roles/octavia/defaults/main.yml", line: 370, sha: "6184ccc4e6cf823c67667e917f32af490bcdb5f2" },
-          "2025.2": { literal: 'octavia_amp_network:\n  name: lb-mgmt-net\n  shared: false\n  subnet:\n    name: lb-mgmt-subnet\n    cidr: "{{ octavia_amp_network_cidr }}"\n    no_gateway_ip: yes\n    enable_dhcp: yes\n',
+          "2025.2": { literal: 'octavia_amp_network:\n  name: lb-mgmt-net\n  shared: false\n  subnet:\n    name: lb-mgmt-subnet\n    cidr: "{{ octavia_amp_network_cidr }}"\n    no_gateway_ip: yes\n    enable_dhcp: yes',
                      path: "ansible/roles/octavia/defaults/main.yml", line: 377, sha: "e683e67669806cc0c844a23302733ddf8a123b90" },
-          "2026.1": { literal: 'octavia_amp_network:\n  name: lb-mgmt-net\n  shared: false\n  subnet:\n    name: lb-mgmt-subnet\n    cidr: "{{ octavia_amp_network_cidr }}"\n    no_gateway_ip: true\n    enable_dhcp: true\n',
+          "2026.1": { literal: 'octavia_amp_network:\n  name: lb-mgmt-net\n  shared: false\n  subnet:\n    name: lb-mgmt-subnet\n    cidr: "{{ octavia_amp_network_cidr }}"\n    no_gateway_ip: true\n    enable_dhcp: true',
                      path: "ansible/roles/octavia/defaults/main.yml", line: 377, sha: "1909af8cff27e80d154728170597b4f804e665c1" }
         } },
       "octavia_network_type": { kind: "scalar",

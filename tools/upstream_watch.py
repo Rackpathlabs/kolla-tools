@@ -299,6 +299,297 @@ def compare_kolla(matrix, versions, absent):
     return drifts, compared, skipped
 
 
+# --- wartości domyślne upstreamu (ADR-005, #81) -------------------------------
+
+DEFAULTS_RAW_URL = (
+    "https://raw.githubusercontent.com/openstack/kolla-ansible/{tag}/{path}"
+)
+# SHA obiektu, na który wskazuje ścieżka wydania. Bierzemy je z LISTINGU KATALOGU
+# NADRZĘDNEGO, jednym zapytaniem dla obu przypadków: do 20.x `group_vars/all.yml`
+# jest plikiem (sha bloba), od 21.x `group_vars/all/` jest katalogiem (sha drzewa),
+# a listing rodzica podaje jedno i drugie w tym samym polu. Liczenie sha bloba
+# lokalnie obsłużyłoby tylko połowę wydań, a połowa pokrycia w polu, które ma
+# przypinać źródło, jest gorsza niż brak — bo wygląda tak samo jak całość.
+DEFAULTS_SHA_URL = (
+    "https://api.github.com/repos/openstack/kolla-ansible/contents/{parent}?ref={tag}"
+)
+
+YAML_TRUE = ("true", "yes", "on")
+YAML_FALSE = ("false", "no", "off")
+
+
+def yaml_bool(literal):
+    """Napis -> True/False, albo None, jeśli to nie jest boolean YAML-a.
+
+    Odpowiednik `yamlBool` z generatora i istnieje z tego samego powodu: między
+    21.x a 22.x trzynaście wartości zmieniło pisownię z "no" na false, nie zmieniając
+    znaczenia. Widok różnic ma tego NIE pokazywać jako zmiany; tabela ma pisownię
+    zapisać, bo cytuje źródło. Jedna funkcja obsługuje obie potrzeby, bo obie pytają
+    o to samo: czy te dwa napisy znaczą to samo.
+    """
+    t = str(literal).strip().strip('"').strip("'").lower()
+    if t in YAML_TRUE:
+        return True
+    if t in YAML_FALSE:
+        return False
+    return None
+
+
+def read_default(text, key, kind):
+    """(wartość, numer linii) dla klucza w pliku źródłowym, albo (None, None).
+
+    Klucz na POZIOMIE ZEROWYM wcięcia — `octavia_amp_network` w roli stoi tak samo
+    jak `network_interface` w group_vars, a klucz zagnieżdżony w cudzej mapie nie
+    jest wartością domyślną tego klucza i nie ma prawa się tu dopasować.
+
+    Dla `kind == "map"` wartością jest CAŁY blok: linia klucza i wszystko bardziej
+    wcięte pod nią. Ansible zastępuje słowniki w całości, więc porównywanie samej
+    linii nagłówka nie zauważyłoby zmiany żadnego pola w środku.
+    """
+    lines = text.split("\n")
+    head = re.compile(r"^%s:(.*)$" % re.escape(key))
+    for i, line in enumerate(lines):
+        m = head.match(line)
+        if not m:
+            continue
+        if kind != "map":
+            return m.group(1).strip(), i + 1
+        block = [line.rstrip()]
+        for nxt in lines[i + 1:]:
+            if nxt.strip() and not nxt.startswith((" ", "\t")):
+                break
+            if nxt.strip():
+                block.append(nxt.rstrip())
+        return "\n".join(block), i + 1
+    return None, None
+
+
+def compare_defaults(defaults, sources):
+    """Zwraca (drifts, compared, skipped) dla tabeli wartości domyślnych.
+
+    Czysty komparator: dostaje sparsowany defaults.js i mapę (wydanie, ścieżka) ->
+    treść pliku z otagowanego drzewa. Bez sieci, więc --self-test dowodzi go w ci.yml.
+
+    KAŻDA para (wydanie, klucz) kończy w 'compared' albo w 'skipped' Z POWODEM.
+    Wydanie nieskatalogowane i plik, którego nie udało się pobrać, wyglądają w ciszy
+    identycznie jak zgodność — i to jest ta sama pomyłka, przed którą broni się
+    komparator serii wyżej.
+    """
+    drifts, compared, skipped = [], [], []
+    releases = defaults.get("releases", {})
+
+    for rid, rel in releases.items():
+        if not rel.get("catalogued"):
+            skipped.append((rid, "release not catalogued in defaults.js"))
+
+    for key, entry in sorted(defaults.get("keys", {}).items()):
+        kind = entry.get("kind")
+        for rid, val in sorted((entry.get("values") or {}).items()):
+            rel = releases.get(rid) or {}
+            if not rel.get("catalogued"):
+                continue        # powód zgłoszony raz na wydanie, nie raz na klucz
+            path = val.get("path")
+            text = sources.get((rid, path))
+            if text is None:
+                skipped.append(("%s/%s" % (rid, key), "source not fetched: " + str(path)))
+                continue
+
+            found, line = read_default(text, key, kind)
+            if found is None:
+                drifts.append({"release": rid, "key": key, "field": "presence",
+                               "ours": path, "upstream": None,
+                               "why": "key not found at the recorded path"})
+                compared.append((rid, key))
+                continue
+
+            field = "expr" if kind == "derived" else "literal"
+            ours = val.get(field)
+            if found != ours:
+                d = {"release": rid, "key": key, "field": field,
+                     "ours": ours, "upstream": found}
+                if kind == "scalar":
+                    a, b = yaml_bool(ours), yaml_bool(found)
+                    if a is not None and a == b:
+                        d["sameMeaning"] = True
+                drifts.append(d)
+
+            if line != val.get("line"):
+                drifts.append({"release": rid, "key": key, "field": "line",
+                               "ours": val.get("line"), "upstream": line})
+            compared.append((rid, key))
+
+    return drifts, compared, skipped
+
+
+def fetch_defaults_sources(defaults, fetcher=fetch):
+    """(sources, absent) — treść każdego pliku, do którego tabela się odwołuje.
+
+    Pobieramy PO ŚCIEŻKACH ZAPISANYCH W TABELI, nie po listingu katalogu. Gdy upstream
+    przeniesie klucz do innego pliku, zapisana ścieżka przestaje go zawierać i wychodzi
+    to jako rozjazd 'presence' — czyli jako pytanie do człowieka, a nie jako cicha
+    zgodność, którą dałoby szukanie klucza gdziekolwiek.
+    """
+    sources, absent = {}, []
+    wanted = set()
+    for entry in defaults.get("keys", {}).values():
+        for rid, val in (entry.get("values") or {}).items():
+            rel = defaults.get("releases", {}).get(rid) or {}
+            if rel.get("catalogued") and val.get("path"):
+                wanted.add((rid, val["path"]))
+    for rid, path in sorted(wanted):
+        tag = defaults["releases"][rid]["tag"]
+        try:
+            sources[(rid, path)] = fetcher(DEFAULTS_RAW_URL.format(tag=tag, path=path))
+        except Exception as exc:            # noqa: BLE001 - powód ma trafić do raportu
+            absent.append(("%s/%s" % (rid, path), "fetch failed: %s" % exc))
+    return sources, absent
+
+
+def fetch_defaults_shas(defaults, fetcher=fetch):
+    """(shas, absent) — sha obiektu, na który wskazuje `path` każdego skatalogowanego wydania."""
+    shas, absent = {}, []
+    for rid, rel in sorted(defaults.get("releases", {}).items()):
+        if not rel.get("catalogued"):
+            continue
+        p = str(rel.get("path", "")).rstrip("/")
+        parent, _, name = p.rpartition("/")
+        try:
+            listing = json.loads(fetcher(DEFAULTS_SHA_URL.format(parent=parent, tag=rel["tag"])))
+        except Exception as exc:            # noqa: BLE001
+            absent.append((rid, "listing failed: %s" % exc))
+            continue
+        hit = [e for e in listing if e.get("name") == name]
+        if not hit:
+            absent.append((rid, "%s not present under %s at %s" % (name, parent, rel["tag"])))
+            continue
+        shas[rid] = hit[0].get("sha")
+    return shas, absent
+
+
+def compare_defaults_shas(defaults, shas):
+    """Rozjazd sha wydania: drzewo pod zapisanym tagiem przestało być tym, co przeczytaliśmy."""
+    drifts = []
+    for rid, sha in sorted(shas.items()):
+        ours = defaults["releases"][rid].get("sha")
+        if ours and sha and ours != sha:
+            drifts.append({"release": rid, "key": "-", "field": "sha",
+                           "ours": ours, "upstream": sha})
+    return drifts
+
+
+def _obj_span(text, brace_at):
+    """Zakres obiektu { ... } zaczynającego się na brace_at, z poszanowaniem napisów.
+
+    Liczenie klamer bez patrzenia na cudzysłowy urwałoby się na PIERWSZYM literale mapy:
+    `"{{ octavia_amp_network_cidr }}"` niesie klamry W ŚRODKU napisu. Pierwsza wersja tej
+    łatki używała `[^}]*?` i przez to odkładała wszystko przy tym jednym kluczu — czyli
+    cichła dokładnie na wpisie, dla którego rodzaj "map" powstał.
+    """
+    depth, i, n = 0, brace_at, len(text)
+    while i < n:
+        c = text[i]
+        if c in "'\"":
+            q, i = c, i + 1
+            while i < n and text[i] != q:
+                i += 2 if text[i] == "\\" else 1
+        elif c == "{":
+            depth += 1
+        elif c == "}":
+            depth -= 1
+            if depth == 0:
+                return brace_at, i + 1
+        i += 1
+    return None
+
+
+def apply_defaults(drifts, shas, path="defaults.js"):
+    """Nanosi WYŁĄCZNIE wartości, numery linii i sha źródeł. Nigdy keys{}, kind ani wag.
+
+    Granica jest tu, a nie w recenzji, bo recenzent draftu widzi diff, a nie intencję
+    skryptu. Rozjazd 'presence' — klucza nie ma pod zapisaną ścieżką — zostaje dla
+    człowieka ZAWSZE: odpowiedzią na niego jest nowa ścieżka albo nowy rodzaj wpisu,
+    czyli semantyka, a semantyki ten skrypt nie dotyka.
+
+    Podmiana jest zakresowa, nie globalna: najpierw obiekt jednego klucza, w nim obiekt
+    jednego wydania. Ten sam literał stoi pod trzema wydaniami i podmiana globalna
+    trafiłaby we wszystkie trzy.
+    """
+    text = io_read(path)
+    applied, deferred = [], []
+
+    for d in drifts:
+        if d["field"] == "presence":
+            deferred.append(d)
+            continue
+
+        if d["field"] == "sha":
+            m = re.search(r'"%s":\s*\{' % re.escape(d["release"]), text)
+            span = _obj_span(text, m.end() - 1) if m else None
+            if not span:
+                deferred.append(d); continue
+            body = text[span[0]:span[1]]
+            body2, n = re.subn(r'(sha:\s*")[0-9a-f]+(")',
+                               lambda mm: mm.group(1) + d["upstream"] + mm.group(2),
+                               body, count=1)
+            if not n:
+                deferred.append(d); continue
+            text = text[:span[0]] + body2 + text[span[1]:]
+            applied.append(d)
+            continue
+
+        m = re.search(r'^      "%s":\s*\{' % re.escape(d["key"]), text, re.M)
+        span = _obj_span(text, m.end() - 1) if m else None
+        if not span:
+            deferred.append(d); continue
+        entry = text[span[0]:span[1]]
+
+        mr = re.search(r'"%s":\s*\{' % re.escape(d["release"]), entry)
+        vspan = _obj_span(entry, mr.end() - 1) if mr else None
+        if not vspan:
+            deferred.append(d); continue
+        value = entry[vspan[0]:vspan[1]]
+
+        if d["field"] == "line":
+            value2, n = re.subn(r'(line:\s*)\d+',
+                                lambda mm: mm.group(1) + str(d["upstream"]), value, count=1)
+        else:
+            value2, n = re.subn(
+                r"(%s:\s*)('(?:[^'\\]|\\.)*'|\"(?:[^\"\\]|\\.)*\")" % d["field"],
+                lambda mm: mm.group(1) + js_literal(d["upstream"]), value, count=1)
+        if not n:
+            deferred.append(d); continue
+
+        entry = entry[:vspan[0]] + value2 + entry[vspan[1]:]
+        text = text[:span[0]] + entry + text[span[1]:]
+        applied.append(d)
+
+    if applied:
+        io_write(path, text)
+    return applied, deferred
+
+
+def js_literal(value):
+    """Napis -> literał JavaScriptu w apostrofach.
+
+    W apostrofach, bo wartości upstreamu SAME zawierają cudzysłowy — `"eth0"` jest
+    tam z cudzysłowami i pisownia jest informacją. Nowa linia w bloku mapy idzie
+    jako \n, tak jak stoi w pliku napisanym ręcznie.
+    """
+    return "'" + (str(value).replace("\\", "\\\\").replace("'", "\\'")
+                  .replace("\n", "\\n")) + "'"
+
+
+def load_defaults(path="defaults.js"):
+    """defaults.js to czysty literał danych — wyciągamy go Node'em, jak matrix.js."""
+    node = os.environ.get("NODE", "node")
+    out = subprocess.run(
+        [node, "-e",
+         "const fs=require('fs');eval(fs.readFileSync(process.argv[1],'utf8'));"
+         "process.stdout.write(JSON.stringify(KOLLA_DEFAULTS))", path],
+        capture_output=True, text=True, check=True)
+    return json.loads(out.stdout)
+
+
 def apply_patch(drifts, path="matrix.js", today=None):
     """Nanosi WYŁĄCZNIE rozjazdy klasy 1: statusy i daty istniejących serii.
 
@@ -487,11 +778,24 @@ def run(as_json=False):
     kdrifts, kcompared, kskipped = compare_kolla(matrix, versions, absent)
     drifts = drifts + kdrifts
 
+    # Wartości domyślne upstreamu (ADR-005). Osobna rubryka i osobne liczby, bo
+    # porównuje CO INNEGO — nie kalendarz wydań, tylko treść cudzych plików.
+    defaults = load_defaults()
+    dsources, dabsent = fetch_defaults_sources(defaults)
+    ddrifts, dcompared, dskipped = compare_defaults(defaults, dsources)
+    dskipped = dskipped + dabsent
+    dshas, shaabsent = fetch_defaults_shas(defaults)
+    ddrifts = ddrifts + compare_defaults_shas(defaults, dshas)
+    dskipped = dskipped + shaabsent
+
     total = len(matrix["releases"])
     if as_json:
         print(json.dumps({"drifts": drifts, "compared": compared,
                           "skipped": skipped, "unresolved": unresolved,
-                          "kollaCompared": kcompared, "kollaSkipped": kskipped}, indent=2))
+                          "kollaCompared": kcompared, "kollaSkipped": kskipped,
+                          "defaultsDrifts": ddrifts,
+                          "defaultsCompared": [list(x) for x in dcompared],
+                          "defaultsSkipped": dskipped}, indent=2))
     else:
         print("matrix.js updated: %s" % matrix.get("updated"))
         print("series in matrix: %d   compared: %d   skipped: %d"
@@ -502,11 +806,19 @@ def run(as_json=False):
               % (len(kcompared), len(kskipped)))
         for rid, why in kskipped:
             print("  skipped %-8s %s" % (rid, why))
-        if not drifts:
+        print("upstream defaults    compared: %d   skipped: %d"
+              % (len(dcompared), len(dskipped)))
+        for rid, why in dskipped:
+            print("  skipped %-16s %s" % (rid, why))
+        if not drifts and not ddrifts:
             print("OK   no drift against upstream")
         for d in drifts:
             print("DRIFT %-8s %-10s ours=%s upstream=%s"
                   % (d["series"], d["field"], d["ours"], d["upstream"]))
+        for d in ddrifts:
+            print("DRIFT %-8s %-34s %-8s ours=%s upstream=%s%s"
+                  % (d["release"], d["key"], d["field"], d["ours"], d["upstream"],
+                     "   (spelling only, same meaning)" if d.get("sameMeaning") else ""))
 
     if unresolved:
         for rid, why in unresolved:
@@ -520,7 +832,7 @@ def run(as_json=False):
               % (total - len(compared) - len(skipped), total), file=sys.stderr)
         return 2
 
-    return 1 if drifts else 0
+    return 1 if (drifts or ddrifts) else 0
 
 
 def self_test():
@@ -638,6 +950,174 @@ def self_test():
         failures.append("the scanner keywords do not follow the matrix: missing %s"
                         % sorted(want - set(kw)))
 
+    # --- WARTOŚCI DOMYŚLNE UPSTREAMU (ADR-005, #81) ---------------------------
+    #
+    # Tabela w defaults.js jest MIGAWKĄ cudzego repozytorium. Migawka, której nikt
+    # nie odświeża, po jednym wydaniu upstreamu twierdzi coś nieprawdziwego o pliku,
+    # którego nie czytała — i twierdzi to tym samym zdaniem co wtedy, gdy była
+    # prawdziwa. Ta klasa jest jedyną rzeczą stojącą między tabelą a taką migawką.
+    #
+    # Komparator jest CZYSTY: dostaje sparsowany defaults.js i teksty plików
+    # z otagowanego drzewa, więc cały ten dowód działa bez sieci, w ci.yml.
+    dsrc_all = ("---\n"
+                "network_interface: \"eth0\"\n"
+                "api_interface: \"{{ network_interface }}\"\n"
+                "enable_octavia: \"no\"\n")
+    dsrc_role = ("---\n"
+                 "octavia_amp_network:\n"
+                 "  name: lb-mgmt-net\n"
+                 "  subnet:\n"
+                 "    name: lb-mgmt-subnet\n")
+    P_ALL, P_ROLE = "ansible/group_vars/all/common.yml", "ansible/roles/octavia/defaults/main.yml"
+    defaults_honest = {
+        "releases": {"2026.1": {"tag": "22.1.0", "catalogued": True,
+                                "path": "ansible/group_vars/all/", "sha": "6d3ced62"},
+                     "2026.2": {"catalogued": False}},
+        "keys": {
+            "network_interface": {"kind": "scalar", "values": {
+                "2026.1": {"literal": '"eth0"', "path": P_ALL, "line": 2}}},
+            "api_interface": {"kind": "derived", "values": {
+                "2026.1": {"expr": '"{{ network_interface }}"', "path": P_ALL, "line": 3}}},
+            "enable_octavia": {"kind": "scalar", "values": {
+                "2026.1": {"literal": '"no"', "path": P_ALL, "line": 4}}},
+            "octavia_amp_network": {"kind": "map", "values": {
+                "2026.1": {"literal": "octavia_amp_network:\n  name: lb-mgmt-net\n"
+                                      "  subnet:\n    name: lb-mgmt-subnet",
+                           "path": P_ROLE, "line": 2}}}}}
+    sources_honest = {("2026.1", P_ALL): dsrc_all, ("2026.1", P_ROLE): dsrc_role}
+
+    dd, dcomp, dskip = compare_defaults(defaults_honest, sources_honest)
+    print("  %-22s %s" % ("defaults clean", "silent" if not dd else "FALSE ALARM"))
+    if dd:
+        failures.append("the defaults table reported drift against data that agrees: %r" % dd)
+    if len(dcomp) != 4:
+        failures.append("expected 4 compared default values, got %d" % len(dcomp))
+    # Wydanie nieskatalogowane MUSI trafić do pominiętych z powodem. Cisza na nim
+    # czyta się jak zgodność, a to jest dokładnie ta pomyłka, którą flaga
+    # `catalogued` ma nazwać zamiast ukryć.
+    ok = any(r == "2026.2" for r, _w in dskip)
+    print("  %-22s %s" % ("uncatalogued named", "named" if ok else "SILENT"))
+    if not ok:
+        failures.append("an uncatalogued release was passed over without a reason")
+
+    dcases = [
+        ("default value moved", {("2026.1", P_ALL): dsrc_all.replace('"eth0"', '"eth1"')},
+         "network_interface", "literal"),
+        ("default line moved", {("2026.1", P_ALL): "# added a line\n" + dsrc_all},
+         "network_interface", "line"),
+        ("key left the file", {("2026.1", P_ALL): dsrc_all.replace("network_interface: \"eth0\"\n", "")},
+         "network_interface", "presence"),
+        ("derived expr changed", {("2026.1", P_ALL): dsrc_all.replace("{{ network_interface }}",
+                                                                     "{{ network_interface | default('eth0') }}")},
+         "api_interface", "expr"),
+        ("map body changed", {("2026.1", P_ROLE): dsrc_role.replace("lb-mgmt-net", "lb-mgmt-net2")},
+         "octavia_amp_network", "literal"),
+    ]
+    for label, patch, key, field in dcases:
+        src = dict(sources_honest); src.update(patch)
+        dd, _c, _s = compare_defaults(defaults_honest, src)
+        hit = [x for x in dd if x["key"] == key and x["field"] == field]
+        print("  %-22s %s" % (label, "detected" if hit else "NOT DETECTED"))
+        if not hit:
+            failures.append("defaults drift not detected: %s (%s/%s)" % (label, key, field))
+
+    # PISOWNIA BOOLEANA. Między 21.x a 22.x trzynaście wartości zmieniło "no" na
+    # false bez zmiany znaczenia. Dla WIDOKU RÓŻNIC to nie jest zmiana i ADR-005
+    # każe porównywać przez yamlBool. Dla TABELI to jest zmiana, bo tabela cytuje
+    # pisownię ze źródła — więc rozjazd jest zgłaszany, ale NIESIE ZNACZNIK, że
+    # znaczenie jest to samo. Bez znacznika recenzent trzynastu wierszy nie odróżni
+    # od trzynastu zmian zachowania, a wtedy przejrzy je wszystkie tak samo.
+    #
+    # Kierunek jest w tych dwóch przypadkach ISTOTNY i pierwsza wersja tego testu go
+    # pomyliła: podstawiła "yes" -> false i zażądała znacznika. To jest zmiana
+    # ZNACZENIA, nie pisowni, i komparator słusznie znacznika nie postawił. Upstream
+    # zrobił "no" -> false, i tak stoi tu teraz.
+    src = dict(sources_honest)
+    src[("2026.1", P_ALL)] = dsrc_all.replace('enable_octavia: "no"', "enable_octavia: false")
+    dd, _c, _s = compare_defaults(defaults_honest, src)
+    hit = [x for x in dd if x["key"] == "enable_octavia" and x["field"] == "literal"]
+    print("  %-22s %s" % ("bool respelled", "detected" if hit else "NOT DETECTED"))
+    if not hit:
+        failures.append("a boolean respelled upstream was not recorded as drift")
+    elif hit[0].get("sameMeaning") is not True:
+        failures.append("a spelling-only boolean change was not marked as such")
+    # I ODWROTNIE: zmiana znaczenia nie ma prawa dostać tego znacznika.
+    src[("2026.1", P_ALL)] = dsrc_all.replace('enable_octavia: "no"', 'enable_octavia: "yes"')
+    dd, _c, _s = compare_defaults(defaults_honest, src)
+    hit = [x for x in dd if x["key"] == "enable_octavia"]
+    ok = bool(hit) and hit[0].get("sameMeaning") is not True
+    print("  %-22s %s" % ("bool value flipped", "detected" if ok else "NOT DETECTED"))
+    if not ok:
+        failures.append("a boolean whose VALUE changed was reported as spelling only")
+
+    # Nieodebrany plik to nie jest czysty przebieg. Ta sama zasada co przy seriach:
+    # cicha awaria pobierania wygląda dokładnie jak zgodność.
+    dd, _c, dskip = compare_defaults(defaults_honest, {("2026.1", P_ROLE): dsrc_role})
+    ok = any("ansible/group_vars" in w for _r, w in dskip) and not [x for x in dd if x["key"] == "network_interface"]
+    print("  %-22s %s" % ("source not fetched", "named" if ok else "SILENT"))
+    if not ok:
+        failures.append("a source that was never fetched did not reach the skipped column")
+
+    # GRANICA --apply. Zdanie „nanosi wartości, nigdy semantyki" stoi w ADR-005 i w
+    # opisie draftu; tu jest sprawdzane, bo recenzent draftu widzi diff, a nie intencję.
+    # Podkładka jest kopią kształtu defaults.js, nie samym plikiem — test ma dowodzić
+    # łatki, a nie zależeć od dzisiejszych danych.
+    import tempfile
+    stub = ('  var KOLLA_DEFAULTS = {\n'
+            '    releases: {\n'
+            '      "2026.1": { tag: "22.1.0", catalogued: true,\n'
+            '                 path: "ansible/group_vars/all/", sha: "6d3ced62" }\n'
+            '    },\n'
+            '    keys: {\n'
+            '      "network_interface": { kind: "scalar",\n'
+            '        values: {\n'
+            '          "2026.1": { literal: \'"eth0"\', path: "p", line: 2 }\n'
+            '        } },\n'
+            '      "enable_octavia": { kind: "scalar",\n'
+            '        values: {\n'
+            '          "2026.1": { literal: \'"no"\', path: "p", line: 4 }\n'
+            '        } },\n'
+            '      "octavia_amp_network": { kind: "map",\n'
+            '        values: {\n'
+            '          "2026.1": { literal: \'octavia_amp_network:\\n  cidr: "{{ x }}"\',\n'
+            '                     path: "r", line: 9 }\n'
+            '        } }\n'
+            '    }\n'
+            '  };\n')
+    with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False, encoding="utf-8") as fh:
+        fh.write(stub); stub_path = fh.name
+    ap, df = apply_defaults([
+        {"release": "2026.1", "key": "network_interface", "field": "literal",
+         "ours": '"eth0"', "upstream": '"eth1"'},
+        {"release": "2026.1", "key": "enable_octavia", "field": "line",
+         "ours": 4, "upstream": 7},
+        {"release": "2026.1", "key": "-", "field": "sha",
+         "ours": "6d3ced62", "upstream": "aabbccdd"},
+        {"release": "2026.1", "key": "network_interface", "field": "presence",
+         "ours": "p", "upstream": None},
+        # Literał mapy niesie klamry W ŚRODKU napisu — na tym urwała się pierwsza
+        # wersja łatki, odkładając dla człowieka wpis, dla którego rodzaj powstał.
+        {"release": "2026.1", "key": "octavia_amp_network", "field": "line",
+         "ours": 9, "upstream": 11},
+    ], {}, path=stub_path)
+    patched = io_read(stub_path)
+    os.unlink(stub_path)
+    ok = (len(ap) == 4 and len(df) == 1 and df[0]["field"] == "presence"
+          and '"eth1"' in patched and "line: 7" in patched and "line: 11" in patched
+          and 'sha: "aabbccdd"' in patched)
+    print("  %-22s %s" % ("apply writes values", "applied" if ok else "NOT APPLIED"))
+    if not ok:
+        failures.append("--apply did not write the values it is allowed to write: %r %r" % (ap, df))
+    # Drugi klucz nie ma prawa ruszyć się przy podmianie pierwszego: oba niosą
+    # ten sam kształt wpisu i podmiana globalna trafiłaby w oba.
+    if '"no"' not in patched:
+        failures.append("--apply changed a key it was not asked about")
+    # I to, czego nie wolno tknąć NIGDY.
+    if 'kind: "scalar"' not in patched or patched.count("kind:") != stub.count("kind:"):
+        failures.append("--apply touched kind, which is semantics")
+    if patched.count('": {') != stub.count('": {'):
+        failures.append("--apply changed the shape of keys{}")
+
     if failures:
         for f in failures:
             print("FAIL " + f, file=sys.stderr)
@@ -665,6 +1145,26 @@ if __name__ == "__main__":
             print("applied  %-8s %-10s -> %s" % (d["series"], d["field"], d["upstream"]))
         for d in deferred:
             print("deferred %-8s %-10s (needs a human)" % (d["series"], d["field"]))
+
+        # Wartości domyślne: nanoszone są WYŁĄCZNIE literały, wyrażenia, numery linii
+        # i sha źródeł. keys{}, kind i cokolwiek o wadze zostaje dla człowieka —
+        # granica z ADR-005, zapisana tu, a nie tylko w opisie draftu.
+        defaults = load_defaults()
+        dsources, dabsent = fetch_defaults_sources(defaults)
+        ddrifts, _dc, dskipped = compare_defaults(defaults, dsources)
+        dshas, shaabsent = fetch_defaults_shas(defaults)
+        ddrifts = ddrifts + compare_defaults_shas(defaults, dshas)
+        for rid, why in dskipped + dabsent + shaabsent:
+            print("skipped  %-16s %s" % (rid, why))
+        dapplied, ddeferred = apply_defaults(ddrifts)
+        for d in dapplied:
+            print("applied  %-8s %-34s %-8s -> %s"
+                  % (d["release"], d["key"], d["field"], d["upstream"]))
+        for d in ddeferred:
+            print("deferred %-8s %-34s %-8s (needs a human)"
+                  % (d["release"], d["key"], d["field"]))
+        if dapplied:
+            print("NOTE defaults.js changed — run tools/sync-blocks.sh before committing")
         # Odłożenie wszystkiego dla człowieka to poprawny wynik, nie porażka.
         # Kod różny od zera ubijał krok, a razem z nim kolejne — w tym ten, który
         # zakłada issue o nowej serii, czyli dokładnie ten przypadek.
