@@ -4,7 +4,7 @@
  * ŻĄDANIA, KTÓRE WYSTĄPIŁY, czytane po WPISACH ZDARZEŃ netlogu — nie napisy w pliku
  * diagnostycznym. Różnica nie jest szczegółem implementacji: netlog niesie na końcu zrzut
  * STANU przeglądarki, w którym stoją adresy, do których nikt nie wysłał ani jednego bajtu,
- * i właśnie je czytaliśmy jako ruch (#128). Kryterium pochodzenia stoi przy hostsFrom.
+ * i właśnie je czytaliśmy jako ruch (#128). Kryterium pochodzenia stoi przy readLog.
  *
  * To zdanie jest całym zakresem tego pliku i jest napisane tak od pierwszej wersji.
  * NIE brzmi „narzędzie nie wychodzi do sieci" — bo tego ten strażnik nie dowodzi
@@ -91,6 +91,42 @@
  * zestarzałaby się cicho. Zmierzone: trzy kolejne przebiegi kontrolne dały identyczny
  * zbiór pięciu hostów.
  *
+ * THE CONTROL PASS OBSERVES THE BROWSER FOR AT LEAST AS LONG AS THE LONGEST SCENARIO,
+ * AND THAT WINDOW IS THE MEASURED NETLOG SPAN — NOT A NUMBER WRITTEN HERE (#191).
+ *
+ * Measured on Chrome 153.0.8010.36, 2026-09-21, before this rule existed. The blank control
+ * page closed its netlog after 382 / 421 / 480 ms, the scenarios ran 540 ms on average, and
+ * the browser's own component update arrived 283 to 458 ms after the first event in the log.
+ * So the same host was seen in 44% of control passes and in 99% of scenarios — 20 of 45
+ * against 223 of 225 over 270 launches — and four of fifteen consecutive runs of this section
+ * went red on one commit.
+ *
+ * EVERY MILLISECOND BELOW IS A PROPERTY OF THAT BUILD ON THAT DAY, not a constant — the same
+ * reading check-a11y.js records about its own flags. Which is the point of taking the target
+ * from the run instead of from here: the numbers age, the comparison does not.
+ *
+ * That is not a race anybody can retry their way out of. The background was measured
+ * through a SHORTER WINDOW than the thing it is used to judge, so the bias runs one way:
+ * towards reporting the browser's own traffic as a violation of the product's.
+ *
+ * Hence the order below. The scenarios run FIRST, the longest of their spans is the target,
+ * and each control pass is stretched until ITS OWN MEASURED SPAN reaches it. A control pass
+ * that cannot reach the target is not a weaker measurement — it is no measurement, and it
+ * is red, for the same reason a missing netlog is red.
+ *
+ * WHY A BUSY LOOP AND NOT A TIMER, measured rather than assumed, same browser and same day.
+ * --virtual-time-budget fast-forwards timers, so waiting on one buys no observation: the blank
+ * page spans 402 ms, and the same page waiting on a 3000 ms setTimeout spans 453 ms. Three
+ * seconds of waiting bought fifty milliseconds, which is this measurement's noise. Virtual
+ * time does not advance while a task is RUNNING, so synchronous work is the one thing that
+ * holds the browser — and with it the log — open: the same page with 20e6 iterations spans
+ * 749 ms. Scaling: 0 iterations 462 ms, 3e6 500 ms, 30e6 875 ms, 120e6 2162 ms.
+ *
+ * The iteration count is therefore nobody's constant to keep true. It starts at zero, doubles
+ * until the measured span reaches the target, and the number that decides is the span. An
+ * attempt that falls short is discarded, hosts and all: it is not a control pass, and the
+ * union below says three because three is what it counts.
+ *
  * Użycie:
  *     node tools/check-network.js
  *     node tools/check-network.js --dir <katalog>   # fixtura: wszystkie .html z katalogu
@@ -169,8 +205,13 @@ function winPath(p) { return p.replace(/\\/g, "/").replace(/^([A-Za-z]):/, "$1:"
    logu, i to jest cały flake opisany w #128.
 
    Był to pomiar REPREZENTACJI w strażniku zbudowanym po to, żeby mierzyć SKUTEK (ADR-003,
-   opcja D). Ta funkcja odpowiada teraz na pytanie „jakie żądania WYSTĄPIŁY". */
-function hostsFrom(logFile) {
+   opcja D). Ta funkcja odpowiada teraz na pytanie „jakie żądania WYSTĄPIŁY".
+
+   It returns the log's span ALONGSIDE the hosts, because that span is this launch's WINDOW
+   OF OBSERVATION — the one number that says how long anything could have been seen at all
+   (#191). Read from the same events as the hosts, so that it cannot be declared beside
+   them. */
+function readLog(logFile) {
   if (!fs.existsSync(logFile)) return null;
   var raw = fs.readFileSync(logFile, "utf8");
   var log;
@@ -201,7 +242,26 @@ function hostsFrom(logFile) {
     var m = /^https?:\/\/([^/]+)/.exec(p.url);
     if (m) out[m[1]] = (out[m[1]] || 0) + 1;
   });
-  return out;
+
+  /* THE WINDOW IS COUNTED OVER ALL EVENTS, not over requests alone: the question is how
+     long the log was open, not when the first request went out. A launch that sent nothing
+     still has a window, and still has to be comparable with one that did. */
+  var lo = Infinity, hi = -Infinity;
+  log.events.forEach(function (ev) {
+    var t = Number(ev && ev.time);
+    if (!isFinite(t)) return;
+    if (t < lo) lo = t;
+    if (t > hi) hi = t;
+  });
+  return { hosts: out, span: hi >= lo ? hi - lo : 0 };
+}
+
+/* The --explain-netlog seam asks about hosts alone and stays that way: the fixture from #128
+   demonstrates the ORIGIN CRITERION and not the window, and handing it a second number would
+   change what that pass shows. */
+function hostsFrom(logFile) {
+  var r = readLog(logFile);
+  return r === null ? null : r.hosts;
 }
 
 /* Nazwa scenariusza w NAZWIE PLIKU, nie sam numer przebiegu. Netlog nazwany „net7.json"
@@ -247,12 +307,40 @@ function render(file, steps, label) {
     cp.execFileSync(chrome, args, { stdio: ["ignore", "ignore", "ignore"], timeout: 120000 });
   } catch (e) { /* kod wyjścia przeglądarki nie jest wynikiem pomiaru */ }
 
-  var hosts = hostsFrom(log);
+  var read = readLog(log);
   /* FAIL CLOSED: brak netlogu znaczy, że pomiar się nie odbył. Zielone przy nieobecnym
      przedmiocie pomiaru to trzeci wariant pustego zielonego z docs/PRINCIPLES.md. */
-  if (hosts === null) die(label + ": Chrome nie zapisał netlogu — pomiar się nie odbył");
-  return hosts;
+  if (read === null) die(label + ": Chrome nie zapisał netlogu — pomiar się nie odbył");
+  return read;
 }
+
+/* --- scenariusze --- */
+var cases = fixtureDir
+  ? fs.readdirSync(path.resolve(root, fixtureDir))
+      .filter(function (f) { return /\.html$/i.test(f); }).sort()
+      .map(function (f) { return { file: path.join(fixtureDir, f), name: f, steps: "" }; })
+  : lib.FILES.map(function (sc) {
+      return { file: sc.file, name: sc.file + " [" + sc.name + "]", steps: sc.steps };
+    });
+
+if (!cases.length) die("zero scenariuszy — przedmiot pomiaru jest nieobecny");
+
+console.log("polityka CSP zdejmowana z kopii — mierzymy, co kod PRÓBUJE zrobić, " +
+            "nie czego polityka nie dopuszcza");
+
+/* Najpierw ZBIERAMY wszystkie scenariusze, dopiero potem rozstrzygamy. Reguła podejrzenia
+   tła jest zdaniem o WSZYSTKICH scenariuszach naraz („w każdym, w żadnym kontrolnym") i nie
+   da się jej wypowiedzieć, oceniając scenariusze po kolei.
+
+   THE SCENARIOS NOW RUN FIRST, BEFORE THE BACKGROUND, and that is a change of order rather
+   than of layout (#191). The background has to be measured through a window NO SHORTER than
+   the window of the thing it judges — and how long that is, is known only once the scenarios
+   have been measured. The other order would force the target to be written down from memory,
+   which is a number standing in for a measurement. */
+var results = cases.map(function (sc) {
+  var r = render(path.join(root, sc.file), sc.steps, sc.name);
+  return { name: sc.name, hosts: r.hosts, span: r.span, out: null };
+});
 
 /* --- przebieg kontrolny: tło --- */
 var blank = path.join(work, "control.html");
@@ -277,35 +365,61 @@ fs.writeFileSync(blank,
    scenariuszu i w ŻADNYM przebiegu kontrolnym jest zgłaszany jako PODEJRZENIE TŁA, a nie
    jako naruszenie. Ta reguła nie zależy od K i sama zamyka awarię z #128. */
 var CONTROL_RUNS = 3;
+
+/* THE CONTROL WINDOW IS STRETCHED TO THE LONGEST SCENARIO — the reason is in the header
+   (#191). Against a fixture whose scenarios are short, nothing is injected at all. */
+var BUSY_SEED = 20000000;
+var BUSY_ATTEMPTS = 6;
+function busySteps(n) {
+  return n ? "var __s = 0; for (var __i = 0; __i < " + n + "; __i++) " +
+             "{ __s += Math.sqrt(__i % 97 + 1); } window.__controlBusy = __s;" : "";
+}
+
+var target = results.reduce(function (m, r) { return r.span > m ? r.span : m; }, 0);
 var background = {};
+var controlSpans = [];
+var discarded = [];
+var busy = 0;
 for (var ci = 0; ci < CONTROL_RUNS; ci++) {
-  var one = render(blank, "", "przebieg kontrolny " + (ci + 1));
-  Object.keys(one).forEach(function (h) { background[h] = (background[h] || 0) + one[h]; });
+  var one = null;
+  for (var attempt = 1; ; attempt++) {
+    /* THE ATTEMPT NUMBER GOES IN THE NAME, for the same reason the scenario's name does:
+       a rejected attempt stays on disk, and a netlog named like the accepted one would leave
+       somebody guessing, on a red build, which of them reached the background. */
+    one = render(blank, busySteps(busy),
+                 "przebieg kontrolny " + (ci + 1) + " proba " + attempt);
+    if (one.span >= target) break;
+    discarded.push(one.span);
+    /* FAIL CLOSED, exactly as for a missing netlog: a window shorter than the scenarios' is
+       not a weaker measurement of the background, it is none — and it is what produced the
+       red runs in #191. */
+    if (attempt >= BUSY_ATTEMPTS) {
+      die("przebieg kontrolny " + (ci + 1) + ": okno " + one.span + " ms nie sięgnęło " +
+          "najdłuższego scenariusza (" + target + " ms) w " + attempt + " próbach — " +
+          "tło byłoby zmierzone krótszym oknem niż to, co ma osądzać");
+    }
+    busy = busy ? busy * 2 : BUSY_SEED;
+  }
+  controlSpans.push(one.span);
+  /* Attempts that fell short are discarded, hosts and all: they are not control passes, and
+     the union below says three because three is what it counts. */
+  Object.keys(one.hosts).forEach(function (h) {
+    background[h] = (background[h] || 0) + one.hosts[h];
+  });
+}
+console.log("okno obserwacji: najdłuższy scenariusz " + target + " ms, przebiegi kontrolne " +
+            controlSpans.join(", ") + " ms — każdy nie krótszy");
+if (discarded.length) {
+  /* Printed, because those attempts' netlogs stay on disk next to the accepted ones. Silence
+     here would mean that on a red build somebody reads one control pass too many. */
+  console.log("     (odrzucone próby kalibracji okna: " + discarded.join(", ") +
+              " ms — hosty z nich NIE weszły do tła)");
 }
 console.log("tło (własne żądania przeglądarki): " + Object.keys(background).length +
             " hostów, unia z " + CONTROL_RUNS + " przebiegów kontrolnych");
-console.log("polityka CSP zdejmowana z kopii — mierzymy, co kod PRÓBUJE zrobić, " +
-            "nie czego polityka nie dopuszcza");
 
-/* --- scenariusze --- */
-var cases = fixtureDir
-  ? fs.readdirSync(path.resolve(root, fixtureDir))
-      .filter(function (f) { return /\.html$/i.test(f); }).sort()
-      .map(function (f) { return { file: path.join(fixtureDir, f), name: f, steps: "" }; })
-  : lib.FILES.map(function (sc) {
-      return { file: sc.file, name: sc.file + " [" + sc.name + "]", steps: sc.steps };
-    });
-
-if (!cases.length) die("zero scenariuszy — przedmiot pomiaru jest nieobecny");
-
-/* Najpierw ZBIERAMY wszystkie scenariusze, dopiero potem rozstrzygamy. Reguła podejrzenia
-   tła jest zdaniem o WSZYSTKICH scenariuszach naraz („w każdym, w żadnym kontrolnym") i nie
-   da się jej wypowiedzieć, oceniając scenariusze po kolei. */
-var results = cases.map(function (sc) {
-  var hosts = render(path.join(root, sc.file), sc.steps, sc.name);
-  return { name: sc.name,
-           out: Object.keys(hosts).filter(function (h) { return !background[h]; }).sort(),
-           hosts: hosts };
+results.forEach(function (r) {
+  r.out = Object.keys(r.hosts).filter(function (h) { return !background[h]; }).sort();
 });
 
 /* PODEJRZENIE TŁA, nie naruszenie. Host w KAŻDYM scenariuszu i w ŻADNYM z przebiegów
