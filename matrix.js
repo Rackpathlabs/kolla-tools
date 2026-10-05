@@ -50,7 +50,7 @@
                   nadrzędnej to informacja */
   var KOLLA_MATRIX = {
     schema: 1,
-    updated: "2026-08-11",
+    updated: "2026-10-05",
 
     /* Opis klucza żyje tu raz, nie przy każdym wydaniu.
        notable: klucz dotyczy każdego wdrożenia i narzędzie wspomina o nim zawsze.
@@ -87,8 +87,8 @@
 
     releases: [
       {
-        id: "2026.2", name: "Hibiscus", kolla: null, status: "development",
-        released: null, expected: "2026-09-30", endsOn: null,
+        id: "2026.2", name: "Hibiscus", kolla: null, status: "maintained",
+        released: "2026-09-30", expected: "2026-09-30", endsOn: "2028-04-26",
         /* CentOS ZDJĘTY, nie „brak danych". Nota wydania 2026.2 mówi wprost, że wsparcie
            dla CentOS Stream 10 zostało porzucone — więc lista jest tu WIEDZĄ, a nie
            zgadywaniem, i null przestał być poprawną wartością. Trzy pozostałe są tymi,
